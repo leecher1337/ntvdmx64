@@ -1,0 +1,433 @@
+--- NT4\private\mvdm\softpc.new\base\cvidc\cpu4gen.h
++++ nt\private\mvdm\softpc.new\base\cvidc\cpu4gen.h
+5a6,11
+> #ifdef i386
+> #define STDCALL __stdcall
+> #else
+> #define STDCALL
+> #endif
+> 
+182c188
+< IMPORT	void	c_cpu_simulate	IPT0();
+---
+> IMPORT	void	STDCALL c_cpu_simulate	IPT0();
+195c201
+< IMPORT	void	c_cpu_interrupt	IPT2(CPU_INT_TYPE, intType, IU16, intNum);
+---
+> IMPORT	void	STDCALL c_cpu_interrupt	IPT2(CPU_INT_TYPE, intType, IU16, intNum);
+208c214
+< IMPORT	void	c_cpu_clearHwInt	IPT0();
+---
+> IMPORT	void	STDCALL c_cpu_clearHwInt	IPT0();
+221c227
+< IMPORT	void	c_cpu_EOA_hook	IPT0();
+---
+> IMPORT	void	STDCALL c_cpu_EOA_hook	IPT0();
+234c240
+< IMPORT	void	c_cpu_terminate	IPT0();
+---
+> IMPORT	void	STDCALL c_cpu_terminate	IPT0();
+247c253
+< IMPORT	void	c_cpu_init	IPT0();
+---
+> IMPORT	void	STDCALL c_cpu_init	IPT0();
+260c266
+< IMPORT	void	c_cpu_q_ev_set_count	IPT1(IU32, val);
+---
+> IMPORT	void	STDCALL c_cpu_q_ev_set_count	IPT1(IU32, val);
+273c279
+< IMPORT	IU32	c_cpu_q_ev_get_count	IPT0();
+---
+> IMPORT	IU32	STDCALL c_cpu_q_ev_get_count	IPT0();
+286c292
+< IMPORT	IU32	c_cpu_calc_q_ev_inst_for_time	IPT1(IU32, val);
+---
+> IMPORT	IU32	STDCALL c_cpu_calc_q_ev_inst_for_time	IPT1(IU32, val);
+299c305
+< IMPORT	void	c_cpu_init_ios_in	IPT4(IHP, InTables, IHP, OutTables, IUH, maxAdaptor, IU16, portMask);
+---
+> IMPORT	void	STDCALL c_cpu_init_ios_in	IPT4(IHP, InTables, IHP, OutTables, IUH, maxAdaptor, IU16, portMask);
+312c318
+< IMPORT	void	c_cpu_define_inb	IPT2(IUH, adaptor, IHP, func);
+---
+> IMPORT	void	STDCALL c_cpu_define_inb	IPT2(IUH, adaptor, IHP, func);
+325c331
+< IMPORT	void	c_cpu_define_inw	IPT2(IUH, adaptor, IHP, func);
+---
+> IMPORT	void	STDCALL c_cpu_define_inw	IPT2(IUH, adaptor, IHP, func);
+338c344
+< IMPORT	void	c_cpu_define_ind	IPT2(IUH, adaptor, IHP, func);
+---
+> IMPORT	void	STDCALL c_cpu_define_ind	IPT2(IUH, adaptor, IHP, func);
+351c357
+< IMPORT	void	c_cpu_define_outb	IPT2(IUH, adaptor, IHP, func);
+---
+> IMPORT	void	STDCALL c_cpu_define_outb	IPT2(IUH, adaptor, IHP, func);
+364c370
+< IMPORT	void	c_cpu_define_outw	IPT2(IUH, adaptor, IHP, func);
+---
+> IMPORT	void	STDCALL c_cpu_define_outw	IPT2(IUH, adaptor, IHP, func);
+377c383
+< IMPORT	void	c_cpu_define_outd	IPT2(IUH, adaptor, IHP, func);
+---
+> IMPORT	void	STDCALL c_cpu_define_outd	IPT2(IUH, adaptor, IHP, func);
+2080c2086
+< IMPORT	IUH	host_get_q_calib_val	IPT0();
+---
+> IMPORT	IUH	STDCALL host_get_q_calib_val	IPT0();
+2093c2099
+< IMPORT	IUH	host_get_jump_restart	IPT0();
+---
+> IMPORT	IUH	STDCALL host_get_jump_restart	IPT0();
+2106c2112
+< IMPORT	void	host_set_jump_restart	IPT1(IUH, initialVal);
+---
+> IMPORT	void	STDCALL host_set_jump_restart	IPT1(IUH, initialVal);
+2113c2119
+< IMPORT	void	host_set_jump_restart	IPT1(IUH, initialVal);
+---
+> IMPORT	void	STDCALL host_set_jump_restart	IPT1(IUH, initialVal);
+2119c2125
+< IMPORT	void	setEOIEnableAddr	IPT1(IU8 *, initialVal);
+---
+> IMPORT	void	STDCALL setEOIEnableAddr	IPT1(IU8 *, initialVal);
+2132c2138
+< IMPORT	void	setAddProfileDataPtr	IPT1(IHP, initialVal);
+---
+> IMPORT	void	STDCALL setAddProfileDataPtr	IPT1(IHP, initialVal);
+2145c2151
+< IMPORT	void	setMaxProfileDataAddr	IPT1(IHP, initialVal);
+---
+> IMPORT	void	STDCALL setMaxProfileDataAddr	IPT1(IHP, initialVal);
+2158c2164
+< IMPORT	IHP	getAddProfileDataAddr	IPT0();
+---
+> IMPORT	IHP	STDCALL getAddProfileDataAddr	IPT0();
+2171c2177
+< IMPORT	void	PurgeLostIretHookLine	IPT1(IU16, lineNum);
+---
+> IMPORT	void	STDCALL PurgeLostIretHookLine	IPT1(IU16, lineNum);
+2883c2889
+< IMPORT	void	c_growRecPool	IPT0();
+---
+> IMPORT	void	STDCALL c_growRecPool	IPT0();
+2908c2914
+< IMPORT	void	c_trashIntelRegisters	IPT0();
+---
+> IMPORT	void	STDCALL c_trashIntelRegisters	IPT0();
+--- NT4\private\mvdm\softpc.new\base\cvidc\ev_glue.c
++++ nt\private\mvdm\softpc.new\base\cvidc\ev_glue.c
+18a19
+> #include <stdio.h>
+35a37,43
+> 
+> #ifdef i386
+> #define STDCALL __stdcall
+> #else
+> #define STDCALL
+> #endif
+> 
+102c110
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+123c131
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+144c152
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+165c173
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+187c195
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+209c217
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+231c239
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+256c264
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+281c289
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+306c314
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+331c339
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+356c364
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+381c389
+< GLOBAL IU32
+---
+> GLOBAL IU32 STDCALL
+403c411
+< GLOBAL IU32
+---
+> GLOBAL IU32 STDCALL
+425c433
+< GLOBAL IU32
+---
+> GLOBAL IU32 STDCALL
+447c455
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+470c478
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+494c502
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+556c564
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+671c679
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+708c716
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+718c726
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+739c747
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+762c770
+< GLOBAL void
+---
+> GLOBAL void STDCALL
+789c797
+< GLOBAL IHP
+---
+> GLOBAL IHP STDCALL
+792c800
+< 	Gdp = (IHP)host_malloc(64 * 1024);
+---
+> 	Gdp = (IHP)host_calloc(64, 1024);
+--- NT4\private\mvdm\softpc.new\base\cvidc\evidgen.h
++++ nt\private\mvdm\softpc.new\base\cvidc\evidgen.h
+4a5,9
+> #ifdef i386
+> #define CDECL __cdecl
+> #else
+> #define CDECL 
+> #endif
+8,88c13,93
+< 	IU32	(*GetVideolatches)	IPT0();
+< 	IU8 *	(*GetVideorplane)	IPT0();
+< 	IU8 *	(*GetVideowplane)	IPT0();
+< 	IU8 *	(*GetVideoscratch)	IPT0();
+< 	IU32	(*GetVideosr_masked_val)	IPT0();
+< 	IU32	(*GetVideosr_nmask)	IPT0();
+< 	IU32	(*GetVideodata_and_mask)	IPT0();
+< 	IU32	(*GetVideodata_xor_mask)	IPT0();
+< 	IU32	(*GetVideolatch_xor_mask)	IPT0();
+< 	IU32	(*GetVideobit_prot_mask)	IPT0();
+< 	IU32	(*GetVideoplane_enable)	IPT0();
+< 	IU32	(*GetVideoplane_enable_mask)	IPT0();
+< 	IHP	(*GetVideosr_lookup)	IPT0();
+< 	IHP	(*GetVideofwd_str_read_addr)	IPT0();
+< 	IHP	(*GetVideobwd_str_read_addr)	IPT0();
+< 	IU32	(*GetVideodirty_total)	IPT0();
+< 	IU32	(*GetVideodirty_low)	IPT0();
+< 	IU32	(*GetVideodirty_high)	IPT0();
+< 	IU8 *	(*GetVideovideo_copy)	IPT0();
+< 	IHP	(*GetVideomark_byte)	IPT0();
+< 	IHP	(*GetVideomark_word)	IPT0();
+< 	IHP	(*GetVideomark_string)	IPT0();
+< 	IU32	(*GetVideoread_shift_count)	IPT0();
+< 	IU32	(*GetVideoread_mapped_plane)	IPT0();
+< 	IU32	(*GetVideocolour_comp)	IPT0();
+< 	IU32	(*GetVideodont_care)	IPT0();
+< 	IU32	(*GetVideov7_bank_vid_copy_off)	IPT0();
+< 	IU8 *	(*GetVideoscreen_ptr)	IPT0();
+< 	IU32	(*GetVideorotate)	IPT0();
+< 	IU32	(*GetVideocalc_data_xor)	IPT0();
+< 	IU32	(*GetVideocalc_latch_xor)	IPT0();
+< 	IHP	(*GetVideoread_byte_addr)	IPT0();
+< 	IU32	(*GetVideov7_fg_latches)	IPT0();
+< 	IHP	(*GetVideoGC_regs)	IPT0();
+< 	IU8	(*GetVideolast_GC_index)	IPT0();
+< 	IU8	(*GetVideodither)	IPT0();
+< 	IU8	(*GetVideowrmode)	IPT0();
+< 	IU8	(*GetVideochain)	IPT0();
+< 	IU8	(*GetVideowrstate)	IPT0();
+< 	void	(*SetVideolatches)	IPT1(IU32,	value);
+< 	void	(*SetVideorplane)	IPT1(IU8 *,	value);
+< 	void	(*SetVideowplane)	IPT1(IU8 *,	value);
+< 	void	(*SetVideoscratch)	IPT1(IU8 *,	value);
+< 	void	(*SetVideosr_masked_val)	IPT1(IU32,	value);
+< 	void	(*SetVideosr_nmask)	IPT1(IU32,	value);
+< 	void	(*SetVideodata_and_mask)	IPT1(IU32,	value);
+< 	void	(*SetVideodata_xor_mask)	IPT1(IU32,	value);
+< 	void	(*SetVideolatch_xor_mask)	IPT1(IU32,	value);
+< 	void	(*SetVideobit_prot_mask)	IPT1(IU32,	value);
+< 	void	(*SetVideoplane_enable)	IPT1(IU32,	value);
+< 	void	(*SetVideoplane_enable_mask)	IPT1(IU32,	value);
+< 	void	(*SetVideosr_lookup)	IPT1(IHP,	value);
+< 	void	(*SetVideofwd_str_read_addr)	IPT1(IHP,	value);
+< 	void	(*SetVideobwd_str_read_addr)	IPT1(IHP,	value);
+< 	void	(*SetVideodirty_total)	IPT1(IU32,	value);
+< 	void	(*SetVideodirty_low)	IPT1(IU32,	value);
+< 	void	(*SetVideodirty_high)	IPT1(IU32,	value);
+< 	void	(*SetVideovideo_copy)	IPT1(IU8 *,	value);
+< 	void	(*SetVideomark_byte)	IPT1(IHP,	value);
+< 	void	(*SetVideomark_word)	IPT1(IHP,	value);
+< 	void	(*SetVideomark_string)	IPT1(IHP,	value);
+< 	void	(*SetVideoread_shift_count)	IPT1(IU32,	value);
+< 	void	(*SetVideoread_mapped_plane)	IPT1(IU32,	value);
+< 	void	(*SetVideocolour_comp)	IPT1(IU32,	value);
+< 	void	(*SetVideodont_care)	IPT1(IU32,	value);
+< 	void	(*SetVideov7_bank_vid_copy_off)	IPT1(IU32,	value);
+< 	void	(*SetVideoscreen_ptr)	IPT1(IU8 *,	value);
+< 	void	(*SetVideorotate)	IPT1(IU32,	value);
+< 	void	(*SetVideocalc_data_xor)	IPT1(IU32,	value);
+< 	void	(*SetVideocalc_latch_xor)	IPT1(IU32,	value);
+< 	void	(*SetVideoread_byte_addr)	IPT1(IHP,	value);
+< 	void	(*SetVideov7_fg_latches)	IPT1(IU32,	value);
+< 	void	(*SetVideoGC_regs)	IPT1(IHP,	value);
+< 	void	(*SetVideolast_GC_index)	IPT1(IU8,	value);
+< 	void	(*SetVideodither)	IPT1(IU8,	value);
+< 	void	(*SetVideowrmode)	IPT1(IU8,	value);
+< 	void	(*SetVideochain)	IPT1(IU8,	value);
+< 	void	(*SetVideowrstate)	IPT1(IU8,	value);
+< 	void	(*setWritePointers)	IPT0();
+< 	void	(*setReadPointers)	IPT1(IUH,	readset);
+< 	void	(*setMarkPointers)	IPT1(IUH,	markset);
+---
+> 	IU32	(CDECL *GetVideolatches)	IPT0();
+> 	IU8 *	(CDECL *GetVideorplane)	IPT0();
+> 	IU8 *	(CDECL *GetVideowplane)	IPT0();
+> 	IU8 *	(CDECL *GetVideoscratch)	IPT0();
+> 	IU32	(CDECL *GetVideosr_masked_val)	IPT0();
+> 	IU32	(CDECL *GetVideosr_nmask)	IPT0();
+> 	IU32	(CDECL *GetVideodata_and_mask)	IPT0();
+> 	IU32	(CDECL *GetVideodata_xor_mask)	IPT0();
+> 	IU32	(CDECL *GetVideolatch_xor_mask)	IPT0();
+> 	IU32	(CDECL *GetVideobit_prot_mask)	IPT0();
+> 	IU32	(CDECL *GetVideoplane_enable)	IPT0();
+> 	IU32	(CDECL *GetVideoplane_enable_mask)	IPT0();
+> 	IHP	(CDECL *GetVideosr_lookup)	IPT0();
+> 	IHP	(CDECL *GetVideofwd_str_read_addr)	IPT0();
+> 	IHP	(CDECL *GetVideobwd_str_read_addr)	IPT0();
+> 	IU32	(CDECL *GetVideodirty_total)	IPT0();
+> 	IU32	(CDECL *GetVideodirty_low)	IPT0();
+> 	IU32	(CDECL *GetVideodirty_high)	IPT0();
+> 	IU8 *	(CDECL *GetVideovideo_copy)	IPT0();
+> 	IHP	(CDECL *GetVideomark_byte)	IPT0();
+> 	IHP	(CDECL *GetVideomark_word)	IPT0();
+> 	IHP	(CDECL *GetVideomark_string)	IPT0();
+> 	IU32	(CDECL *GetVideoread_shift_count)	IPT0();
+> 	IU32	(CDECL *GetVideoread_mapped_plane)	IPT0();
+> 	IU32	(CDECL *GetVideocolour_comp)	IPT0();
+> 	IU32	(CDECL *GetVideodont_care)	IPT0();
+> 	IU32	(CDECL *GetVideov7_bank_vid_copy_off)	IPT0();
+> 	IU8 *	(CDECL *GetVideoscreen_ptr)	IPT0();
+> 	IU32	(CDECL *GetVideorotate)	IPT0();
+> 	IU32	(CDECL *GetVideocalc_data_xor)	IPT0();
+> 	IU32	(CDECL *GetVideocalc_latch_xor)	IPT0();
+> 	IHP	(CDECL *GetVideoread_byte_addr)	IPT0();
+> 	IU32	(CDECL *GetVideov7_fg_latches)	IPT0();
+> 	IHP	(CDECL *GetVideoGC_regs)	IPT0();
+> 	IU8	(CDECL *GetVideolast_GC_index)	IPT0();
+> 	IU8	(CDECL *GetVideodither)	IPT0();
+> 	IU8	(CDECL *GetVideowrmode)	IPT0();
+> 	IU8	(CDECL *GetVideochain)	IPT0();
+> 	IU8	(CDECL *GetVideowrstate)	IPT0();
+> 	void	(CDECL *SetVideolatches)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideorplane)	IPT1(IU8 *,	value);
+> 	void	(CDECL *SetVideowplane)	IPT1(IU8 *,	value);
+> 	void	(CDECL *SetVideoscratch)	IPT1(IU8 *,	value);
+> 	void	(CDECL *SetVideosr_masked_val)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideosr_nmask)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideodata_and_mask)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideodata_xor_mask)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideolatch_xor_mask)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideobit_prot_mask)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideoplane_enable)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideoplane_enable_mask)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideosr_lookup)	IPT1(IHP,	value);
+> 	void	(CDECL *SetVideofwd_str_read_addr)	IPT1(IHP,	value);
+> 	void	(CDECL *SetVideobwd_str_read_addr)	IPT1(IHP,	value);
+> 	void	(CDECL *SetVideodirty_total)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideodirty_low)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideodirty_high)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideovideo_copy)	IPT1(IU8 *,	value);
+> 	void	(CDECL *SetVideomark_byte)	IPT1(IHP,	value);
+> 	void	(CDECL *SetVideomark_word)	IPT1(IHP,	value);
+> 	void	(CDECL *SetVideomark_string)	IPT1(IHP,	value);
+> 	void	(CDECL *SetVideoread_shift_count)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideoread_mapped_plane)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideocolour_comp)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideodont_care)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideov7_bank_vid_copy_off)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideoscreen_ptr)	IPT1(IU8 *,	value);
+> 	void	(CDECL *SetVideorotate)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideocalc_data_xor)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideocalc_latch_xor)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideoread_byte_addr)	IPT1(IHP,	value);
+> 	void	(CDECL *SetVideov7_fg_latches)	IPT1(IU32,	value);
+> 	void	(CDECL *SetVideoGC_regs)	IPT1(IHP,	value);
+> 	void	(CDECL *SetVideolast_GC_index)	IPT1(IU8,	value);
+> 	void	(CDECL *SetVideodither)	IPT1(IU8,	value);
+> 	void	(CDECL *SetVideowrmode)	IPT1(IU8,	value);
+> 	void	(CDECL *SetVideochain)	IPT1(IU8,	value);
+> 	void	(CDECL *SetVideowrstate)	IPT1(IU8,	value);
+> 	void	(CDECL *setWritePointers)	IPT0();
+> 	void	(CDECL *setReadPointers)	IPT1(IUH,	readset);
+> 	void	(CDECL *setMarkPointers)	IPT1(IUH,	markset);
+--- NT4\private\mvdm\softpc.new\base\cvidc\j_c_lang.c
++++ nt\private\mvdm\softpc.new\base\cvidc\j_c_lang.c
+0a2
+> #include <stdio.h>
+--- NT4\private\mvdm\softpc.new\base\cvidc\vglfunc.c
++++ nt\private\mvdm\softpc.new\base\cvidc\vglfunc.c
+86c86
+< struct VideoVector C_Video = 
+---
+> struct VideoVector C_Video, Video = 
+--- NT4\private\mvdm\softpc.new\base\cvidc\sources
++++ nt\private\mvdm\softpc.new\base\cvidc\sources
+87d86
+<                         accessfn.c  \
+88a88
+> #                        accessfn.c
+92a93
+> 386_STDCALL=0
+\ No newline at end of file
+--- NT4\private\mvdm\softpc.new\base\inc\video.h
++++ nt\private\mvdm\softpc.new\base\inc\video.h
+242a243,246
+> #if (i386)
+> IMPORT VOID (__stdcall *bios_ch2_byte_wrt_fn) IPT2(ULONG, ch_attr, ULONG, ch_addr);
+> IMPORT VOID (__stdcall *bios_ch2_word_wrt_fn) IPT2(ULONG, ch_attr, ULONG, ch_addr);
+> #else
+244a249
+> #endif

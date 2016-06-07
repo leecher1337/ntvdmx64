@@ -1,0 +1,94 @@
+--- NT4\private\mvdm\softpc.new\host\inc\cfpu_def.h
++++ nt\private\mvdm\softpc.new\host\inc\cfpu_def.h
+18a19,21
+> #ifdef i386
+> IU32	mant:23;
+> IU32	exp:8;
+19a23,24
+> #else
+> IU32	sign:1;
+21a27
+> #endif
+24a31,33
+> #ifdef i386
+> IU32	mant_hi:20;
+> IU32	exp:11;
+25a35,36
+> #else
+> IU32 	sign:1;
+27a39
+> #endif
+30a43,44
+> #ifdef i386
+> IU16	exp:15;
+31a46,47
+> #else
+> IU16	sign:1;
+32a49
+> #endif
+37a55,58
+> #ifdef i386
+> IU32	mant_lo;
+> FP64HI  hiword;
+> #else
+39a61
+> #endif
+54a77,78
+> #ifdef i386
+> IU32	mant_lo;
+55a80,82
+> FP80SE	sign_exp;
+> #else
+> IU32	mant_hi;
+57a85
+> #endif
+68c96,102
+< #ifdef BIGEND
+---
+> #if defined(BIGEND) //|| defined(i386)
+> 
+> /* Format for single precision on bigendian host */
+> #define HOST_R32_BYTE_0 0
+> #define HOST_R32_BYTE_1 1
+> #define HOST_R32_BYTE_2 2
+> #define HOST_R32_BYTE_3 3
+81a116,127
+> #ifdef i386
+> #define HOST_R80_BYTE_0 9
+> #define HOST_R80_BYTE_1 8
+> #define HOST_R80_BYTE_2 3
+> #define HOST_R80_BYTE_3 2
+> #define HOST_R80_BYTE_4 1
+> #define HOST_R80_BYTE_5 0
+> #define HOST_R80_BYTE_6 7
+> #define HOST_R80_BYTE_7 6
+> #define HOST_R80_BYTE_8 5
+> #define HOST_R80_BYTE_9 4
+> #else
+91a138
+> #endif
+95c142,143
+< #endif	/* BIGEND */
+---
+> 
+> #else	/* BIGEND */
+97c145,150
+< #ifdef LITTLEND
+---
+> /* Format for single precision on littleendian host */
+> #define HOST_R32_BYTE_0 3
+> #define HOST_R32_BYTE_1 2
+> #define HOST_R32_BYTE_2 1
+> #define HOST_R32_BYTE_3 0
+> 
+127a181,186
+> #ifdef i386
+> #define HostGetOverflowException()	(_statusfp() & _EM_OVERFLOW)
+> #define HostGetUnderflowException()	(_statusfp() & _EM_UNDERFLOW)
+> #define HostGetPrecisionException()	(_statusfp() & _EM_INEXACT)
+> #define HostClearExceptions()		_clear87(); _control87(MCW_EM, MCW_EM);
+> #else
+131d189
+< 
+132a191
+> #endif

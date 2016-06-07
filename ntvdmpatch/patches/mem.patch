@@ -1,0 +1,6 @@
+--- NT4\private\mvdm\dos\v86\cmd\mem\mem.c
++++ nt\private\mvdm\dos\v86\cmd\mem\mem.c
+93c93
+< 	unsigned DOS_TopOfMemory = 0;
+---
+> 	unsigned DOS_TopOfMemory = 0xA0000;

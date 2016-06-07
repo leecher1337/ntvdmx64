@@ -1,0 +1,1 @@
+call %_NTDRIVE%\nt\public\tools\sizzletst.cmd

@@ -1,0 +1,145 @@
+--- NT4\private\mvdm\softpc.new\host\src\nt_aorc.c
++++ nt\private\mvdm\softpc.new\host\src\nt_aorc.c
+155a156,161
+> #undef getSTATUS
+> GLOBAL IU32		getSTATUS()
+> {
+> 	return c_getSTATUS();
+> }
+> 
+187a194,204
+> #undef getFS
+> GLOBAL word		getFS()
+> {
+> 	return c_getFS();
+> }
+> 
+> #undef getGS
+> GLOBAL word		getGS()
+> {
+> 	return c_getGS();
+> }
+252a270,312
+> 
+> #undef getCR0
+> GLOBAL IU32 getCR0()
+> {
+> 	return c_getCR0();
+> }
+> 
+> #undef getEAX
+> GLOBAL IU32 getEAX()
+> {
+> 	return c_getEAX();
+> }
+> #undef getEBX
+> GLOBAL IU32 getEBX()
+> {
+> 	return c_getEBX();
+> }
+> #undef getECX
+> GLOBAL IU32 getECX()
+> {
+> 	return c_getECX();
+> }
+> #undef getEDX
+> GLOBAL IU32 getEDX()
+> {
+> 	return c_getEDX();
+> }
+> #undef getEDI
+> GLOBAL IU32 getEDI()
+> {
+> 	return c_getEDI();
+> }
+> #undef getESI
+> GLOBAL IU32 getESI()
+> {
+> 	return c_getESI();
+> }
+> #undef getEBP
+> GLOBAL IU32 getEBP()
+> {
+> 	return c_getEBP();
+> }
+> 
+418a479,491
+> #undef setGS
+> GLOBAL 	setGS(val)
+> word	val;
+> {
+> 	return c_setGS(val);
+> }
+> 
+> #undef setFS
+> GLOBAL 	setFS(val)
+> word	val;
+> {
+> 	return c_setFS(val);
+> }
+513a587
+> 
+527a602,664
+> }
+> 
+> #undef setEDI
+> void setEDI(val)
+> IU32  val;
+> {
+>     c_setEDI(val);
+> }
+> 
+> #undef setESI
+> void setESI(val)
+> IU32  val;
+> {
+>     c_setESI(val);
+> }
+> 
+> #undef setEBP
+> void setEBP(val)
+> IU32  val;
+> {
+>     c_setEBP(val);
+> }
+> 
+> #undef setEAX
+> void setEAX(val)
+> IU32  val;
+> {
+>     c_setEAX(val);
+> }
+> 
+> #undef setEBX
+> void setEBX(val)
+> IU32  val;
+> {
+>     c_setEBX(val);
+> }
+> 
+> #undef setECX
+> void setECX(val)
+> IU32  val;
+> {
+>     c_setECX(val);
+> }
+> 
+> #undef setEDX
+> void setEDX(val)
+> IU32  val;
+> {
+>     c_setEDX(val);
+> }
+> 
+> #undef setCR0
+> void setCR0(val)
+> IU32  val;
+> {
+>     c_setCR0(val);
+> }
+> 
+> #undef setCPL
+> void setCPL(val)
+> IUH val;
+> { 
+>     c_setCPL(val);

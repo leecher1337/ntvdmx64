@@ -1,0 +1,14 @@
+--- NT4\private\mvdm\softpc.new\base\ccpu386\gdpvar.h
++++ nt\private\mvdm\softpc.new\base\ccpu386\gdpvar.h
+693c693,695
+< #define GLOBAL_TraceVector ((IU8 *)((IUH)Gdp + 3512))
+---
+> #define GLOBAL_CurrentUniverse (*(IU32 *)((IUH)Gdp + 3512))
+> #define SET_GLOBAL_CurrentUniverse(v) (GLOBAL_CurrentUniverse = (v)) 
+> #define GLOBAL_TraceVector ((IU8 *)((IUH)Gdp + 3516))
+695c697
+< #define GDP_SIZE 43513
+---
+> #define GDP_SIZE 43517
+697a700
+> #define GDP_PTR Gdp

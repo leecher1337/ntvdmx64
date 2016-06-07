@@ -1,0 +1,20 @@
+--- NT4\private\mvdm\softpc.new\base\system\idetect.c
++++ nt\private\mvdm\softpc.new\base\system\idetect.c
+225a226,230
+> /* leecher1337: Set them up temporarily until BOP 5F so that 
+>  * NTVDM doesn't crash on startup */
+> static int temp_i_counter = 0;
+> static int temp_nCharPollsPerTick = 0;
+> static int temp_minConsecutiveTicks = 12;
+227c232
+< word *pICounter;
+---
+> word *pICounter = &temp_i_counter;
+230c235
+< word *pCharPollsPerTick;
+---
+> word *pCharPollsPerTick = &temp_nCharPollsPerTick;
+233c238
+< word *pMinConsecutiveTicks;
+---
+> word *pMinConsecutiveTicks = &temp_minConsecutiveTicks;

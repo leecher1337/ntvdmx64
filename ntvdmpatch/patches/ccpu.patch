@@ -1,0 +1,130 @@
+--- NT4\private\mvdm\softpc.new\base\ccpu386\c_bsic.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\c_bsic.c
+15a16
+> #include <stdlib.h>
+--- NT4\private\mvdm\softpc.new\base\ccpu386\c_page.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\c_page.c
+29a30
+> #include <yoda.h>
+--- NT4\private\mvdm\softpc.new\base\ccpu386\c_reg.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\c_reg.c
+12a13
+> #include <stdio.h>
+--- NT4\private\mvdm\softpc.new\base\ccpu386\c_xcptn.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\c_xcptn.c
+17a18
+> #include <stdlib.h>
+39a41,46
+> #ifdef i386
+> IMPORT char * __cdecl host_getenv IPT1 (char *, name);
+> #else
+> IMPORT char *host_getenv IPT1 (char *, name);
+> #endif
+> 
+42d48
+< 	IMPORT char *host_getenv IPT1 (char *, name);			\
+--- NT4\private\mvdm\softpc.new\base\ccpu386\cpu4gen.h
++++ nt\private\mvdm\softpc.new\base\ccpu386\cpu4gen.h
+265c265
+< #ifdef	CCPU
+---
+> #ifdef	CCPUxx
+270c270
+< #ifdef PROD
+---
+> #ifdef PRODxx
+--- NT4\private\mvdm\softpc.new\base\ccpu386\evidgen.h
++++ nt\private\mvdm\softpc.new\base\ccpu386\evidgen.h
+8a9,15
+> #ifdef i386
+> #define CDECL __cdecl
+> #else
+> #define CDECL 
+> #endif
+> 
+> 
+10,14c17,21
+< 	IU32	(*GetVideolatches)	IPT0();
+< 	void	(*SetVideolatches)	IPT1(IU32,	value);
+< 	void	(*setWritePointers)	IPT0();
+< 	void	(*setReadPointers)	IPT1(IUH,	readset);
+< 	void	(*setMarkPointers)	IPT1(IUH,	markset);
+---
+> 	IU32	(CDECL *GetVideolatches)	IPT0();
+> 	void	(CDECL *SetVideolatches)	IPT1(IU32,	value);
+> 	void	(CDECL *setWritePointers)	IPT0();
+> 	void	(CDECL *setReadPointers)	IPT1(IUH,	readset);
+> 	void	(CDECL *setMarkPointers)	IPT1(IUH,	markset);
+--- NT4\private\mvdm\softpc.new\base\ccpu386\fpu.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\fpu.c
+20a21
+> #include <stdio.h>
+--- NT4\private\mvdm\softpc.new\base\ccpu386\ntstubs.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\ntstubs.c
+0a1
+> #include <stdio.h>
+14c15
+< struct VideoVector Video;
+---
+> //struct VideoVector Video;
+--- NT4\private\mvdm\softpc.new\base\ccpu386\popf.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\popf.c
+28a29
+> #include <stdio.h>
+--- NT4\private\mvdm\softpc.new\base\ccpu386\zfrsrvd.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\zfrsrvd.c
+2726c2726
+< 	FXTRACT();
+---
+> 	FXTRACT(0);
+--- NT4\private\mvdm\softpc.new\base\ccpu386\sources
++++ nt\private\mvdm\softpc.new\base\ccpu386\sources
+178c178,179
+<     ntthread.c
+---
+>     ntthread.c \
+> 	vglob.c
+--- NT4\private\mvdm\softpc.new\base\support\xt.c
++++ nt\private\mvdm\softpc.new\base\support\xt.c
+164,165c164
+< #if defined(CPU_40_STYLE)
+< #if defined(PROD) && !defined(CCPU)
+---
+> #if defined(CPU_40_STYLE) && defined(PROD) && !defined(CCPU)
+172d170
+< #else	/* !CPU_40_STYLE */
+221d218
+< #endif	/* !CPU_40_STYLE */
+--- NT4\private\mvdm\softpc.new\host\src\nt_cpu.c
++++ nt\private\mvdm\softpc.new\host\src\nt_cpu.c
+155a156
+> #endif
+156a158,159
+> #if defined(A3CPU) || defined(CCPU)
+> #undef setSTATUS
+170a174
+> #endif
+171a176
+> #ifdef A3CPU
+276a282,284
+> #ifdef i386
+>     nt_cpu_info.in_nano_cpu = (BOOL *) ((IUH)Gdp + 560 + 3);
+> #else
+278,279c286,288
+< #endif /* ALPHA */
+< #ifndef PROD
+---
+> #endif /* i386 */
+> #endif /* ALPHA */
+> #if !defined(PROD) && !defined(i386)
+294a304,306
+> #ifdef i386
+>     nt_cpu_info.stack_is_big = (BOOL *) ((IUH)Gdp + 3096 + 3);
+> #else
+296,297c308,310
+< #endif /* ALPHA */
+< #ifndef PROD
+---
+> #endif /* i386 */
+> #endif /* ALPHA */
+> #if !defined(PROD) && !defined(i386)

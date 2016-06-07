@@ -1,0 +1,24 @@
+--- NT4\private\mvdm\dos\dem\dem.c
++++ nt\private\mvdm\dos\dem\dem.c
+59c59,60
+< 		fShowSVCMsg = DEMDOSDISP | DEMFILIO;
+---
+> 	        if (!(psz[1] && sscanf(psz+1, "%X", &fShowSVCMsg)))
+> 		    fShowSVCMsg = DEMDOSDISP | DEMFILIO;
+--- NT4\private\mvdm\softpc.new\base\debug\trace.c
++++ nt\private\mvdm\softpc.new\base\debug\trace.c
+491a492,499
+> 
+>  /* No YODA in i386, so let use set this via env too */
+>  start = host_getenv("SUB_IO_VERBOSE");
+>  if (start) sub_io_verbose = atoi(start);
+> 
+>  start = host_getenv("IO_VERBOSE");
+>  if (start) io_verbose = atoi(start);
+> 
+--- NT4\private\mvdm\softpc.new\base\support\main.c
++++ nt\private\mvdm\softpc.new\base\support\main.c
+178c178
+<   io_verbose = FALSE;
+---
+>   //io_verbose = FALSE;  // Already set in trace_init() and is initilized with 0 globally anway

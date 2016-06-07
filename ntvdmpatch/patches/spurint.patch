@@ -1,0 +1,8 @@
+--- NT4\private\mvdm\softpc.new\base\ccpu386\c_intr.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\c_intr.c
+213a214,218
+>    if (vector == (IU16)-1)
+>    {
+> 	   OutputDebugString("NTVDM: Spurious int!");
+> 	   return;	/* Ignore spurious interrupts */
+>    }

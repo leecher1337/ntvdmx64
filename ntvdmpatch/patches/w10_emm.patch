@@ -1,0 +1,28 @@
+--- NT4\private\mvdm\softpc.new\host\src\nt_emm.c
++++ nt\private\mvdm\softpc.new\host\src\nt_emm.c
+344a345
+> #ifndef i386
+366a368,369
+> #else
+> 	sys_addr from, to;	/* pointers used for copying	*/
+367a371,377
+> 	from = EM_PAGE_ADDRESS(EM_page_no);
+> 	to = effective_addr(segment, 0);
+> 
+> 	note_trace2(LIM_VERBOSE,"map page %d to segment 0x%4x", EM_page_no, segment);
+> 	EM_moves(from, to, EMM_PAGE_SIZE);
+> 	return(SUCCESS);
+> #endif
+396a407
+> #ifndef i386
+416a428,429
+> #else
+> 	sys_addr from, to;	/* pointers used for copying	*/
+417a431,437
+> 	to = EM_PAGE_ADDRESS(EM_page_no);
+> 	from = effective_addr(segment, 0);
+> 
+> 	EM_moves(from, to, EMM_PAGE_SIZE);
+> 	note_trace2(LIM_VERBOSE,"unmap page %d from segment 0x%.4x\n",EM_page_no,segment);
+> 	return(SUCCESS);
+> #endif

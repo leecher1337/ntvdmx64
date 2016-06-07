@@ -1,0 +1,72 @@
+--- NT4\private\mvdm\softpc.new\host\src\nt_bop.c
++++ nt\private\mvdm\softpc.new\host\src\nt_bop.c
+101c101
+< typedef ULONG (*MYFARPROC)();
+---
+> typedef ULONG (WINAPI *MYFARPROC)();
+196c196
+<     if ((WOWDispatchEntry = GetProcAddress(hWOWDll, "W32Dispatch")) == NULL)
+---
+>     if ((WOWDispatchEntry = (MYFARPROC)GetProcAddress(hWOWDll, "W32Dispatch")) == NULL)
+345,346c345,346
+< ULONG DefaultVrInitialized(VOID);
+< ULONG DefaultVrInitialized() {
+---
+> ULONG WINAPI DefaultVrInitialized(VOID);
+> ULONG WINAPI DefaultVrInitialized() {
+--- NT4\private\mvdm\softpc.new\host\src\nt_com.c
++++ nt\private\mvdm\softpc.new\host\src\nt_com.c
+64c64
+< DWORD PollCommsThread(PVOID pv);
+---
+> DWORD WINAPI PollCommsThread(PVOID pv);
+1411c1411
+< DWORD PollCommsThread(PVOID pv)
+---
+> DWORD WINAPI PollCommsThread(PVOID pv)
+--- NT4\private\mvdm\softpc.new\host\src\nt_error.c
++++ nt\private\mvdm\softpc.new\host\src\nt_error.c
+86c86
+< DWORD ErrorDialogBoxThread(VOID *pv);
+---
+> DWORD WINAPI ErrorDialogBoxThread(VOID *pv);
+648c648
+< DWORD ErrorDialogBoxThread(VOID *pv)
+---
+> DWORD WINAPI ErrorDialogBoxThread(VOID *pv)
+--- NT4\private\mvdm\softpc.new\host\src\nt_event.c
++++ nt\private\mvdm\softpc.new\host\src\nt_event.c
+229c229
+< DWORD ConsoleEventThread(PVOID pv);
+---
+> DWORD WINAPI ConsoleEventThread(PVOID pv);
+307c307
+< DWORD ConsoleEventThread(PVOID pv)
+---
+> DWORD WINAPI ConsoleEventThread(PVOID pv)
+--- NT4\private\mvdm\softpc.new\host\src\nt_thred.c
++++ nt\private\mvdm\softpc.new\host\src\nt_thred.c
+34c34
+< DWORD ThreadStartupRoutine(PVOID pv);
+---
+> DWORD WINAPI ThreadStartupRoutine(PVOID pv);
+112c112
+< DWORD ThreadStartupRoutine(PVOID pv)
+---
+> DWORD WINAPI ThreadStartupRoutine(PVOID pv)
+--- NT4\private\mvdm\softpc.new\host\src\nt_timer.c
++++ nt\private\mvdm\softpc.new\host\src\nt_timer.c
+199c199
+< DWORD HeartBeatThread(PVOID pv);
+---
+> DWORD WINAPI HeartBeatThread(PVOID pv);
+565c565
+< DWORD HeartBeatThread(PVOID pv)
+---
+> DWORD WINAPI HeartBeatThread(PVOID pv)
+--- NT4\private\mvdm\softpc.new\obj.vdm\ntvdm.c
++++ nt\private\mvdm\softpc.new\obj.vdm\ntvdm.c
+76c76
+< VOID
+---
+> VOID WINAPI

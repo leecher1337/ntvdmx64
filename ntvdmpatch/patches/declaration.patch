@@ -1,0 +1,28 @@
+--- NT4\private\mvdm\softpc.new\base\video\ega_writ.c
++++ nt\private\mvdm\softpc.new\base\video\ega_writ.c
+331,334c331,334
+< IMPORT VOID ega_copy_b_write();
+< IMPORT VOID ega_mode0_chn_b_write();
+< IMPORT VOID ega_mode1_chn_b_write();
+< IMPORT VOID ega_mode2_chn_b_write();
+---
+> IMPORT VOID ega_copy_b_write IFN2(ULONG, value, ULONG, offset);
+> IMPORT VOID ega_mode0_chn_b_write IFN2(ULONG, value, ULONG, offset);
+> IMPORT VOID ega_mode1_chn_b_write IFN2(ULONG, value, ULONG, offset);
+> IMPORT VOID ega_mode2_chn_b_write IFN2(ULONG, value, ULONG, offset);
+336,339c336,339
+< IMPORT VOID ega_copy_w_write();
+< IMPORT VOID ega_mode0_chn_w_write();
+< IMPORT VOID ega_mode1_chn_w_write();
+< IMPORT VOID ega_mode2_chn_w_write();
+---
+> IMPORT VOID ega_copy_w_write IFN2(ULONG, value, ULONG, offset);
+> IMPORT VOID ega_mode0_chn_w_write IFN2(ULONG, value, ULONG, offset);
+> IMPORT VOID ega_mode1_chn_w_write IFN2(ULONG, value, ULONG, offset);
+> IMPORT VOID ega_mode2_chn_w_write IFN2(ULONG, value, ULONG, offset);
+--- NT4\private\mvdm\softpc.new\host\src\stubs.c
++++ nt\private\mvdm\softpc.new\host\src\stubs.c
+612c612
+< void host_note_queue_added() 
+---
+> void host_note_queue_added(unsigned long x) 

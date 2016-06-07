@@ -1,0 +1,364 @@
+--- NT4\private\mvdm\bde\bdeutil.c
++++ nt\private\mvdm\bde\bdeutil.c
+39c39
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+--- NT4\private\mvdm\dbg\dbg.c
++++ nt\private\mvdm\dbg\dbg.c
+189c189
+< #ifdef i386
+---
+> #ifdef MONITOR
+200c200
+< #ifdef i386
+---
+> #ifdef MONITOR
+239c239
+< #ifdef i386
+---
+> #ifdef MONITOR
+302c302
+< #ifdef i386
+---
+> #ifdef MONITOR
+347c347
+< #ifdef i386
+---
+> #ifdef MONITOR
+377c377
+< #ifdef i386
+---
+> #ifdef MONITOR
+410c410
+< #ifdef i386
+---
+> #ifdef MONITOR
+457c457
+< #ifdef i386
+---
+> #ifdef MONITOR
+502c502
+< #ifdef i386
+---
+> #ifdef MONITOR
+544c544
+< #ifdef i386
+---
+> #ifdef MONITOR
+557c557
+< #ifdef i386
+---
+> #ifdef MONITOR
+581c581
+< #ifdef i386
+---
+> #ifdef MONITOR
+598c598
+< #ifdef i386
+---
+> #ifdef MONITOR
+652c652
+< #ifdef i386
+---
+> #ifdef MONITOR
+665c665
+< #ifdef i386
+---
+> #ifdef MONITOR
+691c691
+< #ifdef i386
+---
+> #ifdef MONITOR
+708c708
+< #ifdef i386
+---
+> #ifdef MONITOR
+760c760
+< #ifdef i386
+---
+> #ifdef MONITOR
+766c766
+< #ifdef i386
+---
+> #ifdef MONITOR
+779c779
+< #ifdef i386
+---
+> #ifdef MONITOR
+872c872
+< #ifdef i386
+---
+> #ifdef MONITOR
+889c889
+< #ifdef i386
+---
+> #ifdef MONITOR
+953c953
+< #ifdef i386
+---
+> #ifdef MONITOR
+966c966
+< #ifdef i386
+---
+> #ifdef MONITOR
+990c990
+< #ifdef i386
+---
+> #ifdef MONITOR
+1007c1007
+< #ifdef i386
+---
+> #ifdef MONITOR
+1070c1070
+< #ifdef i386
+---
+> #ifdef MONITOR
+1084c1084
+< #ifdef i386
+---
+> #ifdef MONITOR
+1140c1140
+< #ifdef i386
+---
+> #ifdef MONITOR
+1157c1157
+< #ifdef i386
+---
+> #ifdef MONITOR
+1220c1220
+< #ifdef i386
+---
+> #ifdef MONITOR
+1527c1527
+< #ifdef i386
+---
+> #ifdef MONITOR
+1542c1542
+< #ifdef i386
+---
+> #ifdef MONITOR
+1615c1615
+< #ifdef i386
+---
+> #ifdef MONITOR
+1632c1632
+< #ifdef i386
+---
+> #ifdef MONITOR
+--- NT4\private\mvdm\dpmi32\data.c
++++ nt\private\mvdm\dpmi32\data.c
+126c126
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\dpmi32.c
++++ nt\private\mvdm\dpmi32\dpmi32.c
+247c247
+< #if defined(i386)
+---
+> #if defined(i386) && defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\dpmi32p.h
++++ nt\private\mvdm\dpmi32\dpmi32p.h
+29c29
+< #ifdef i386
+---
+> #if defined(i386) && defined(MONITOR)
+53c53
+< #ifdef i386
+---
+> #if defined(i386) && defined(MONITOR)
+109c109
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\dpmidata.h
++++ nt\private\mvdm\dpmi32\dpmidata.h
+31c31
+< #ifdef i386 
+---
+> #if defined(i386) && defined(MONITOR) 
+57a58
+> #ifndef i386
+81a83
+> #endif
+--- NT4\private\mvdm\dpmi32\dpmiint.c
++++ nt\private\mvdm\dpmi32\dpmiint.c
+88c88
+< #ifdef i386
+---
+> #if defined(i386) && defined(MONITOR)
+387c387
+< #ifdef i386
+---
+> #if defined(i386) && defined(MONITOR)
+689c689
+< #ifdef i386
+---
+> #if defined(i386) && defined(MONITOR)
+798c798
+< #ifdef i386
+---
+> #if defined(i386) && defined(MONITOR)
+859c859
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+1167c1167
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+1201c1201
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+1237c1237
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\dpmiint.h
++++ nt\private\mvdm\dpmi32\dpmiint.h
+23c23
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\dpmiselr.c
++++ nt\private\mvdm\dpmi32\dpmiselr.c
+40c40
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+147c147
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+164c164
+< #ifdef i386
+---
+> #if defined(i386) && defined(MONITOR)
+172c172
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+185c185
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\modesw.c
++++ nt\private\mvdm\dpmi32\modesw.c
+49c49
+< #if defined(i386)
+---
+> #if defined(i386) && defined(MONITOR)
+68c68
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+97c97
+< #if defined(i386)
+---
+> #if defined(i386) && defined(MONITOR)
+114c114
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+--- NT4\private\mvdm\inc\softpc.h
++++ nt\private\mvdm\inc\softpc.h
+225c225,226
+< #ifdef i386
+---
+> 
+> #ifdef MONITOR
+--- NT4\private\mvdm\inc\wow.h
++++ nt\private\mvdm\inc\wow.h
+29c29
+< #ifdef i386
+---
+> #ifdef MONITOR
+--- NT4\private\mvdm\softpc.new\base\dos\emm_mngr.c
++++ nt\private\mvdm\softpc.new\base\dos\emm_mngr.c
+80c80
+< #if defined(NTVDM) && defined(MONITOR)
+---
+> #if defined(NTVDM)
+1883c1883
+< #ifndef NTVDM
+---
+> #if !defined(NTVDM) || defined(CCPU)
+--- NT4\private\mvdm\softpc.new\host\inc\host_def.h
++++ nt\private\mvdm\softpc.new\host\inc\host_def.h
+144c144
+< #if !defined(MONITOR) && !defined(PROD)
+---
+> #if !defined(i386) && !defined(PROD)
+--- NT4\private\mvdm\softpc.new\host\src\config.c
++++ nt\private\mvdm\softpc.new\host\src\config.c
+506c506
+< #ifdef i386
+---
+> #ifdef MONITOR
+--- NT4\private\mvdm\softpc.new\host\src\nt_msscs.c
++++ nt\private\mvdm\softpc.new\host\src\nt_msscs.c
+123c123
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+--- NT4\private\mvdm\softpc.new\obj.vdm\ntvdm.src
++++ nt\private\mvdm\softpc.new\obj.vdm\ntvdm.src
+4c4
+< #if defined(i386)
+---
+> #if defined(MONITOR)
+95a96,99
+> 
+> #if defined(i386)
+>     MGetVdmPointer = ExpSim32GetVDMPointer
+> #endif
+--- NT4\private\mvdm\vdmexts\misc.c
++++ nt\private\mvdm\vdmexts\misc.c
+508c508
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+567c567
+< #ifdef i386
+---
+> #ifdef MONITOR
+583c583
+< #ifdef i386
+---
+> #ifdef MONITOR
+671c671
+< #ifdef i386
+---
+> #ifdef MONITOR
+687c687
+< #ifdef i386
+---
+> #ifdef MONITOR
+--- NT4\private\mvdm\xms.486\xms.c
++++ nt\private\mvdm\xms.486\xms.c
+47c47
+< #ifndef i386
+---
+> #ifndef MONITOR
+67c67
+< #ifndef i386
+---
+> #ifndef MONITOR
+--- NT4\private\mvdm\xms.486\xms.h
++++ nt\private\mvdm\xms.486\xms.h
+60c60
+< #ifndef i386
+---
+> #ifndef MONITOR
+149c149
+< #ifndef i386
+---
+> #ifndef MONITOR
+--- NT4\private\mvdm\xms.486\xmsblock.c
++++ nt\private\mvdm\xms.486\xmsblock.c
+194c194
+< #ifdef i386
+---
+> #ifdef MONITOR

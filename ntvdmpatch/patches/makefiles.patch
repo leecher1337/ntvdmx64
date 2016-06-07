@@ -1,0 +1,226 @@
+--- NT4\private\mvdm\dpmi\makefile
++++ nt\private\mvdm\dpmi\makefile
+16a17,18
+> PLATFORM = PPC
+> 
+27c29
+< PLATFORM = x86
+---
+> # PLATFORM = x86
+29c31
+< PLATFORM = $(PROCESSOR_ARCHITECTURE)
+---
+> # PLATFORM = $(PROCESSOR_ARCHITECTURE)
+37,40c39,42
+< !IF "$(PLATFORM)" == "x86"
+< EXTRA_OPTIONS = -DWOW -DWOW_$(PLATFORM) -Di386 -DFLATAPIXLAT -DXMEMNT -DMD
+< LNKFILE = dosxi.lnk
+< !ENDIF
+---
+> # !IF "$(PLATFORM)" == "x86"
+> # EXTRA_OPTIONS = -DWOW -DWOW_$(PLATFORM) -Di386 -DFLATAPIXLAT -DXMEMNT -DMD
+> # LNKFILE = dosxi.lnk
+> # !ENDIF
+47a50
+> 
+66,68c69,71
+< !IF "$(PLATFORM)" == "x86"
+< 	$(DEST486)\ntnpxem.obj	\
+< !ENDIF
+---
+> # !IF "$(PLATFORM)" == "x86"
+> # 	$(DEST486)\ntnpxem.obj	\
+> # !ENDIF
+--- NT4\private\mvdm\dpmi32\sources
++++ nt\private\mvdm\dpmi32\sources
+56,57c56,57
+< i386_SOURCES=i386\dpmi386.c i386\dpmimem.c i386\dpmimisc.c
+< 
+---
+> #i386_SOURCES=i386\dpmi386.c i386\dpmimem.c i386\dpmimisc.c
+> i386_SOURCES=dpmimemr.c dpmimscr.c
+62d61
+< C_DEFINES=-DLINKED_INTO_MONITOR
+--- NT4\private\mvdm\softpc.new\base\ccpu386\ccpudefs.inc
++++ nt\private\mvdm\softpc.new\base\ccpu386\ccpudefs.inc
+1c1
+< C_DEFINES= -DCPU_30_STYLE -DCPU_40_STYLE -DNEW_CPU -DCCPU -DSPC386 -DANSI -DNTVDM
+---
+> C_DEFINES= -DCPU_30_STYLE -DCPU_40_STYLE -DNEW_CPU -DCCPU -DSPC386 -DANSI -DNTVDM -DPROD
+--- NT4\private\mvdm\softpc.new\base\dasm386\sources
++++ nt\private\mvdm\softpc.new\base\dasm386\sources
+61c61
+< i386_SOURCES=
+---
+> i386_SOURCES=$(PPC_SOURCES)
+--- NT4\private\mvdm\softpc.new\base\dirs
++++ nt\private\mvdm\softpc.new\base\dirs
+26a27
+>         ccpu386 \
+27a29
+>         cvidc \
+--- NT4\private\mvdm\softpc.new\base\system\sources
++++ nt\private\mvdm\softpc.new\base\system\sources
+59d58
+<         qevnt.c       \
+64c63,65
+<         unexp_nt.c
+---
+>         unexp_nt.c    \
+> 	  quick_ev.c
+> #        qevnt.c       
+65a67
+> 
+--- NT4\private\mvdm\softpc.new\host\src\sources
++++ nt\private\mvdm\softpc.new\host\src\sources
+107c107
+< i386_SOURCES=
+---
+> i386_SOURCES=nt_aorc.c
+--- NT4\private\mvdm\softpc.new\obj.vdm\cdefine.inc
++++ nt\private\mvdm\softpc.new\obj.vdm\cdefine.inc
+2a3
+> #NTDEBUG=
+34,39c35,40
+< !IF $(386)
+< 
+< SPC_MC_DEF=   -DMONITOR \
+<               -DC_VID   \
+<               -DX86GFX
+< !ELSE
+---
+> #!IF $(386)
+> #
+> #SPC_MC_DEF=   -DMONITOR \
+> #              -DC_VID   \
+> #              -DX86GFX
+> #!ELSE
+42a44
+> CCPU=1
+53,54c55,56
+< 	      -DV7VGA
+< 
+---
+> 	      -DV7VGA \
+> 	      -DW10
+64a67,68
+> CPU_INCLUDES=$(SOFTPC_TREE)\base\Ccpu386
+> 
+67c71
+< !ENDIF
+---
+> #!ENDIF
+--- NT4\private\mvdm\softpc.new\obj.vdm\sources
++++ nt\private\mvdm\softpc.new\obj.vdm\sources
+35c35
+< INCLUDES=$(SOFTPC_TREE)\host\inc;$(SOFTPC_TREE)\base\inc
+---
+> INCLUDES=$(SOFTPC_TREE)\host\inc;$(SOFTPC_TREE)\base\inc;$(BASEDIR)\private\windows\inc
+44,50c44,50
+< !if $(386)
+< TARGETLIBS=\
+<         $(BASEDIR)\public\sdk\lib\*\gdi32.lib     \
+<         $(BASEDIR)\public\sdk\lib\*\user32p.lib   \
+<         $(BASEDIR)\public\sdk\lib\*\ntdll.lib   \
+<         $(BASEDIR)\public\sdk\lib\*\advapi32.lib
+< !else
+---
+> #!if $(386)
+> #TARGETLIBS=\
+> #        $(BASEDIR)\public\sdk\lib\*\gdi32.lib     \
+> #        $(BASEDIR)\public\sdk\lib\*\user32p.lib   \
+> #        $(BASEDIR)\public\sdk\lib\*\ntdll.lib   \
+> #        $(BASEDIR)\public\sdk\lib\*\advapi32.lib
+> #!else
+57c57
+< !endif
+---
+> #!endif
+70,92c70,92
+< !if $(386)
+< LINKLIBS = \
+<      $(SOFTPC_TREE)\base\support\obj\*\MAIN.obj \
+<      $(SOFTPC_TREE)\host\src\obj\*\FPRT.OBJ     \
+<      $(SOFTPC_TREE)\base\system\obj\*\SYSTEM.LIB    \
+<      $(SOFTPC_TREE)\base\bios\obj\*\BIOS.LIB    \
+<      $(SOFTPC_TREE)\base\video\obj\*\VIDEO.LIB  \
+<      $(SOFTPC_TREE)\base\dos\obj\*\DOS.LIB      \
+<      $(SOFTPC_TREE)\base\comms\obj\*\COMMS.LIB  \
+<      $(SOFTPC_TREE)\base\debug\obj\*\DEBUG.LIB  \
+<      $(SOFTPC_TREE)\base\support\obj\*\SUPPORT.LIB  \
+<      $(SOFTPC_TREE)\base\disks\obj\*\DISKS.LIB  \
+<      $(SOFTPC_TREE)\base\keymouse\obj\*\KEYMOUSE.LIB \
+<      $(SOFTPC_TREE)\host\src\obj\*\SRC.LIB      \
+<      $(BASEDIR)\public\sdk\lib\*\monitor.lib        \
+<      $(BASEDIR)\public\sdk\lib\*\dem.lib    \
+<      $(BASEDIR)\public\sdk\lib\*\dbg.lib    \
+<      $(BASEDIR)\public\sdk\lib\*\command.lib        \
+<      $(BASEDIR)\public\sdk\lib\*\dpmi32.lib \
+<      $(BASEDIR)\public\sdk\lib\*\xms486.lib \
+<      $(BASEDIR)\public\sdk\lib\*\suballoc.lib    \
+<      $(BASEDIR)\public\sdk\lib\*\oemuni.lib
+< !else
+---
+> #!if $(386)
+> #LINKLIBS = \
+> #     $(SOFTPC_TREE)\base\support\obj\*\MAIN.obj \
+> #     $(SOFTPC_TREE)\host\src\obj\*\FPRT.OBJ     \
+> #     $(SOFTPC_TREE)\base\system\obj\*\SYSTEM.LIB    \
+> #     $(SOFTPC_TREE)\base\bios\obj\*\BIOS.LIB    \
+> #     $(SOFTPC_TREE)\base\video\obj\*\VIDEO.LIB  \
+> #     $(SOFTPC_TREE)\base\dos\obj\*\DOS.LIB      \
+> #     $(SOFTPC_TREE)\base\comms\obj\*\COMMS.LIB  \
+> #     $(SOFTPC_TREE)\base\debug\obj\*\DEBUG.LIB  \
+> #     $(SOFTPC_TREE)\base\support\obj\*\SUPPORT.LIB  \
+> #     $(SOFTPC_TREE)\base\disks\obj\*\DISKS.LIB  \
+> #     $(SOFTPC_TREE)\base\keymouse\obj\*\KEYMOUSE.LIB \
+> #     $(SOFTPC_TREE)\host\src\obj\*\SRC.LIB      \
+> #     $(BASEDIR)\public\sdk\lib\*\monitor.lib        \
+> #     $(BASEDIR)\public\sdk\lib\*\dem.lib    \
+> #     $(BASEDIR)\public\sdk\lib\*\dbg.lib    \
+> #     $(BASEDIR)\public\sdk\lib\*\command.lib        \
+> #     $(BASEDIR)\public\sdk\lib\*\dpmi32.lib \
+> #     $(BASEDIR)\public\sdk\lib\*\xms486.lib \
+> #     $(BASEDIR)\public\sdk\lib\*\suballoc.lib    \
+> #     $(BASEDIR)\public\sdk\lib\*\oemuni.lib
+> #!else
+98c98
+< LINKER_FLAGS=$(LINKER_FLAGS) -INCLUDE:__mb_cur_max -INCLUDE:_pctype
+---
+> # LINKER_FLAGS=$(LINKER_FLAGS) -INCLUDE:__mb_cur_max -INCLUDE:_pctype
+122c122
+< !endif
+---
+> #!endif
+132,136c132,137
+< !if "$(CCPU)" == ""
+< CPULIBS=$(SOFTPC_TREE)\*\libs\a4$(PD).lib
+< !else
+< CPULIBS=$(SOFTPC_TREE)\obj.vdm\obj\*\ccpu486.lib
+< !endif
+---
+> #!if "$(CCPU)" == ""
+> #CPULIBS=$(SOFTPC_TREE)\*\libs\a4$(PD).lib
+> #!else
+> #CPULIBS=$(SOFTPC_TREE)\obj.vdm\obj\*\ccpu486.lib
+> CPULIBS=$(SOFTPC_TREE)\base\ccpu386\obj\*\ccpu386.lib $(SOFTPC_TREE)\base\cvidc\obj\*\cvidc.lib
+> #!endif
+138a140
+> 	fmstubs.c \
+--- NT4\private\mvdm\xms.486\i386\sources
++++ nt\private\mvdm\xms.486\i386\sources
+2c2,3
+< i386_SOURCES=i386\xmsmem86.c
+---
+> #i386_SOURCES=i386\xmsmem86.c
+> i386_SOURCES=..\xmsmemr.c
+--- NT4\private\mvdm\wow32\i386\sources
++++ nt\private\mvdm\wow32\i386\sources
+1,3c1,3
+< I386_SOURCES=         \
+<     i386\fastwow.asm  \
+<     i386\callpr32.asm
+---
+> #I386_SOURCES=         \
+> #    i386\fastwow.asm  \
+> #    i386\callpr32.asm

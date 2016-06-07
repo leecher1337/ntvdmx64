@@ -1,0 +1,18 @@
+List of registry patches needed for installation
+------------------------------------------------
+appinit.reg  - Tells Windows to allow us to load our ldntvdm.dll 
+ldntvdm.reg  - Makes Windows load our ldntvdm.dll Windows Bugfixes 
+               and loader code on startup into every GUI app, so that 
+               DOS-applications can be started properly again and 
+               NTVDM runs correctly.
+               !!!CAUTION!! This .reg file will OVERWRITE AppInit_DLLs key's
+               values, therefe DO NOT USE THIS! Better use install.bat
+               installation routine which takes care of this situation!
+conhost.reg  - Foreces Windows Console to be version 1, so that it supports
+               all the features required by the NTVDM.
+vdd.reg      - Setup Path in Registry for Virtual device drivers so that NTVDM
+               can run.
+               !!!CAUTION!! This .reg fie will OVERWRITE any existing VDD
+               extensions that you may have registered. Better use install.bat
+               installation routine which takes care of this situation!
+wow.reg      - Register necessay WOW-keys in Windows so that NTVDM can run.

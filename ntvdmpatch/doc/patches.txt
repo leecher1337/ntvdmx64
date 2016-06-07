@@ -1,0 +1,58 @@
+Description of the necessary patches included in this package
+-------------------------------------------------------------
+
+callconv.patch      - Patches wrong calling conventions in host-code
+ccpu.patch          - Patches the CCPU to compile on i386
+ccpu_regs.patch     - Adds functions to access registers from the CCPU 
+                      externally from other omdules requiring them.
+console.patch       - Fixes console startup bug that would otherwise not init
+                      colors of console properly and would therefore cause
+                      black chars on black screen.
+cvidc.patch         - Patches the Video controller CPU to work in i386
+debug.patch         - Adds some useful debugging settings to enable debugging
+                      without needing to have master YODA in place.
+declaration.patch   - In cdecl calling convention, prototypes of functions
+                      without parameters are possible, but on Windows with
+                      __sdtcall, this would cause linking errors.
+                      This patch fixes wrong declarations.
+ega_crash.patch     - Console graphics is required, as newer Windows display 
+                      drivers with WDDM driver model do not support fullscreen
+                      anymore. Some DOS programs, like i.e. Commander Keen 4, 
+                      try to paint outside the screen boundaries which causes
+                      crashes when not properly checked, so added checks for 
+                      this.
+fpu.patch           - The FPU of the CCPU is optimized for MIPS/PPC 
+                      architecture and not Intel i386. This patch fixes 
+                      declarations for FPU-Type to compile on x86 systems.
+gdpvar.patch        - The CCPU definitions copied over from CVIDC do not 
+                      include some necessary state words, this adds them.
+heartbeat.patch     - This prevents a freeze of the idle timer
+include.patch       - Patches some missing includes
+makefiles.patch     - This is a CRUDE HACK(!) for the Makefiles of NTVDM to
+                      forcefully compile a CCPU (emulated) Version without
+                      MONITOR on i386. We should definitely fix them, i.e. 
+                      with a special makefile target for CCPU i386 build, but
+                      for the time being, we leave it to this hackery.
+mem.patch           - Fixes a hack that was done to the mem-command by 
+                      Stephanos (not present in original NT4 source)
+monitor.patch       - In a lot of #ifdefs, i386 is assumed to include V86 
+                      MONITOR code from Kernel. As we want a CCPU-Only build,
+                      change #ifdef i386 to check for MONITOR define in order
+                      to be able to build V86 an non-V86 i386 builds.
+                      -DMONITOR should be added to some makefiles for the V86
+                      build then as a consequence to be able to do both builds
+                      lateron, when crude makefiles.patch gets cleaned up.
+sas4gen.patch       - Fix sas4gen CCPU header file
+spurint.patch       - Fix crash on spurious Interrupts
+timers.patch        - Fix crash on startup caued by uninitialized timer 
+                      defaults.
+w10.patch           - Patches function calls that changed in later versions
+                      of Windows so that NTVDM also works on Windows 10
+                      and not only NT4 where source originates from.
+w10_emm.patch       - x64 systems cannot allocate with 4k page granularity as
+                      required by NTVDM, therefore use different EMS 
+                      allocation functions on these Windows versions.
+                      (Also see makefile-patches so that correct EMS-manager
+                      code is used)
+wow32.patch         - Crude hack to disable WOW32, we do not currently support
+                      it, this is just for DOS

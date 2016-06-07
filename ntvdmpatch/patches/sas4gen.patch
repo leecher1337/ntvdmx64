@@ -1,0 +1,52 @@
+--- NT4\private\mvdm\softpc.new\base\ccpu386\sas4gen.h
++++ nt\private\mvdm\softpc.new\base\ccpu386\sas4gen.h
+59a60
+> typedef	IU8 *	TYPE_sas_touch	IPT2(IU32,	addr, IU32,	length);
+60a62,63
+> typedef	IU32	TYPE_VirtualiseInstruction	IPT4(IU32,	eipInRom, IUH,	size, IU32,	linearAddrOrPort, IU32,	dataIn);
+> typedef	IBOOL	TYPE_IsPageInstanceData	IPT1(IU32,	physAddr);
+116a120
+> 	IU8 *	(*Sas_touch)	IPT2(IU32,	addr, IU32,	length);
+117a122,123
+> 	IU32	(*SasVirtualiseInstruction)	IPT4(IU32,	eipInRom, IUH,	size, IU32,	linearAddrOrPort, IU32,	dataIn);
+> 	IBOOL	(*IsPageInstanceData)	IPT1(IU32,	physAddr); 
+823a830,842
+> IMPORT	IU8 *	c_sas_touch	IPT2(IU32, addr, IU32, length);
+> #define	sas_touch(addr, length)	c_sas_touch(addr, length)
+> #else	/* CCPU */
+> 
+> #ifdef PROD
+> #define	sas_touch(addr, length)	(*(Sas.Sas_touch))(addr, length)
+> #else /* PROD */
+> IMPORT	IU8 *	sas_touch	IPT2(IU32, addr, IU32, length);
+> #endif /*PROD*/
+> 
+> #endif	/* CCPU */
+> 
+> #ifdef	CCPU
+835a855,879
+> #ifdef	CCPU
+> IMPORT	IU32	c_VirtualiseInstruction	IPT4(IU32, eipInRom, IUH, size, IU32, linearAddrOrPort, IU32, dataIn);
+> #define	VirtualiseInstruction(eipInRom, size, linearAddrOrPort, dataIn)	c_VirtualiseInstruction(eipInRom, size, linearAddrOrPort, dataIn)
+> #else	/* CCPU */
+> 
+> #ifdef PROD
+> #define	VirtualiseInstruction(eipInRom, size, linearAddrOrPort, dataIn)	(*(Sas.SasVirtualiseInstruction))(eipInRom, size, linearAddrOrPort, dataIn)
+> #else /* PROD */
+> IMPORT	IU32	VirtualiseInstruction	IPT4(IU32, eipInRom, IUH, size, IU32, linearAddrOrPort, IU32, dataIn);
+> #endif /*PROD*/
+> 
+> #endif	/* CCPU */
+> 
+> #ifdef	CCPU
+> 
+> #else	/* CCPU */ 
+> 
+> #ifdef PROD
+> #define	IsPageInstanceData(physAddr)	(*(Sas.IsPageInstanceData))(physAddr)
+> #else /* PROD */
+> IMPORT	IBOOL	IsPageInstanceData	IPT1(IU32, physAddr);
+> #endif /*PROD*/
+> 
+> #endif	/* CCPU */
+> 

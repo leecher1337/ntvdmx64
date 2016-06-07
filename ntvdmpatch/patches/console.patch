@@ -1,0 +1,12 @@
+--- NT4\private\mvdm\softpc.new\host\src\nt_fulsc.c
++++ nt\private\mvdm\softpc.new\host\src\nt_fulsc.c
+963a964
+> SetConsoleTextAttribute(sc.OutputHandle, sc.PCBackground);
+--- NT4\private\mvdm\softpc.new\host\src\nt_graph.c
++++ nt\private\mvdm\softpc.new\host\src\nt_graph.c
+653c653,654
+<     sc.PCBackground = RGB(0,0,0);        /* Black RGB */
+---
+>     //sc.PCBackground = RGB(0,0,0);        /* Black RGB */
+> 	sc.PCBackground = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE; /* White on black */
+

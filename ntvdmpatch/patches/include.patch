@@ -1,0 +1,15 @@
+--- NT4\private\mvdm\softpc.new\base\inc\ckmalloc.h
++++ nt\private\mvdm\softpc.new\base\inc\ckmalloc.h
+21a22
+> #include MallocH
+--- NT4\private\mvdm\softpc.new\host\src\nt_mem.c
++++ nt\private\mvdm\softpc.new\host\src\nt_mem.c
+39a40
+> #include <stdio.h>
+
+--- NT4\private\mvdm\softpc.new\base\bios\virtual.c
++++ nt\private\mvdm\softpc.new\base\bios\virtual.c
+21c21
+< #if defined(NTVDM) && defined(MONITOR)
+---
+> #if defined(NTVDM)

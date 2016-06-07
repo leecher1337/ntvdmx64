@@ -1,0 +1,40 @@
+--- NT4\private\mvdm\wow32\fastwow.h
++++ nt\private\mvdm\wow32\fastwow.h
+14c14
+< #if defined(i386) && !defined(DEBUG_OR_WOWPROFILE)
+---
+> #if defined(i386xx) && !defined(DEBUG_OR_WOWPROFILE)
+--- NT4\private\mvdm\wow32\wkgthunk.c
++++ nt\private\mvdm\wow32\wkgthunk.c
+174c174
+< #ifdef i386
+---
+> #ifdef i386xx
+--- NT4\private\mvdm\wow32\wow32.c
++++ nt\private\mvdm\wow32\wow32.c
+122c122
+< #ifndef _X86_
+---
+> #ifndef _X86xx_
+162c162
+< #if defined (_X86_)
+---
+> #if defined (_X86xx_)
+473c473
+< #ifdef _X86_
+---
+> #ifdef _X86xx_
+475c475
+< #endif                                             // UP.
+---
+> #else                                             // UP.
+477d476
+< #ifndef _X86_
+1077c1076
+< #if NO_W32TRYCALL
+---
+> #if NO_W32TRYCALLxx
+1824c1823
+< #ifdef _X86_
+---
+> #ifdef _X86xx_
