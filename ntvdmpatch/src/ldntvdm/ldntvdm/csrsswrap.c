@@ -458,9 +458,25 @@ NTSTATUS NTAPI myCsrClientCallServer(BASE_API_MSG *m, PCSR_CAPTURE_HEADER Captur
 	return Status;
 }
 
+/* wow64!whNtWow64CsrAllocateMessagePointer just pipes through our call to x64 end, but this assumes that destination
+ * pointers are 64bit whereas in 32bit they are only DWORDs which leads to memory overwrites in the 32bit 
+ * structures being allocated. Therefore we need to catch these calls too and ensure that they do not overwrite
+ * anything
+ */
+ULONG NTAPI myCsrAllocateMessagePointer(struct _CSR_CAPTURE_BUFFER *CaptureBuffer, ULONG MessageLength, PVOID *CaptureData)
+{
+	ULONGLONG CapturePtr;
+	ULONG Status;
+
+	Status = CsrAllocateMessagePointer(CaptureBuffer, MessageLength, &CapturePtr);
+	*((ULONG*)CaptureData) = (ULONG)CapturePtr;
+	return Status;
+}
+
 void HookCsrClientCallServer()
 {
 	Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(_T("kernel32.dll")), "ntdll.dll", "CsrClientCallServer", myCsrClientCallServer, &CsrClientCallServerReal);
+	Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(_T("kernel32.dll")), "ntdll.dll", "CsrAllocateMessagePointer", myCsrAllocateMessagePointer, NULL);
 }
 
 #endif
