@@ -60,3 +60,20 @@
 >     if (bSwitchF == FALSE)
 >         ExitProcess (0);
 >  */
+--- NT4\private\ntos\w32\ntcon\client\private.c
++++ nt\private\ntos\w32\ntcon\client\private.c
+355a356
+> #ifndef W10
+357a359
+> #endif
+388a391,394
+> #ifdef W10
+>     LPWSTR lpVDMBufferSectionName = NULL;
+>     DWORD dwVDMBufferSectionNameLength = 0;
+> #endif
+--- NT4\private\ntos\w32\ntcon\client\sources
++++ nt\private\ntos\w32\ntcon\client\sources
+19c19
+< C_DEFINES=$(C_DEFINES) -D_KERNEL32_
+---
+> C_DEFINES=$(C_DEFINES) -D_KERNEL32_ -DW10

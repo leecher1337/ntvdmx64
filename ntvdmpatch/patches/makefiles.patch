@@ -224,3 +224,11 @@
 > #I386_SOURCES=         \
 > #    i386\fastwow.asm  \
 > #    i386\callpr32.asm
+--- NT4\private\mvdm\makefil0
++++ nt\private\mvdm\makefil0
+43a44,45
+>     binplace $(SOFTPC_TREE)\data\*.r?m
+>     binplace $(SOFTPC_TREE)\data\profile.spc
+49,50d50
+<     binplace $(SOFTPC_TREE)\data\*.r?m
+<     binplace $(SOFTPC_TREE)\data\profile.spc

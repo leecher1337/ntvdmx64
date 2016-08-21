@@ -148,15 +148,21 @@ will happen, they seem to forget about us DOS-users. :-(
 
 Here is a short howto on how to compile this:
 1) Prepare your machine according the the OpenNT project build instructions:
-   a) Unpack old-src.trunk.r687.20150728.7z to a directory
-   b) Unpack old-sdk.trunk_r57.20150728.7z to public\sdk
+   a) Unpack contents of old-src directory from 
+      old-src.trunk.r687.20150728.7z to your working directory
+      You do not need to extract the .svn folder in it
+   b) Create directory nt\public\sdk in your working directory and 
+      unpack the contentes of old-sdk directory from 
+      old-sdk.trunk_r57.20150728.7z to it.
+      You do not need to extract the .svn folder in it
    c) Ensure that you don't have w: drive already assigned and then
-      setup w: drive to point to the old-src directory by typing
+      setup w: drive to point to the working directory by typing
       SUBST W: .
-      inside the old-src directory and then switch to W:
+      inside the working directory and then switch to W:
 2) Now extract the ntvdmpatch directory from this source repository
    to the root of W: drive 
-3) Run the patch.cmd file to patch the sourcecode tree accordingly
+3) Run the patch.cmd file inside the ntvdmpatch directory to patch 
+   the sourcecode tree accordingly
 4) Run zSHtst.cmd to enter build shell where you then type:
    a) bld-ntos.cmd 
       to build base components that are required for building NTVDM.

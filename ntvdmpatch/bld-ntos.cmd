@@ -27,6 +27,22 @@ build %BldFlags%
 cd %_NTROOT%\private
 echo.
 
+echo Now building prereq for Win10 kernel32.lib
+cd %_NTROOT%\private\lsa
+build %BldFlags%
+echo.
+cd %_NTROOT%\private\windows\winnls
+build %BldFlags%
+echo.
+cd %_NTROOT%\private\windows\screg
+build %BldFlags%
+echo.
+echo Building W10 kernel32.lib
+cd %_NTROOT%\private\windows\base
+build  %BldFlags%
+cd %_NTROOT%\private
+echo.
+
 :Error
 echo.
 echo Build error. Process aborted.
