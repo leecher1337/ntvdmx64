@@ -95,15 +95,26 @@ BOOL Hook_IAT_x64_IAT(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char F
 			PIMAGE_THUNK_DATA ThunkData = (PIMAGE_THUNK_DATA)(hMod + idata->OriginalFirstThunk);
 			PULONG_PTR Address = (PULONG_PTR)(hMod + idata->FirstThunk);
 			for (i = 0; ThunkData->u1.ForwarderString; i++) {
-				if (!(ThunkData->u1.AddressOfData & IMAGE_ORDINAL_FLAG) && !lstrcmpA((char*)(hMod + ThunkData->u1.ForwarderString + 2), FunName))
+				if (!(ThunkData->u1.AddressOfData & IMAGE_ORDINAL_FLAG))
 				{
-					DWORD OldProt;
-					VirtualProtect(&Address[i], sizeof(ULONG_PTR), PAGE_READWRITE, &OldProt);
-					if (OldFun) *OldFun = Address[i];
-					Address[i] = (ULONG_PTR)NewFun;
-					VirtualProtect(&Address[i], sizeof(ULONG_PTR), OldProt, &OldProt);
-					return TRUE;
+					char *pszIATFunName = (char*)(hMod + ThunkData->u1.ForwarderString + 2);
+					if (IsBadStringPtrA(pszIATFunName, 4096))
+					{
+						char szBuf[512];
 
+						wsprintfA(szBuf, "LDNTVDM: Cannot check for IAT entry %s of module @%08X. Thunk=%08X, AddressOfData=%08X, ForwarderString=%08X",
+							FunName, hMod, ThunkData, ThunkData->u1.AddressOfData, ThunkData->u1.ForwarderString);
+						OutputDebugStringA(szBuf);
+					}
+					else if (!lstrcmpA((char*)(hMod + ThunkData->u1.ForwarderString + 2), FunName))
+					{
+						DWORD OldProt;
+						VirtualProtect(&Address[i], sizeof(ULONG_PTR), PAGE_READWRITE, &OldProt);
+						if (OldFun) *OldFun = Address[i];
+						Address[i] = (ULONG_PTR)NewFun;
+						VirtualProtect(&Address[i], sizeof(ULONG_PTR), OldProt, &OldProt);
+						return TRUE;
+					}
 				} ThunkData++;
 			}
 		}
