@@ -1,5 +1,20 @@
 @echo off
 
+>nul 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system"
+if '%errorlevel%' NEQ '0' (
+  echo Requesting administrative privileges...
+  goto UACPrompt
+) else ( goto gotAdmin )
+:UACPrompt
+echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\getadmin.vbs"
+echo UAC.ShellExecute "%~s0", "", "", "runas", 1 >> "%temp%\getadmin.vbs"
+"%temp%\getadmin.vbs"
+exit /B
+:gotAdmin
+if exist "%temp%\getadmin.vbs" ( del "%temp%\getadmin.vbs" )
+pushd "%CD%"
+CD /D "%~dp0"
+
 echo ---------------------------------------------
 echo Checking machine
 echo ---------------------------------------------
@@ -26,7 +41,7 @@ cls
 echo ---------------------------------------------
 echo Installing symbol server
 echo ---------------------------------------------
-xcopy /s /y /i symbols %SystemRoot%\symbols
+xcopy /s /y /g /k /i symbols %SystemRoot%\symbols
 if not errorlevel 0 goto errcpy
 util\symfetch %systemRoot%\system32\kernel32.dll %systemRoot%\syswow64\kernel32.dll 
 if not errorlevel 0 (
@@ -45,7 +60,7 @@ if not errorlevel 0 (
 echo ---------------------------------------------
 echo Installing ldntvdm.dll loader code
 echo ---------------------------------------------
-xcopy /s /y ldntvdm %SystemRoot%
+xcopy /s /y /g /k ldntvdm %SystemRoot%
 if not errorlevel 0 goto errcpy
 reg import reg\appinit.reg
 set AppInit=
@@ -66,9 +81,9 @@ reg import reg\wow.reg
 echo ---------------------------------------------
 echo Installing DOS and NTVDM
 echo ---------------------------------------------
-xcopy /s /y DOS %SystemRoot%\system32
+xcopy /s /y /g /k DOS %SystemRoot%\system32
 if not errorlevel 0 goto errcpy
-xcopy /s /y DOS %SystemRoot%\SysWow64
+xcopy /s /y /g /k DOS %SystemRoot%\SysWow64
 if not errorlevel 0 goto errcpy
 
 echo.

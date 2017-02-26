@@ -173,12 +173,12 @@ Here is a short howto on how to compile this:
       is built.
 5) Run mkrelease.bat to create a redistributable package in the
    release\ subdirectory
-6) Pack reelease-Directory as installation package for target machine.
+6) Pack release-Directory as installation package for target machine.
 
 How to install
 ==============
 Now you can install the NTVDM on the destination machine:
-Run install.bat with Admin-rights so that all files will be installed on 
+Run install.bat so that all files will be installed on 
 the target machine and Registry patches will get applied.
 Afterwards you may need to reboot the machine to get the AppInit-DLL loaded
 into explorer, but it should already get loaded into the next GUI process
