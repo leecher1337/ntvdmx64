@@ -10,6 +10,10 @@
  *          by kernel32-functions in order to get loader and NTVDM
  *          up and running (this normaly should be done by WOW64.dll)
  *          Additionally it fixes a bug in SetConsolePalette call.
+ *          Also it fixes a missing NULL pointer initialiszation
+ *          in ConHostV1.dll!CreateConsoleBitmap 
+ *          (second NtMapViewOFSection doesn't have its buffer Ptr
+ *           initialized) by hooking RtlAllocateHeap.
  * Changes: 01.04.2016  - Created
  */
 
@@ -30,6 +34,14 @@
 #include "symeng.h"
 
 #pragma comment(lib, "ntdll.lib")
+
+//#define TRACING
+
+#ifdef TRACING
+#define TRACE(...) { char szDbgBuf[2048]; wsprintfA(szDbgBuf, __VA_ARGS__); OutputDebugStringA(szDbgBuf); }
+#else
+#define TRACE(...)
+#endif
 
 #ifdef _WIN64
 #define BASEP_CALL __fastcall
@@ -94,6 +106,7 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 	INT_PTR ret;
 	ULONG BinarySubType = BINARY_TYPE_DOS_EXE;
 
+	TRACE("LDNTVDM: BasepProcessInvalidImage(%08X,'%ws');", Error, PathName->Buffer);
 	if (Error == STATUS_INVALID_IMAGE_PROTECT ||
 		(Error == STATUS_INVALID_IMAGE_NOT_MZ && BaseIsDosApplication && 
 			(BinarySubType = BaseIsDosApplication(PathName, Error))))
@@ -150,7 +163,10 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 				pAnsiStringEnv,
 				pUnicodeStringEnv
 				))
+			{
+				TRACE("LDNTVDM: BaseCreateVDMEnvironment failed");
 				return FALSE;
+			}
 
 			Status = BaseCheckVDM(*pVdmBinaryType | BinarySubType,
 				*lppApplicationName,
@@ -166,15 +182,18 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 			if (!NT_SUCCESS(Status))
 			{
 				SetLastError(RtlNtStatusToDosError(Status));
+				TRACE("LDNTVDM: BaseCheckVDM failed, gle=%d", GetLastError());
 				return FALSE;
 			}
 
+			TRACE("VDMState=%08X", b->VDMState);
 			switch (b->VDMState & VDM_STATE_MASK) {
 			case VDM_NOT_PRESENT:
 				*pVDMCreationState = VDM_PARTIALLY_CREATED;
 				if (*pdwCreationFlags & DETACHED_PROCESS)
 				{
 					SetLastError(ERROR_ACCESS_DENIED);
+					TRACE("LDNTVDM: VDM_NOT_PRESENT -> ERROR_ACCESS_DENIED");
 					return FALSE;
 				}
 				if (!BaseGetVdmConfigInfo(m,
@@ -207,6 +226,7 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 				*pbInheritHandles = 0;
 				*lppEnvironment = pUnicodeStringEnv->Buffer;
 			}
+			TRACE("LDNTVDM: Launch DOS!");
 			return TRUE;
 		}
 #endif
@@ -217,6 +237,7 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 #ifdef WOW_HACK
 	*pdwCreationFlags &= ~CREATE_NO_WINDOW;
 #endif
+	TRACE("LDNTVDM: BasepProcessInvalidImage = %d", ret);
 
 	return ret;
 }
@@ -235,6 +256,29 @@ BOOL FixNTDLL(void)
 		return TRUE;
 	}
 	return FALSE;
+}
+
+typedef PVOID(WINAPI *RtlAllocateHeapFunc)(PVOID  HeapHandle, ULONG  Flags, SIZE_T Size);
+RtlAllocateHeapFunc RtlAllocateHeapReal;
+PVOID WINAPI RtlAllocateHeapHook(PVOID  HeapHandle, ULONG  Flags, SIZE_T Size)
+{
+	if (Size == 0x150) /* Any better idea to find correct call? */ Flags |= HEAP_ZERO_MEMORY;
+	return RtlAllocateHeapReal(HeapHandle, Flags, Size);
+}
+
+typedef HMODULE(WINAPI *LoadLibraryExWFunc)(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags);
+LoadLibraryExWFunc LoadLibraryExWReal;
+HMODULE WINAPI LoadLibraryExWHook(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
+{
+	HANDLE hRet = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
+
+	TRACE("LDNTVDM: LoadLibraryExWHook(%S)", lpLibFileName);
+	if (hRet && lstrcmpiW(lpLibFileName, L"ConHostV1.dll") == 0)
+	{
+		TRACE("LDNTVDM hooks Conhost RtlAllocateHeap");
+		Hook_IAT_x64_IAT((LPBYTE)hRet, "ntdll.dll", "RtlAllocateHeap", RtlAllocateHeapHook, &RtlAllocateHeapReal);
+	}
+	return hRet;
 }
 
 #define SUBSYS_OFFSET 0x128
@@ -414,7 +458,9 @@ BOOL WINAPI _DllMainCRTStartup(
 		hKernelBase = (HMODULE)GetModuleHandle(_T("KernelBase.dll"));
 		lpProcII = (LPBYTE)GetProcAddress(hKrnl32, "BasepProcessInvalidImage");
 		BasepProcessInvalidImageReal = (fpBasepProcessInvalidImage)lpProcII;
+		TRACE("LDNTVDM: BasepProcessInvalidImageReal = %08X", BasepProcessInvalidImageReal);
 		BaseIsDosApplication = GetProcAddress(hKrnl32, "BaseIsDosApplication");
+		TRACE("LDNTVDM: BaseIsDosApplication = %08X", BaseIsDosApplication);
 		Hook_IAT_x64((LPBYTE)hKernelBase, "KERNEL32.DLL", "ext-ms-win-kernelbase-processthread-l1-1-0.dll", 
 			"BasepProcessInvalidImage", BasepProcessInvalidImage);
 
@@ -423,6 +469,22 @@ BOOL WINAPI _DllMainCRTStartup(
 
 #ifdef _WIN64
 		FixNTDLL();
+		{
+			TCHAR szProcess[MAX_PATH], *p;
+
+			// Fix ConhostV1.dll bug where memory isn't initialized properly
+			p=szProcess + GetModuleFileName(NULL, szProcess, sizeof(szProcess) / sizeof(TCHAR));
+			while (*p != '\\') p--;
+			if (lstrcmpi(++p, _T("ConHost.exe")) == 0)
+			{
+				TRACE("LDNTVDM is running inside ConHost.exe");
+				if (hKrnl32 = GetModuleHandle(_T("ConHostV1.dll")))
+					Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "ntdll.dll", "RtlAllocateHeap", RtlAllocateHeapHook, &RtlAllocateHeapReal);
+				else
+					Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "api-ms-win-core-libraryloader-l1-2-0.dll", "LoadLibraryExW", LoadLibraryExWHook, &LoadLibraryExWReal);
+				
+			}
+		}
 #else
 		HookCsrClientCallServer();
 		/* SetConsolePalette bug */
