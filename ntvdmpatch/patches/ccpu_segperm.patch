@@ -1,0 +1,26 @@
+--- NT4\private\mvdm\softpc.new\base\ccpu386\mov.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\mov.c
+126a127,149
+> 	  /* leecher1337, 20170305: HACKHACK
+> 	   * It seems that on various places DS-GS and their read/write 
+> 	   * protection bits get set to 0, i.e. in load_data_seg or
+> 	   * load_data_seg_new_privilege if there is no LDT/GDT entry in table.
+> 	   * Now this can cause problems in real mode when these segemnts
+> 	   * are used there causing faults and consequently locking up.
+> 	   * Therefore we do a check here and if they all got set to 0,
+> 	   * restore default values. No idea if this is correct in 
+> 	   * regard to the 386 manual, I bet it's not.. :-/
+> 	   */
+> 	  if ( GET_PE() && !(op2 & BIT0_MASK) )
+> 	  {
+> 		  int i, regs[] = {DS_REG, ES_REG, FS_REG, GS_REG};
+> 
+> 		  for (i=0; i<sizeof(regs)/sizeof(regs[0]); i++)
+> 		  {
+> 			if (GET_SR_SELECTOR(regs[i]) == 0 && GET_SR_BASE(regs[i]) == 0 && 
+> 				GET_SR_AR_W(regs[i]) == 0 && GET_SR_AR_R(regs[i]) == 0 && 
+> 				GET_SR_LIMIT(regs[i]) == 0)
+> 				load_pseudo_descr(regs[i]);
+> 		  }
+>       }
+> 

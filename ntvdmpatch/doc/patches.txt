@@ -4,7 +4,10 @@ Description of the necessary patches included in this package
 callconv.patch      - Patches wrong calling conventions in host-code
 ccpu.patch          - Patches the CCPU to compile on i386
 ccpu_regs.patch     - Adds functions to access registers from the CCPU 
-                      externally from other omdules requiring them.
+                      externally from other modules requiring them.
+ccpu_segperm.patch  - Patches a potential bug in the CCPU that causes
+                      segment access permission to be set to 0 and not
+                      restored on going back to realmode.
 console.patch       - Fixes console startup bug that would otherwise not init
                       colors of console properly and would therefore cause
                       black chars on black screen.
