@@ -41,10 +41,10 @@ cls
 echo ---------------------------------------------
 echo Installing symbol server
 echo ---------------------------------------------
-xcopy /s /y /g /k /i symbols %SystemRoot%\symbols
-if not errorlevel 0 goto errcpy
+xcopy /s /y /g /k /d /i symbols %SystemRoot%\symbols
+if errorlevel 1 goto errcpy
 util\symfetch %systemRoot%\system32\kernel32.dll %systemRoot%\syswow64\kernel32.dll 
-if not errorlevel 0 (
+if errorlevel 1 (
   echo Downloading required Symbols from Microsoft Symbol server failed.
   echo It may be that you are not connected to the Internet or there is
   echo a problem with the symbol server DLLs.
@@ -60,8 +60,10 @@ if not errorlevel 0 (
 echo ---------------------------------------------
 echo Installing ldntvdm.dll loader code
 echo ---------------------------------------------
-xcopy /s /y /g /k ldntvdm %SystemRoot%
-if not errorlevel 0 goto errcpy
+move /Y %SystemRoot%\System32\ldntvdm.dll %SystemRoot%\System32\ldntvdm.dll.bak >nul
+move /Y %SystemRoot%\System32\ldntvdm.dll %SystemRoot%\SysWow64\ldntvdm.dll.bak >nul
+xcopy /s /y /g /k /d ldntvdm %SystemRoot%
+if errorlevel 1 goto errcpy
 reg import reg\appinit.reg
 set AppInit=
 for /F "skip=2 tokens=2*" %%r in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs') do set AppInit=%AppInit%%%s
@@ -82,9 +84,9 @@ echo ---------------------------------------------
 echo Installing DOS and NTVDM
 echo ---------------------------------------------
 xcopy /s /y /g /k DOS %SystemRoot%\system32
-if not errorlevel 0 goto errcpy
+if errorlevel 1 goto errcpy
 xcopy /s /y /g /k DOS %SystemRoot%\SysWow64
-if not errorlevel 0 goto errcpy
+if errorlevel 1 goto errcpy
 
 echo.
 echo =============================================
