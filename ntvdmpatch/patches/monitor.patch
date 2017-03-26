@@ -285,12 +285,6 @@
 < #ifndef NTVDM
 ---
 > #if !defined(NTVDM) || defined(CCPU)
---- NT4\private\mvdm\softpc.new\host\inc\host_def.h
-+++ nt\private\mvdm\softpc.new\host\inc\host_def.h
-144c144
-< #if !defined(MONITOR) && !defined(PROD)
----
-> #if !defined(i386) && !defined(PROD)
 --- NT4\private\mvdm\softpc.new\host\src\config.c
 +++ nt\private\mvdm\softpc.new\host\src\config.c
 506c506

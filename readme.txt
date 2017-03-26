@@ -193,6 +193,18 @@ functions in order to properly start NTVDM. When the symbols are once
 fetched for the current user, they won't be fetched again, until either
 the Temp-folder is cleared or the OS files are upgraded.
 
+Debugging
+=========
+Name of debugger Master Yoda is.
+Compiling frontend in mvdm\softpc.new\debugger you do.
+Like Gandalf, debugger master Yoda smokes pipe in \\.\pipe\softpc
+Therefore writing REG_SZ Key named PIPE containing
+   \\.\pipe\softpc
+to HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\WOW\CpuEnv
+you need.
+After running vdmdebug.exe, you will be enlighted by running vdmdebug.
+Do not call Yoda, Yoda will call you.
+
 Known bugs
 ==========
 Currently there are crashes with various DPMI programs like i.e

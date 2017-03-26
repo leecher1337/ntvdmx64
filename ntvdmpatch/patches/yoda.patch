@@ -1,0 +1,15 @@
+--- NT4\private\mvdm\softpc.new\base\debug\dasm.c
++++ nt\private\mvdm\softpc.new\base\debug\dasm.c
+51a52,57
+> #if defined(CPU_40_STYLE) && !defined(HOST_SAS)
+> #define inc_M_ptr(p,o)	(p+(o))
+> #define get_byte_addr(addr) ((IU8 *)((IHPE)Start_of_M_area + (PHY_ADDR)(addr)))
+> #define M_get_dw_ptr(address) ((IHPE)Start_of_M_area + (long)(address))
+> #endif
+> 
+--- NT4\private\mvdm\softpc.new\base\debug\yoda.c
++++ nt\private\mvdm\softpc.new\base\debug\yoda.c
+19a20,22
+> #if !defined(macintosh) && !defined(SFELLOW)
+> #include <time.h>
+> #endif

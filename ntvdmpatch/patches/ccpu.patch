@@ -10,6 +10,124 @@
 +++ nt\private\mvdm\softpc.new\base\ccpu386\c_reg.c
 12a13
 > #include <stdio.h>
+1879a1881,1997
+> 
+> /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+> /* Provide Access to Debug registers.								  */
+> /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+> GLOBAL IU32
+> c_getDREG0()
+>    {
+>    return (IU32)GET_DR(DR_DAR0);
+>    }
+> 
+> GLOBAL IU32
+> c_getDREG1()
+>    {
+>    return (IU32)GET_DR(DR_DAR1);
+>    }
+> 
+> GLOBAL IU32
+> c_getDREG2()
+>    {
+>    return (IU32)GET_DR(DR_DAR2);
+>    }
+> 
+> GLOBAL IU32
+> c_getDREG3()
+>    {
+>    return (IU32)GET_DR(DR_DAR3);
+>    }
+> 
+> GLOBAL IU32
+> c_getDREG4()
+>    {
+>    return (IU32)GET_DR(4);
+>    }
+> 
+> GLOBAL IU32
+> c_getDREG5()
+>    {
+>    return (IU32)GET_DR(5);
+>    }
+> 
+> GLOBAL IU32
+> c_getDREG6()
+>    {
+>    return (IU32)GET_DR(DR_DSR);
+>    }
+> 
+> GLOBAL IU32
+> c_getDREG7()
+>    {
+>    return (IU32)GET_DR(DR_DCR);
+>    }
+> 
+> GLOBAL VOID
+> c_setDREG0
+> IFN1(IU32, val)
+>    {
+>    SET_DR(DR_DAR0, val);
+>    }
+> 
+> GLOBAL VOID
+> c_setDREG1
+> IFN1(IU32, val)
+>    {
+>    SET_DR(DR_DAR1, val);
+>    }
+> 
+> GLOBAL VOID
+> c_setDREG2
+> IFN1(IU32, val)
+>    {
+>    SET_DR(DR_DAR2, val);
+>    }
+> 
+> GLOBAL VOID
+> c_setDREG3
+> IFN1(IU32, val)
+>    {
+>    SET_DR(DR_DAR3, val);
+>    }
+> 
+> GLOBAL VOID
+> c_setDREG4
+> IFN1(IU32, val)
+>    {
+>    SET_DR(4, val);
+>    }
+> 
+> GLOBAL VOID
+> c_setDREG5
+> IFN1(IU32, val)
+>    {
+>    SET_DR(5, val);
+>    }
+> 
+> GLOBAL VOID
+> c_setDREG6
+> IFN1(IU32, val)
+>    {
+>    SET_DR(DR_DSR, val);
+>    }
+> 
+> GLOBAL VOID
+> c_setDREG7
+> IFN1(IU32, val)
+>    {
+>    SET_DR(DR_DCR, val);
+>    }
+> 
+> GLOBAL VOID
+> c_moveToDebugRegister
+> IFN2(
+> 	INT, debugRegister,
+> 	IU32, src
+>     )
+>    {
+>    MOV_DR(debugRegister, src);
+>    }
 --- NT4\private\mvdm\softpc.new\base\ccpu386\c_xcptn.c
 +++ nt\private\mvdm\softpc.new\base\ccpu386\c_xcptn.c
 17a18
@@ -23,16 +141,243 @@
 > 
 42d48
 < 	IMPORT char *host_getenv IPT1 (char *, name);			\
+92a99
+> GLOBAL IBOOL snaffle = FALSE; /* SetSnaffleDataDebugExcpn on/off for Yoda */
+482a490,498
+> #ifdef YODA
+>    if (snaffle &&  (GET_DR(DR_DSR) &
+> 	(DSR_B3_MASK | DSR_B2_MASK | DSR_B1_MASK | DSR_B0_MASK))) 
+>    {
+> 	 data_debug_exception();
+> 	 c_cpu_continue();
+>    }
+> 
+> #endif
+641a658,669
+> 
+> /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+> /* Turn snaffle on and off                                            */
+> /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+> GLOBAL VOID
+> c_setSnaffleDataDebugExcpn
+> IFN1(
+> 	IBOOL, dosnaffle
+>     )
+>    {
+>    snaffle = dosnaffle;
+>    }
 --- NT4\private\mvdm\softpc.new\base\ccpu386\cpu4gen.h
 +++ nt\private\mvdm\softpc.new\base\ccpu386\cpu4gen.h
-265c265
+101a102,107
+> 	void	(*SetDREG0)	IPT1(IU32,	val);
+> 	void	(*SetDREG1)	IPT1(IU32,	val);
+> 	void	(*SetDREG2)	IPT1(IU32,	val);
+> 	void	(*SetDREG3)	IPT1(IU32,	val);
+> 	void	(*SetDREG6)	IPT1(IU32,	val);
+> 	void	(*SetDREG7)	IPT1(IU32,	val);
+172a179,184
+> 	IU32	(*GetDREG0)	IPT0();
+> 	IU32	(*GetDREG1)	IPT0();
+> 	IU32	(*GetDREG2)	IPT0();
+> 	IU32	(*GetDREG3)	IPT0();
+> 	IU32	(*GetDREG6)	IPT0();
+> 	IU32	(*GetDREG7)	IPT0();
+265c277
 < #ifdef	CCPU
 ---
 > #ifdef	CCPUxx
-270c270
+270c282
 < #ifdef PROD
 ---
 > #ifdef PRODxx
+1206a1219,1296
+> IMPORT	void	c_setDREG0	IPT1(IU32, val);
+> #define	setDREG0(val)	c_setDREG0(val)
+> #else	/* CCPU */
+> 
+> #ifdef PROD
+> #define	setDREG0(val)	(*(Cpu.SetDREG0))(val)
+> #else /* PROD */
+> IMPORT	void	setDREG0	IPT1(IU32, val);
+> #endif /*PROD*/
+> 
+> #endif	/* CCPU */
+> 
+> #ifdef	CCPU
+> IMPORT	void	c_setDREG1	IPT1(IU32, val);
+> #define	setDREG1(val)	c_setDREG1(val)
+> #else	/* CCPU */
+> 
+> #ifdef PROD
+> #define	setDREG1(val)	(*(Cpu.SetDREG1))(val)
+> #else /* PROD */
+> IMPORT	void	setDREG1	IPT1(IU32, val);
+> #endif /*PROD*/
+> 
+> #endif	/* CCPU */
+> 
+> #ifdef	CCPU
+> IMPORT	void	c_setDREG2	IPT1(IU32, val);
+> #define	setDREG2(val)	c_setDREG2(val)
+> #else	/* CCPU */
+> 
+> #ifdef PROD
+> #define	setDREG2(val)	(*(Cpu.SetDREG2))(val)
+> #else /* PROD */
+> IMPORT	void	setDREG2	IPT1(IU32, val);
+> #endif /*PROD*/
+> 
+> #endif	/* CCPU */
+> 
+> #ifdef	CCPU
+> IMPORT	void	c_setDREG3	IPT1(IU32, val);
+> #define	setDREG3(val)	c_setDREG3(val)
+> #else	/* CCPU */
+> 
+> #ifdef PROD
+> #define	setDREG3(val)	(*(Cpu.SetDREG3))(val)
+> #else /* PROD */
+> IMPORT	void	setDREG3	IPT1(IU32, val);
+> #endif /*PROD*/
+> 
+> #endif	/* CCPU */
+> 
+> #ifdef	CCPU
+> IMPORT	void	c_setDREG6	IPT1(IU32, val);
+> #define	setDREG6(val)	c_setDREG6(val)
+> #else	/* CCPU */
+> 
+> #ifdef PROD
+> #define	setDREG6(val)	(*(Cpu.SetDREG6))(val)
+> #else /* PROD */
+> IMPORT	void	setDREG6	IPT1(IU32, val);
+> #endif /*PROD*/
+> 
+> #endif	/* CCPU */
+> 
+> #ifdef	CCPU
+> IMPORT	void	c_setDREG7	IPT1(IU32, val);
+> #define	setDREG7(val)	c_setDREG7(val)
+> #else	/* CCPU */
+> 
+> #ifdef PROD
+> #define	setDREG7(val)	(*(Cpu.SetDREG7))(val)
+> #else /* PROD */
+> IMPORT	void	setDREG7	IPT1(IU32, val);
+> #endif /*PROD*/
+> 
+> #endif	/* CCPU */
+> 
+> #ifdef	CCPU
+2129a2220,2297
+> IMPORT	IU32	c_getDREG0	IPT0();
+> #define	getDREG0()	c_getDREG0()
+> #else	/* CCPU */
+> 
+> #ifdef PROD
+> #define	getDREG0()	(*(Cpu.GetDREG0))()
+> #else /* PROD */
+> IMPORT	IU32	getDREG0	IPT0();
+> #endif /*PROD*/
+> 
+> #endif	/* CCPU */
+> 
+> #ifdef	CCPU
+> IMPORT	IU32	c_getDREG1	IPT0();
+> #define	getDREG1()	c_getDREG1()
+> #else	/* CCPU */
+> 
+> #ifdef PROD
+> #define	getDREG1()	(*(Cpu.GetDREG1))()
+> #else /* PROD */
+> IMPORT	IU32	getDREG1	IPT0();
+> #endif /*PROD*/
+> 
+> #endif	/* CCPU */
+> 
+> #ifdef	CCPU
+> IMPORT	IU32	c_getDREG2	IPT0();
+> #define	getDREG2()	c_getDREG2()
+> #else	/* CCPU */
+> 
+> #ifdef PROD
+> #define	getDREG2()	(*(Cpu.GetDREG2))()
+> #else /* PROD */
+> IMPORT	IU32	getDREG2	IPT0();
+> #endif /*PROD*/
+> 
+> #endif	/* CCPU */
+> 
+> #ifdef	CCPU
+> IMPORT	IU32	c_getDREG3	IPT0();
+> #define	getDREG3()	c_getDREG3()
+> #else	/* CCPU */
+> 
+> #ifdef PROD
+> #define	getDREG3()	(*(Cpu.GetDREG3))()
+> #else /* PROD */
+> IMPORT	IU32	getDREG3	IPT0();
+> #endif /*PROD*/
+> 
+> #endif	/* CCPU */
+> 
+> #ifdef	CCPU
+> IMPORT	IU32	c_getDREG6	IPT0();
+> #define	getDREG6()	c_getDREG6()
+> #else	/* CCPU */
+> 
+> #ifdef PROD
+> #define	getDREG6()	(*(Cpu.GetDREG6))()
+> #else /* PROD */
+> IMPORT	IU32	getDREG6	IPT0();
+> #endif /*PROD*/
+> 
+> #endif	/* CCPU */
+> 
+> #ifdef	CCPU
+> IMPORT	IU32	c_getDREG7	IPT0();
+> #define	getDREG7()	c_getDREG7()
+> #else	/* CCPU */
+> 
+> #ifdef PROD
+> #define	getDREG7()	(*(Cpu.GetDREG7))()
+> #else /* PROD */
+> IMPORT	IU32	getDREG7	IPT0();
+> #endif /*PROD*/
+> 
+> #endif	/* CCPU */
+> 
+> #ifdef	CCPU
+2322a2491,2492
+> 	void	(*OpMoveToDebugRegister)	IPT2(INT,	debugRegister, IU32,	src);
+> 	void	(*SetSnaffleDataDebugExcpn)	IPT1(IBOOL,	val);
+3084a3255,3280
+> #ifdef	CCPU
+> IMPORT	void	c_moveToDebugRegister	IPT2(INT, debugRegister, IU32, src);
+> #define	moveToDebugRegister(debugRegister, src)	c_moveToDebugRegister(debugRegister, src)
+> #else	/* CCPU */
+> 
+> #ifdef PROD
+> #define	moveToDebugRegister(debugRegister, src)	(*((*(Cpu.Private)).OpMoveToDebugRegister))(debugRegister, src)
+> #else /* PROD */
+> IMPORT	void	moveToDebugRegister	IPT2(INT, debugRegister, IU32, src);
+> #endif /*PROD*/
+> 
+> #endif	/* CCPU */
+> 
+> #ifdef	CCPU
+> IMPORT	void	c_setSnaffleDataDebugExcpn	IPT1(IBOOL, val);
+> #define	setSnaffleDataDebugExcpn(val)	c_setSnaffleDataDebugExcpn(val)
+> #else	/* CCPU */
+> 
+> #ifdef PROD
+> #define	setSnaffleDataDebugExcpn(val)	(*((*(Cpu.Private)).SetSnaffleDataDebugExcpn))(val)
+> #else /* PROD */
+> IMPORT	void	setSnaffleDataDebugExcpn	IPT1(IBOOL, val);
+> #endif /*PROD*/
+> 
+> #endif	/* CCPU */
+> 
 --- NT4\private\mvdm\softpc.new\base\ccpu386\evidgen.h
 +++ nt\private\mvdm\softpc.new\base\ccpu386\evidgen.h
 8a9,15
@@ -128,3 +473,9 @@
 > #endif /* i386 */
 > #endif /* ALPHA */
 > #if !defined(PROD) && !defined(i386)
+--- NT4\private\mvdm\softpc.new\base\ccpu386\stubs.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\stubs.c
+8a9
+> #ifndef YODA
+21a23
+> #endif
