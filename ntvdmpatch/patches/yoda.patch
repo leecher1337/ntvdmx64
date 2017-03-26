@@ -13,3 +13,9 @@
 > #if !defined(macintosh) && !defined(SFELLOW)
 > #include <time.h>
 > #endif
+--- NT4\private\mvdm\softpc.new\host\src\fprt.c
++++ nt\private\mvdm\softpc.new\host\src\fprt.c
+227c227
+<     tmp_buf[len] = 0;		// Bullshit write into a const ptr!
+---
+>     if (tmp_buf[len]) tmp_buf[len] = 0;		// Bullshit write into a const ptr!

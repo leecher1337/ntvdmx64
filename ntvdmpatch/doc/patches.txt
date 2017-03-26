@@ -2,7 +2,7 @@ Description of the necessary patches included in this package
 -------------------------------------------------------------
 
 callconv.patch      - Patches wrong calling conventions in host-code
-ccpu.patch          - Patches the CCPU to compile on i386
+ccpu.patch          - Patches the CCPU to compile on i386 and support Yoda
 ccpu_regs.patch     - Adds functions to access registers from the CCPU 
                       externally from other modules requiring them.
 ccpu_segperm.patch  - Patches a potential bug in the CCPU that causes
@@ -59,3 +59,4 @@ w10_emm.patch       - x64 systems cannot allocate with 4k page granularity as
                       code is used)
 wow32.patch         - Crude hack to disable WOW32, we do not currently support
                       it, this is just for DOS
+yoda.patch          - Fixes a few compilation problems of Yoda on i386 with CCPU
