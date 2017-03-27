@@ -13,7 +13,11 @@
 #if !defined(PROD) && defined(CPU_40_STYLE) 
 void FmDebugBop()
 {
+#ifdef YODA
+	force_yoda();
+#else
 	illegal_bop();
+#endif
 }
 
 void	FmDebug(ULONG hook)
