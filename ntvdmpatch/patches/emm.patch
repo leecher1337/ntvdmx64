@@ -1,0 +1,26 @@
+--- NT4\private\mvdm\softpc.new\base\dos\emm_mngr.c
++++ nt\private\mvdm\softpc.new\base\dos\emm_mngr.c
+970c970
+< #ifndef NTVDM
+---
+> #if !defined(NTVDM) || defined(CCPU)
+1108c1108
+< 	if(EM_page_mapped[physical_page_no] != EMPTY)
+---
+> 	if(EM_page_mapped[physical_page_no] != (unsigned short)EMPTY)
+1122c1122
+< #ifndef NTVDM
+---
+> #if !defined(NTVDM) || defined(CCPU)
+1153c1153
+< #ifndef NTVDM
+---
+> #if !defined(NTVDM) || defined(CCPU)
+1242c1242
+< #ifndef NTVDM
+---
+> #if  !defined(NTVDM) || defined(CCPU)
+1883c1883
+< #ifndef NTVDM
+---
+> #if !defined(NTVDM) || defined(CCPU)

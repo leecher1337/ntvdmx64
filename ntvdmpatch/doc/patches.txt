@@ -24,6 +24,7 @@ ega_crash.patch     - Console graphics is required, as newer Windows display
                       try to paint outside the screen boundaries which causes
                       crashes when not properly checked, so added checks for 
                       this.
+emm.patch           - Fixes a little problem in the EMM-Manager
 fpu.patch           - The FPU of the CCPU is optimized for MIPS/PPC 
                       architecture and not Intel i386. This patch fixes 
                       declarations for FPU-Type to compile on x86 systems.
