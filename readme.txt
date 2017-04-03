@@ -207,10 +207,8 @@ Do not call Yoda, Yoda will call you.
 
 Known bugs
 ==========
-Currently there are crashes with various DPMI programs like i.e
-Borland Turbo C or some DOS extenders, currently I don't know what
-is causing this, maybe someone can help me debugging them?
-But for simple DOS business applications, it may be enough.
+Currently there are crashes with some DPMI programs like i.e
+dpmi.exe, but most programs should work, I hope.
 
 Tested on
 =========
