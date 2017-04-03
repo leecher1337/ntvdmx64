@@ -13,6 +13,18 @@
 > #if !defined(macintosh) && !defined(SFELLOW)
 > #include <time.h>
 > #endif
+1975c1978
+< 
+---
+> #endif /* GISP_CPU */
+1991c1994
+< #endif /* GISP_CPU */
+---
+> 
+5016a5020
+> #endif	/* GISP_CPU */
+5019d5022
+< #endif	/* GISP_CPU */
 --- NT4\private\mvdm\softpc.new\host\src\fprt.c
 +++ nt\private\mvdm\softpc.new\host\src\fprt.c
 227c227
