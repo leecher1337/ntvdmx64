@@ -24,3 +24,7 @@
 > 		  }
 >       }
 > 
+--- NT4\private\mvdm\softpc.new\base\ccpu386\c_seg.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\c_seg.c
+241a242
+> 	  load_pseudo_descr(indx);
