@@ -232,3 +232,7 @@
 49,50d50
 <     binplace $(SOFTPC_TREE)\data\*.r?m
 <     binplace $(SOFTPC_TREE)\data\profile.spc
+--- NT4\private\mvdm\softpc.new\obj.vdm\ntvdm.src
++++ nt\private\mvdm\softpc.new\obj.vdm\ntvdm.src
+30a31
+>     Sim32FlushVDMPointer
