@@ -25,6 +25,14 @@ ega_crash.patch     - Console graphics is required, as newer Windows display
                       crashes when not properly checked, so added checks for 
                       this.
 emm.patch           - Fixes a little problem in the EMM-Manager
+fixexe.patch        - It seems like the creator of the OpenNT package 
+                      accidentally compiled the fixexe.c with a 32bit Compiler
+                      instead of the DOS compiler which caused int data
+                      type to be interpreted as 32bit, therefore fixexe.exe
+                      tool trashes the MZ header instead of fixing it.
+                      So wow16 makefile was adjusted to first create a valid
+                      fixexe.exe tool. This is not original NT sourcecode patch
+                      but just a bugfix for broken OpenNT fixexe.exe tool.
 fpu.patch           - The FPU of the CCPU is optimized for MIPS/PPC 
                       architecture and not Intel i386. This patch fixes 
                       declarations for FPU-Type to compile on x86 systems.

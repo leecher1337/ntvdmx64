@@ -1,0 +1,17 @@
+--- NT4\private\mvdm\wow16\kernel31\makefile
++++ nt\private\mvdm\wow16\kernel31\makefile
+201c201
+< all:  $(DEST)\kernel.exe $(DEST)\krnl286.sym
+---
+> all:  fixexe.exe $(DEST)\kernel.exe $(DEST)\krnl286.sym
+208c208
+< all:  $(DEST)\kernel.exe $(DEST)\krnl386.sym
+---
+> all:  fixexe.exe $(DEST)\kernel.exe $(DEST)\krnl386.sym
+829c829,832
+< fixexe.obj fixexe.lst:: fixexe.c
+---
+> fixexe.exe fixexe.lst:: fixexe.c
+> 	$(CP) fixexe.c
+> 	link16 fixexe.obj,fixexe.exe,fixexe,..\..\dos\v86\lib\slibce.lib ..\..\dos\v86\lib\oldnames.lib,nul.def
+> 	copy fixexe.exe ..\..\tools16\
