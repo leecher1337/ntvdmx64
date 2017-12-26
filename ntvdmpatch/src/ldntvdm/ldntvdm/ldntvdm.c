@@ -33,6 +33,9 @@
 #include "basevdm.h"
 #include "symeng.h"
 
+/* Don't use yet, you currently may not be very happy using this on Win 7 yet */
+//#define TARGET_WIN7
+
 #pragma comment(lib, "ntdll.lib")
 
 #ifdef _WIN64
@@ -525,9 +528,11 @@ BOOL WINAPI _DllMainCRTStartup(
 		BaseIsDosApplication = GetProcAddress(hKrnl32, "BaseIsDosApplication");
 		Hook_IAT_x64((LPBYTE)hKernelBase, "KERNEL32.DLL", "ext-ms-win-kernelbase-processthread-l1-1-0.dll",
 			"BasepProcessInvalidImage", BasepProcessInvalidImage);
-
-		Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-2.dll", "CreateProcessA", CreateProcessAHook, &CreateProcessAReal);
-		Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-2.dll", "CreateProcessW", CreateProcessWHook, &CreateProcessWReal);
+		/* Newer Windows Versions use l1-1-0 instead of l1-1-2 */
+		if (!Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-2.dll", "CreateProcessA", CreateProcessAHook, &CreateProcessAReal))
+			Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-0.dll", "CreateProcessA", CreateProcessAHook, &CreateProcessAReal);
+		if (!Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-2.dll", "CreateProcessW", CreateProcessWHook, &CreateProcessWReal))
+			Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-0.dll", "CreateProcessW", CreateProcessWHook, &CreateProcessWReal);
 #ifdef WOW16_SUPPORT
 		if (!Hook_IAT_x64_IAT((LPBYTE)hKernelBase, "ntdll.dll", "NtCreateUserProcess", NtCreateUserProcessHook, &NtCreateUserProcessReal))
 			OutputDebugStringA("Hooking NtCreateUserProcess failed.");
