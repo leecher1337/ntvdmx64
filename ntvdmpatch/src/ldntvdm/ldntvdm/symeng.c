@@ -32,6 +32,7 @@ typedef struct _SYMBOL_INFO {
 
 #define SYMOPT_ALLOW_ABSOLUTE_SYMBOLS    0x00000800
 #define SYMOPT_DEFERRED_LOADS            0x00000004
+#define SYMOPT_DEBUG					 0x80000000
 
 
 typedef BOOL (WINAPI *fpSymInitialize)(
@@ -114,14 +115,20 @@ static int InitSymEng(void)
 
 		lstrcatA(szPath, "*http://msdl.microsoft.com/download/symbols");
 		if (!SymInitialize(hProcess, 0, FALSE))
+		{
+			TRACE("SymInitialize failed: %08X", GetLastError());
 			return -2;
+		}
 
-		SymSetOptions(SymGetOptions() | SYMOPT_ALLOW_ABSOLUTE_SYMBOLS);
+		TRACE("Symsrv options: %08X", SymGetOptions());
+
+		SymSetOptions(SymGetOptions() | SYMOPT_ALLOW_ABSOLUTE_SYMBOLS | SYMOPT_DEBUG);
 		SymSetOptions(SymGetOptions() & (~SYMOPT_DEFERRED_LOADS));
 		SymSetSearchPath(hProcess, szPath);
 
 		return 0;
 	}
+	TRACE("InitSymEng failed.");
 	return -1;
 }
 
@@ -136,7 +143,10 @@ int SymEng_LoadModule(char *pszFile, DWORD64 *pdwBase)
 	}
 
 	if (!(*pdwBase = SymLoadModule64(GetCurrentProcess(), 0, pszFile, 0, 0, 0)))
+	{
+		TRACE("SymLoadModule64 %s failed: %08X", pszFile, GetLastError());
 		return -3;
+	}
 
 	return 0;
 }
@@ -147,9 +157,13 @@ ULONG64 SymEng_GetAddr(DWORD64 dwBase, char *pszSymbol)
 	SYMBOL_INFO symInfo;
 
 	RtlZeroMemory(&symInfo, sizeof(symInfo));
+	TRACE("SymEng_GetAddr %s", pszSymbol);
 	symInfo.SizeOfStruct = sizeof(SYMBOL_INFO);
 	if (!SymFromName(GetCurrentProcess(), pszSymbol, &symInfo))
+	{
+		TRACE("SymFromName failed: %08X\n", GetLastError());
 		return 0;
+	}
 
 	return (symInfo.Address - symInfo.ModBase);
 }

@@ -6,6 +6,16 @@
 
 #define LDNTVDM_NAME _T("ldntvdm.dll")
 
+//#define TRACING
+
+#ifdef TRACING
+static char szDbgBuf[2048];
+#define TRACE(...) { wsprintfA(szDbgBuf, __VA_ARGS__); OutputDebugStringA(szDbgBuf); }
+#else
+#define TRACE(...)
+#endif
+
+
 /* This is the simplest method of entering the NTVDM.
  * It has the advantage that it doesn't need symbol server for internal
  * symbol resoution to execute loader code, however it has some problems

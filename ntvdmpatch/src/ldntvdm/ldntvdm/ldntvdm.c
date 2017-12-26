@@ -35,14 +35,6 @@
 
 #pragma comment(lib, "ntdll.lib")
 
-//#define TRACING
-
-#ifdef TRACING
-#define TRACE(...) { char szDbgBuf[2048]; wsprintfA(szDbgBuf, __VA_ARGS__); OutputDebugStringA(szDbgBuf); }
-#else
-#define TRACE(...)
-#endif
-
 #ifdef _WIN64
 #define BASEP_CALL __fastcall
 #else

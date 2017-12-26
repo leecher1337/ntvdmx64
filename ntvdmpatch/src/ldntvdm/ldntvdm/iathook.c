@@ -89,6 +89,7 @@ BOOL Hook_IAT_x64_IAT(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char F
 	int i;
 	char *pszDLL;
 
+	TRACE("Hook_IAT_x64_IAT(%08X, %s, %s, %08X, %08X)", hMod, LibNameBigCaseName_SmallFormat, FunName, NewFun, OldFun);
 	for (; idata->Name; idata++) {
 		pszDLL = (char*)(hMod + idata->Name);
 		if (!lstrcmpiA(pszDLL, LibNameBigCaseName_SmallFormat)) {
@@ -119,7 +120,7 @@ BOOL Hook_IAT_x64_IAT(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char F
 			}
 		}
 	}
-	//OutputDebugString(_T("Hooking failed."));
+	TRACE("Hooking failed.");
 	return FALSE;
 }
 
