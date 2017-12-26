@@ -87,8 +87,55 @@ typedef BOOL (__fastcall *fpBaseGetVdmConfigInfo)(
 	IN  PUNICODE_STRING CmdLineString
 	);
 
+#define WOW16_SUPPORT
+#ifdef WOW16_SUPPORT
+typedef NTSTATUS (NTAPI *fpNtCreateUserProcess)(
+	PHANDLE ProcessHandle,
+	PHANDLE ThreadHandle,
+	ACCESS_MASK ProcessDesiredAccess,
+	ACCESS_MASK ThreadDesiredAccess,
+	POBJECT_ATTRIBUTES ProcessObjectAttributes,
+	POBJECT_ATTRIBUTES ThreadObjectAttributes,
+	ULONG ProcessFlags,
+	ULONG ThreadFlags,
+	PRTL_USER_PROCESS_PARAMETERS ProcessParameters,
+	PVOID CreateInfo,
+	PVOID AttributeList
+	);
+fpNtCreateUserProcess NtCreateUserProcessReal;
+NTSTATUS LastCreateUserProcessError = STATUS_SUCCESS;
+NTSTATUS NTAPI NtCreateUserProcessHook(
+	PHANDLE ProcessHandle,
+	PHANDLE ThreadHandle,
+	ACCESS_MASK ProcessDesiredAccess,
+	ACCESS_MASK ThreadDesiredAccess,
+	POBJECT_ATTRIBUTES ProcessObjectAttributes,
+	POBJECT_ATTRIBUTES ThreadObjectAttributes,
+	ULONG ProcessFlags,
+	ULONG ThreadFlags,
+	PRTL_USER_PROCESS_PARAMETERS ProcessParameters,
+	PVOID CreateInfo,
+	PVOID AttributeList
+	)
+{
+	LastCreateUserProcessError = NtCreateUserProcessReal(ProcessHandle,
+		ThreadHandle,
+		ProcessDesiredAccess,
+		ThreadDesiredAccess,
+		ProcessObjectAttributes,
+		ThreadObjectAttributes,
+		ProcessFlags,
+		ThreadFlags,
+		ProcessParameters,
+		CreateInfo,
+		AttributeList);
 
-fpBasepProcessInvalidImage BasepProcessInvalidImageReal;
+	return LastCreateUserProcessError==STATUS_INVALID_IMAGE_WIN_16?STATUS_INVALID_IMAGE_PROTECT:LastCreateUserProcessError;
+}
+#endif
+
+
+fpBasepProcessInvalidImage BasepProcessInvalidImageReal = NULL;
 fpBaseIsDosApplication BaseIsDosApplication = NULL;
 fpBaseCheckVDM BaseCheckVDM = NULL;
 fpBaseCreateVDMEnvironment BaseCreateVDMEnvironment = NULL;
@@ -107,8 +154,15 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 	ULONG BinarySubType = BINARY_TYPE_DOS_EXE;
 
 	TRACE("LDNTVDM: BasepProcessInvalidImage(%08X,'%ws');", Error, PathName->Buffer);
+#ifdef WOW16_SUPPORT
+	if (LastCreateUserProcessError == STATUS_INVALID_IMAGE_WIN_16 && Error == STATUS_INVALID_IMAGE_PROTECT)
+	{
+		TRACE("LDNTVDM: Launching Win16 application");
+		Error = LastCreateUserProcessError;
+	}
+#endif
 	if (Error == STATUS_INVALID_IMAGE_PROTECT ||
-		(Error == STATUS_INVALID_IMAGE_NOT_MZ && BaseIsDosApplication && 
+		(Error == STATUS_INVALID_IMAGE_NOT_MZ && BaseIsDosApplication &&
 			(BinarySubType = BaseIsDosApplication(PathName, Error))))
 	{
 #ifdef WOW_HACK
@@ -120,7 +174,7 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 		if (!BaseCheckVDM)
 		{
 			// Load the private loader functions by using DbgHelp and Symbol server
-			DWORD64 dwBase, dwAddress;
+			DWORD64 dwBase = 0, dwAddress;
 			char szKernel32[MAX_PATH];
 			HMODULE hKrnl32 = GetModuleHandle(_T("kernel32.dll"));
 
@@ -229,6 +283,8 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 			TRACE("LDNTVDM: Launch DOS!");
 			return TRUE;
 		}
+	} else if (Error == STATUS_INVALID_IMAGE_WIN_16) {
+		//*pdwCreationFlags |= CREATE_SEPARATE_WOW_VDM;
 #endif
 	}
 	ret = BasepProcessInvalidImageReal(Error, TokenHandle, dosname, lppApplicationName, lppCommandLine, lpCurrentDirectory,
@@ -242,8 +298,8 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 	return ret;
 }
 
-#ifdef _WIN64
 
+#ifdef _WIN64
 BOOL FixNTDLL(void)
 {
 	PVOID pNtVdmControl = GetProcAddress(GetModuleHandle(_T("ntdll.dll")), "NtVdmControl");
@@ -317,6 +373,20 @@ myNtQueryInformationProcess(
 		}
 	}
 	return NtQueryInformationProcess(ProcessHandle, ProcessInformationClass, ProcessInformation, ProcessInformationLength, ReturnLength);
+}
+
+BOOL FixNTDLL(void)
+{
+	PVOID pNtVdmControl = GetProcAddress(GetModuleHandle(_T("ntdll.dll")), "NtVdmControl");
+	DWORD OldProt;
+
+	if (VirtualProtect(pNtVdmControl, 11, PAGE_EXECUTE_READWRITE, &OldProt))
+	{
+		RtlMoveMemory(pNtVdmControl, "\x8B\x54\x24\x08\xC6\x42\x04\x01\x33\xc0\xc3", 11);
+		VirtualProtect(pNtVdmControl, 11, OldProt, &OldProt);
+		return TRUE;
+	}
+	return FALSE;
 }
 #endif	// _WIN32
 
@@ -453,24 +523,29 @@ BOOL WINAPI _DllMainCRTStartup(
 	{
 		STARTUPINFO si = { 0 };
 		HMODULE hKernelBase, hKrnl32;
-		LPBYTE lpProcII;
+		LPBYTE lpProcII = NULL;
 		int i;
 
 		hKrnl32 = GetModuleHandle(_T("kernel32.dll"));
 		hKernelBase = (HMODULE)GetModuleHandle(_T("KernelBase.dll"));
 		lpProcII = (LPBYTE)GetProcAddress(hKrnl32, "BasepProcessInvalidImage");
 		BasepProcessInvalidImageReal = (fpBasepProcessInvalidImage)lpProcII;
-		TRACE("LDNTVDM: BasepProcessInvalidImageReal = %08X", BasepProcessInvalidImageReal);
 		BaseIsDosApplication = GetProcAddress(hKrnl32, "BaseIsDosApplication");
-		TRACE("LDNTVDM: BaseIsDosApplication = %08X", BaseIsDosApplication);
-		Hook_IAT_x64((LPBYTE)hKernelBase, "KERNEL32.DLL", "ext-ms-win-kernelbase-processthread-l1-1-0.dll", 
+		Hook_IAT_x64((LPBYTE)hKernelBase, "KERNEL32.DLL", "ext-ms-win-kernelbase-processthread-l1-1-0.dll",
 			"BasepProcessInvalidImage", BasepProcessInvalidImage);
 
 		Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-2.dll", "CreateProcessA", CreateProcessAHook, &CreateProcessAReal);
 		Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-2.dll", "CreateProcessW", CreateProcessWHook, &CreateProcessWReal);
+#ifdef WOW16_SUPPORT
+		if (!Hook_IAT_x64_IAT((LPBYTE)hKernelBase, "ntdll.dll", "NtCreateUserProcess", NtCreateUserProcessHook, &NtCreateUserProcessReal))
+			OutputDebugStringA("Hooking NtCreateUserProcess failed.");
+#endif	// WOW16_SUPPORT
+		TRACE("LDNTVDM: BasepProcessInvalidImageReal = %08X", BasepProcessInvalidImageReal);
+		TRACE("LDNTVDM: BaseIsDosApplication = %08X", BaseIsDosApplication);
+
+		FixNTDLL();
 
 #ifdef _WIN64
-		FixNTDLL();
 		{
 			TCHAR szProcess[MAX_PATH], *p;
 

@@ -17,17 +17,8 @@
 #define LPBYTE ULONGLONG
 #define ULONG_PTR ULONGLONG
 
-#define BASESRV_API_CONNECTINFO BASESRV_API_CONNECTINFO64
 #define BASESRV_API_NUMBER BASESRV_API_NUMBER64
 #define PORT_MESSAGE PORT_MESSAGE64
-#define BASESRV_API_CONNECTINFO BASESRV_API_CONNECTINFO64
-#define BASE_NLS_SET_USER_INFO_MSG BASE_NLS_SET_USER_INFO_MSG64
-#define BASE_NLS_SET_MULTIPLE_USER_INFO_MSG BASE_NLS_SET_MULTIPLE_USER_INFO_MSG64
-#define BASE_NLS_CREATE_SORT_SECTION_MSG BASE_NLS_CREATE_SORT_SECTION_MSG64
-#define BASE_NLS_PRESERVE_SECTION_MSG BASE_NLS_PRESERVE_SECTION_MSG64
-#define BASE_CREATEPROCESS_MSG BASE_CREATEPROCESS_MSG64
-#define BASE_CREATETHREAD_MSG BASE_CREATETHREAD_MSG64
-#define BASE_DEBUGPROCESS_MSG BASE_DEBUGPROCESS_MSG64
 #define BASE_CHECKVDM_MSG BASE_CHECKVDM_MSG64
 #define BASE_UPDATE_VDM_ENTRY_MSG BASE_UPDATE_VDM_ENTRY_MSG64
 #define BASE_GET_NEXT_VDM_COMMAND_MSG BASE_GET_NEXT_VDM_COMMAND_MSG64
@@ -48,16 +39,13 @@
 #define CLIENT_ID CLIENT_ID64
 #define UNICODE_STRING UNICODE_STRING64
 
-//
-// Message format for messages sent from the client to the server
-//
-
-typedef enum {
+typedef enum _BASESRV_API_NUMBER
+{
 	BasepCreateProcess = BASESRV_FIRST_API_NUMBER,
 	BasepCreateThread,
 	BasepGetTempFile,
 	BasepExitProcess,
-	BasepDebugProcess,
+	BasepDebugProcess,  // Deprecated
 	BasepCheckVDM,
 	BasepUpdateVDMEntry,
 	BasepGetNextVDMCommand,
@@ -69,8 +57,7 @@ typedef enum {
 	BasepGetProcessShutdownParam,
 	BasepNlsSetUserInfo,
 	BasepNlsSetMultipleUserInfo,
-	BasepNlsCreateSortSection,
-	BasepNlsPreserveSection,
+	BasepNlsCreateSection,
 	BasepSetVDMCurDirs,
 	BasepGetVDMCurDirs,
 	BasepBatNotification,
@@ -78,8 +65,17 @@ typedef enum {
 	BasepSoundSentryNotification,
 	BasepRefreshIniFileMapping,
 	BasepDefineDosDevice,
+	BasepSetTermsrvAppInstallMode,
+	BasepNlsUpdateCacheCount,
+	BasepSetTermsrvClientTimeZone,
+	BasepSxsCreateActivationContext,
+	BasepDebugProcessStop, // Alias to BasepDebugProcess, deprecated
+	BasepRegisterThread,
+	BasepNlsGetUserInfo,
+
 	BasepMaxApiNumber
-} BASESRV_API_NUMBER;
+} BASESRV_API_NUMBER, *PBASESRV_API_NUMBER;
+
 
 typedef struct _STARTUPINFOA64 {
 	ULONG_PTR cb;
@@ -163,64 +159,12 @@ typedef struct {
 	//  UCHAR Data[];						// +24	+32
 } PORT_MESSAGE;
 
-typedef struct {
-    IN ULONG ExpectedVersion;
-    OUT HANDLE DefaultObjectDirectory;
-    OUT ULONG WindowsVersion;
-    OUT ULONG CurrentVersion;
-    OUT ULONG DebugFlags;
-    OUT WCHAR WindowsDirectory[ MAX_PATH ];
-    OUT WCHAR WindowsSystemDirectory[ MAX_PATH ];
-} BASESRV_API_CONNECTINFO;
-
 #define BASESRV_VERSION 0x10000
-
-typedef struct {
-    LPWSTR pValue;
-    LPWSTR pCacheString;
-    LPWSTR pData;
-    ULONG DataLength;
-} BASE_NLS_SET_USER_INFO_MSG;
-
-typedef struct {
-    ULONG Flags;
-    ULONG DataLength;
-    LPWSTR pPicture;
-    LPWSTR pSeparator;
-    LPWSTR pOrder;
-    LPWSTR pTLZero;
-    LPWSTR pTimeMarkPosn;
-} BASE_NLS_SET_MULTIPLE_USER_INFO_MSG;
-
-typedef struct {
-    UNICODE_STRING SectionName;
-    HANDLE hNewSection;
-    LARGE_INTEGER SectionSize;
-} BASE_NLS_CREATE_SORT_SECTION_MSG;
-
-typedef struct {
-    HANDLE hSection;
-} BASE_NLS_PRESERVE_SECTION_MSG;
 
 typedef struct {
     ULONG ShutdownLevel;
     ULONG ShutdownFlags;
 } BASE_SHUTDOWNPARAM_MSG;
-
-typedef struct {
-    HANDLE ProcessHandle;
-    HANDLE ThreadHandle;
-    CLIENT_ID ClientId;
-    CLIENT_ID DebuggerClientId;
-    ULONG CreationFlags;
-    ULONG IsVDM;
-    HANDLE hVDM;
-} BASE_CREATEPROCESS_MSG;
-
-typedef struct {
-    HANDLE ThreadHandle;
-    CLIENT_ID ClientId;
-} BASE_CREATETHREAD_MSG;
 
 typedef struct {
     UINT uUnique;
@@ -229,12 +173,6 @@ typedef struct {
 typedef struct {
     UINT uExitCode;
 } BASE_EXITPROCESS_MSG;
-
-typedef struct {
-    DWORD dwProcessId;
-    CLIENT_ID DebuggerClientId;
-    PVOID AttachCompleteRoutine;
-} BASE_DEBUGPROCESS_MSG;
 
 typedef struct {
     ULONG_PTR  iTask;				// + 38  40
@@ -370,16 +308,9 @@ typedef struct {
     ULONG ReturnValue;
     ULONG Reserved;
     union {
-        BASE_NLS_SET_USER_INFO_MSG NlsSetUserInfo;
-        BASE_NLS_SET_MULTIPLE_USER_INFO_MSG NlsSetMultipleUserInfo;
-        BASE_NLS_CREATE_SORT_SECTION_MSG NlsCreateSortSection;
-        BASE_NLS_PRESERVE_SECTION_MSG NlsPreserveSection;
         BASE_SHUTDOWNPARAM_MSG ShutdownParam;
-        BASE_CREATEPROCESS_MSG CreateProcess;
-        BASE_CREATETHREAD_MSG CreateThread;
         BASE_GETTEMPFILE_MSG GetTempFile;
         BASE_EXITPROCESS_MSG ExitProcess;
-        BASE_DEBUGPROCESS_MSG DebugProcess;
         BASE_CHECKVDM_MSG CheckVDM;
         BASE_UPDATE_VDM_ENTRY_MSG UpdateVDMEntry;
         BASE_GET_NEXT_VDM_COMMAND_MSG GetNextVDMCommand;
@@ -398,17 +329,8 @@ typedef struct {
 
 
 #ifndef DEFINE_BASEMSG32
-#undef BASESRV_API_CONNECTINFO
 #undef BASESRV_API_NUMBER
 #undef PORT_MESSAGE
-#undef BASESRV_API_CONNECTINFO
-#undef BASE_NLS_SET_USER_INFO_MSG
-#undef BASE_NLS_SET_MULTIPLE_USER_INFO_MSG
-#undef BASE_NLS_CREATE_SORT_SECTION_MSG
-#undef BASE_NLS_PRESERVE_SECTION_MSG
-#undef BASE_CREATEPROCESS_MSG
-#undef BASE_CREATETHREAD_MSG
-#undef BASE_DEBUGPROCESS_MSG
 #undef BASE_CHECKVDM_MSG
 #undef BASE_UPDATE_VDM_ENTRY_MSG
 #undef BASE_GET_NEXT_VDM_COMMAND_MSG
