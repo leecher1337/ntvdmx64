@@ -40,6 +40,18 @@ for /F "skip=2 tokens=3" %%r in ('reg query HKLM\SYSTEM\CurrentControlSet\Contro
   goto fini
 )
 
+for /f "tokens=4-5 delims=[.XP " %%i in ('ver') do set VERSION=%%i.%%j
+if "%version%"=="6.1" goto ossupp
+if "%version%"=="10.0" goto ossupp
+echo Your operating system version %VERSION% is currently not officially supported
+echo by the loader code. You can try Windows 7 loader at your own risk by pressing
+echo any key to continue. Otherwise please quit now (CTRL+C)
+pause
+set VERSION=6.1
+:ossupp
+copy /y ldntvdm\system32\%VERSION%\ldntvdm.dll ldntvdm\system32\
+copy /y ldntvdm\syswow64\%VERSION%\ldntvdm.dll ldntvdm\syswow64\
+
 cls
 echo ---------------------------------------------
 echo Installing, please wait...

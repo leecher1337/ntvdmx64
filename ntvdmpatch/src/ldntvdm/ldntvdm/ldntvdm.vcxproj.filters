@@ -39,6 +39,12 @@
     <ClCompile Include="wow64ext.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="detour.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="consbmp.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="basemsg64.h">
@@ -72,6 +78,12 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="wow64inj.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="detour.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="consbmp.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
