@@ -164,7 +164,7 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 		TRACE("LDNTVDM: Launching Win16 application");
 		Error = LastCreateUserProcessError;
 	}
-#endif-
+#endif
 	if (Error == STATUS_INVALID_IMAGE_PROTECT ||
 		(Error == STATUS_INVALID_IMAGE_NOT_MZ && BaseIsDosApplication &&
 			(BinarySubType = BaseIsDosApplication(PathName, Error))))

@@ -117,6 +117,40 @@ NTSTATUS CallBaseExitVDM(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 	return Status;
 }
 
+NTSTATUS CallBaseGetSetVDMCurDirs(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
+{
+	BASE_API_MSG64 m;
+	BASE_GET_SET_VDM_CUR_DIRS_MSG64 *b = (BASE_GET_SET_VDM_CUR_DIRS_MSG64*)&m.u.GetSetVDMCurDirs;
+	BASE_GET_SET_VDM_CUR_DIRS_MSG *b32 = (BASE_GET_SET_VDM_CUR_DIRS_MSG*)&m32->u.GetSetVDMCurDirs;
+	NTSTATUS Status;
+
+	b->ConsoleHandle = (ULONGLONG)b32->ConsoleHandle;
+	b->lpszzCurDirs = (ULONGLONG)b32->lpszzCurDirs;
+	b->cchCurDirs = b32->cchCurDirs;
+	Status = CsrClientCallServer((struct _CSR_API_MESSAGE*)&m, NULL, ApiNumber, sizeof(*b));
+	TRACE("CallBaseGetSetVDMCurDirs(%d) = %08X", ApiNumber, Status);
+	m32->ReturnValue = m.ReturnValue;
+	b32->lpszzCurDirs = b->lpszzCurDirs;
+	b32->cchCurDirs = b->cchCurDirs;
+	return Status;
+}
+
+NTSTATUS CallBaseRegisterWowExec(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
+{
+	BASE_API_MSG64 m;
+	BASE_REGISTER_WOWEXEC_MSG64 *b = (BASE_REGISTER_WOWEXEC_MSG64*)&m.u.RegisterWowExec;
+	BASE_REGISTER_WOWEXEC_MSG *b32 = (BASE_REGISTER_WOWEXEC_MSG*)&m32->u.RegisterWowExec;
+	NTSTATUS Status;
+
+	b->hwndWowExec = (ULONGLONG)b32->hwndWowExec;
+	b->ConsoleHandle = (ULONGLONG)b32->ConsoleHandle;
+	Status = CsrClientCallServer((struct _CSR_API_MESSAGE*)&m, NULL, ApiNumber, sizeof(*b));
+	TRACE("BaseRegisterWowExex(%d) = %08X", ApiNumber, Status);
+	m32->ReturnValue = m.ReturnValue;
+
+	return Status;
+}
+
 NTSTATUS CallBaseCheckVDM(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 {
 	BASE_API_MSG64 m;
@@ -459,6 +493,11 @@ NTSTATUS NTAPI myCsrClientCallServer(BASE_API_MSG *m, PCSR_CAPTURE_HEADER Captur
 			return CallBaseUpdateVDMEntry(m, ApiNumber);
 		case BasepGetNextVDMCommand:
 			return CallBaseGetNextVDMCommand(m, ApiNumber);
+		case BasepGetVDMCurDirs:
+		case BasepSetVDMCurDirs:
+			return CallBaseGetSetVDMCurDirs(m, ApiNumber);
+		case BasepRegisterWowExec:
+			return CallBaseRegisterWowExec(m, ApiNumber);
 		}
 	}
 	Status = CsrClientCallServerReal(m, CaptureHeader, ApiNumber, ArgLength);

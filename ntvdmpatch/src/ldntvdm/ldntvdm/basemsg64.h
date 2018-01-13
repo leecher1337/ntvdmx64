@@ -55,9 +55,6 @@ typedef enum _BASESRV_API_NUMBER
 	BasepSetReenterCount,
 	BasepSetProcessShutdownParam,
 	BasepGetProcessShutdownParam,
-	BasepNlsSetUserInfo,
-	BasepNlsSetMultipleUserInfo,
-	BasepNlsCreateSection,
 	BasepSetVDMCurDirs,
 	BasepGetVDMCurDirs,
 	BasepBatNotification,
@@ -72,7 +69,6 @@ typedef enum _BASESRV_API_NUMBER
 	BasepDebugProcessStop, // Alias to BasepDebugProcess, deprecated
 	BasepRegisterThread,
 	BasepNlsGetUserInfo,
-
 	BasepMaxApiNumber
 } BASESRV_API_NUMBER, *PBASESRV_API_NUMBER;
 
@@ -282,6 +278,7 @@ typedef struct {
 
 typedef struct {
     HANDLE hwndWowExec;
+	HANDLE ConsoleHandle;
 } BASE_REGISTER_WOWEXEC_MSG;
 
 typedef struct {
