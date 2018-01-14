@@ -115,6 +115,7 @@ BOOL ConsBmp_Install(void)
 	HMODULE hConhost;
 	DWORD flOld = 0;
 	DWORD dwRet, dwAddress, cbData;
+	BYTE *pConsBmp;
 	HKEY hKey;
 	
 	hConhost = GetModuleHandleA("conhost.exe");
@@ -127,7 +128,7 @@ BOOL ConsBmp_Install(void)
 		if ((dwRet = RegQueryValueEx(hKey, _T("FindProcessInList"), NULL, NULL, &dwAddress, &cbData)) == ERROR_SUCCESS) FindProcessInList = (fpFindProcessInList)((DWORD64)hConhost + dwAddress);
 		dwAddress = 0;
 		cbData = sizeof(dwAddress);
-		if ((dwRet = RegQueryValueEx(hKey, _T("CreateConsoleBitmap"), NULL, NULL, &dwAddress, &cbData)) == ERROR_SUCCESS) dwAddress += (DWORD64)hConhost;
+		if ((dwRet = RegQueryValueEx(hKey, _T("CreateConsoleBitmap"), NULL, NULL, &dwAddress, &cbData)) == ERROR_SUCCESS) pConsBmp = (DWORD64)hConhost + dwAddress;
 		RegCloseKey(hKey);
 	}
 
@@ -140,14 +141,14 @@ BOOL ConsBmp_Install(void)
 	pConHeap = GetProcessHeap();
 
 	// Build jump (jmp [rip - offset])
-	if (!VirtualProtect(dwAddress, 6 + sizeof(ULONG_PTR), PAGE_EXECUTE_READWRITE, &flOld))
+	if (!VirtualProtect(pConsBmp, 6 + sizeof(ULONG_PTR), PAGE_EXECUTE_READWRITE, &flOld))
 	{
-		TRACE("ConsBmp_Install hooking failed: VirtualProtect err=%08X", GetLastError());
+		TRACE("ConsBmp_Install hooking failed: VirtualProtect(%08X, %d) -> err=%08X", pConsBmp, 6 + sizeof(ULONG_PTR), GetLastError());
 		return FALSE;
 	}
-	RtlMoveMemory(dwAddress, "\xFF\x25\x00\x00\x00\x00", 6);
-	*((ULONG_PTR*)(dwAddress + 6)) = (ULONG_PTR)CreateConsoleBitmap;
-	VirtualProtect(dwAddress, 6 + sizeof(ULONG_PTR), flOld, &flOld);
+	RtlMoveMemory(pConsBmp, "\xFF\x25\x00\x00\x00\x00", 6);
+	*((ULONG_PTR*)(pConsBmp + 6)) = (ULONG_PTR)CreateConsoleBitmap;
+	VirtualProtect(pConsBmp, 6 + sizeof(ULONG_PTR), flOld, &flOld);
 
 	TRACE("ConsBmp_Install done");
 

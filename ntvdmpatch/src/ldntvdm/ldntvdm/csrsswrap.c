@@ -117,21 +117,38 @@ NTSTATUS CallBaseExitVDM(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 	return Status;
 }
 
-NTSTATUS CallBaseGetSetVDMCurDirs(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
+NTSTATUS CallBaseGetSetVDMCurDirs(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber, BOOL bGet)
 {
 	BASE_API_MSG64 m;
 	BASE_GET_SET_VDM_CUR_DIRS_MSG64 *b = (BASE_GET_SET_VDM_CUR_DIRS_MSG64*)&m.u.GetSetVDMCurDirs;
 	BASE_GET_SET_VDM_CUR_DIRS_MSG *b32 = (BASE_GET_SET_VDM_CUR_DIRS_MSG*)&m32->u.GetSetVDMCurDirs;
 	NTSTATUS Status;
+	PCSR_CAPTURE_HEADER CaptureBuffer = NULL;
 
+	if (b32->cchCurDirs && b32->lpszzCurDirs)
+	{
+		if (!(CaptureBuffer = (ULONG_PTR)CsrAllocateCaptureBuffer(1, b32->cchCurDirs)))
+		{
+			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+			return STATUS_NO_MEMORY;
+		}
+		CsrAllocateMessagePointer(CaptureBuffer, ROUND_UP(b32->cchCurDirs, 8), (PVOID *)&b->lpszzCurDirs);
+		if (!bGet) RtlMoveMemory(b->lpszzCurDirs, b32->lpszzCurDirs, b32->cchCurDirs);
+	}
+	else b->lpszzCurDirs = b32->lpszzCurDirs;
 	b->ConsoleHandle = (ULONGLONG)b32->ConsoleHandle;
-	b->lpszzCurDirs = (ULONGLONG)b32->lpszzCurDirs;
 	b->cchCurDirs = b32->cchCurDirs;
-	Status = CsrClientCallServer((struct _CSR_API_MESSAGE*)&m, NULL, ApiNumber, sizeof(*b));
-	TRACE("CallBaseGetSetVDMCurDirs(%d) = %08X", ApiNumber, Status);
+
+	Status = CsrClientCallServer((struct _CSR_API_MESSAGE*)&m, CaptureBuffer, ApiNumber, sizeof(*b));
+	TRACE("CallBase%sVDMCurDirs(%08X) = %08X", bGet?"Get":"Set", b32->ConsoleHandle, Status);
+
 	m32->ReturnValue = m.ReturnValue;
-	b32->lpszzCurDirs = b->lpszzCurDirs;
-	b32->cchCurDirs = b->cchCurDirs;
+	if (bGet && b->lpszzCurDirs)
+	{
+		RtlMoveMemory(b32->lpszzCurDirs, b->lpszzCurDirs, b->cchCurDirs);
+		b32->cchCurDirs = b->cchCurDirs;
+	}
+	if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
 	return Status;
 }
 
@@ -494,8 +511,9 @@ NTSTATUS NTAPI myCsrClientCallServer(BASE_API_MSG *m, PCSR_CAPTURE_HEADER Captur
 		case BasepGetNextVDMCommand:
 			return CallBaseGetNextVDMCommand(m, ApiNumber);
 		case BasepGetVDMCurDirs:
+			return CallBaseGetSetVDMCurDirs(m, ApiNumber, TRUE);
 		case BasepSetVDMCurDirs:
-			return CallBaseGetSetVDMCurDirs(m, ApiNumber);
+			return CallBaseGetSetVDMCurDirs(m, ApiNumber, FALSE);
 		case BasepRegisterWowExec:
 			return CallBaseRegisterWowExec(m, ApiNumber);
 		}
