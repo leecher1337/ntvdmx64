@@ -31,3 +31,77 @@
 <     tmp_buf[len] = 0;		// Bullshit write into a const ptr!
 ---
 >     if (tmp_buf[len]) tmp_buf[len] = 0;		// Bullshit write into a const ptr!
+--- NT4\private\mvdm\softpc.new\base\comms\com.c
++++ nt\private\mvdm\softpc.new\base\comms\com.c
+61a62,63
+> extern FILE *in_stream = NULL;
+> 
+236c238
+< FILE     *com_trace_fd = NULL;
+---
+> FILE     *com_trace_fd = NULL, *com_trace_rawfd = NULL;
+1084a1087
+> 		if (com_trace_rawfd) fwrite(&value, 1, 1, com_trace_rawfd);
+2683a2687,2689
+> 	if (com_trace_rawfd)
+> 		fclose (com_trace_rawfd);
+> 	com_trace_rawfd = NULL;
+2816a2823,2831
+> static int yscanf(char *format, void *arg)
+> {
+> 	char str [81];
+> 
+> 	if (fgets (str, 80, in_stream))
+> 		return sscanf(str, format, arg);
+> 	return 0;
+> }
+> 
+2824c2839
+< 	scanf ("%s", ref);
+---
+> 	yscanf ("%s", ref);
+2900c2915
+< 		scanf ("%x", &val1);
+---
+> 		yscanf ("%x", &val1);
+2938c2953
+< 	scanf ("%s", com_reg);
+---
+> 	yscanf ("%s", com_reg);
+2956c2971
+< 	scanf ("%s", com_reg);
+---
+> 	yscanf ("%s", com_reg);
+2963c2978
+< 	scanf ("%x", &val);
+---
+> 	yscanf ("%x", &val);
+2977c2992
+< 	scanf ("%s", filename);
+---
+> 	yscanf ("%s", filename);
+3042c3057
+< 	scanf ("%s", filename);
+---
+> 	yscanf ("%s", filename);
+3066a3082,3095
+> 	return (0);
+> }
+> 
+> int com_o_rawfd ()
+> {
+> 	char filename[100];
+> 	printf ("FILE > ");
+> 	yscanf ("%s", filename);
+> 	if (!(com_trace_rawfd = fopen (filename, "w")))
+> 	{
+> 		printf ("Cannot open %s\n", filename);
+> 		return (0);
+> 	}
+> 	printf ("Com raw debug output file = '%s'\n", filename);
+3210a3240
+> 	{"rawo",   com_o_rawfd,      "  Open raw output logfile"},
+3238c3268
+< 		scanf ("%s", com);
+---
+> 		yscanf ("%s", com);
