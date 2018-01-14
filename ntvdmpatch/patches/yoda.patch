@@ -27,10 +27,32 @@
 < #endif	/* GISP_CPU */
 --- NT4\private\mvdm\softpc.new\host\src\fprt.c
 +++ nt\private\mvdm\softpc.new\host\src\fprt.c
-227c227
+148a149
+> 	int len;
+150c151
+<     if (getenv("TRACE") == NULL)        //JonLu request to limit debugs
+---
+>     if (getenv("TRACE") == NULL && tf==stdout)        //JonLu request to limit debugs
+154c155
+<     vsprintf(buf, str, ap);
+---
+>     len = vsprintf(buf, str, ap);
+156c157
+<     OutputString(buf);
+---
+> 	fwrite(buf,len,1,tf);
+227c228,236
 <     tmp_buf[len] = 0;		// Bullshit write into a const ptr!
 ---
->     if (tmp_buf[len]) tmp_buf[len] = 0;		// Bullshit write into a const ptr!
+>     // If not processing call to STDOUT pass on to standard library function
+>     if(stream != stdout)
+>     {
+> 	int i;
+> 	for (i=0; i<size*len && (fputc(((unsigned char*)buf)[i], stream)) != EOF; i++);
+> 	return (len);
+>     }
+> 
+>     if (tmp_buf[size*len]) tmp_buf[size*len] = 0;		// Bullshit write into a const ptr!
 --- NT4\private\mvdm\softpc.new\base\comms\com.c
 +++ nt\private\mvdm\softpc.new\base\comms\com.c
 61a62,63
