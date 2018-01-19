@@ -130,33 +130,44 @@
 >    }
 --- NT4\private\mvdm\softpc.new\base\ccpu386\c_xcptn.c
 +++ nt\private\mvdm\softpc.new\base\ccpu386\c_xcptn.c
-98a99
+17a18
+> #include <stdlib.h>
+39a41,46
+> #ifdef i386
+> IMPORT char * __cdecl host_getenv IPT1 (char *, name);
+> #else
+> IMPORT char *host_getenv IPT1 (char *, name);
+> #endif
+> 
+42d48
+< 	IMPORT char *host_getenv IPT1 (char *, name);			\
+92a99
 > GLOBAL IBOOL snaffle = FALSE; /* SetSnaffleDataDebugExcpn on/off for Yoda */
-258c259
+252c259
 < 	if(GET_PE() && host_exint_hook((IS32) nmbr, (IS32)error_code))
 ---
 > 	if(GET_PE() && host_exint_hook((IS32) nmbr, (IS32)error_code)) {
-260a262
+254a262
 > 	}
-318c320
+312c320
 < 	  if(GET_PE() && host_exint_hook((IS32) nmbr, (IS32)error_code))
 ---
 > 	  if(GET_PE() && host_exint_hook((IS32) nmbr, (IS32)error_code)) {
-320a323
+314a323
 > 	  }
-379c382
+373c382
 < 	  if(GET_PE() && host_exint_hook((IS32) DF_INT_NR, (IS32)NULL_ERROR_CODE))
 ---
 > 	  if(GET_PE() && host_exint_hook((IS32) DF_INT_NR, (IS32)NULL_ERROR_CODE)) {
-381a385
+375a385
 > 	  }
-443c447
+437c447
 < 	  if(GET_PE() && host_exint_hook((IS32) I0_INT_NR, (IS32)NULL_ERROR_CODE))
 ---
 > 	  if(GET_PE() && host_exint_hook((IS32) I0_INT_NR, (IS32)NULL_ERROR_CODE)) {
-446a451
+440a451
 > 	  }
-488a494,502
+482a494,502
 > #ifdef YODA
 >    if (snaffle &&  (GET_DR(DR_DSR) &
 > 	(DSR_B3_MASK | DSR_B2_MASK | DSR_B1_MASK | DSR_B0_MASK))) 
@@ -166,13 +177,13 @@
 >    }
 > 
 > #endif
-589c603
+583c603
 < 	  if(GET_PE() && host_exint_hook((IS32) PF_INT_NR, (IS32)page_error))
 ---
 > 	  if(GET_PE() && host_exint_hook((IS32) PF_INT_NR, (IS32)page_error)) {
-592a607
+586a607
 > 	  }
-647a663,674
+641a663,674
 > 
 > /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 > /* Turn snaffle on and off                                            */
