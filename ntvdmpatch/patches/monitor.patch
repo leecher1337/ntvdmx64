@@ -281,10 +281,6 @@
 < #if defined(NTVDM) && defined(MONITOR)
 ---
 > #if defined(NTVDM)
-1883c1883
-< #ifndef NTVDM
----
-> #if !defined(NTVDM) || defined(CCPU)
 --- NT4\private\mvdm\softpc.new\host\src\config.c
 +++ nt\private\mvdm\softpc.new\host\src\config.c
 506c506
