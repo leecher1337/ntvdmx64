@@ -212,6 +212,8 @@ dpmi.exe, but most programs should work, I hope.
 
 Tested on
 =========
+Windows 7 x64
+Windows Server 2008 x64
 Windows 10 x64
 
 You are invited to improve this project to bring back DOS to Windows.

@@ -1,9 +1,8 @@
 /* Just in case we need to be loaded as appcert DLL. 
  * Currently this is not used */
+#include "ldntvdm.h"
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include "Winternl.h"
+#ifdef APPCERT_DLL
 #include <ntstatus.h>
 
 
@@ -16,6 +15,9 @@ __declspec(dllexport) NTSTATUS NTAPI CreateProcessNotify(
 	ULONG uNotifyReason
 	)
 {
+#ifdef TARGET_WIN7
+	UpdateSymbolCache();
+#endif
 	switch (uNotifyReason)
 	{
 	case APPCERT_IMAGE_OK_TO_RUN:
@@ -35,3 +37,5 @@ __declspec(dllexport) NTSTATUS NTAPI CreateProcessNotify(
 		return STATUS_SUCCESS;
 	}
 }
+
+#endif

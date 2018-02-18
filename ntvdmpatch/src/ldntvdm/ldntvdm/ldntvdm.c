@@ -58,6 +58,19 @@ typedef INT_PTR(BASEP_CALL *fpBasepProcessInvalidImage)(NTSTATUS Error, HANDLE T
 	PUNICODE_STRING pUnicodeStringEnv, PDWORD pVDMCreationState, PULONG pVdmBinaryType, PDWORD pbVDMCreated,
 	PHANDLE pVdmWaitHandle);
 
+typedef BOOL(BASEP_CALL *fpCreateProcessInternalW)(HANDLE hToken,
+	LPCWSTR lpApplicationName,
+	LPWSTR lpCommandLine,
+	LPSECURITY_ATTRIBUTES lpProcessAttributes,
+	LPSECURITY_ATTRIBUTES lpThreadAttributes,
+	BOOL bInheritHandles,
+	DWORD dwCreationFlags,
+	LPVOID lpEnvironment,
+	LPCWSTR lpCurrentDirectory,
+	LPSTARTUPINFOW lpStartupInfo,
+	LPPROCESS_INFORMATION lpProcessInformation,
+	PHANDLE hNewToken
+	);
 
 typedef ULONG(BASEP_CALL *fpBaseIsDosApplication)(
 	IN PUNICODE_STRING  	PathName,
@@ -404,6 +417,7 @@ BOOL FixNTDLL(void)
 }
 #endif	// _WIN32
 
+#ifdef CREATEPROCESS_HOOK
 BOOL InjectIntoCreatedThread(LPPROCESS_INFORMATION lpProcessInformation)
 {
 	PROCESS_BASIC_INFORMATION basicInfo;
@@ -461,6 +475,44 @@ BOOL InjectIntoCreatedThread(LPPROCESS_INFORMATION lpProcessInformation)
 	}
 	return bRet;
 }
+#else /* CREATEPROCESS_HOOK */
+#ifdef _WIN64
+DWORD WINAPI InjectIntoCreatedThreadThread(LPVOID lpPID)
+{
+	HANDLE hProcess;
+	BOOL bIsWow64;
+
+	if (hProcess = OpenProcess(PROCESS_CREATE_THREAD | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION, FALSE, lpPID))
+	{
+		IsWow64Process(hProcess, &bIsWow64);
+		/* 64 -> 32 */
+		if (bIsWow64)
+		{
+			if (!InjectLdntvdmWow64(hProcess)) OutputDebugStringA("Injecting int 32bit conhost parent failed");
+		}
+		/* 64 -> 64, 32 -> 32 */
+		else
+		{
+			if (!(injectLdrLoadDLL(hProcess, 0, LDNTVDM_NAME, METHOD_CREATETHREAD))) OutputDebugStringA("Inject LdrLoadDLL failed.");
+		}
+		CloseHandle(hProcess);
+	}
+}
+
+typedef void (WINAPI *fpNotifyWinEvent)(DWORD event, HWND hwnd, LONG idObject, LONG idChild);
+fpNotifyWinEvent NotifyWinEventReal;
+void WINAPI NotifyWinEventHook(DWORD event, HWND  hwnd, LONG  idObject, LONG  idChild)
+{
+	if (event == EVENT_CONSOLE_START_APPLICATION)
+	{
+		TRACE("EVENT_CONSOLE_START_APPLICATION PID %d", idObject);
+		// Inject ourself into the new process
+		CreateThread(NULL, 0, InjectIntoCreatedThreadThread, idObject, 0, NULL);
+	}
+	NotifyWinEventReal(event, hwnd, idObject, idChild);
+}
+#endif
+#endif /* CREATEPROCESS_HOOK*/
 
 #ifdef TARGET_WIN7
 #ifdef _WIN64
@@ -525,6 +577,7 @@ BOOL UpdateSymbolCache()
 }
 #endif
 
+#ifdef CREATEPROCESS_HOOK
 typedef BOOL(WINAPI *CreateProcessAFunc)(LPCSTR lpApplicationName, LPSTR lpCommandLine, 
 	LPSECURITY_ATTRIBUTES lpProcessAttributes, LPSECURITY_ATTRIBUTES lpThreadAttributes, 
 	BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPCSTR lpCurrentDirectory, 
@@ -577,6 +630,7 @@ BOOL WINAPI CreateProcessWHook(LPCWSTR lpApplicationName, LPWSTR lpCommandLine, 
 	}
 	return bRet;
 }
+#endif
 
 typedef BOOL(WINAPI *fpSetConsolePalette)(IN HANDLE hConsoleOutput, IN HPALETTE hPalette, IN UINT dwUsage);
 fpSetConsolePalette SetConsolePaletteReal;
@@ -664,8 +718,10 @@ BOOL WINAPI _DllMainCRTStartup(
 			}
 
 
+#ifdef CREATEPROCESS_HOOK
 			CreateProcessAReal = Hook_Inline(CreateProcessA, CreateProcessAHook);
 			CreateProcessWReal = Hook_Inline(CreateProcessW, CreateProcessWHook);
+#endif
 		}
 #ifdef WOW16_SUPPORT
 		if (!Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "ntdll.dll", "NtCreateUserProcess", NtCreateUserProcessHook, &NtCreateUserProcessReal))
@@ -679,11 +735,13 @@ BOOL WINAPI _DllMainCRTStartup(
 		BaseIsDosApplication = GetProcAddress(hKrnl32, "BaseIsDosApplication");
 		Hook_IAT_x64((LPBYTE)hKernelBase, "KERNEL32.DLL", "ext-ms-win-kernelbase-processthread-l1-1-0.dll",
 			"BasepProcessInvalidImage", BasepProcessInvalidImage);
+#ifdef CREATEPROCESS_HOOK
 		/* Newer Windows Versions use l1-1-0 instead of l1-1-2 */
 		if (!Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-2.dll", "CreateProcessA", CreateProcessAHook, &CreateProcessAReal))
 			Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-0.dll", "CreateProcessA", CreateProcessAHook, &CreateProcessAReal);
 		if (!Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-2.dll", "CreateProcessW", CreateProcessWHook, &CreateProcessWReal))
 			Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-0.dll", "CreateProcessW", CreateProcessWHook, &CreateProcessWReal);
+#endif
 #ifdef WOW16_SUPPORT
 		if (!Hook_IAT_x64_IAT((LPBYTE)hKernelBase, "ntdll.dll", "NtCreateUserProcess", NtCreateUserProcessHook, &NtCreateUserProcessReal))
 			OutputDebugStringA("Hooking NtCreateUserProcess failed.");
@@ -713,7 +771,14 @@ BOOL WINAPI _DllMainCRTStartup(
 				else
 					Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "api-ms-win-core-libraryloader-l1-2-0.dll", "LoadLibraryExW", LoadLibraryExWHook, &LoadLibraryExWReal);
 #endif
-				
+#ifndef CREATEPROCESS_HOOK
+				// We want notification when new console process gets started so that we can inject
+#ifdef TARGET_WIN7
+				Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "user32.dll", "NotifyWinEvent", NotifyWinEventHook, &NotifyWinEventReal);
+#else
+				if (hKrnl32) Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "user32.dll", "NotifyWinEvent", NotifyWinEventHook, &NotifyWinEventReal);
+#endif
+#endif
 			}
 		}
 #else

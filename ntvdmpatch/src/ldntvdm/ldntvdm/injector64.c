@@ -180,32 +180,36 @@ DWORD GetLoadLibraryAddressX32(HANDLE ProcessHandle)
 	return 0;
 }
 
+HANDLE InjectLdntvdmWow64(HANDLE hProcess)
+{
+	LPTHREAD_START_ROUTINE pLoadLibraryW;
+
+	if (pLoadLibraryW = (LPTHREAD_START_ROUTINE)GetLoadLibraryAddressX32(hProcess))
+	{
+		PBYTE *pLibRemote;
+		if (pLibRemote = VirtualAllocEx(hProcess, NULL, sizeof(LDNTVDM_NAME), MEM_COMMIT, PAGE_READWRITE))
+		{
+			WriteProcessMemory(hProcess, pLibRemote, (void*)LDNTVDM_NAME, sizeof(LDNTVDM_NAME), NULL);
+			return CreateRemoteThread(hProcess, NULL, 0, pLoadLibraryW, pLibRemote, 0, NULL) != NULL;
+		}
+
+	}
+	return NULL;
+}
 
 DWORD WINAPI InjectLdntvdmWow64Thread(LPVOID lpPID)
 {
 	HANDLE hProcess;
 	int i;
-	LPTHREAD_START_ROUTINE pLoadLibraryW;
+	HANDLE hThread;
 
 	for (i = 0; i < 20; i++)
 	{
 		if (hProcess = OpenProcess(PROCESS_CREATE_THREAD | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION, FALSE, (DWORD)lpPID))
 		{
-			if (pLoadLibraryW = (LPTHREAD_START_ROUTINE)GetLoadLibraryAddressX32(hProcess))
-			{
-				PBYTE *pLibRemote;
-				if (pLibRemote = VirtualAllocEx(hProcess, NULL, sizeof(LDNTVDM_NAME), MEM_COMMIT, PAGE_READWRITE))
-				{
-					WriteProcessMemory(hProcess, pLibRemote, (void*)LDNTVDM_NAME, sizeof(LDNTVDM_NAME), NULL);
-					if (CreateRemoteThread(hProcess, NULL, 0, pLoadLibraryW, pLibRemote, 0, NULL))
-					{
-						CloseHandle(hProcess);
-						break;
-					}
-				}
-
-			}
+			hThread = InjectLdntvdmWow64(hProcess);
 			CloseHandle(hProcess);
+			if (hThread) break;
 		}
 		else break;
 		Sleep(250);
