@@ -103,7 +103,7 @@ typedef BOOL (KRNL32_CALL *fpBaseGetVdmConfigInfo)(
 	,OUT PULONG VdmSize
 #endif
 	);
-
+	
 #define WOW16_SUPPORT
 #ifdef WOW16_SUPPORT
 typedef NTSTATUS (NTAPI *fpNtCreateUserProcess)(
@@ -135,6 +135,9 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 	PVOID AttributeList
 	)
 {
+#if defined(TARGET_WIN7) && !defined(CREATEPROCESS_HOOK)
+	UpdateSymbolCache();
+#endif
 	LastCreateUserProcessError = NtCreateUserProcessReal(ProcessHandle,
 		ThreadHandle,
 		ProcessDesiredAccess,
@@ -157,6 +160,31 @@ fpBaseIsDosApplication BaseIsDosApplication = NULL;
 fpBaseCheckVDM BaseCheckVDM = NULL;
 fpBaseCreateVDMEnvironment BaseCreateVDMEnvironment = NULL;
 fpBaseGetVdmConfigInfo BaseGetVdmConfigInfo = NULL;
+fpCreateProcessInternalW CreateProcessInternalW = NULL;
+
+BOOL __declspec(dllexport) BASEP_CALL NtVdm64CreateProcessInternalW(HANDLE hToken,
+	LPCWSTR lpApplicationName,
+	LPWSTR lpCommandLine,
+	LPSECURITY_ATTRIBUTES lpProcessAttributes,
+	LPSECURITY_ATTRIBUTES lpThreadAttributes,
+	BOOL bInheritHandles,
+	DWORD dwCreationFlags,
+	LPVOID lpEnvironment,
+	LPCWSTR lpCurrentDirectory,
+	LPSTARTUPINFOW lpStartupInfo,
+	LPPROCESS_INFORMATION lpProcessInformation,
+	PHANDLE hNewToken
+	)
+{
+	if (!CreateProcessInternalW)
+	{
+		if (!(CreateProcessInternalW = (fpCreateProcessInternalW)GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "CreateProcessInternalW")))
+			return FALSE;
+	}
+	return CreateProcessInternalW(hToken, lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes, bInheritHandles,
+		dwCreationFlags, lpEnvironment, lpCurrentDirectory, lpStartupInfo, lpProcessInformation, hNewToken);
+}
+
 
 INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 	LPCWSTR dosname, LPCWSTR *lppApplicationName,
