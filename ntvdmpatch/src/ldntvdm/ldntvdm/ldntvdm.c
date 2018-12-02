@@ -715,6 +715,30 @@ TCHAR *GetProcessName(void)
 	return ++p;
 }
 
+#ifndef _WIN64
+void NTAPI HookSetConsolePaletteAPC(ULONG_PTR Parameter)
+{
+	static int iTries = 0;
+	if (Hook_IAT_x64_IAT(GetModuleHandle(NULL), "KERNEL32.DLL", "SetConsolePalette", mySetConsolePalette, &SetConsolePaletteReal) == -3)
+	{
+		HANDLE hThread;
+		if (iTries >= 10) return;
+
+		// Queue APC to main thread and try again
+		if (hThread = OpenThread(THREAD_SET_CONTEXT, FALSE, *((DWORD*)(__readfsdword(0x18) + 36))))
+		{
+			if (!QueueUserAPC(HookSetConsolePaletteAPC, hThread, NULL))
+			{
+				TRACE("QueueUserAPC failed gle=%d", GetLastError());
+			}
+			CloseHandle(hThread);
+		}
+		else { TRACE("OpenThread error %d", GetLastError()); }
+		iTries++;
+	}
+}
+#endif
+
 BOOL WINAPI _DllMainCRTStartup(
 	HANDLE  hDllHandle,
 	DWORD   dwReason,
@@ -793,8 +817,7 @@ BOOL WINAPI _DllMainCRTStartup(
 #endif
 		}
 #if defined(WOW16_SUPPORT) || (defined(TARGET_WIN7) && !defined(CREATEPROCESS_HOOK))
-		if (!Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "ntdll.dll", "NtCreateUserProcess", NtCreateUserProcessHook, &NtCreateUserProcessReal))
-			OutputDebugStringA("Hooking NtCreateUserProcess failed.");
+		Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "ntdll.dll", "NtCreateUserProcess", NtCreateUserProcessHook, &NtCreateUserProcessReal);
 #endif	// WOW16_SUPPORT
 
 #else	// TARGET_WIN7
@@ -806,14 +829,13 @@ BOOL WINAPI _DllMainCRTStartup(
 			"BasepProcessInvalidImage", BasepProcessInvalidImage);
 #ifdef CREATEPROCESS_HOOK
 		/* Newer Windows Versions use l1-1-0 instead of l1-1-2 */
-		if (!Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-2.dll", "CreateProcessA", CreateProcessAHook, &CreateProcessAReal))
+		if (Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-2.dll", "CreateProcessA", CreateProcessAHook, &CreateProcessAReal)<0)
 			Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-0.dll", "CreateProcessA", CreateProcessAHook, &CreateProcessAReal);
-		if (!Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-2.dll", "CreateProcessW", CreateProcessWHook, &CreateProcessWReal))
+		if (Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-2.dll", "CreateProcessW", CreateProcessWHook, &CreateProcessWReal)<0)
 			Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-0.dll", "CreateProcessW", CreateProcessWHook, &CreateProcessWReal);
 #endif
 #ifdef WOW16_SUPPORT
-		if (!Hook_IAT_x64_IAT((LPBYTE)hKernelBase, "ntdll.dll", "NtCreateUserProcess", NtCreateUserProcessHook, &NtCreateUserProcessReal))
-			OutputDebugStringA("Hooking NtCreateUserProcess failed.");
+		Hook_IAT_x64_IAT((LPBYTE)hKernelBase, "ntdll.dll", "NtCreateUserProcess", NtCreateUserProcessHook, &NtCreateUserProcessReal);
 #endif	// WOW16_SUPPORT
 #endif 
 		TRACE("LDNTVDM: BasepProcessInvalidImageReal = %08X", BasepProcessInvalidImageReal);
@@ -854,7 +876,7 @@ BOOL WINAPI _DllMainCRTStartup(
 		FixNTDLL();
 		HookCsrClientCallServer();
 		/* SetConsolePalette bug */
-		Hook_IAT_x64_IAT(GetModuleHandle(NULL), "KERNEL32.DLL", "SetConsolePalette", mySetConsolePalette, &SetConsolePaletteReal);
+		HookSetConsolePaletteAPC(NULL);
 		Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "ntdll.dll", "NtQueryInformationProcess", myNtQueryInformationProcess, NULL);
 		Hook_IAT_x64_IAT((LPBYTE)hKernelBase, "ntdll.dll", "NtQueryInformationProcess", myNtQueryInformationProcess, NULL);
 #endif

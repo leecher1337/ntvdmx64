@@ -81,18 +81,23 @@ LPVOID GetPtrFromVA(PVOID ptr, IMAGE_NT_HEADERS *pNTHeader, PBYTE pImageBase) //
 	return GetPtrFromRVA(rva, pNTHeader, pImageBase);
 }
 
-BOOL Hook_IAT_x64_IAT(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char FunName[], LPVOID NewFun, PULONG_PTR OldFun) 
+/* -1	-	Library not found
+ * -2	-	Entry point not found
+ * -3	-	IAT entry not bound yet
+ */
+int Hook_IAT_x64_IAT(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char FunName[], LPVOID NewFun, PULONG_PTR OldFun) 
 {
 	PIMAGE_DOS_HEADER DosHeader = (PIMAGE_DOS_HEADER)hMod;
 	PIMAGE_NT_HEADERS NtHeaders = (PIMAGE_NT_HEADERS)(hMod + DosHeader->e_lfanew);
 	PIMAGE_IMPORT_DESCRIPTOR idata = (PIMAGE_IMPORT_DESCRIPTOR)(hMod + NtHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
-	int i;
+	int i, iRet = -1;
 	char *pszDLL;
 
 	TRACE("Hook_IAT_x64_IAT(%08X, %s, %s, %08X, %08X)", hMod, LibNameBigCaseName_SmallFormat, FunName, NewFun, OldFun);
 	for (; idata->Name; idata++) {
 		pszDLL = (char*)(hMod + idata->Name);
 		if (!lstrcmpiA(pszDLL, LibNameBigCaseName_SmallFormat)) {
+			iRet = -2;
 			PIMAGE_THUNK_DATA ThunkData = (PIMAGE_THUNK_DATA)(hMod + idata->OriginalFirstThunk);
 			PULONG_PTR Address = (PULONG_PTR)(hMod + idata->FirstThunk);
 			for (i = 0; ThunkData->u1.ForwarderString; i++) {
@@ -107,19 +112,25 @@ BOOL Hook_IAT_x64_IAT(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char F
 					else if (!lstrcmpA((char*)(hMod + ThunkData->u1.ForwarderString + 2), FunName))
 					{
 						DWORD OldProt;
+
+						if (Address[i] == ThunkData->u1.AddressOfData)
+						{
+							TRACE("IAT entry is not bound yet");
+							return -3;
+						}
 						VirtualProtect(&Address[i], sizeof(ULONG_PTR), PAGE_READWRITE, &OldProt);
 						if (OldFun) *OldFun = Address[i];
-						TRACE("Hooked %08X -> %08X (AddressOfData = %08X)", Address[i], NewFun, ThunkData->u1.AddressOfData);
+						TRACE("Hooked %08X -> %08X", Address[i], NewFun);
 						Address[i] = (ULONG_PTR)NewFun;
 						VirtualProtect(&Address[i], sizeof(ULONG_PTR), OldProt, &OldProt);
-						return TRUE;
+						return 0;
 					}
 				} ThunkData++;
 			}
 		}
 	}
 	TRACE("Hooking failed.");
-	return FALSE;
+	return iRet;
 }
 
 
