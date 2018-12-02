@@ -20,7 +20,6 @@
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
 #include "ldntvdm.h"
-#include <stdio.h>
 #include <tchar.h>
 #include "Winternl.h"
 #include "csrsswrap.h"
@@ -104,8 +103,9 @@ typedef BOOL (KRNL32_CALL *fpBaseGetVdmConfigInfo)(
 #endif
 	);
 	
-#define WOW16_SUPPORT
-#ifdef WOW16_SUPPORT
+// We now have https://github.com/otya128/winevdm , no more need to try to support WOW16, which didn't work anyway
+//#define WOW16_SUPPORT
+#if defined(WOW16_SUPPORT) || (defined(TARGET_WIN7) && !defined(CREATEPROCESS_HOOK))
 typedef NTSTATUS (NTAPI *fpNtCreateUserProcess)(
 	PHANDLE ProcessHandle,
 	PHANDLE ThreadHandle,
@@ -150,11 +150,17 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 		CreateInfo,
 		AttributeList);
 
+#ifdef WOW16_SUPPORT
 	return LastCreateUserProcessError==STATUS_INVALID_IMAGE_WIN_16?STATUS_INVALID_IMAGE_PROTECT:LastCreateUserProcessError;
+#else
+	return LastCreateUserProcessError;
+#endif
 }
 #endif
 
-
+#ifdef TRACING
+fpsprintf sprintf;
+#endif
 fpBasepProcessInvalidImage BasepProcessInvalidImageReal = NULL;
 fpBaseIsDosApplication BaseIsDosApplication = NULL;
 fpBaseCheckVDM BaseCheckVDM = NULL;
@@ -662,6 +668,13 @@ BOOL WINAPI CreateProcessWHook(LPCWSTR lpApplicationName, LPWSTR lpCommandLine, 
 
 typedef BOOL(WINAPI *fpSetConsolePalette)(IN HANDLE hConsoleOutput, IN HPALETTE hPalette, IN UINT dwUsage);
 fpSetConsolePalette SetConsolePaletteReal;
+typedef BOOL (WINAPI *fpOpenClipboard)(IN HWND hWndNewOwner);
+fpOpenClipboard pOpenClipboard = NULL;
+typedef HANDLE (WINAPI *fpSetClipboardData)(IN UINT uFormat, IN HANDLE hMem);
+fpSetClipboardData pSetClipboardData = NULL;
+typedef BOOL (WINAPI *fpCloseClipboard)(VOID);
+fpCloseClipboard pCloseClipboard = NULL;
+
 BOOL WINAPI mySetConsolePalette(IN HANDLE hConsoleOutput, IN HPALETTE hPalette, IN UINT dwUsage)
 {
 	/* This dirty hack via clipboard causes hPalette to become public (GreSetPaletteOwner(hPalette, OBJECT_OWNER_PUBLIC))
@@ -669,13 +682,38 @@ BOOL WINAPI mySetConsolePalette(IN HANDLE hConsoleOutput, IN HPALETTE hPalette, 
 	 * For the record, ConsoleControl() is a function located in USER32.DLL that could be used, but as said,
 	 * ConsolePublicPalette call isn't implemented anymore in WIN32k, another stupidity by our friends at M$...
 	 */
-	OpenClipboard(NULL);
-	SetClipboardData(CF_PALETTE, hPalette);
-	CloseClipboard();
+	BOOL bRet;
 
-	return SetConsolePaletteReal(hConsoleOutput, hPalette, dwUsage);
+	// Avoid USER32.DLL dependency of loader by manually loading functions
+	if (!pOpenClipboard)
+	{
+		HMODULE hUser32 = GetModuleHandle(_T("user32.dll"));
+		if (!hUser32 && !(hUser32 = LoadLibrary(_T("user32.dll"))))
+		{
+			TRACE("Loadlibrary user32.dll fail");
+			return SetConsolePaletteReal(hConsoleOutput, hPalette, dwUsage);
+		}
+		pOpenClipboard = GetProcAddress(hUser32, "OpenClipboard");
+		pSetClipboardData = GetProcAddress(hUser32, "SetClipboardData");
+		pCloseClipboard = GetProcAddress(hUser32, "CloseClipboard");
+	}
+	pOpenClipboard(NULL);
+	pSetClipboardData(CF_PALETTE, hPalette);
+	pCloseClipboard();
+
+	bRet = SetConsolePaletteReal(hConsoleOutput, hPalette, dwUsage);
+	TRACE("SetConsolePalette = %d", bRet);
+	return bRet;
 }
 
+TCHAR *GetProcessName(void)
+{
+	TCHAR szProcess[MAX_PATH], *p;
+
+	p = szProcess + GetModuleFileName(NULL, szProcess, sizeof(szProcess) / sizeof(TCHAR));
+	while (*p != '\\') p--;
+	return ++p;
+}
 
 BOOL WINAPI _DllMainCRTStartup(
 	HANDLE  hDllHandle,
@@ -694,6 +732,9 @@ BOOL WINAPI _DllMainCRTStartup(
 
 		hKrnl32 = GetModuleHandle(_T("kernel32.dll"));
 		hKernelBase = (HMODULE)GetModuleHandle(_T("KernelBase.dll"));
+#ifdef TRACING
+		sprintf = (fpsprintf)GetProcAddress(GetModuleHandle(_T("ntdll.dll")), "sprintf");
+#endif
 
 #ifdef TARGET_WIN7
 		{
@@ -751,12 +792,12 @@ BOOL WINAPI _DllMainCRTStartup(
 			CreateProcessWReal = Hook_Inline(CreateProcessW, CreateProcessWHook);
 #endif
 		}
-#ifdef WOW16_SUPPORT
+#if defined(WOW16_SUPPORT) || (defined(TARGET_WIN7) && !defined(CREATEPROCESS_HOOK))
 		if (!Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "ntdll.dll", "NtCreateUserProcess", NtCreateUserProcessHook, &NtCreateUserProcessReal))
 			OutputDebugStringA("Hooking NtCreateUserProcess failed.");
 #endif	// WOW16_SUPPORT
 
-#else
+#else	// TARGET_WIN7
 		// Windows 10
 		lpProcII = (LPBYTE)GetProcAddress(hKrnl32, "BasepProcessInvalidImage");
 		BasepProcessInvalidImageReal = (fpBasepProcessInvalidImage)lpProcII;
@@ -778,18 +819,14 @@ BOOL WINAPI _DllMainCRTStartup(
 		TRACE("LDNTVDM: BasepProcessInvalidImageReal = %08X", BasepProcessInvalidImageReal);
 		TRACE("LDNTVDM: BaseIsDosApplication = %08X", BaseIsDosApplication);
 
-		FixNTDLL();
-
 #ifdef _WIN64
 		{
-			TCHAR szProcess[MAX_PATH], *p;
-
 			// Fix ConhostV1.dll bug where memory isn't initialized properly
-			p=szProcess + GetModuleFileName(NULL, szProcess, sizeof(szProcess) / sizeof(TCHAR));
-			while (*p != '\\') p--;
-			if (lstrcmpi(++p, _T("ConHost.exe")) == 0)
+			if (lstrcmpi(GetProcessName(), _T("ConHost.exe")) == 0)
 			{
 				TRACE("LDNTVDM is running inside ConHost.exe");
+
+				FixNTDLL();
 #ifdef TARGET_WIN7
 				ConsBmp_Install();
 				Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "ntdll.dll", "RtlAllocateHeap", RtlAllocateHeapHook, &RtlAllocateHeapReal);
@@ -809,7 +846,12 @@ BOOL WINAPI _DllMainCRTStartup(
 #endif
 			}
 		}
-#else
+#else /* WIN64 */
+#ifndef WOW16_SUPPORT
+		// Only fix NTDLL in ntvdm.exe where it is needed, don't interfere with other applications like ovdm, until we natively support Win16
+		if (lstrcmpi(GetProcessName(), _T("ntvdm.exe")) == 0)
+#endif
+		FixNTDLL();
 		HookCsrClientCallServer();
 		/* SetConsolePalette bug */
 		Hook_IAT_x64_IAT(GetModuleHandle(NULL), "KERNEL32.DLL", "SetConsolePalette", mySetConsolePalette, &SetConsolePaletteReal);

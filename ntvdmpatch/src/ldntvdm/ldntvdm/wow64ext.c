@@ -515,12 +515,6 @@ ULONG __stdcall BaseSetLastNTError(NTSTATUS NtStatus)
 {
 
   ULONG ret = RtlNtStatusToDosError(NtStatus);
-/*
-  char szMsg[128];
-
-  wsprintf(szMsg, "Error %d", ret);
-  MessageBox(NULL, szMsg, "Error", MB_OK);
-*/
   SetLastError(ret);
   return ret;
 }

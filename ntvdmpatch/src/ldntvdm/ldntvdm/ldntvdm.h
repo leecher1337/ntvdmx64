@@ -26,10 +26,11 @@
 //#define CREATEPROCESS_HOOK
 #endif
 
-
 #ifdef TRACING
 static char szDbgBuf[2048];
-#define TRACE(...) { wsprintfA(szDbgBuf, __VA_ARGS__); OutputDebugStringA(szDbgBuf); }
+typedef int (NTAPI *fpsprintf)(char * str, const char * format, ...);
+extern fpsprintf sprintf;
+#define TRACE(...) { sprintf(szDbgBuf, __VA_ARGS__); OutputDebugStringA(szDbgBuf); }
 #else
 #define TRACE(...)
 #endif

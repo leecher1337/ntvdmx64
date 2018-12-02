@@ -519,8 +519,7 @@ NTSTATUS NTAPI myCsrClientCallServer(BASE_API_MSG *m, PCSR_CAPTURE_HEADER Captur
 		}
 	}
 	Status = CsrClientCallServerReal(m, CaptureHeader, ApiNumber, ArgLength);
-	wsprintfA(szMsg, "Unpatched CSR call %d returns %08X", CSR_APINUMBER_TO_APITABLEINDEX(ApiNumber), Status);
-	OutputDebugStringA(szMsg);
+	TRACE("Unpatched CSR call %d returns %08X", CSR_APINUMBER_TO_APITABLEINDEX(ApiNumber), Status);
 	return Status;
 }
 

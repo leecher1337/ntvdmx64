@@ -101,17 +101,15 @@ BOOL Hook_IAT_x64_IAT(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char F
 					char *pszIATFunName = (char*)(hMod + ThunkData->u1.ForwarderString + 2);
 					if (IsBadStringPtrA(pszIATFunName, 4096))
 					{
-						char szBuf[512];
-
-						wsprintfA(szBuf, "LDNTVDM: Cannot check for IAT entry %s of module @%08X. Thunk=%08X, AddressOfData=%08X, ForwarderString=%08X",
+						TRACE("LDNTVDM: Cannot check for IAT entry %s of module @%08X. Thunk=%08X, AddressOfData=%08X, ForwarderString=%08X",
 							FunName, hMod, ThunkData, ThunkData->u1.AddressOfData, ThunkData->u1.ForwarderString);
-						OutputDebugStringA(szBuf);
 					}
 					else if (!lstrcmpA((char*)(hMod + ThunkData->u1.ForwarderString + 2), FunName))
 					{
 						DWORD OldProt;
 						VirtualProtect(&Address[i], sizeof(ULONG_PTR), PAGE_READWRITE, &OldProt);
 						if (OldFun) *OldFun = Address[i];
+						TRACE("Hooked %08X -> %08X (AddressOfData = %08X)", Address[i], NewFun, ThunkData->u1.AddressOfData);
 						Address[i] = (ULONG_PTR)NewFun;
 						VirtualProtect(&Address[i], sizeof(ULONG_PTR), OldProt, &OldProt);
 						return TRUE;

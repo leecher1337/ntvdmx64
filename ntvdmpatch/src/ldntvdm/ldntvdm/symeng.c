@@ -6,7 +6,6 @@
  * Changes: 01.04.2016  - Created
  */
 
-#include <stdio.h>
 #include <windows.h>
 #include "ldntvdm.h"
 
