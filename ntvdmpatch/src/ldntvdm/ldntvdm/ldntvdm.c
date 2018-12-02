@@ -516,7 +516,7 @@ DWORD WINAPI InjectIntoCreatedThreadThread(LPVOID lpPID)
 		/* 64 -> 32 */
 		if (bIsWow64)
 		{
-			if (!InjectLdntvdmWow64(hProcess)) OutputDebugStringA("Injecting int 32bit conhost parent failed");
+			if (!InjectLdntvdmWow64HijackThread(hProcess)) OutputDebugStringA("Injecting int 32bit conhost parent failed");
 		}
 		/* 64 -> 64, 32 -> 32 */
 		else

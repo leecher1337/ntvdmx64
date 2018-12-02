@@ -180,7 +180,55 @@ DWORD GetLoadLibraryAddressX32(HANDLE ProcessHandle)
 	return 0;
 }
 
-HANDLE InjectLdntvdmWow64(HANDLE hProcess)
+BOOL InjectDllHijackThreadX32(HANDLE hProc, HANDLE hThread, WCHAR *DllName)
+{
+	//get the thread context
+	BYTE code[] = {
+		0x60,	// PUSHAD
+		0xb8, 0xAA, 0xAA, 0xAA, 0xAA,	// MOV EAX, AAAAAAAA
+		0x68, 0xBB, 0xBB, 0xBB, 0xBB,	// PUSH BBBBBBBB
+		0xff, 0xd0,	// CALL EAX
+		0x61,	// POPAD
+		0x68, 0xCC, 0xCC, 0xCC, 0xCC,	// PUSH CCCCCCCC
+		0xc3	// RET
+	};
+	WOW64_CONTEXT ThreadContext;
+	ThreadContext.ContextFlags = CONTEXT_FULL;
+	Wow64GetThreadContext(hThread, &ThreadContext);
+
+	//allocate a remote buffer
+	PBYTE InjData =
+		(PBYTE)VirtualAllocEx(hProc, NULL, sizeof(code) + (wcslen(DllName) + 1)*sizeof(WCHAR),
+			MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+	*(PDWORD)&code[2] = GetLoadLibraryAddressX32(hProc);
+	*(PDWORD)&code[7] = InjData + sizeof(code);
+	*(PDWORD)&code[15] = ThreadContext.Eip;
+
+	//write the tmp buff + dll
+	//Format: [RemoteFunction][DllName][null char]
+	ULONG dwWritten;
+	WriteProcessMemory(hProc, InjData, code, sizeof(code), &dwWritten);
+	WriteProcessMemory(hProc, InjData + sizeof(code), DllName, (wcslen(DllName) + 1)*sizeof(WCHAR), &dwWritten);
+
+	//set the EIP
+	ThreadContext.Eip = (ULONG)InjData;
+	Wow64SetThreadContext(hThread, &ThreadContext);
+	return TRUE;
+}
+
+__kernel_entry NTSTATUS
+NTAPI
+NtGetNextThread(
+_In_ HANDLE ProcessHandle,
+_In_ HANDLE ThreadHandle,
+_In_ ACCESS_MASK DesiredAccess,
+_In_ ULONG HandleAttributes,
+_In_ ULONG Flags,
+_Out_ PHANDLE NewThreadHandle
+);
+
+
+HANDLE InjectLdntvdmWow64RemoteThread(HANDLE hProcess)
 {
 	LPTHREAD_START_ROUTINE pLoadLibraryW;
 
@@ -190,11 +238,29 @@ HANDLE InjectLdntvdmWow64(HANDLE hProcess)
 		if (pLibRemote = VirtualAllocEx(hProcess, NULL, sizeof(LDNTVDM_NAME), MEM_COMMIT, PAGE_READWRITE))
 		{
 			WriteProcessMemory(hProcess, pLibRemote, (void*)LDNTVDM_NAME, sizeof(LDNTVDM_NAME), NULL);
-			return CreateRemoteThread(hProcess, NULL, 0, pLoadLibraryW, pLibRemote, 0, NULL) != NULL;
+			return CreateRemoteThread(hProcess, NULL, 0, pLoadLibraryW, pLibRemote, 0, NULL);
 		}
-
 	}
 	return NULL;
+}
+
+BOOL InjectLdntvdmWow64HijackThread(HANDLE hProcess)
+{
+	HANDLE hThread;
+	NTSTATUS Status;
+	BOOL bRet = FALSE;
+
+	if (NT_SUCCESS((Status = NtGetNextThread(hProcess, NULL, THREAD_GET_CONTEXT | THREAD_SET_CONTEXT | THREAD_SUSPEND_RESUME, 0, 0, &hThread))))
+	{
+		HANDLE hRemoteThread;
+
+		SuspendThread(hThread);
+		bRet = InjectDllHijackThreadX32(hProcess, hThread, LDNTVDM_NAME);
+		ResumeThread(hThread);
+		CloseHandle(hThread);
+	}
+	else { TRACE("NtGetThread returned Status %08X", Status); }
+	return bRet;
 }
 
 DWORD WINAPI InjectLdntvdmWow64Thread(LPVOID lpPID)
@@ -207,9 +273,13 @@ DWORD WINAPI InjectLdntvdmWow64Thread(LPVOID lpPID)
 	{
 		if (hProcess = OpenProcess(PROCESS_CREATE_THREAD | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION, FALSE, (DWORD)lpPID))
 		{
-			hThread = InjectLdntvdmWow64(hProcess);
+			hThread = InjectLdntvdmWow64RemoteThread(hProcess);
 			CloseHandle(hProcess);
-			if (hThread) break;
+			if (hThread)
+			{
+				CloseHandle(hThread);
+				break;
+			}
 		}
 		else break;
 		Sleep(250);
