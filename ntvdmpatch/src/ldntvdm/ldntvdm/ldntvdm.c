@@ -527,7 +527,7 @@ DWORD WINAPI InjectIntoCreatedThreadThread(LPVOID lpPID)
 		/* 64 -> 64, 32 -> 32 */
 		else
 		{
-			if (!(injectLdrLoadDLL(hProcess, 0, LDNTVDM_NAME, METHOD_CREATETHREAD))) OutputDebugStringA("Inject LdrLoadDLL failed.");
+			if (!(injectLdrLoadDLL(hProcess, 0, LDNTVDM_NAME, METHOD_INTERCEPTTHREAD))) OutputDebugStringA("Inject LdrLoadDLL failed.");
 		}
 		CloseHandle(hProcess);
 	}

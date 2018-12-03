@@ -216,18 +216,6 @@ BOOL InjectDllHijackThreadX32(HANDLE hProc, HANDLE hThread, WCHAR *DllName)
 	return TRUE;
 }
 
-__kernel_entry NTSTATUS
-NTAPI
-NtGetNextThread(
-_In_ HANDLE ProcessHandle,
-_In_ HANDLE ThreadHandle,
-_In_ ACCESS_MASK DesiredAccess,
-_In_ ULONG HandleAttributes,
-_In_ ULONG Flags,
-_Out_ PHANDLE NewThreadHandle
-);
-
-
 HANDLE InjectLdntvdmWow64RemoteThread(HANDLE hProcess)
 {
 	LPTHREAD_START_ROUTINE pLoadLibraryW;

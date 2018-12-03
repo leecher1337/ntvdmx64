@@ -13,7 +13,6 @@
 #ifdef _WIN64
 #undef METHOD_APC
 #undef METHOD_MODIFYSTARTUP
-#undef METHOD_INTERCEPTTHREAD
 #endif
 
 
@@ -125,76 +124,76 @@ BOOL inject_via_apcthread(HANDLE hProcess, HANDLE hThread, LPVOID lpStartAddress
 #endif
 
 #ifdef METHOD_INTERCEPTTHREAD
-void __declspec(naked) InjectFunction()
-{
-	__asm
-	{
-		PUSHAD
-		MOV EAX, 0xAAAAAAAA //eventually the address of LoadLibraryA
-
-			PUSH 0xBBBBBBBB //eventually the module name
-			call EAX
-
-			POPAD
-			//vc is pissy and requires us to emit the hardcoded jump
-			__emit 0xE9
-			__emit 0xCC
-			__emit 0xCC
-			__emit 0xCC
-			__emit 0xCC
-	}
-}
-
-void __declspec(naked) AfterFunction()
-{
-}
-
-
 BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, char *DllName)
 {
+#ifdef _WIN64
+	BYTE code[] = {
+		// sub rsp, 28h
+		0x48, 0x83, 0xec, 0x28,
+		// mov [rsp + 18], rax
+		0x48, 0x89, 0x44, 0x24, 0x18,
+		// mov [rsp + 10h], rcx
+		0x48, 0x89, 0x4c, 0x24, 0x10,
+		// mov rax, 22222222222222222h
+		0x48, 0xb8, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22,
+		// mov rcx, 11111111111111111h
+		0x48, 0xb9, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11,
+		// call rax
+		0xff, 0xd0,
+		// mov rcx, [rsp + 10h]
+		0x48, 0x8b, 0x4c, 0x24, 0x10,
+		// mov rax, [rsp + 18h]
+		0x48, 0x8b, 0x44, 0x24, 0x18,
+		// add rsp, 28h
+		0x48, 0x83, 0xc4, 0x28,
+		// mov r11, 333333333333333333h
+		0x49, 0xbb, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33,
+		// jmp r11
+		0x41, 0xff, 0xe3
+	};
+#else
+	BYTE code[] = {
+		0x60,	// PUSHAD
+		0xb8, 0xAA, 0xAA, 0xAA, 0xAA,	// MOV EAX, AAAAAAAA
+		0x68, 0xBB, 0xBB, 0xBB, 0xBB,	// PUSH BBBBBBBB
+		0xff, 0xd0,	// CALL EAX
+		0x61,	// POPAD
+		0x68, 0xCC, 0xCC, 0xCC, 0xCC,	// PUSH CCCCCCCC
+		0xc3	// RET
+	};
+#endif
 	//get the thread context
 	CONTEXT ThreadContext;
 	ThreadContext.ContextFlags = CONTEXT_FULL;
 	GetThreadContext(hThread, &ThreadContext);
 
-	//copy the function to a tmp buffer
-	ULONG FunctionSize = (PBYTE)AfterFunction - (PBYTE)InjectFunction;
-	PBYTE LocalFunction = HeapAlloc(GetProcessHeap(), 0, FunctionSize);
-	RtlMoveMemory(LocalFunction, InjectFunction, FunctionSize);
-
 	//allocate a remote buffer
 	PBYTE InjData =
-		(PBYTE)VirtualAllocEx(hProc, NULL, FunctionSize + strlen(DllName) + 1,
-			MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-
-	//fixup the tmp buff
-	for (ULONG i = 0; i < FunctionSize - 3; i++)
-	{
-		if (*(PULONG)&LocalFunction[i] == 0xAAAAAAAA)
-		{
-			*(PULONG)&LocalFunction[i] = (ULONG)GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "LoadLibraryA");
-		}
-		if (*(PULONG)&LocalFunction[i] == 0xBBBBBBBB)
-		{
-			*(PULONG)&LocalFunction[i] = (ULONG)InjData + FunctionSize;
-		}
-		if (*(PULONG)&LocalFunction[i] == 0xCCCCCCCC)
-		{
-			*(PULONG)&LocalFunction[i] = ThreadContext.Eip - ((ULONG)&InjData[i] + 4);
-		}
-	}
+		(PBYTE)VirtualAllocEx(hProc, NULL, sizeof(code) + (strlen(DllName) + 1),
+			MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+#ifdef _WIN64
+	*(ULONG_PTR*)&code[16] = GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "LoadLibraryA");;
+	*(ULONG_PTR*)&code[26] = InjData + sizeof(code);
+	*(ULONG_PTR*)&code[52] = ThreadContext.Rip;
+#else
+	*(ULONG_PTR*)&code[2] = GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "LoadLibraryA");;
+	*(ULONG_PTR*)&code[7] = InjData + sizeof(code);
+	*(ULONG_PTR*)&code[15] = ThreadContext.Eip;
+#endif
 
 	//write the tmp buff + dll
 	//Format: [RemoteFunction][DllName][null char]
 	ULONG dwWritten;
-	WriteProcessMemory(hProc, InjData, LocalFunction, FunctionSize, &dwWritten);
-	WriteProcessMemory(hProc, InjData + FunctionSize, DllName, strlen(DllName) + 1, &dwWritten);
+	WriteProcessMemory(hProc, InjData, code, sizeof(code), &dwWritten);
+	WriteProcessMemory(hProc, InjData + sizeof(code), DllName, (strlen(DllName) + 1), &dwWritten);
 
 	//set the EIP
+#ifdef _WIN64
+	ThreadContext.Rip = (DWORD64)InjData;
+#else
 	ThreadContext.Eip = (ULONG)InjData;
+#endif
 	SetThreadContext(hThread, &ThreadContext);
-
-	HeapFree(GetProcessHeap(), 0, LocalFunction);
 	return TRUE;
 }
 
@@ -210,8 +209,20 @@ BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR metho
 	CONTEXT ctx;
 
 #ifdef METHOD_INTERCEPTTHREAD
-	if (method == METHOD_INTERCEPTTHREAD) return InjectDllHijackThread(hProcess, hThread, "ldntvdm.dll");
+	if (method == METHOD_INTERCEPTTHREAD)
+	{
+		if (!hThread)
+		{
+			if (!NT_SUCCESS(NtGetNextThread(hProcess, NULL, THREAD_GET_CONTEXT | THREAD_SET_CONTEXT | THREAD_SUSPEND_RESUME, 0, 0, &hThread)))
+				return FALSE;
+		}
+		SuspendThread(hThread);
+		bRet = InjectDllHijackThread(hProcess, hThread, "ldntvdm.dll");
+		ResumeThread(hThread);
+	}
 #endif
+
+#if defined(METHOD_MODIFYSTARTUP) || defined (METHOD_CREATETHREAD) || defined(METHOD_APC)
 
 	nt = GetModuleHandleW(L"ntdll.dll");
 	ulSizeOfCode = (LPBYTE)dummy - (LPBYTE)ThreadProc;
@@ -281,6 +292,7 @@ BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR metho
 	}
 #endif
 	}
+#endif
 
 	return bRet;
 }

@@ -48,3 +48,14 @@ extern fpsprintf sprintf;
 EXTERN_C void _declspec(dllimport) WINAPI RtlMoveMemory(PVOID, const VOID*, SIZE_T);
 #undef RtlZeroMemory
 EXTERN_C void _declspec(dllimport) WINAPI RtlZeroMemory(PVOID, SIZE_T);
+
+__kernel_entry NTSTATUS
+NTAPI
+NtGetNextThread(
+	_In_ HANDLE ProcessHandle,
+	_In_ HANDLE ThreadHandle,
+	_In_ ACCESS_MASK DesiredAccess,
+	_In_ ULONG HandleAttributes,
+	_In_ ULONG Flags,
+	_Out_ PHANDLE NewThreadHandle
+	);
