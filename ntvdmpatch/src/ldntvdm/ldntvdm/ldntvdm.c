@@ -441,10 +441,10 @@ BOOL FixNTDLL(void)
 	PVOID pNtVdmControl = GetProcAddress(GetModuleHandle(_T("ntdll.dll")), "NtVdmControl");
 	DWORD OldProt;
 
-	if (VirtualProtect(pNtVdmControl, 11, PAGE_EXECUTE_READWRITE, &OldProt))
+	if (VirtualProtect(pNtVdmControl, 13, PAGE_EXECUTE_READWRITE, &OldProt))
 	{
-		RtlMoveMemory(pNtVdmControl, "\x8B\x54\x24\x08\xC6\x42\x04\x01\x33\xc0\xc3", 11);
-		VirtualProtect(pNtVdmControl, 11, OldProt, &OldProt);
+		RtlMoveMemory(pNtVdmControl, "\x8B\x54\x24\x08\xC6\x42\x04\x01\x33\xc0\xc2\x08\x00", 13);
+		VirtualProtect(pNtVdmControl, 13, OldProt, &OldProt);
 		return TRUE;
 	}
 	return FALSE;
