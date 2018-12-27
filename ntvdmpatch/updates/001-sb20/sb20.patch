@@ -1,0 +1,269 @@
+Index: nt/private/inc/vdm.h
+===================================================================
+--- nt/private/inc/vdm.h	(revision 1)
++++ nt/private/inc/vdm.h	(working copy)
+@@ -33,6 +33,12 @@
+     VdmQueryDir,
+     VdmPrinterDirectIoOpen,
+     VdmPrinterDirectIoClose,
++    VdmPrinterInitialize,
++    VdmSetLdtEntries,
++    VdmSetProcessLdtInfo,
++    VdmAdlibEmulation,
++    VdmPMCliControl,
++    VdmQueryVdmProcess
+ } VDMSERVICECLASS, *PVDMSERVICECLASS;
+ 
+ 
+@@ -121,7 +127,7 @@
+ 
+ #endif // _VDMNTOS_
+ 
+-#if defined (i386)
++#if defined (i386) && defined(MONITOR)
+   // defined on x86 only since on mips we must reference thru sas
+ #define  pNtVDMState                ((PULONG)FIXED_NTVDMSTATE_LINEAR)
+ #endif
+@@ -227,7 +233,32 @@
+     IN OUT PVOID ServiceData
+     );
+ 
++#define ADLIB_USER_EMULATION     0      // default action
++#define ADLIB_DIRECT_IO          1
++#define ADLIB_KERNEL_EMULATION   2
++
++typedef struct _VDM_ADLIB_DATA {
++        USHORT VirtualPortStart;
++        USHORT VirtualPortEnd;
++        USHORT PhysicalPortStart;
++        USHORT PhysicalPortEnd;
++        USHORT Action;
++}VDM_ADLIB_DATA, *PVDM_ADLIB_DATA;
++
+ //
++// Definitions for Protected Mode DOS apps cli control
++//
++
++#define PM_CLI_CONTROL_DISABLE  0
++#define PM_CLI_CONTROL_ENABLE   1
++#define PM_CLI_CONTROL_CHECK    2
++#define PM_CLI_CONTROL_SET      3
++#define PM_CLI_CONTROL_CLEAR    4
++
++typedef struct _VDM_PM_CLI_DATA {
++        ULONG Control;
++}VDM_PM_CLI_DATA, *PVDM_PM_CLI_DATA;
++//
+ // Interrupt handler flags
+ //
+ 
+Index: nt/private/mvdm/bin86/autoexec.nt
+===================================================================
+--- nt/private/mvdm/bin86/autoexec.nt	(revision 1)
++++ nt/private/mvdm/bin86/autoexec.nt	(working copy)
+@@ -12,3 +12,29 @@
+ 
+ REM Install DPMI support
+ lh %SystemRoot%\system32\dosx
++
++REM The following line enables Sound Blaster 2.0 support on NTVDM.
++REM The command for setting the BLASTER environment is as follows:
++REM    SET BLASTER=A220 I5 D1 P330
++REM    where:
++REM        A    specifies the sound blaster's base I/O port
++REM        I    specifies the interrupt request line
++REM        D    specifies the 8-bit DMA channel
++REM        P    specifies the MPU-401 base I/O port
++REM        T    specifies the type of sound blaster card
++REM                 1 - Sound Blaster 1.5
++REM                 2 - Sound Blaster Pro I
++REM                 3 - Sound Blaster 2.0
++REM                 4 - Sound Blaster Pro II
++REM                 6 - SOund Blaster 16/AWE 32/32/64
++REM
++REM    The default value is A220 I5 D1 T3 and P330.  If any of the switches is
++REM    left unspecified, the default value will be used. (NOTE, since all the
++REM    ports are virtualized, the information provided here does not have to
++REM    match the real hardware setting.)  NTVDM supports Sound Blaster 2.0 only.
++REM    The T switch must be set to 3, if specified.
++SET BLASTER=A220 I5 D1 P330 T3
++
++REM To disable the sound blaster 2.0 support on NTVDM, specify an invalid
++REM SB base I/O port address.  For example:
++REM    SET BLASTER=A0
+Index: nt/private/mvdm/dos/command/cmdmisc.c
+===================================================================
+--- nt/private/mvdm/dos/command/cmdmisc.c	(revision 1)
++++ nt/private/mvdm/dos/command/cmdmisc.c	(working copy)
+@@ -17,6 +17,7 @@
+ #include "oemuni.h"
+ #include "nt_pif.h"
+ #include "nt_uis.h"	  // For resource id
++#include "nt_sb.h"
+ 
+ 
+ VOID GetWowKernelCmdLine(VOID);
+@@ -63,6 +64,8 @@
+     VDMInfo.CurDirectory = achCurDirectory;
+ 
+     if(IsFirstCall){
++		char  achBlaster[MAX_PATH];
++
+         VDMInfo.VDMState = ASKING_FOR_FIRST_COMMAND;
+         VDMInfo.ErrorCode = 0;
+ 
+@@ -73,6 +76,9 @@
+ 	// Therefore, we don't have to ask environment from BASE
+ 	cmdVDMEnvBlk.lpszzEnv = (PVOID)GetVDMAddr(FETCHWORD(pCMDInfo->EnvSeg),0);
+         cmdVDMEnvBlk.cchEnv = FETCHWORD(pCMDInfo->EnvSize);
++		
++    if ( cmdGetEnvironmentVariable(0, "BLASTER", achBlaster, sizeof(achBlaster)) )
++      SbReinitialize(achBlaster, sizeof(achBlaster));
+ 
+ 	//clear bits that track printer flushing
+         host_lpt_flush_initialize();
+Index: nt/private/mvdm/softpc.new/base/support/terminat.c
+===================================================================
+--- nt/private/mvdm/softpc.new/base/support/terminat.c	(revision 1)
++++ nt/private/mvdm/softpc.new/base/support/terminat.c	(working copy)
+@@ -40,6 +40,9 @@
+ #include "host_lic.h"
+ #endif
+ #include "emm.h"
++#ifdef NTVDM
++#include "nt_sb.h"
++#endif
+ 
+ #ifdef SEGMENTATION
+ /*
+@@ -66,6 +69,9 @@
+ 	else
+ 		already_called_terminate = TRUE;
+ 
++#ifdef NTVDM
++	SbTerminate();
++#endif
+ #ifdef MSWDVR
+ 	WinTerm();
+ #endif
+Index: nt/private/mvdm/softpc.new/base/system/at_dma.c
+===================================================================
+--- nt/private/mvdm/softpc.new/base/system/at_dma.c	(revision 1)
++++ nt/private/mvdm/softpc.new/base/system/at_dma.c	(working copy)
+@@ -48,6 +48,10 @@
+ #include "dma.h"
+ #include "debug.h"
+ 
++#ifdef NTVDM
++#include "nt_sb.h"
++IMPORT WORD SbDmaChannel;
++#endif
+ /*
+  * ============================================================================
+  * Local static data and defines
+@@ -172,6 +176,10 @@
+ 	case	DMA_CH1_ADDRESS:
+ 	case	DMA_CH2_ADDRESS:
+ 	case	DMA_CH3_ADDRESS:
++#ifdef NTVDM
++        if (port == SbDmaChannel && !dcp->first_last)
++          SbGetDMAPosition();		
++#endif
+ 		*value = dcp->current_address[(port-DMA_CH0_ADDRESS)/2][dcp->first_last];
+ 		dcp->first_last ^= 1;
+ 		break;
+@@ -190,6 +198,10 @@
+ 	case	DMA_CH1_COUNT:
+ 	case	DMA_CH2_COUNT:
+ 	case	DMA_CH3_COUNT:
++#ifdef NTVDM
++        if (port == SbDmaChannel + 2 && !dcp->first_last)
++          SbGetDMAPosition();		
++#endif
+ 		*value = dcp->current_count[(port-DMA_CH0_COUNT)/2][dcp->first_last];
+ 		dcp->first_last ^= 1;
+ 		break;
+Index: nt/private/mvdm/softpc.new/host/src/nt_event.c
+===================================================================
+--- nt/private/mvdm/softpc.new/host/src/nt_event.c	(revision 2)
++++ nt/private/mvdm/softpc.new/host/src/nt_event.c	(working copy)
+@@ -74,6 +74,7 @@
+ #include "nt_eoi.h"
+ #include "nt_com.h"
+ #include "nt_pif.h"
++#include "nt_sb.h"
+ #include "yoda.h"
+ /*================================================================
+ External references.
+@@ -1385,6 +1386,7 @@
+ 
+     /*::::::::::::::::::::::::::::::::::::::::::::::::::::: Turn off sound */
+     InitSound(FALSE);
++	SbCloseDevices();
+ 
+     /*::::::::::::::::::::::::::::::::::::::::::::: Block the event thread */
+ 
+Index: nt/private/mvdm/softpc.new/host/src/nt_msscs.c
+===================================================================
+--- nt/private/mvdm/softpc.new/host/src/nt_msscs.c	(revision 22)
++++ nt/private/mvdm/softpc.new/host/src/nt_msscs.c	(working copy)
+@@ -30,6 +30,7 @@
+ #include "nt_graph.h"
+ #include "nt_event.h"
+ #include "nt_reset.h"
++#include "nt_sb.h"
+ #include "config.h"
+ #include <nt_vdd.h>   // DO NOT USE vddsvc.h
+ #include <nt_vddp.h>
+@@ -147,11 +148,12 @@
+     reset();
+ 
+     SetupInstallableVDD ();
++
+     /* reserve lim block after all vdd are installed.
+        the pif file settings tell us if it is necessary to
+        reserve the block
+     */
+-
++	SbInitialize();
+ #ifdef LIM
+     /* initialize lim page frames after all vdd are installed.
+        the pif file settings tell us if it is necessary to
+Index: nt/private/mvdm/softpc.new/host/src/nt_reset.c
+===================================================================
+--- nt/private/mvdm/softpc.new/host/src/nt_reset.c	(revision 25)
++++ nt/private/mvdm/softpc.new/host/src/nt_reset.c	(working copy)
+@@ -53,6 +53,7 @@
+ #include "nt_eoi.h"
+ #include "video.h"
+ #include "nt_thred.h"
++#include "nt_sb.h"
+ 
+ 
+ VOID DeleteConfigFiles(VOID);  // from command.lib
+@@ -287,6 +288,7 @@
+ {
+   nt_remove_event_thread();
+   InitSound(FALSE);
++  SbCloseDevices();
+   TerminateHeartBeat();
+ 
+   GfxCloseDown();             // ensure video section destroyed
+Index: nt/private/mvdm/softpc.new/host/src/sources
+===================================================================
+--- nt/private/mvdm/softpc.new/host/src/sources	(revision 23)
++++ nt/private/mvdm/softpc.new/host/src/sources	(working copy)
+@@ -96,7 +96,12 @@
+ 			nt_rflop.c	\
+ 			nt_inthk.c	\
+                         nt_reset.c      \
+-			nt_mem.c
++			nt_mem.c \
++			nt_sb.c \
++			nt_sbdsp.c \
++			nt_sbfm.c \
++			nt_sbmid.c \
++			nt_sbmxr.c
+ 
+ PPC_SOURCES=nt_aorc.c
+ 
