@@ -110,12 +110,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-Win7|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>$(ProjectName)</TargetName>
+    <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-Win7|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -228,6 +230,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="appcert.c" />
     <ClCompile Include="consbmp.c" />
     <ClCompile Include="csrsswrap.c" />
     <ClCompile Include="detour.c" />
@@ -235,6 +238,7 @@
     <ClCompile Include="injector32.c" />
     <ClCompile Include="injector64.c" />
     <ClCompile Include="ldntvdm.c" />
+    <ClCompile Include="reg.c" />
     <ClCompile Include="symeng.c" />
     <ClCompile Include="wow64ext.c" />
     <ClCompile Include="wow64inj.c" />
@@ -249,6 +253,7 @@
     <ClInclude Include="injector32.h" />
     <ClInclude Include="injector64.h" />
     <ClInclude Include="ldntvdm.h" />
+    <ClInclude Include="reg.h" />
     <ClInclude Include="symeng.h" />
     <ClInclude Include="wow64ext.h" />
     <ClInclude Include="wow64inj.h" />

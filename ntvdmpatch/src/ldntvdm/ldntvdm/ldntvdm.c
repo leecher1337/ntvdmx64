@@ -33,6 +33,7 @@
 #include "symeng.h"
 #include "detour.h"
 #include "consbmp.h"
+#include "reg.h"
 
 #pragma comment(lib, "ntdll.lib")
 
@@ -550,17 +551,18 @@ void WINAPI NotifyWinEventHook(DWORD event, HWND  hwnd, LONG  idObject, LONG  id
 
 #ifdef TARGET_WIN7
 #ifdef _WIN64
-#define REGKEY_BasepProcessInvalidImage _T("BasepProcessInvalidImage64")
-#define REGKEY_BaseIsDosApplication _T("BaseIsDosApplication64")
+#define REGKEY_BasepProcessInvalidImage L"BasepProcessInvalidImage64"
+#define REGKEY_BaseIsDosApplication L"BaseIsDosApplication64"
 #else
-#define REGKEY_BasepProcessInvalidImage _T("BasepProcessInvalidImage32")
-#define REGKEY_BaseIsDosApplication _T("BaseIsDosApplication32")
+#define REGKEY_BasepProcessInvalidImage L"BasepProcessInvalidImage32"
+#define REGKEY_BaseIsDosApplication L"BaseIsDosApplication32"
 #endif
 BOOL UpdateSymbolCache()
 {
 	HKEY hKey = NULL;
-	DWORD64 dwBase=0, dwCreated;
+	DWORD64 dwBase=0;
 	DWORD dwAddress;
+	NTSTATUS Status;
 	char szKernel32[MAX_PATH];
 	static BOOL bUpdated = FALSE;
 
@@ -570,19 +572,19 @@ BOOL UpdateSymbolCache()
 	if (SymEng_LoadModule(szKernel32, &dwBase) == 0 || GetLastError() == 0x1E7)
 	{
 		if (!dwBase) dwBase = GetModuleHandleA("kernel32.dll");
-		if ((dwCreated=RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\ldntvdm"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE, NULL, &hKey, NULL)) == ERROR_SUCCESS)
+		if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ | KEY_WRITE, &hKey)))
 		{
 			TRACE("UpdateSymbolCache() loading kernel32 symbols");
 			if (dwAddress = SymEng_GetAddr(dwBase, "BasepProcessInvalidImage"))
-				RegSetValueEx(hKey, REGKEY_BasepProcessInvalidImage, 0, REG_DWORD, &dwAddress, sizeof(dwAddress));
+				REG_SetDWORD(hKey, REGKEY_BasepProcessInvalidImage, dwAddress);
 			if (dwAddress = SymEng_GetAddr(dwBase, "BaseIsDosApplication"))
-				RegSetValueEx(hKey, REGKEY_BaseIsDosApplication, 0, REG_DWORD, &dwAddress, sizeof(dwAddress));
-			RegCloseKey(hKey);
+				REG_SetDWORD(hKey, REGKEY_BaseIsDosApplication, dwAddress);
+			REG_CloseKey(hKey);
 			bUpdated = TRUE;
 		}
 		else
 		{
-			TRACE("RegCreateKeyEx failed; %08X", dwCreated);
+			TRACE("RegCreateKeyEx failed: %08X", Status);
 		}
 		SymEng_UnloadModule(dwBase);
 	}
@@ -593,16 +595,16 @@ BOOL UpdateSymbolCache()
 	if (SymEng_LoadModule(szKernel32, &dwBase) == 0 || GetLastError() == 0x1E7)
 	{
 		if (!dwBase) dwBase = GetModuleHandleA("conhost.exe");
-		if ((dwCreated = RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\ldntvdm"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE, NULL, &hKey, NULL)) == ERROR_SUCCESS)
+		if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ | KEY_WRITE, &hKey)))
 		{
 			TRACE("UpdateSymbolCache() loading conhost symbols");
 			if (dwAddress = SymEng_GetAddr(dwBase, "dwConBaseTag"))
-				RegSetValueEx(hKey, _T("dwConBaseTag"), 0, REG_DWORD, &dwAddress, sizeof(dwAddress));
+				REG_SetDWORD(hKey, L"dwConBaseTag", dwAddress);
 			if (dwAddress = SymEng_GetAddr(dwBase, "FindProcessInList"))
-				RegSetValueEx(hKey, _T("FindProcessInList"), 0, REG_DWORD, &dwAddress, sizeof(dwAddress));
+				REG_SetDWORD(hKey, L"FindProcessInList", dwAddress);
 			if (dwAddress = SymEng_GetAddr(dwBase, "CreateConsoleBitmap"))
-				RegSetValueEx(hKey, _T("CreateConsoleBitmap"), 0, REG_DWORD, &dwAddress, sizeof(dwAddress));
-			RegCloseKey(hKey);
+				REG_SetDWORD(hKey, L"CreateConsoleBitmap", dwAddress);
+			REG_CloseKey(hKey);
 		}
 		SymEng_UnloadModule(dwBase);
 	}
@@ -780,34 +782,32 @@ BOOL WINAPI _DllMainCRTStartup(
 					BaseIsDosApplication = (DWORD64)hKrnl32 + dwAddress;
 			}
 */
-
-			DWORD dwRet, dwAddress, cbData;
+			NTSTATUS Status;
+			DWORD dwAddress;
 			HKEY hKey;
 
-			if ((dwRet = RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\ldntvdm"), 0, KEY_READ, &hKey)) == ERROR_SUCCESS)
+			if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ, &hKey)))
 			{
-				cbData = sizeof(dwAddress);
-				if ((dwRet = RegQueryValueEx(hKey, REGKEY_BasepProcessInvalidImage, NULL, NULL, &dwAddress, &cbData)) == ERROR_SUCCESS)
+				if (NT_SUCCESS(Status = REG_QueryDWORD(hKey, REGKEY_BasepProcessInvalidImage, &dwAddress)))
 				{
 					lpProcII = (DWORD64)hKrnl32 + dwAddress;
 					BasepProcessInvalidImageReal = (fpBasepProcessInvalidImage)Hook_Inline(lpProcII, BasepProcessInvalidImage);
 				}
 				else
 				{
-					TRACE("RegQueryValueEx 1 failed: %08X", dwRet);
+					TRACE("RegQueryValueEx 1 failed: %08X", Status);
 				}
-				cbData = sizeof(dwAddress);
-				if ((dwRet = RegQueryValueEx(hKey, REGKEY_BaseIsDosApplication, NULL, NULL, &dwAddress, &cbData)) == ERROR_SUCCESS)
+				if (NT_SUCCESS(Status = REG_QueryDWORD(hKey, REGKEY_BaseIsDosApplication, &dwAddress)))
 					BaseIsDosApplication = (DWORD64)hKrnl32 + dwAddress;
 				else
 				{
-					TRACE("RegQueryValueEx 2 failed: %08X", dwRet);
+					TRACE("RegQueryValueEx 2 failed: %08X", Status);
 				}
-				RegCloseKey(hKey);
+				REG_CloseKey(hKey);
 			}
 			else
 			{
-				TRACE("RegOpenKey failed: %08X", dwRet);
+				TRACE("RegOpenKey failed: %08X", Status);
 			}
 
 

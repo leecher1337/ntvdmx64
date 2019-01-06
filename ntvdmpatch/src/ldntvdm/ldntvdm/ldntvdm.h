@@ -30,7 +30,7 @@
 static char szDbgBuf[2048];
 typedef int (NTAPI *fpsprintf)(char * str, const char * format, ...);
 extern fpsprintf sprintf;
-#define TRACE(...) { sprintf(szDbgBuf, __VA_ARGS__); OutputDebugStringA(szDbgBuf); }
+#define TRACE(...) { if (sprintf) {sprintf(szDbgBuf, __VA_ARGS__); OutputDebugStringA(szDbgBuf);} }
 #else
 #define TRACE(...)
 #endif

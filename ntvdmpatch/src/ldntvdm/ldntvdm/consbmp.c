@@ -17,6 +17,7 @@
 
 #include "ldntvdm.h"
 #include "consbmp.h"
+#include "reg.h"
 
 #define STATUS_SUCCESS                   ((NTSTATUS)0x00000000L)    // ntsubauth
 #define DPFLTR_USERGDI_ID 112
@@ -114,22 +115,20 @@ BOOL ConsBmp_Install(void)
 {
 	HMODULE hConhost;
 	DWORD flOld = 0;
-	DWORD dwRet, dwAddress, cbData;
+	DWORD dwAddress;
+	NTSTATUS Status;
 	BYTE *pConsBmp;
 	HKEY hKey;
 	
 	hConhost = GetModuleHandleA("conhost.exe");
-	if ((dwRet = RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\ldntvdm"), 0, KEY_READ, &hKey)) == ERROR_SUCCESS)
+	if (NT_SUCCESS(REG_OpenLDNTVDM(KEY_READ, &hKey)))
 	{
-		cbData = sizeof(dwAddress);
-		if ((dwRet = RegQueryValueEx(hKey, _T("dwConBaseTag"), NULL, NULL, &dwAddress, &cbData)) == ERROR_SUCCESS) pdwConBaseTag = (DWORD*)((DWORD64)hConhost + dwAddress);
+		if (NT_SUCCESS(REG_QueryDWORD(hKey, L"dwConBaseTag", &dwAddress))) pdwConBaseTag = (DWORD*)((DWORD64)hConhost + dwAddress);
 		else pdwConBaseTag = &dwConBaseTag;
-		cbData = sizeof(dwAddress);
-		if ((dwRet = RegQueryValueEx(hKey, _T("FindProcessInList"), NULL, NULL, &dwAddress, &cbData)) == ERROR_SUCCESS) FindProcessInList = (fpFindProcessInList)((DWORD64)hConhost + dwAddress);
+		if (NT_SUCCESS(REG_QueryDWORD(hKey, L"FindProcessInList", &dwAddress))) FindProcessInList = (fpFindProcessInList)((DWORD64)hConhost + dwAddress);
 		dwAddress = 0;
-		cbData = sizeof(dwAddress);
-		if ((dwRet = RegQueryValueEx(hKey, _T("CreateConsoleBitmap"), NULL, NULL, &dwAddress, &cbData)) == ERROR_SUCCESS) pConsBmp = (DWORD64)hConhost + dwAddress;
-		RegCloseKey(hKey);
+		if (NT_SUCCESS(REG_QueryDWORD(hKey, L"CreateConsoleBitmap", &dwAddress))) pConsBmp = (DWORD64)hConhost + dwAddress;
+		REG_CloseKey(hKey);
 	}
 
 	if (!FindProcessInList || !dwAddress)
@@ -291,6 +290,7 @@ CreateConsoleBitmap(
     }
     ScreenInfo->BufferInfo.GraphicsInfo.ClientProcess = CONSOLE_CLIENTPROCESSHANDLE();
     ScreenInfo->BufferInfo.GraphicsInfo.ClientBitMap = *lpBitmap;
+	TRACE("Mapped graphics buffer to client memory @%16X", *lpBitmap);
 
     //
     // create mutex to serialize access to bitmap, then map handle to mutex to client side

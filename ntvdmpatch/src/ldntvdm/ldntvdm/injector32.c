@@ -128,6 +128,8 @@ BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, char *DllName)
 {
 #ifdef _WIN64
 	BYTE code[] = {
+		// pushfq
+		0x9c,
 		// sub rsp, 28h
 		0x48, 0x83, 0xec, 0x28,
 		// mov [rsp + 18], rax
@@ -146,17 +148,21 @@ BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, char *DllName)
 		0x48, 0x8b, 0x44, 0x24, 0x18,
 		// add rsp, 28h
 		0x48, 0x83, 0xc4, 0x28,
-		// mov r11, 333333333333333333h
-		0x49, 0xbb, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33,
-		// jmp r11
-		0x41, 0xff, 0xe3
+		// popfq
+		0x9d,
+		// jmp [rip+0]
+		0xFF, 0x25, 0x00, 0x00, 0x00, 0x00,
+		// Target address:
+		0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33,
 	};
 #else
 	BYTE code[] = {
 		0x60,	// PUSHAD
+		0x9C,	// PUSHFD
 		0xb8, 0xAA, 0xAA, 0xAA, 0xAA,	// MOV EAX, AAAAAAAA
 		0x68, 0xBB, 0xBB, 0xBB, 0xBB,	// PUSH BBBBBBBB
 		0xff, 0xd0,	// CALL EAX
+		0x9D,	// POPFD
 		0x61,	// POPAD
 		0x68, 0xCC, 0xCC, 0xCC, 0xCC,	// PUSH CCCCCCCC
 		0xc3	// RET
@@ -167,18 +173,24 @@ BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, char *DllName)
 	ThreadContext.ContextFlags = CONTEXT_FULL;
 	GetThreadContext(hThread, &ThreadContext);
 
+#ifdef _WIN64
+	TRACE("Hijacked Thread currently @%X", ThreadContext.Rip);
+#else
+	TRACE("Hijacked Thread currently @%08X", ThreadContext.Eip);
+#endif
+
 	//allocate a remote buffer
 	PBYTE InjData =
 		(PBYTE)VirtualAllocEx(hProc, NULL, sizeof(code) + (strlen(DllName) + 1),
 			MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 #ifdef _WIN64
-	*(ULONG_PTR*)&code[16] = GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "LoadLibraryA");;
-	*(ULONG_PTR*)&code[26] = InjData + sizeof(code);
-	*(ULONG_PTR*)&code[52] = ThreadContext.Rip;
+	*(ULONG_PTR*)&code[17] = GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "LoadLibraryA");;
+	*(ULONG_PTR*)&code[27] = InjData + sizeof(code);
+	*(ULONG_PTR*)&code[58] = ThreadContext.Rip;
 #else
-	*(ULONG_PTR*)&code[2] = GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "LoadLibraryA");;
-	*(ULONG_PTR*)&code[7] = InjData + sizeof(code);
-	*(ULONG_PTR*)&code[15] = ThreadContext.Eip;
+	*(ULONG_PTR*)&code[3] = GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "LoadLibraryA");;
+	*(ULONG_PTR*)&code[8] = InjData + sizeof(code);
+	*(ULONG_PTR*)&code[17] = ThreadContext.Eip;
 #endif
 
 	//write the tmp buff + dll
@@ -205,6 +217,7 @@ BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR metho
 	PVOID pData, code;
 	BOOL bRet = TRUE;
 	ULONG ulSizeOfCode;
+	NTSTATUS Status;
 	HMODULE nt;
 	CONTEXT ctx;
 
@@ -213,8 +226,11 @@ BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR metho
 	{
 		if (!hThread)
 		{
-			if (!NT_SUCCESS(NtGetNextThread(hProcess, NULL, THREAD_GET_CONTEXT | THREAD_SET_CONTEXT | THREAD_SUSPEND_RESUME, 0, 0, &hThread)))
+			if (!NT_SUCCESS(Status = NtGetNextThread(hProcess, NULL, THREAD_GET_CONTEXT | THREAD_SET_CONTEXT | THREAD_SUSPEND_RESUME, 0, 0, &hThread)))
+			{
+				TRACE("NtGetNextThread failed: %08X", Status);
 				return FALSE;
+			}
 		}
 		SuspendThread(hThread);
 		bRet = InjectDllHijackThread(hProcess, hThread, "ldntvdm.dll");
