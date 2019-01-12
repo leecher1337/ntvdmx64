@@ -50,19 +50,35 @@ NTSTATUS REG_OpenLDNTVDM(DWORD dwAccess, PHKEY phKey)
 	return Status;
 }
 
-NTSTATUS REG_QueryDWORD(HKEY hKey, LPWSTR lpKey, PDWORD pdwResult)
+NTSTATUS REG_QueryNum(HKEY hKey, LPWSTR lpKey, PBYTE pdwResult, UINT Type)
 {
 	NTSTATUS Status;
 	UNICODE_STRING uStr;
 	ULONG ResultLength;
-	BYTE Buffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(DWORD)];
+	BYTE Buffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(ULONGLONG)];
 	KEY_VALUE_PARTIAL_INFORMATION *PartialInfo = (KEY_VALUE_PARTIAL_INFORMATION *)Buffer;
 
 	RtlInitUnicodeString(&uStr, lpKey);
 	Status = NtQueryValueKey(hKey, &uStr, KeyValuePartialInformation, PartialInfo, sizeof(Buffer), &ResultLength);
-	if (NT_SUCCESS(Status) && PartialInfo->Type == REG_DWORD)
-		*pdwResult = *(PDWORD)PartialInfo->Data;
+	if (NT_SUCCESS(Status) && PartialInfo->Type == Type)
+	{
+		switch (Type)
+		{
+		case REG_DWORD: *(PDWORD)pdwResult = *(PDWORD)PartialInfo->Data; break;
+		case REG_QWORD: *(PULONGLONG)pdwResult = *(PULONGLONG)PartialInfo->Data; break;
+		}
+	}
 	return Status;
+}
+
+NTSTATUS REG_QueryDWORD(HKEY hKey, LPWSTR lpKey, PDWORD pdwResult)
+{
+	return REG_QueryNum(hKey, lpKey, pdwResult, REG_DWORD);
+}
+
+NTSTATUS REG_QueryQWORD(HKEY hKey, LPWSTR lpKey, PULONGLONG pdwResult)
+{
+	return REG_QueryNum(hKey, lpKey, pdwResult, REG_QWORD);
 }
 
 NTSTATUS REG_SetDWORD(HKEY hKey, LPWSTR lpKey, DWORD dwData)
@@ -71,6 +87,14 @@ NTSTATUS REG_SetDWORD(HKEY hKey, LPWSTR lpKey, DWORD dwData)
 
 	RtlInitUnicodeString(&uStr, lpKey);
 	return NtSetValueKey(hKey, &uStr, 0, REG_DWORD, &dwData, sizeof(dwData));
+}
+
+NTSTATUS REG_SetQWORD(HKEY hKey, LPWSTR lpKey, ULONGLONG dwData)
+{
+	UNICODE_STRING uStr;
+
+	RtlInitUnicodeString(&uStr, lpKey);
+	return NtSetValueKey(hKey, &uStr, 0, REG_QWORD, &dwData, sizeof(dwData));
 }
 
 VOID REG_CloseKey(HKEY hKey)

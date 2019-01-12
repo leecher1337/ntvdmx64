@@ -560,6 +560,57 @@ void WINAPI NotifyWinEventHook(DWORD event, HWND  hwnd, LONG  idObject, LONG  id
 #define REGKEY_BasepProcessInvalidImage L"BasepProcessInvalidImage32"
 #define REGKEY_BaseIsDosApplication L"BaseIsDosApplication32"
 #endif
+typedef struct {
+	char *pszFunction;
+	LPWSTR lpKeyName;
+} REGKEY_PAIR;
+static BOOL UpdateSymsForModule(HKEY hKey, char *pszDLL, LPWSTR lpDLLKey, REGKEY_PAIR *keys)
+{
+	char szKernel32[MAX_PATH];
+	DWORD dwAddress, i;
+	DWORD64 dwBase = 0;
+	FILETIME tm = { 0 };
+	HANDLE hFile;
+
+	sprintf(szKernel32 + GetSystemDirectoryA(szKernel32, sizeof(szKernel32) / sizeof(szKernel32[0])), "\\%s", pszDLL);
+	hFile = CreateFileA(szKernel32, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+	if (hFile != INVALID_HANDLE_VALUE)
+	{
+		ULONGLONG tmr;
+
+		if (GetFileTime(hFile, NULL, NULL, &tm) &&
+			NT_SUCCESS(REG_QueryQWORD(hKey, lpDLLKey, &tmr)) && *((PULONGLONG)&tm) == tmr)
+		{
+			// So far, it seems unchanged, now check if exports are present
+			for (i = 0; keys[i].lpKeyName; i++)
+			{
+				if (!NT_SUCCESS(REG_QueryDWORD(hKey, keys[i].lpKeyName, &dwAddress)) || !dwAddress) break;
+			}
+			if (!keys[i].lpKeyName) return TRUE; // No update needed, everything fine
+		}
+		CloseHandle(hFile);
+	}
+
+	// Update needed
+	if (SymEng_LoadModule(szKernel32, &dwBase) == 0 || GetLastError() == 0x1E7)
+	{
+		if (!dwBase) dwBase = GetModuleHandleA(pszDLL);
+		TRACE("UpdateSymbolCache() loading %s symbols", pszDLL);
+		for (i = 0; keys[i].lpKeyName; i++)
+		{
+			if (dwAddress = SymEng_GetAddr(dwBase, keys[i].pszFunction))
+				REG_SetDWORD(hKey, keys[i].lpKeyName, dwAddress);
+		}
+		SymEng_UnloadModule(dwBase);
+		if (tm.dwLowDateTime)
+		{
+			REG_SetQWORD(hKey, lpDLLKey, *((PULONGLONG)&tm));
+		}
+		return TRUE;
+	}
+	return FALSE;
+}
+
 BOOL UpdateSymbolCache()
 {
 	HKEY hKey = NULL;
@@ -570,46 +621,31 @@ BOOL UpdateSymbolCache()
 	static BOOL bUpdated = FALSE;
 
 	if (bUpdated) return TRUE;
-	GetSystemDirectoryA(szKernel32, sizeof(szKernel32) / sizeof(szKernel32[0]));
-	strcat(szKernel32, "\\kernel32.dll");
-	if (SymEng_LoadModule(szKernel32, &dwBase) == 0 || GetLastError() == 0x1E7)
+	if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ | KEY_WRITE, &hKey)))
 	{
-		if (!dwBase) dwBase = GetModuleHandleA("kernel32.dll");
-		if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ | KEY_WRITE, &hKey)))
 		{
-			TRACE("UpdateSymbolCache() loading kernel32 symbols");
-			if (dwAddress = SymEng_GetAddr(dwBase, "BasepProcessInvalidImage"))
-				REG_SetDWORD(hKey, REGKEY_BasepProcessInvalidImage, dwAddress);
-			if (dwAddress = SymEng_GetAddr(dwBase, "BaseIsDosApplication"))
-				REG_SetDWORD(hKey, REGKEY_BaseIsDosApplication, dwAddress);
-			REG_CloseKey(hKey);
-			bUpdated = TRUE;
+			REGKEY_PAIR Keys[] = {
+				{"BasepProcessInvalidImage", REGKEY_BasepProcessInvalidImage},
+				{"BaseIsDosApplication", REGKEY_BaseIsDosApplication},
+				{NULL, NULL}
+			};
+			bUpdated = UpdateSymsForModule(hKey, "kernel32.dll", L"kernel32.dll", Keys);
 		}
-		else
-		{
-			TRACE("RegCreateKeyEx failed: %08X", Status);
-		}
-		SymEng_UnloadModule(dwBase);
-	}
 
-	// Also update conhost.exe symbols
-	GetSystemDirectoryA(szKernel32, sizeof(szKernel32) / sizeof(szKernel32[0]));
-	strcat(szKernel32, "\\conhost.exe");
-	if (SymEng_LoadModule(szKernel32, &dwBase) == 0 || GetLastError() == 0x1E7)
-	{
-		if (!dwBase) dwBase = GetModuleHandleA("conhost.exe");
-		if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ | KEY_WRITE, &hKey)))
 		{
-			TRACE("UpdateSymbolCache() loading conhost symbols");
-			if (dwAddress = SymEng_GetAddr(dwBase, "dwConBaseTag"))
-				REG_SetDWORD(hKey, L"dwConBaseTag", dwAddress);
-			if (dwAddress = SymEng_GetAddr(dwBase, "FindProcessInList"))
-				REG_SetDWORD(hKey, L"FindProcessInList", dwAddress);
-			if (dwAddress = SymEng_GetAddr(dwBase, "CreateConsoleBitmap"))
-				REG_SetDWORD(hKey, L"CreateConsoleBitmap", dwAddress);
-			REG_CloseKey(hKey);
+			REGKEY_PAIR Keys[] = {
+				{"dwConBaseTag", L"dwConBaseTag"},
+				{"FindProcessInList", L"FindProcessInList"},
+				{"CreateConsoleBitmap",  L"CreateConsoleBitmap"},
+				{ NULL, NULL }
+			};
+			bUpdated &= UpdateSymsForModule(hKey, "conhost.exe", L"conhost.exe", Keys);
 		}
-		SymEng_UnloadModule(dwBase);
+		REG_CloseKey(hKey);
+	}
+	else
+	{
+		TRACE("RegCreateKeyEx failed: %08X", Status);
 	}
 
 	return bUpdated;
