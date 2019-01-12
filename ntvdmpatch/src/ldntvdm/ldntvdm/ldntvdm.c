@@ -713,7 +713,7 @@ BOOL WINAPI mySetConsolePalette(IN HANDLE hConsoleOutput, IN HPALETTE hPalette, 
 
 TCHAR *GetProcessName(void)
 {
-	TCHAR szProcess[MAX_PATH], *p;
+	static TCHAR szProcess[MAX_PATH], *p;
 
 	p = szProcess + GetModuleFileName(NULL, szProcess, sizeof(szProcess) / sizeof(TCHAR));
 	while (*p != '\\') p--;
@@ -755,7 +755,7 @@ BOOL WINAPI _DllMainCRTStartup(
 	case DLL_PROCESS_ATTACH:
 	{
 		STARTUPINFO si = { 0 };
-		HMODULE hKernelBase, hKrnl32;
+		HMODULE hKernelBase, hKrnl32, hNTDLL = GetModuleHandle(_T("ntdll.dll"));
 		LPBYTE lpProcII = NULL;
 		int i;
 
@@ -886,6 +886,7 @@ BOOL WINAPI _DllMainCRTStartup(
 		Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "ntdll.dll", "NtQueryInformationProcess", myNtQueryInformationProcess, NULL);
 		Hook_IAT_x64_IAT((LPBYTE)hKernelBase, "ntdll.dll", "NtQueryInformationProcess", myNtQueryInformationProcess, NULL);
 #endif
+		TRACE("ldntvdm Init done");
 		break;
 	}
 	case DLL_PROCESS_DETACH:
