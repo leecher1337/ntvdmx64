@@ -127,7 +127,7 @@ static DWORD GetProcAddress32(HANDLE hModule, char *lpProcName)
 		{
 			char *pszProc = (char *)(pBase + pNamesArray[j] - SectHdr[i].VirtualAddress + SectHdr[i].PointerToRawData);
 
-			if (!lstrcmpA(pszProc, lpProcName))
+			if (!_strcmp(pszProc, lpProcName))
 				return pAddressArray[pNameOrdinalsArray[j]];
 		}
 	}
@@ -159,7 +159,7 @@ DWORD GetLoadLibraryAddressX32(HANDLE ProcessHandle)
 			ReadProcessMemory(ProcessHandle, ldrMod.BaseDllName.Buffer, dllName, min(ldrMod.BaseDllName.Length, sizeof(dllName) / sizeof(WCHAR)), NULL))
 		{
 			dllName[ldrMod.BaseDllName.Length / sizeof(WCHAR)] = 0;
-			if (!lstrcmpiW(dllName, L"kernel32.dll"))
+			if (!__wcsicmp(dllName, L"kernel32.dll"))
 			{
 				HANDLE hLibKernel32;
 

@@ -23,6 +23,7 @@
 
 #include <windows.h>
 #include <stddef.h>
+#include "ldntvdm.h"
 #include "Winternl.h"
 #include "wow64int.h"
 #include "wow64ext.h"
@@ -442,7 +443,7 @@ ULONGLONG  GetModuleHandle64(wchar_t* lpModuleName)
 	{
 		getMem64(&head, head.InLoadOrderLinks.Flink, sizeof(LDR_DATA_TABLE_ENTRY64));
 		getMem64(tempBuf, head.BaseDllName.Buffer, min(head.BaseDllName.MaximumLength,MAX_PATH));
-		if (0 == lstrcmpiW(lpModuleName, tempBuf))
+		if (0 == __wcsicmp(lpModuleName, tempBuf))
 			return head.DllBase;
 	} while (head.InLoadOrderLinks.Flink != LastEntry);
 

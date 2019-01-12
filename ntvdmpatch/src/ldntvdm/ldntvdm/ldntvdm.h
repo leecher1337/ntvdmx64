@@ -28,12 +28,19 @@
 
 #ifdef TRACING
 static char szDbgBuf[2048];
-typedef int (NTAPI *fpsprintf)(char * str, const char * format, ...);
+typedef int (*fpsprintf)(char * str, const char * format, ...);
 extern fpsprintf sprintf;
 #define TRACE(...) { if (sprintf) {sprintf(szDbgBuf, __VA_ARGS__); OutputDebugStringA(szDbgBuf);} }
 #else
 #define TRACE(...)
 #endif
+	
+typedef int (__cdecl *fpstrcmp)(char * str, char *str2);
+typedef int (__cdecl *fp_stricmp)(const char * str, const char *str2);
+typedef int (__cdecl *fp_wcsicmp)(PWCHAR str, PWCHAR str2);
+extern fp_stricmp __stricmp;
+extern fp_wcsicmp __wcsicmp;
+extern fpstrcmp _strcmp;
 
 
 /* This is the simplest method of entering the NTVDM.

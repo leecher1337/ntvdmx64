@@ -88,7 +88,7 @@ static int InitSymEng(void)
 	HMODULE hDbgHelp;
 
 	GetWindowsDirectoryA(szPath, sizeof(szPath));
-	lstrcatA(szPath, "\\symbols\\dbghelp\\"
+	strcat(szPath, "\\symbols\\dbghelp\\"
 #ifdef _WIN64
 		"x64"
 #else
@@ -107,12 +107,12 @@ static int InitSymEng(void)
 		(SymUnloadModule64 = (fpSymUnloadModule64)GetProcAddress(hDbgHelp, "SymUnloadModule64"))
 		)
 	{
-		lstrcpyA(szPath, "SRV*");
+		strcpy(szPath, "SRV*");
 		GetTempPathA(sizeof(szPath) - 4, szPath + 4);
-		lstrcatA(szPath, "SymbolCache");
+		strcat(szPath, "SymbolCache");
 		CreateDirectoryA(szPath + 4, NULL);
 
-		lstrcatA(szPath, "*http://msdl.microsoft.com/download/symbols");
+		strcat(szPath, "*http://msdl.microsoft.com/download/symbols");
 		if (!SymInitialize(hProcess, 0, FALSE))
 		{
 			TRACE("SymInitialize failed: %08X", GetLastError());

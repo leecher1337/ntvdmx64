@@ -96,7 +96,7 @@ int Hook_IAT_x64_IAT(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char Fu
 	TRACE("Hook_IAT_x64_IAT(%08X, %s, %s, %08X, %08X)", hMod, LibNameBigCaseName_SmallFormat, FunName, NewFun, OldFun);
 	for (; idata->Name; idata++) {
 		pszDLL = (char*)(hMod + idata->Name);
-		if (!lstrcmpiA(pszDLL, LibNameBigCaseName_SmallFormat)) {
+		if (!__stricmp(pszDLL, LibNameBigCaseName_SmallFormat)) {
 			iRet = -2;
 			PIMAGE_THUNK_DATA ThunkData = (PIMAGE_THUNK_DATA)(hMod + idata->OriginalFirstThunk);
 			PULONG_PTR Address = (PULONG_PTR)(hMod + idata->FirstThunk);
@@ -109,7 +109,7 @@ int Hook_IAT_x64_IAT(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char Fu
 						TRACE("LDNTVDM: Cannot check for IAT entry %s of module @%08X. Thunk=%08X, AddressOfData=%08X, ForwarderString=%08X",
 							FunName, hMod, ThunkData, ThunkData->u1.AddressOfData, ThunkData->u1.ForwarderString);
 					}
-					else if (!lstrcmpA((char*)(hMod + ThunkData->u1.ForwarderString + 2), FunName))
+					else if (!_strcmp((char*)(hMod + ThunkData->u1.ForwarderString + 2), FunName))
 					{
 						DWORD OldProt;
 
@@ -173,7 +173,7 @@ BOOL Hook_IAT_x64(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char *LibD
 
 		PSTR pszDLLNameRVA = (PSTR)GetPtrFromRVA(dllNameRVA, NtHeaders, hMod);
 
-		if (!lstrcmpA(pszDLLNameRVA, LibDelayImpName))
+		if (!_strcmp(pszDLLNameRVA, LibDelayImpName))
 		{
 			PVOID thunkVA = (PBYTE)0 + (DWORD)pDelayDesc->rvaINT;
 
@@ -193,7 +193,7 @@ BOOL Hook_IAT_x64(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char *LibD
 						? (PIMAGE_IMPORT_BY_NAME)GetPtrFromRVA((DWORD)thunk->u1.AddressOfData, NtHeaders, hMod)
 						: (PIMAGE_IMPORT_BY_NAME)GetPtrFromVA((PVOID)pOrdinalName, NtHeaders, hMod);
 
-					if (!lstrcmpA(pOrdinalName->Name, FunName))
+					if (!_strcmp(pOrdinalName->Name, FunName))
 					{
 						PIMAGE_THUNK_DATA thunkIAT = GetPtrFromRVA((DWORD)pDelayDesc->rvaIAT, NtHeaders, hMod);
 						DWORD OldProt;

@@ -162,6 +162,9 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 #ifdef TRACING
 fpsprintf sprintf;
 #endif
+fp_stricmp __stricmp;
+fp_wcsicmp __wcsicmp;
+fpstrcmp _strcmp;
 fpBasepProcessInvalidImage BasepProcessInvalidImageReal = NULL;
 fpBaseIsDosApplication BaseIsDosApplication = NULL;
 fpBaseCheckVDM BaseCheckVDM = NULL;
@@ -231,7 +234,7 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 			HMODULE hKrnl32 = GetModuleHandle(_T("kernel32.dll"));
 
 			GetSystemDirectoryA(szKernel32, sizeof(szKernel32) / sizeof(szKernel32[0]));
-			lstrcatA(szKernel32, "\\kernel32.dll");
+			strcat(szKernel32, "\\kernel32.dll");
 			if (SymEng_LoadModule(szKernel32, &dwBase) == 0)
 			{
 				if ((dwAddress = SymEng_GetAddr(dwBase, "BaseCreateVDMEnvironment")) &&
@@ -391,7 +394,7 @@ HMODULE WINAPI LoadLibraryExWHook(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwF
 	HANDLE hRet = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
 
 	TRACE("LDNTVDM: LoadLibraryExWHook(%S)", lpLibFileName);
-	if (hRet && lstrcmpiW(lpLibFileName, L"ConHostV1.dll") == 0)
+	if (hRet && __wcsicmp(lpLibFileName, L"ConHostV1.dll") == 0)
 	{
 		TRACE("LDNTVDM hooks Conhost RtlAllocateHeap");
 		Hook_IAT_x64_IAT((LPBYTE)hRet, "ntdll.dll", "RtlAllocateHeap", RtlAllocateHeapHook, &RtlAllocateHeapReal);
@@ -568,7 +571,7 @@ BOOL UpdateSymbolCache()
 
 	if (bUpdated) return TRUE;
 	GetSystemDirectoryA(szKernel32, sizeof(szKernel32) / sizeof(szKernel32[0]));
-	lstrcatA(szKernel32, "\\kernel32.dll");
+	strcat(szKernel32, "\\kernel32.dll");
 	if (SymEng_LoadModule(szKernel32, &dwBase) == 0 || GetLastError() == 0x1E7)
 	{
 		if (!dwBase) dwBase = GetModuleHandleA("kernel32.dll");
@@ -591,7 +594,7 @@ BOOL UpdateSymbolCache()
 
 	// Also update conhost.exe symbols
 	GetSystemDirectoryA(szKernel32, sizeof(szKernel32) / sizeof(szKernel32[0]));
-	lstrcatA(szKernel32, "\\conhost.exe");
+	strcat(szKernel32, "\\conhost.exe");
 	if (SymEng_LoadModule(szKernel32, &dwBase) == 0 || GetLastError() == 0x1E7)
 	{
 		if (!dwBase) dwBase = GetModuleHandleA("conhost.exe");
@@ -758,8 +761,11 @@ BOOL WINAPI _DllMainCRTStartup(
 
 		hKrnl32 = GetModuleHandle(_T("kernel32.dll"));
 		hKernelBase = (HMODULE)GetModuleHandle(_T("KernelBase.dll"));
+		__stricmp = (fp_stricmp)GetProcAddress(hNTDLL, "_stricmp");
+		__wcsicmp = (fp_wcsicmp)GetProcAddress(hNTDLL, "_wcsicmp");
+		_strcmp = (fpstrcmp)GetProcAddress(hNTDLL, "strcmp");
 #ifdef TRACING
-		sprintf = (fpsprintf)GetProcAddress(GetModuleHandle(_T("ntdll.dll")), "sprintf");
+		sprintf = (fpsprintf)GetProcAddress(hNTDLL, "sprintf");
 #endif
 
 #ifdef TARGET_WIN7
@@ -770,7 +776,7 @@ BOOL WINAPI _DllMainCRTStartup(
 			DWORD64 dwBase=0, dwAddress;
 			char szKernel32[MAX_PATH];
 			GetSystemDirectoryA(szKernel32, sizeof(szKernel32) / sizeof(szKernel32[0]));
-			lstrcatA(szKernel32, "\\kernel32.dll");
+			strcat(szKernel32, "\\kernel32.dll");
 			if (SymEng_LoadModule(szKernel32, &dwBase) == 0)
 			{
 				if (dwAddress = SymEng_GetAddr(dwBase, "BasepProcessInvalidImage"))
@@ -844,7 +850,7 @@ BOOL WINAPI _DllMainCRTStartup(
 #ifdef _WIN64
 		{
 			// Fix ConhostV1.dll bug where memory isn't initialized properly
-			if (lstrcmpi(GetProcessName(), _T("ConHost.exe")) == 0)
+			if (__stricmp(GetProcessName(), _T("ConHost.exe")) == 0)
 			{
 				TRACE("LDNTVDM is running inside ConHost.exe");
 
@@ -871,7 +877,7 @@ BOOL WINAPI _DllMainCRTStartup(
 #else /* WIN64 */
 #ifndef WOW16_SUPPORT
 		// Only fix NTDLL in ntvdm.exe where it is needed, don't interfere with other applications like ovdm, until we natively support Win16
-		if (lstrcmpi(GetProcessName(), _T("ntvdm.exe")) == 0)
+		if (__wcsicmp(GetProcessName(), _T("ntvdm.exe")) == 0)
 #endif
 		FixNTDLL();
 		HookCsrClientCallServer();
