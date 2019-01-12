@@ -15,6 +15,16 @@
 #undef METHOD_MODIFYSTARTUP
 #endif
 
+typedef union tag_PROCESS_FLAGS
+{
+	ULONG ProcessInJob : 1;
+	ULONG ProcessInitializing : 1;
+	ULONG ProcessUsingVEH : 1;
+	ULONG ProcessUsingVCH : 1;
+	ULONG ProcessUsingFTH : 1;
+	ULONG ReservedBits0 : 27;
+} PROCESS_FLAGS;
+
 
 typedef NTSTATUS(NTAPI *pRtlInitUnicodeString)(PUNICODE_STRING, PCWSTR);
 typedef NTSTATUS(NTAPI *pLdrLoadDll)(PWCHAR, ULONG, PUNICODE_STRING, PHANDLE);
@@ -170,25 +180,27 @@ BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, char *DllName)
 #endif
 	//get the thread context
 	CONTEXT ThreadContext;
-	ThreadContext.ContextFlags = CONTEXT_FULL;
+	ULONG_PTR dwLoadLibrary;
+	ThreadContext.ContextFlags = CONTEXT_CONTROL;
 	GetThreadContext(hThread, &ThreadContext);
 
 #ifdef _WIN64
-	TRACE("Hijacked Thread currently @%X", ThreadContext.Rip);
+	TRACE("Hijacked Thread currently @%X, Flags: %08X", ThreadContext.Rip, ThreadContext.ContextFlags);
 #else
-	TRACE("Hijacked Thread currently @%08X", ThreadContext.Eip);
+	TRACE("Hijacked Thread currently @%08X, Flags: %08X", ThreadContext.Eip, ThreadContext.ContextFlags);
 #endif
 
 	//allocate a remote buffer
 	PBYTE InjData =
 		(PBYTE)VirtualAllocEx(hProc, NULL, sizeof(code) + (strlen(DllName) + 1),
 			MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+	dwLoadLibrary = GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "LoadLibraryA");
 #ifdef _WIN64
-	*(ULONG_PTR*)&code[17] = GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "LoadLibraryA");;
+	*(ULONG_PTR*)&code[17] = dwLoadLibrary;
 	*(ULONG_PTR*)&code[27] = InjData + sizeof(code);
 	*(ULONG_PTR*)&code[58] = ThreadContext.Rip;
 #else
-	*(ULONG_PTR*)&code[3] = GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "LoadLibraryA");;
+	*(ULONG_PTR*)&code[3] = dwLoadLibrary;
 	*(ULONG_PTR*)&code[8] = InjData + sizeof(code);
 	*(ULONG_PTR*)&code[17] = ThreadContext.Eip;
 #endif
@@ -198,6 +210,22 @@ BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, char *DllName)
 	ULONG dwWritten;
 	WriteProcessMemory(hProc, InjData, code, sizeof(code), &dwWritten);
 	WriteProcessMemory(hProc, InjData + sizeof(code), DllName, (strlen(DllName) + 1), &dwWritten);
+
+	if (!isProcessInitialized(hProc))
+	{
+		/* process has not yet been initialized... As hijacking threads is a bit dangerous anyway,
+		 * we back out by queuing an APC instead. NtTestAlert() call in loader should call us just
+		 * in time in this case... */
+		if (QueueUserAPC(dwLoadLibrary, hThread, (ULONG_PTR)InjData + sizeof(code)))
+		{
+			TRACE("Queued loader injection via APC @%08X", dwLoadLibrary);
+			return TRUE;
+		}
+		else
+		{
+			TRACE("QueueUserAPC failed: %d", GetLastError());
+		}
+	}
 
 	//set the EIP
 #ifdef _WIN64
@@ -210,6 +238,61 @@ BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, char *DllName)
 }
 
 #endif
+
+static BOOL isProcessInitialized(HANDLE hProcess)
+{
+#if defined(USE_LDRINITSTATE) && !defined(TARGET_WIN7) /* Win 7 doesn't have it */
+	static DWORD *pLdrInitState = NULL;
+	DWORD LdrInitState = 3, dwRead;
+
+	/* We could also check ((PROCESS_FLAGS)Peb.Reserved6).ProcessInitializing;, if we want to avoid internal symbols (CrossProcessFlags)  */
+	if (!pLdrInitState)
+	{
+		// Load the private loader functions by using DbgHelp and Symbol server
+		DWORD64 dwBase = 0, dwAddress;
+		char szNTDLL[MAX_PATH];
+		HMODULE hNTDLL = GetModuleHandle(_T("ntdll.dll"));
+
+		GetSystemDirectoryA(szNTDLL, sizeof(szNTDLL) / sizeof(szNTDLL[0]));
+		strcat(szNTDLL, "\\ntdll.dll");
+		if (SymEng_LoadModule(szNTDLL, &dwBase) == 0)
+		{
+			if ((dwAddress = SymEng_GetAddr(dwBase, "LdrInitState")))
+			{
+				pLdrInitState = (DWORD64)hNTDLL + dwAddress;
+			}
+			SymEng_UnloadModule(dwBase);
+		}
+	}
+	if (!ReadProcessMemory(hProcess, pLdrInitState, &LdrInitState, sizeof(LdrInitState), &dwRead) || dwRead != sizeof(LdrInitState))
+		return TRUE; /* Better assume yes, if we cannot read it */
+	TRACE("LdrInitState = %d", LdrInitState);
+	return LdrInitState >= 3;
+#else
+	PROCESS_BASIC_INFORMATION basicInfo;
+	PROCESS_FLAGS Flags;
+	NTSTATUS Status;
+	DWORD dwRead;
+
+	if (!NT_SUCCESS(Status = NtQueryInformationProcess(hProcess, ProcessBasicInformation, &basicInfo, sizeof(basicInfo), NULL)))
+	{
+		TRACE("Failed to Query Process basic info: %08X", Status);
+		return TRUE;
+	}
+	if (!ReadProcessMemory(hProcess, &(basicInfo.PebBaseAddress->Reserved6), &Flags, sizeof(Flags), &dwRead))
+	{
+		TRACE("Failed to read process memory: %08X", GetLastError());
+		return TRUE;
+	}
+	if (dwRead == sizeof(Flags) && 	Flags.ProcessInitializing == 1) 
+	{
+		TRACE("Process is in state Initializing");
+		return FALSE;
+	}
+	TRACE("Flags = %08X", Flags);
+	return TRUE;
+#endif
+}
 
 BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR method)
 {

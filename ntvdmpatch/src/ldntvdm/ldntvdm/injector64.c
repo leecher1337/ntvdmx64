@@ -11,6 +11,23 @@ typedef struct _PEB32
 	ULONG				ImageBaseAddress;				// 8
 	ULONG				Ldr;							// C
 	ULONG				ProcessParameters;				// 10
+	ULONG				SubSystemData;
+	ULONG				ProcessHeap;
+	ULONG				FastPebLock;
+	ULONG				AtlThunkSListPtr;
+	ULONG				IFEOKey;
+	union
+	{
+		ULONG CrossProcessFlags;
+		struct
+		{
+			ULONG ProcessInJob : 1;
+			ULONG ProcessInitializing : 1;
+			ULONG ProcessUsingVEH : 1;
+			ULONG ProcessUsingVCH : 1;
+			ULONG ReservedBits0 : 28;
+		};
+	};
 } PEB32, *PPEB32;
 
 typedef struct _UNICODE_STRING32 {
@@ -64,6 +81,21 @@ typedef struct
 	HANDLE hMap;
 	PBYTE lpMem;
 } HMODULE32;
+
+static BOOL isProcessInitialized(HANDLE hProcess)
+{
+	PEB32 *pWow64PEB, Wow64PEB;
+	NTSTATUS Status;
+
+	/* query the process basic information (includes the PEB address) */
+	if (!NT_SUCCESS(Status = NtQueryInformationProcess(hProcess, ProcessWow64Information, &pWow64PEB,
+		sizeof(pWow64PEB), NULL)) ||
+		/* get the address of the PE Loader data */
+		!ReadProcessMemory(hProcess, pWow64PEB, &Wow64PEB, sizeof(Wow64PEB), NULL))
+		return TRUE;	// Better lie...
+	TRACE("ProcessInitializing = %d", Wow64PEB.ProcessInitializing);
+	return !Wow64PEB.ProcessInitializing;
+}
 
 void FreeLibrary32(HANDLE hModule)
 {
@@ -211,6 +243,24 @@ BOOL InjectDllHijackThreadX32(HANDLE hProc, HANDLE hThread, WCHAR *DllName)
 	ULONG dwWritten;
 	WriteProcessMemory(hProc, InjData, code, sizeof(code), &dwWritten);
 	WriteProcessMemory(hProc, InjData + sizeof(code), DllName, (wcslen(DllName) + 1)*sizeof(WCHAR), &dwWritten);
+
+#if 0 /* FIXME: Does not work yet */
+	if (!isProcessInitialized(hProc))
+	{
+		/* process has not yet been initialized... As hijacking threads is a bit dangerous anyway,
+		* we back out by queuing an APC instead. NtTestAlert() call in loader should call us just
+		* in time in this case... */
+		if (QueueUserAPC(*(PDWORD)&code[3], hThread, (DWORD)InjData + sizeof(code)))
+		{
+			TRACE("Queued loader injection via APC @%08X (%08X)", *(PDWORD)&code[3], (DWORD)InjData + sizeof(code));
+			return TRUE;
+		}
+		else
+		{
+			TRACE("QueueUserAPC failed: %d", GetLastError());
+		}
+	}
+#endif
 
 	//set the EIP
 	ThreadContext.Eip = (ULONG)InjData;
