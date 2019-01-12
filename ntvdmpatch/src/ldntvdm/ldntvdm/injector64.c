@@ -185,9 +185,11 @@ BOOL InjectDllHijackThreadX32(HANDLE hProc, HANDLE hThread, WCHAR *DllName)
 	//get the thread context
 	BYTE code[] = {
 		0x60,	// PUSHAD
+		0x9C,	// PUSHFD
 		0xb8, 0xAA, 0xAA, 0xAA, 0xAA,	// MOV EAX, AAAAAAAA
 		0x68, 0xBB, 0xBB, 0xBB, 0xBB,	// PUSH BBBBBBBB
 		0xff, 0xd0,	// CALL EAX
+		0x9D,	// POPFD
 		0x61,	// POPAD
 		0x68, 0xCC, 0xCC, 0xCC, 0xCC,	// PUSH CCCCCCCC
 		0xc3	// RET
@@ -200,9 +202,9 @@ BOOL InjectDllHijackThreadX32(HANDLE hProc, HANDLE hThread, WCHAR *DllName)
 	PBYTE InjData =
 		(PBYTE)VirtualAllocEx(hProc, NULL, sizeof(code) + (wcslen(DllName) + 1)*sizeof(WCHAR),
 			MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-	*(PDWORD)&code[2] = GetLoadLibraryAddressX32(hProc);
-	*(PDWORD)&code[7] = InjData + sizeof(code);
-	*(PDWORD)&code[15] = ThreadContext.Eip;
+	*(PDWORD)&code[3] = GetLoadLibraryAddressX32(hProc);
+	*(PDWORD)&code[8] = InjData + sizeof(code);
+	*(PDWORD)&code[17] = ThreadContext.Eip;
 
 	//write the tmp buff + dll
 	//Format: [RemoteFunction][DllName][null char]
