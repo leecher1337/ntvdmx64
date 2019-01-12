@@ -574,7 +574,7 @@ LOCAL VOID VsbByteOut(io_addr port, half_word data)
         if (!bHighSpeedMode)
         {
             dprintf1(("w-wt %x", data));
-            DspWrite(0, data);
+            DspWrite(data);
         }
         break;
     }
