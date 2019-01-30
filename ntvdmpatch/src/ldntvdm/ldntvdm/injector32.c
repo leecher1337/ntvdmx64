@@ -15,17 +15,6 @@
 #undef METHOD_MODIFYSTARTUP
 #endif
 
-typedef union tag_PROCESS_FLAGS
-{
-	ULONG ProcessInJob : 1;
-	ULONG ProcessInitializing : 1;
-	ULONG ProcessUsingVEH : 1;
-	ULONG ProcessUsingVCH : 1;
-	ULONG ProcessUsingFTH : 1;
-	ULONG ReservedBits0 : 27;
-} PROCESS_FLAGS;
-
-
 typedef NTSTATUS(NTAPI *pRtlInitUnicodeString)(PUNICODE_STRING, PCWSTR);
 typedef NTSTATUS(NTAPI *pLdrLoadDll)(PWCHAR, ULONG, PUNICODE_STRING, PHANDLE);
 
@@ -270,7 +259,7 @@ static BOOL isProcessInitialized(HANDLE hProcess)
 	return LdrInitState >= 3;
 #else
 	PROCESS_BASIC_INFORMATION basicInfo;
-	PROCESS_FLAGS Flags;
+	ULONG Flags;
 	NTSTATUS Status;
 	DWORD dwRead;
 
@@ -284,9 +273,9 @@ static BOOL isProcessInitialized(HANDLE hProcess)
 		TRACE("Failed to read process memory: %08X", GetLastError());
 		return TRUE;
 	}
-	if (dwRead == sizeof(Flags) && 	Flags.ProcessInitializing == 1) 
+	if (dwRead == sizeof(Flags) && (Flags & 2) /* =ProcessInitializing */) 
 	{
-		TRACE("Process is in state Initializing");
+		TRACE("Process is in state Initializing (Flags=%08X)", Flags);
 		return FALSE;
 	}
 	TRACE("Flags = %08X", Flags);
