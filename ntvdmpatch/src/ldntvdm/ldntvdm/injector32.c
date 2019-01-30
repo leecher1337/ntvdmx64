@@ -172,9 +172,9 @@ BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, char *DllName)
 	ULONG_PTR dwLoadLibrary;
 	ThreadContext.ContextFlags = CONTEXT_CONTROL;
 	GetThreadContext(hThread, &ThreadContext);
-
+	
 #ifdef _WIN64
-	TRACE("Hijacked Thread currently @%X, Flags: %08X", ThreadContext.Rip, ThreadContext.ContextFlags);
+	TRACE("Hijacked Thread currently @%016llX, Flags: %016llX", ThreadContext.Rip, ThreadContext.ContextFlags);
 #else
 	TRACE("Hijacked Thread currently @%08X, Flags: %08X", ThreadContext.Eip, ThreadContext.ContextFlags);
 #endif
@@ -184,6 +184,7 @@ BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, char *DllName)
 		(PBYTE)VirtualAllocEx(hProc, NULL, sizeof(code) + (strlen(DllName) + 1),
 			MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 	dwLoadLibrary = GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "LoadLibraryA");
+	//DWORD dwTestAlert = GetProcAddress(GetModuleHandle(_T("ntdll.dll")), "NtTestAlert");
 #ifdef _WIN64
 	*(ULONG_PTR*)&code[17] = dwLoadLibrary;
 	*(ULONG_PTR*)&code[27] = InjData + sizeof(code);
@@ -214,6 +215,11 @@ BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, char *DllName)
 		{
 			TRACE("QueueUserAPC failed: %d", GetLastError());
 		}
+	}
+	else
+	{
+		// FIXME: Too dangerous?
+		return FALSE;
 	}
 
 	//set the EIP
@@ -304,9 +310,9 @@ BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR metho
 				return FALSE;
 			}
 		}
-		SuspendThread(hThread);
 		bRet = InjectDllHijackThread(hProcess, hThread, "ldntvdm.dll");
-		ResumeThread(hThread);
+		if (bRet) return TRUE;
+		method = METHOD_CREATETHREAD;
 	}
 #endif
 
@@ -354,15 +360,19 @@ BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR metho
 #endif
 #ifdef METHOD_CREATETHREAD
 	case METHOD_CREATETHREAD:
-		if (bRet = NT_SUCCESS(RtlCreateUserThread(hProcess, NULL, TRUE, 0, 0, 0, code, pData, &hThread, NULL)))
+	{
+		HANDLE hNewThread;
+
+		if (bRet = (NT_SUCCESS(Status = RtlCreateUserThread(hProcess, NULL, FALSE, 0, 0, 0, code, pData, &hNewThread, NULL))))
 		{
-			ResumeThread(hThread);
-			WaitForSingleObject(hThread, INFINITE);
-			CloseHandle(hThread);
-		}
+			WaitForSingleObject(hNewThread, INFINITE);
+			CloseHandle(hNewThread);
+		} 
+		TRACE("Status = %08X", Status);
 		VirtualFreeEx(hProcess, pData, 0, MEM_RELEASE);
 		VirtualFreeEx(hProcess, code, 0, MEM_RELEASE);
 		break;
+	}
 #endif
 #ifdef METHOD_MODIFYSTARTUP
 	case METHOD_MODIFYSTARTUP:

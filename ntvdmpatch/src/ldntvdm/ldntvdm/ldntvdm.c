@@ -515,26 +515,47 @@ BOOL InjectIntoCreatedThread(LPPROCESS_INFORMATION lpProcessInformation)
 }
 #else /* CREATEPROCESS_HOOK */
 #ifdef _WIN64
-DWORD WINAPI InjectIntoCreatedThreadThread(LPVOID lpPID)
-{
+typedef struct {
 	HANDLE hProcess;
-	BOOL bIsWow64;
+	HANDLE hThread;
+} INJECTOR_PARAM;
 
-	if (hProcess = OpenProcess(PROCESS_CREATE_THREAD | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION, FALSE, lpPID))
+DWORD WINAPI InjectIntoCreatedThreadThread(INJECTOR_PARAM *param)
+{
+	BOOL bIsWow64;
+	
+	IsWow64Process(param->hProcess, &bIsWow64);
+	/* 64 -> 32 */
+	if (bIsWow64)
 	{
-		IsWow64Process(hProcess, &bIsWow64);
-		/* 64 -> 32 */
-		if (bIsWow64)
+		if (isProcessInitialized(param->hProcess) || !InjectDllHijackThreadX32(param->hProcess, param->hThread, LDNTVDM_NAME))
 		{
-			if (!InjectLdntvdmWow64HijackThread(hProcess)) OutputDebugStringA("Injecting int 32bit conhost parent failed");
-		}
-		/* 64 -> 64, 32 -> 32 */
-		else
-		{
-			if (!(injectLdrLoadDLL(hProcess, 0, LDNTVDM_NAME, METHOD_INTERCEPTTHREAD))) OutputDebugStringA("Inject LdrLoadDLL failed.");
-		}
-		CloseHandle(hProcess);
+			HANDLE hThread;
+			
+			if (!(hThread = InjectLdntvdmWow64RemoteThread(param->hProcess)))
+			{
+				OutputDebugStringA("Injecting int 32bit conhost parent failed");
+				ResumeThread(param->hThread);
+			}
+			else
+			{
+				int prio = GetThreadPriority(param->hThread);
+				SetThreadPriority(param->hThread, THREAD_PRIORITY_LOWEST);
+				SetThreadPriority(hThread, THREAD_PRIORITY_TIME_CRITICAL);
+				ResumeThread(param->hThread);
+				WaitForSingleObject(hThread, 1000);
+				SetThreadPriority(param->hThread, prio);
+			}
+		} else ResumeThread(param->hThread);
 	}
+	/* 64 -> 64, 32 -> 32 */
+	else
+	{
+		if (!(injectLdrLoadDLL(param->hProcess, param->hThread, LDNTVDM_NAME, METHOD_INTERCEPTTHREAD))) OutputDebugStringA("Inject LdrLoadDLL failed.");
+		ResumeThread(param->hThread);
+	}
+	CloseHandle(param->hProcess);
+	HeapFree(GetProcessHeap(), 0, param);
 }
 
 typedef void (WINAPI *fpNotifyWinEvent)(DWORD event, HWND hwnd, LONG idObject, LONG idChild);
@@ -543,9 +564,31 @@ void WINAPI NotifyWinEventHook(DWORD event, HWND  hwnd, LONG  idObject, LONG  id
 {
 	if (event == EVENT_CONSOLE_START_APPLICATION)
 	{
+		HANDLE hProcess;
 		TRACE("EVENT_CONSOLE_START_APPLICATION PID %d", idObject);
-		// Inject ourself into the new process
-		CreateThread(NULL, 0, InjectIntoCreatedThreadThread, idObject, 0, NULL);
+		// First freeze the process, don't lose time or it may be too late
+		if (hProcess = OpenProcess(PROCESS_CREATE_THREAD | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION, FALSE, idObject))
+		{
+			NTSTATUS Status;
+			HANDLE hThread;
+
+			if (!NT_SUCCESS(Status = NtGetNextThread(hProcess, NULL, THREAD_GET_CONTEXT | THREAD_SET_CONTEXT | THREAD_SUSPEND_RESUME | THREAD_QUERY_INFORMATION | THREAD_SET_INFORMATION, 0, 0, &hThread)))
+			{
+				TRACE("NtGetNextThread failed: %08X", Status);
+				CloseHandle(hProcess);
+			}
+			else
+			{
+				// Inject ourself into the new process
+				INJECTOR_PARAM *param = HeapAlloc(GetProcessHeap(), 0, sizeof(INJECTOR_PARAM));
+				param->hProcess = hProcess;
+				param->hThread = hThread;
+				SuspendThread(hThread);
+				TRACE("Before CreatEThread");
+				CreateThread(NULL, 0, InjectIntoCreatedThreadThread, param, 0, NULL);
+				TRACE("After CreatEThread");
+			}
+		}
 	}
 	NotifyWinEventReal(event, hwnd, idObject, idChild);
 }
@@ -885,6 +928,7 @@ BOOL WINAPI _DllMainCRTStartup(
 
 #ifdef _WIN64
 		{
+			BOOL bIsWindows8 = FALSE;
 			// Fix ConhostV1.dll bug where memory isn't initialized properly
 			if (__wcsicmp(GetProcessName(), _T("ConHost.exe")) == 0)
 			{
@@ -898,13 +942,23 @@ BOOL WINAPI _DllMainCRTStartup(
 				if (hKrnl32 = GetModuleHandle(_T("ConHostV1.dll")))
 					Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "ntdll.dll", "RtlAllocateHeap", RtlAllocateHeapHook, &RtlAllocateHeapReal);
 				else
-					Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "api-ms-win-core-libraryloader-l1-2-0.dll", "LoadLibraryExW", LoadLibraryExWHook, &LoadLibraryExWReal);
+				{
+					char szFile[MAX_PATH];
+
+					GetSystemDirectoryA(szFile, sizeof(szFile) / sizeof(szFile[0]));
+					strcat(szFile, "\\ConhostV1.dll");
+					if (bIsWindows8 = GetFileAttributesA(szFile) == 0xFFFFFFFF) // Windows 8
+						Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "ntdll.dll", "RtlAllocateHeap", RtlAllocateHeapHook, &RtlAllocateHeapReal); 
+					else
+						Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "api-ms-win-core-libraryloader-l1-2-0.dll", "LoadLibraryExW", LoadLibraryExWHook, &LoadLibraryExWReal);
+				}
 #endif
 #ifndef CREATEPROCESS_HOOK
 				// We want notification when new console process gets started so that we can inject
 #ifdef TARGET_WIN7
 				Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "user32.dll", "NotifyWinEvent", NotifyWinEventHook, &NotifyWinEventReal);
 #else
+				if (bIsWindows8) Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "user32.dll", "NotifyWinEvent", NotifyWinEventHook, &NotifyWinEventReal); else
 				if (hKrnl32) Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "user32.dll", "NotifyWinEvent", NotifyWinEventHook, &NotifyWinEventReal);
 #endif
 #endif

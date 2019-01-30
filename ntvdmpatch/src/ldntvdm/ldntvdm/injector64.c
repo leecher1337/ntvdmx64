@@ -82,7 +82,7 @@ typedef struct
 	PBYTE lpMem;
 } HMODULE32;
 
-static BOOL isProcessInitialized(HANDLE hProcess)
+BOOL isProcessInitialized(HANDLE hProcess)
 {
 	PEB32 *pWow64PEB, Wow64PEB;
 	NTSTATUS Status;
@@ -166,7 +166,7 @@ static DWORD GetProcAddress32(HANDLE hModule, char *lpProcName)
 	return 0;
 }
 
-DWORD GetLoadLibraryAddressX32(HANDLE ProcessHandle)
+HANDLE GetModuleHandle32(HANDLE ProcessHandle, LPWSTR lpDllName)
 {
 	PEB32 *pWow64PEB, Wow64PEB;
 	NTSTATUS Status;
@@ -180,7 +180,7 @@ DWORD GetLoadLibraryAddressX32(HANDLE ProcessHandle)
 		/* get the address of the PE Loader data */
 		!ReadProcessMemory(ProcessHandle, pWow64PEB, &Wow64PEB, sizeof(Wow64PEB), NULL) ||
 		!ReadProcessMemory(ProcessHandle, Wow64PEB.Ldr, &LoaderData, sizeof(LoaderData), NULL))
-		return 0;
+		return NULL;
 
 	/* head of the module list: the last element in the list will point to this */
 	pStart = pMod = (PEB_LDR_DATA32*)LoaderData.InLoadOrderModuleList.Flink;
@@ -191,25 +191,38 @@ DWORD GetLoadLibraryAddressX32(HANDLE ProcessHandle)
 			ReadProcessMemory(ProcessHandle, ldrMod.BaseDllName.Buffer, dllName, min(ldrMod.BaseDllName.Length, sizeof(dllName) / sizeof(WCHAR)), NULL))
 		{
 			dllName[ldrMod.BaseDllName.Length / sizeof(WCHAR)] = 0;
-			if (!__wcsicmp(dllName, L"kernel32.dll"))
-			{
-				HANDLE hLibKernel32;
-
-				GetSystemWow64Directory(dllName, sizeof(dllName) / sizeof(WCHAR));
-				wcscat(dllName, L"\\kernel32.dll");
-				if (hLibKernel32 = LoadLibrary32(dllName))
-				{
-					DWORD dwRet = 0;
-
-					dwRet = GetProcAddress32(hLibKernel32, "LoadLibraryW");
-					FreeLibrary32(hLibKernel32);
-					return dwRet ? dwRet + ldrMod.DllBase : 0;
-				}
-			}
+			if (!__wcsicmp(dllName, lpDllName))
+				return ldrMod.DllBase;
 		}
 		pMod = (PEB_LDR_DATA32*)ldrMod.InLoadOrderModuleList.Flink;
 	} while (pMod != pStart);
-	return 0;
+	return NULL;
+}
+
+DWORD GetRemoteProcAddressX32(HANDLE ProcessHandle, LPWSTR lpDllName, LPSTR lpProcName)
+{
+	HANDLE hRemoteMod = GetModuleHandle32(ProcessHandle, lpDllName);
+	HANDLE hLibKernel32;
+	WCHAR dllName[MAX_PATH + 1];
+
+	if (!hRemoteMod) return NULL;
+	GetSystemWow64Directory(dllName, sizeof(dllName) / sizeof(WCHAR));
+	wcscat(dllName, L"\\");
+	wcscat(dllName, lpDllName);
+	if (hLibKernel32 = LoadLibrary32(dllName))
+	{
+		DWORD dwRet = 0;
+
+		dwRet = GetProcAddress32(hLibKernel32, lpProcName);
+		FreeLibrary32(hLibKernel32);
+		return dwRet ? dwRet + (DWORD)hRemoteMod : 0;
+	}
+
+}
+
+DWORD GetLoadLibraryAddressX32(HANDLE ProcessHandle)
+{
+	return GetRemoteProcAddressX32(ProcessHandle, L"kernel32.dll", "LoadLibraryW");
 }
 
 BOOL InjectDllHijackThreadX32(HANDLE hProc, HANDLE hThread, WCHAR *DllName)
@@ -234,7 +247,8 @@ BOOL InjectDllHijackThreadX32(HANDLE hProc, HANDLE hThread, WCHAR *DllName)
 	PBYTE InjData =
 		(PBYTE)VirtualAllocEx(hProc, NULL, sizeof(code) + (wcslen(DllName) + 1)*sizeof(WCHAR),
 			MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-	*(PDWORD)&code[3] = GetLoadLibraryAddressX32(hProc);
+	DWORD dwLoadLibrary = GetLoadLibraryAddressX32(hProc);
+	*(PDWORD)&code[3] = dwLoadLibrary;
 	*(PDWORD)&code[8] = InjData + sizeof(code);
 	*(PDWORD)&code[17] = ThreadContext.Eip;
 
@@ -244,23 +258,29 @@ BOOL InjectDllHijackThreadX32(HANDLE hProc, HANDLE hThread, WCHAR *DllName)
 	WriteProcessMemory(hProc, InjData, code, sizeof(code), &dwWritten);
 	WriteProcessMemory(hProc, InjData + sizeof(code), DllName, (wcslen(DllName) + 1)*sizeof(WCHAR), &dwWritten);
 
-#if 0 /* FIXME: Does not work yet */
 	if (!isProcessInitialized(hProc))
 	{
 		/* process has not yet been initialized... As hijacking threads is a bit dangerous anyway,
 		* we back out by queuing an APC instead. NtTestAlert() call in loader should call us just
 		* in time in this case... */
-		if (QueueUserAPC(*(PDWORD)&code[3], hThread, (DWORD)InjData + sizeof(code)))
+		NTSTATUS Status;
+
+		Status = RtlQueueApcWow64Thread(hThread, (PVOID)dwLoadLibrary, (ULONG_PTR)InjData + sizeof(code), NULL, NULL);
+		if (NT_SUCCESS(Status))
 		{
-			TRACE("Queued loader injection via APC @%08X (%08X)", *(PDWORD)&code[3], (DWORD)InjData + sizeof(code));
+			TRACE("Queued loader injection via APC @%08X", dwLoadLibrary);
 			return TRUE;
 		}
 		else
 		{
-			TRACE("QueueUserAPC failed: %d", GetLastError());
+			TRACE("QueueUserAPC failed: %d", Status);
 		}
 	}
-#endif
+	else
+	{
+		// FIXME: Too dangerous?
+		return FALSE;
+	}
 
 	//set the EIP
 	ThreadContext.Eip = (ULONG)InjData;
@@ -284,23 +304,35 @@ HANDLE InjectLdntvdmWow64RemoteThread(HANDLE hProcess)
 	return NULL;
 }
 
-BOOL InjectLdntvdmWow64HijackThread(HANDLE hProcess)
+DWORD WINAPI InjectLdntvdmWow64UsingRemoteThread(HANDLE hProcess)
 {
-	HANDLE hThread;
 	NTSTATUS Status;
-	BOOL bRet = FALSE;
+	HANDLE hThread;
 
 	if (NT_SUCCESS((Status = NtGetNextThread(hProcess, NULL, THREAD_GET_CONTEXT | THREAD_SET_CONTEXT | THREAD_SUSPEND_RESUME, 0, 0, &hThread))))
 	{
-		HANDLE hRemoteThread;
+		HANDLE hNewThread;
 
 		SuspendThread(hThread);
-		bRet = InjectDllHijackThreadX32(hProcess, hThread, LDNTVDM_NAME);
+		if (hNewThread = InjectLdntvdmWow64RemoteThread(hProcess))
+		{
+			int i;
+
+			for (i = 0; i < 20; i++)
+			{
+				if (WaitForSingleObject(hNewThread, 50) == WAIT_OBJECT_0) break;
+				InjectDllHijackThreadX32(hProcess, hThread, LDNTVDM_NAME);
+				ResumeThread(hThread);
+				break;
+			}
+			CloseHandle(hNewThread);
+		}
 		ResumeThread(hThread);
 		CloseHandle(hThread);
+		return TRUE;
 	}
 	else { TRACE("NtGetThread returned Status %08X", Status); }
-	return bRet;
+	return FALSE;
 }
 
 DWORD WINAPI InjectLdntvdmWow64Thread(LPVOID lpPID)

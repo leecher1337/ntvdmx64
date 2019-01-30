@@ -129,7 +129,7 @@ int Hook_IAT_x64_IAT(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char Fu
 			}
 		}
 	}
-	TRACE("Hooking failed.");
+	TRACE("Hooking failed (%d).", iRet);
 	return iRet;
 }
 
