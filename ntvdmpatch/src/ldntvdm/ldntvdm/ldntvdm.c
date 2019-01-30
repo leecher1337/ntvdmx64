@@ -886,7 +886,7 @@ BOOL WINAPI _DllMainCRTStartup(
 #ifdef _WIN64
 		{
 			// Fix ConhostV1.dll bug where memory isn't initialized properly
-			if (__stricmp(GetProcessName(), _T("ConHost.exe")) == 0)
+			if (__wcsicmp(GetProcessName(), _T("ConHost.exe")) == 0)
 			{
 				TRACE("LDNTVDM is running inside ConHost.exe");
 
