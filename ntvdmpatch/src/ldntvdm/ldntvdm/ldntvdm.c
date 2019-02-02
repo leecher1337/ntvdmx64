@@ -43,7 +43,7 @@
 #define BASEP_CALL WINAPI
 #endif
 
-#ifdef TARGET_WIN7
+#if defined(TARGET_WIN7) || defined(TARGET_WIN80)
 #define KRNL32_CALL BASEP_CALL
 #else
 #define KRNL32_CALL __fastcall
@@ -78,7 +78,9 @@ typedef ULONG(BASEP_CALL *fpBaseIsDosApplication)(
 	);
 typedef BOOL(KRNL32_CALL *fpBaseCheckVDM)(
 	IN	ULONG BinaryType,
+#if !(defined(TARGET_WIN80) && !defined(_WIN64))
 	IN	PCWCH lpApplicationName,
+#endif
 	IN	PCWCH lpCommandLine,
 	IN  PCWCH lpCurrentDirectory,
 	IN	ANSI_STRING *pAnsiStringEnv,
@@ -95,7 +97,9 @@ typedef BOOL(KRNL32_CALL *fpBaseCreateVDMEnvironment)(
 	UNICODE_STRING *pUStringEnv
 	);
 typedef BOOL (KRNL32_CALL *fpBaseGetVdmConfigInfo)(
+#ifndef TARGET_WIN80
 	IN  LPCWSTR CommandLine,
+#endif
 	IN  ULONG  DosSeqId,
 	IN  ULONG  BinaryType,
 	IN  PUNICODE_STRING CmdLineString
@@ -279,8 +283,19 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 				return FALSE;
 			}
 
-			Status = BaseCheckVDM(*pVdmBinaryType | BinarySubType,
+#if defined(TARGET_WIN80) && !defined(_WIN64)
+			/* ARRRGH! Microsoft used compiler option for Link time optimization
+			 * http://msdn.microsoft.com/en-us/library/xbf3tbeh.aspx 
+			 * This means, second parameter is in ESI... *grrr*
+			 */
+			PCWCH ApplicationName = *lppApplicationName;
+			__asm mov esi, ApplicationName
+#endif
+			Status = BaseCheckVDM(
+				*pVdmBinaryType | BinarySubType,
+#if !(defined(TARGET_WIN80) && !defined(_WIN64))
 				*lppApplicationName,
+#endif
 				*lppCommandLine,
 				lpCurrentDirectory,
 				pAnsiStringEnv,
@@ -307,7 +322,10 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 					TRACE("LDNTVDM: VDM_NOT_PRESENT -> ERROR_ACCESS_DENIED");
 					return FALSE;
 				}
-				if (!BaseGetVdmConfigInfo(m,
+				if (!BaseGetVdmConfigInfo(
+#ifndef TARGET_WIN80
+					m,
+#endif
 					*piTask,
 					*pVdmBinaryType,
 					pVdmNameString

@@ -109,7 +109,7 @@ int Hook_IAT_x64_IAT(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char Fu
 						TRACE("LDNTVDM: Cannot check for IAT entry %s of module @%08X. Thunk=%08X, AddressOfData=%08X, ForwarderString=%08X",
 							FunName, hMod, ThunkData, ThunkData->u1.AddressOfData, ThunkData->u1.ForwarderString);
 					}
-					else if (!_strcmp((char*)(hMod + ThunkData->u1.ForwarderString + 2), FunName))
+					else if (!_strcmp(pszIATFunName, FunName))
 					{
 						DWORD OldProt;
 

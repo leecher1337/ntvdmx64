@@ -42,7 +42,7 @@ for /F "skip=2 tokens=3" %%r in ('reg query HKLM\SYSTEM\CurrentControlSet\Contro
 
 for /f "tokens=4-5 delims=[.XP " %%i in ('ver') do set VERSION=%%i.%%j
 if "%version%"=="6.1" goto ossupp
-if "%version%"=="6.2" goto usew10
+if "%version%"=="6.2" goto ossupp
 if "%version%"=="6.3" goto usew10
 if "%version%"=="10.0" goto ossupp
 echo Your operating system version %VERSION% is currently not officially supported
