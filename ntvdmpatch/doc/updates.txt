@@ -1,0 +1,2 @@
+001-sb20	-	Adds the lousy Soundblaster 2.0 emulation of NTVDM starting with Windows XP
+002-demlfn	-	Long filename support for DOS emulation (71h functions of INT21h)

@@ -1,0 +1,863 @@
+Index: nt/private/mvdm/dos/command/cmd.h
+===================================================================
+210a211,215
+> BOOL   cmdGetSystemrootTemp		    (LPSTR, DWORD, int);
+> BOOL   cmdCreateTempEnvironmentVar  (LPSTR, BOOL, LPSTR, ULONG);
+> BOOL   cmdMakeShortEnvVar           (LPSTR, LPSTR, LPSTR, ULONG);
+> LPSTR  cmdCheckTemp                 (LPSTR);
+> CHAR * cmdFilterTempEnvironmentVariables (LPSTR, UINT );
+Index: nt/private/mvdm/dos/command/cmdenv.c
+===================================================================
+23a24
+> extern BOOL demIsShortPathName(PCSZ PathName, BOOL bAllowWildcards);
+125c126,129
+< 	RtlInitString(&String, pEnv16);
+---
+> 	if (pTmp = cmdCheckTemp(pEnv16))
+> 		RtlInitString(&String, pTmp);
+> 	else
+> 		RtlInitString(&String, pEnv16);
+214a219,223
+> 	if (lpszEnv == NULL) {
+> 	    RcMessageBox(EG_MALLOC_FAILURE, NULL, NULL,
+> 			 RMB_ICON_BANG | RMB_ABORT);
+> 	    TerminateVDM();
+>         }
+224c233
+< 	lpszzVDMEnv32 = malloc(++cchVDMEnv32);
+---
+> 	lpszzVDMEnv32 = cmdFilterTempEnvironmentVariables(lpszzEnvStrings, ++cchVDMEnv32);
+360c369
+< PCHAR	lpszzVDMEnv, lpszzEnv;
+---
+> PCHAR	lpszzVDMEnv, lpszzEnv, lpszzTemp;
+406a416,420
+> 		if (lpszzTemp = cmdCheckTemp(lpszzEnv)) {
+> 			Length = strlen(lpszzTemp) + 1;
+> 		} else {
+> 			lpszzTemp = lpszzEnv;
+> 		}
+422c436
+< 		    AnsiToOemBuff(lpszzEnv, lpszzVDMEnv, Length);
+---
+> 		    AnsiToOemBuff(lpszzTemp, lpszzVDMEnv, Length);
+696a711,981
+> 
+> #define FOUND_TMP	1
+> #define FOUND_TEMP	2
+> #define FOUND_MASK	(FOUND_TEMP|FOUND_TMP)
+> 
+> BOOL gfFoundTmp = FALSE;
+> 
+> LPCSTR rgpszLongPathNames[] = {
+> 	"ALLUSERSPROFILE",
+> 	"APPDATA",
+> 	"COMMONPROGRAMFILES",
+> 	"COMMONPROGRAMFILES(x86)",
+> 	"PROGRAMFILES",
+> 	"PROGRAMFILES(X86)",
+> 	"SYSTEMROOT",
+> 	"USERPROFILE",
+> 	"_NTTREE",
+> 	"_NTX86TREE",
+> 	"_NTPOSTBLD",
+> 	"BINPLACE_EXCLUDE_FILE",
+> 	"BINPLACE_LOG",
+> 	"CLUSTERLOG",
+> 	"INIT",
+> 	"NTMAKEENV",
+> 	"MSWNET",
+> 	"PREFAST_ROOT",
+> 	"RAZZLETOOLPATH",
+> 	"SDXROOT",
+> 	"TEMP",
+> 	"TMP"
+> };
+> 
+> typedef BOOL (WINAPI *fpGetSystemTempDirectory)(LPSTR lpDir, LPDWORD lpcchSize);
+> #ifdef INLINE_GETSYSDIR // Not used, just here for reference of compatibility with NT 4.0
+> BOOL WINAPI GetSystemTempDir(LPSTR lpDir, LPDWORD lpcchSize)
+> {
+>   DWORD cbData, cbBuffer, Type;
+>   HKEY phkResult = NULL;
+>   BOOL bRet;
+>   CHAR szData[MAX_PATH], szPath[MAX_PATH];
+> 
+>   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
+>         "System\\CurrentControlSet\\Control\\Session Manager\\Environment",
+>         0, KEY_READ, &phkResult) == ERROR_SUCCESS)
+>   {
+>     cbData = sizeof(szData);
+>     if (RegQueryValueEx(phkResult, "TEMP", 0, &Type, &szData, &cbData) == ERROR_SUCCESS)
+>     {
+>       RegCloseKey(phkResult);
+>       phkResult = NULL;
+>     }
+>     else
+>     {
+>       cbData = sizeof(szData);
+>       if (RegQueryValueEx(phkResult, "TMP", 0, &Type, &szData, &cbData) == ERROR_SUCCESS)
+>       {
+>         RegCloseKey(phkResult);
+>         phkResult = NULL;
+>       } else RegCloseKey(phkResult);
+>     }
+>   }
+>   if (phkResult)
+>   {
+>     WIN32_FILE_ATTRIBUTE_DATA FileInformation;
+> 
+>     strcpy (szPath, "%SystemRoot%\\Temp");
+>     ExpandEnvironmentStrings(szPath, szData, sizeof(szPath));
+>     if (!GetFileAttributesEx(szData, GetFileExInfoStandard, &FileInformation) || 
+>         !(FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) )
+>     {
+>       strcpy(szPath, "%SystemDrive%\\Temp");
+>       ExpandEnvironmentStrings(szPath, szData, sizeof(szPath));
+>       if (!GetFileAttributesEx(szData, GetFileExInfoStandard, &FileInformation) ||
+>           !(FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) )
+>           strcpy(szData, "%SystemRoot%");
+>     }
+>   }
+>   ExpandEnvironmentStrings(szData, szPath, sizeof(szData));
+>   GetShortPathName(szPath, szData, sizeof(szPath));
+>   cbBuffer = strlen(szData) + 1;
+>   if ((bRet = (lpDir && cbBuffer >= cbBuffer)))
+>     strcpy(lpDir, szData);
+>   else
+>     SetLastError(ERROR_INSUFFICIENT_BUFFER);
+>   *lpcchSize = cbBuffer;
+>   return bRet;
+> }
+> fpGetSystemTempDirectory GetSystemTempDirectory = GetSystemTempDir;
+> #else
+> fpGetSystemTempDirectory GetSystemTempDirectory = NULL;
+> #endif
+> 
+> VOID cmdCheckTempInit(VOID)
+> {
+>   gfFoundTmp = 0;
+> }
+> 
+> BOOL cmdGetSystemrootTemp(LPSTR lpDirectoryName, DWORD cbDirectoryName, int iMode)
+> {
+>   DWORD cbData, Type, dwRet;
+>   HKEY phkResult;
+> 
+>   switch (iMode)
+>   {
+>     case 0:
+> 	case 1:
+> 		if (!(cbData = GetEnvironmentVariable(iMode?"SystemDrive":"SystemRoot", lpDirectoryName, cbDirectoryName)) ||
+> 		  cbData >= cbDirectoryName || strlen("\\temp") >= cbDirectoryName)
+>         return FALSE;
+>       break;
+>     case 2:
+>       if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows NT\\CurrentVersion\\Terminal Server", 0, KEY_QUERY_VALUE, &phkResult) == ERROR_SUCCESS)
+>       {
+>         cbData = cbDirectoryName;
+>         dwRet = RegQueryValueEx(phkResult, "RootDrive", 0, &Type, (LPBYTE)lpDirectoryName, &cbData);
+>         RegCloseKey(phkResult);
+>         if (dwRet != ERROR_SUCCESS || Type != REG_SZ) return FALSE;
+>         cbData--;
+>         break;
+>       }
+>     default:
+>       return FALSE;
+>   }
+> 
+>   if (cbData+5>cbDirectoryName) return FALSE;
+>   if (lpDirectoryName[cbData-1]!='\\') strcat(lpDirectoryName, "\\");
+>   strcat (lpDirectoryName, "temp");
+>   cbData = GetShortPathName(lpDirectoryName, lpDirectoryName, cbDirectoryName);
+>   if (cbData && cbData < cbDirectoryName)
+>   {
+>     if ((dwRet = GetFileAttributes(lpDirectoryName)) != 0xFFFFFFFF) return (dwRet & FILE_ATTRIBUTE_DIRECTORY);
+>     dwRet = GetLastError();
+>     if (dwRet == ERROR_FILE_NOT_FOUND || dwRet == ERROR_PATH_NOT_FOUND)
+>     {
+>       return CreateDirectory(lpDirectoryName, NULL) && (GetFileAttributes(lpDirectoryName) & FILE_ATTRIBUTE_DIRECTORY);
+>     }
+>   }
+>   return FALSE;
+> }
+> 
+> BOOL cmdCreateTempEnvironmentVar(LPSTR lpEnvVar, BOOL bUnk, LPSTR lpDestStr, ULONG cbDestStr)
+> {
+>   DWORD dwOffset;
+>   LPSTR lpOffset;
+>   BOOL fRet;
+> 
+>   if (lpOffset = strchr(lpEnvVar, '='))
+>   {
+>     dwOffset = lpOffset - lpEnvVar;
+>     if (strlen(lpOffset+1)<=(8+3) && demIsShortPathName(lpOffset+1, FALSE)) return FALSE;
+>   } else dwOffset = strlen(lpEnvVar);
+>   
+>   strncpy(lpDestStr, lpEnvVar, dwOffset);
+>   lpDestStr[dwOffset]='=';
+>   fRet = cmdGetSystemrootTemp(&lpDestStr[dwOffset+1], cbDestStr - dwOffset - 1, 2);
+>   if (!fRet || strlen(&lpDestStr[dwOffset+1]) > (8+3))
+>   {
+> #ifndef INLINE_GETSYSDIR
+> 	HMODULE hModule = LoadLibrary("userenv.dll");
+> 	if (hModule)
+> 	{
+> 		GetSystemTempDirectory = (fpGetSystemTempDirectory)GetProcAddress(hModule, (LPCSTR)125); // GetSystemTempDirectoryA
+> 		if (GetSystemTempDirectory)
+> 		{
+> #endif
+> 			DWORD cchSize = cbDestStr - dwOffset - 1;
+> 			if (GetSystemTempDirectory(&lpDestStr[dwOffset+1], &cchSize))
+> 				fRet = demIsShortPathName(&lpDestStr[dwOffset+1], FALSE);
+> #ifndef INLINE_GETSYSDIR
+> 		}
+> #endif
+> 		if (!fRet) fRet = cmdGetSystemrootTemp(&lpDestStr[dwOffset+1], cbDestStr - dwOffset - 1, 0);
+> #ifndef INLINE_GETSYSDIR
+> 		FreeLibrary(hModule);
+> 	}
+> #endif
+>   }
+>   return fRet;
+> }
+> 
+> BOOL cmdMakeShortEnvVar(LPSTR lpEnvVar, LPSTR lpValue, LPSTR lpDestStr, ULONG cbDestStr)
+> {
+>   DWORD cbValue, cbShortPath;
+> 
+>   if ((cbValue = strlen(lpEnvVar)) > cbDestStr-2) return FALSE;
+>   strcpy (lpDestStr, lpEnvVar);
+>   lpDestStr[cbValue]='=';
+>   if ((cbShortPath = GetShortPathNameOem(lpValue, &lpDestStr[cbValue+1], cbDestStr - cbValue - 1)))
+>     return cbShortPath <= cbDestStr - cbValue - 1;
+>   return FALSE;
+> }
+> 
+> LPSTR cmdCheckTemp(LPSTR lpszzEnv)
+> {
+>   LPSTR lpOffset;
+>   DWORD cbEnvVar, i;
+>   static char Buffer[MAX_PATH+1];
+> 
+>   if (lpOffset = strchr(lpszzEnv, '='))
+>   {
+>     DWORD iLenEntry;
+> 
+>     cbEnvVar = lpOffset - lpszzEnv;
+>     for (i=0; i<sizeof(rgpszLongPathNames)/sizeof(rgpszLongPathNames[0]); i++)
+>     {
+>       iLenEntry = strlen(rgpszLongPathNames[i]);
+>       if (!_strnicmp(lpszzEnv, rgpszLongPathNames[i], iLenEntry) && iLenEntry == cbEnvVar)
+>       {
+>         if (cmdMakeShortEnvVar(rgpszLongPathNames[i], lpOffset+1, Buffer, sizeof(Buffer)))
+>           return Buffer;
+>         return NULL;
+>       }
+>     }
+>     if ((gfFoundTmp&FOUND_MASK)==FOUND_MASK) return NULL;
+>     if (!(gfFoundTmp&FOUND_TEMP) && !_strnicmp(lpszzEnv, "Temp", 4) && cbEnvVar == 4)
+>     {
+>       gfFoundTmp|=FOUND_TEMP;
+>       if (cmdCreateTempEnvironmentVar(lpszzEnv, 0, Buffer, sizeof(Buffer))) return Buffer;
+>     }
+>     else if (!(gfFoundTmp&FOUND_TMP) && !_strnicmp(lpszzEnv, "Tmp", 3) && cbEnvVar == 3)
+>     {
+>       gfFoundTmp|=FOUND_TMP;
+>       if (cmdCreateTempEnvironmentVar(lpszzEnv, 0, Buffer, sizeof(Buffer))) return Buffer;
+>     }
+>   }
+>   return NULL;
+> }
+> 
+> CHAR *cmdFilterTempEnvironmentVariables(LPSTR lpEnv, UINT cchEnv)
+> {
+>   CHAR *lpOldEnv;
+>   CHAR *lpNewEnv, *lpCurEnv;
+>   ULONG cchOldEntry, cchNewEntry, cchOldEnv, cchEnvNew, i;
+> 
+>   i = 0;
+>   cchEnvNew = cchEnv;
+>   cchNewEntry = MAX_PATH;
+>   lpNewEnv = (CHAR *)malloc(cchEnv);
+>   if (lpNewEnv)
+>   {
+>     gfFoundTmp = 0;
+>     for ( lpOldEnv = lpEnv; *lpOldEnv ; lpEnv = lpOldEnv )
+>     {
+>       cchOldEnv = strlen(lpOldEnv);
+>       cchOldEntry = cchOldEnv + 1;
+>       lpCurEnv = cmdCheckTemp(lpOldEnv);
+>       if ( lpCurEnv )
+>         cchOldEntry = strlen(lpCurEnv) + 1;
+>       else
+>         lpCurEnv = lpOldEnv;
+>       if ( cchEnvNew < cchOldEntry + 1 )
+>       {
+>         if ( cchNewEntry < cchOldEntry )
+>           cchNewEntry = cchOldEntry;
+>         lpNewEnv = (CHAR *)realloc(lpNewEnv, cchNewEntry + cchEnv);
+>         if ( !lpNewEnv )
+>           return NULL;
+>         cchEnvNew += cchNewEntry;
+>         cchEnv += cchNewEntry;
+>         lpOldEnv = lpEnv;
+>       }
+> 	  strcpy(&lpNewEnv[i], lpCurEnv);
+>       i += cchOldEntry;
+>       cchEnvNew -= cchOldEntry;
+>       lpOldEnv += cchOldEnv + 1;
+>     }
+> 	lpNewEnv[i] = 0;
+>   }
+>   return lpNewEnv;
+> }
+> 
+Index: nt/private/mvdm/dos/dem/dem.c
+===================================================================
+49,50c49,50
+< 
+<     if (VDMForWOW)
+---
+> 	dempInitLFNSupport();
+> 	if (VDMForWOW)
+Index: nt/private/mvdm/dos/dem/dem.h
+===================================================================
+106a107,120
+> typedef struct _DOSENV
+> {
+> 	USHORT ax;
+> 	USHORT bx;
+> 	USHORT cx;
+> 	USHORT dx;
+> 	USHORT si;
+> 	USHORT di;
+> 	USHORT bp;
+> 	USHORT ds;
+> 	USHORT es;
+> 	USHORT flags;
+> } DOSENV;
+> 
+114a129,136
+> typedef struct _DOSTIME
+> {
+> 	WORD FatDate;
+> 	WORD FatTime;
+> 	WORD FatHundredths;
+> } DOSTIME;
+> 
+> 
+131a154
+> extern PDOSWOWDODIRECTHDPOPUP DosWowDoDirectHDPopup;
+134a158
+> #include "demlfn.h"
+Index: nt/private/mvdm/dos/dem/demdasd.c
+===================================================================
+144c144
+< 	if (!demIsDriveFloppy(Drive))
+---
+> 	if (!demIsDriveFloppy(Drive) && Drive < 26 && (!DosWowDoDirectHDPopup || DosWowDoDirectHDPopup()))
+Index: nt/private/mvdm/dos/dem/demdir.c
+===================================================================
+162a163
+> DWORD  dwAttr;
+171,175c172,181
+<     if (SetCurrentDirectoryOem (lpBuf) == FALSE){
+<         demClientError(INVALID_HANDLE_VALUE, *lpBuf);
+<         return;
+<     }
+< 
+---
+>     if (ch == getAL() + 'A'){
+>       if (SetCurrentDirectoryOem (lpBuf) == FALSE){
+>           demClientError(INVALID_HANDLE_VALUE, ch);
+>           return;
+>       }
+>     } else if ((dwAttr = GetFileAttributesOem(lpBuf)) == -1 ||
+>                !(dwAttr & FILE_ATTRIBUTE_DIRECTORY)){
+>                demClientError(INVALID_HANDLE_VALUE, ch);
+>                return;
+>            }
+177,180c183,191
+<     if(SetEnvironmentVariableOem ((LPSTR)EnvVar,lpBuf) == FALSE)
+< 	setCF(1);
+<     else
+< 	setCF(0);
+---
+>     if(SetEnvironmentVariableOem ((LPSTR)EnvVar,lpBuf)){
+> 	demSetCurrentDirectoryLCDS(ch - 'A', lpBuf);
+> 	strncpy((LPSTR) GetVDMAddr (getES(),getDI()), lpBuf, DIRSTRLEN);
+> 	if (strlen(lpBuf) <= DIRSTRLEN) {
+> 		setCF(0);
+> 		return;
+> 	}
+>     }
+>     setCF(1);
+182a194
+> 
+Index: nt/private/mvdm/dos/dem/demdisp.c
+===================================================================
+89c89,91
+<      "DemPipeFileEOF"
+---
+>      "DemPipeFileEOF",
+>      "DemLFNEntry",
+>      "DemSetDosVarLocation"
+171c173,175
+<      demPipeFileEOF		//SVC_DEMPIPEFILEEOF
+---
+>      demPipeFileEOF,		//SVC_DEMPIPEFILEEOF
+>      demLFNEntry, 		// SVC_DEMLFNENTRY
+>      demSetDosVarLocation	// SVC_SETDOSVARLOCATION
+Index: nt/private/mvdm/dos/dem/demfile.c
+===================================================================
+427c427
+<     if (DeleteFileOem (lpFileName) == FALSE){
+---
+>     if (demFileDelete(lpFileName) != ERROR_SUCCESS) {
+435a436,497
+> DWORD demFileDelete(LPSTR SourceString)
+> {
+> HANDLE  hFile;
+> LPSTR lpstr;
+> DWORD dwRet;
+> char Str1[MAX_PATH+4], Str2[MAX_PATH];
+> 
+>     if ((hFile = CreateFileOem(SourceString,
+>                                DELETE,
+>                                0,
+>                                NULL,
+>                                OPEN_EXISTING,
+>                                FILE_ATTRIBUTE_NORMAL,
+>                                NULL)) != (HANDLE)-1){
+> 		IO_STATUS_BLOCK IoStatusBlock;
+> 		FILE_DISPOSITION_INFORMATION FileInformation;
+> 		NTSTATUS Status;
+> 
+> #undef DeleteFile
+> 		FileInformation.DeleteFile = TRUE;
+> 		Status = NtSetInformationFile(hFile, &IoStatusBlock, 
+> 			&FileInformation, sizeof(FileInformation), 
+> 			FileDispositionInformation);
+> 		CloseHandle(hFile);
+> 		if (!NT_SUCCESS(Status)) SetLastError(ERROR_ACCESS_DENIED);
+> 		else SetLastError(ERROR_SUCCESS);
+> 	}
+> 	switch (GetLastError())
+> 	{
+> 	case ERROR_FILE_NOT_FOUND:
+> 	case ERROR_PATH_NOT_FOUND:
+> 		break;
+> 	case ERROR_ACCESS_DENIED:
+> 	case ERROR_SHARING_VIOLATION:
+> 		if (GetFullPathNameOem(SourceString, MAX_PATH, Str2, &lpstr))
+> 		{
+> 			if (lpstr) *lpstr=0;
+> 			if (GetTempFileNameOem(Str2, "VDM", 0, Str1) && MoveFileExOem(SourceString, Str1, 0))
+> 			{
+> 				if (!DeleteFileOem(Str1))
+> 				{
+> 					MoveFileOem(Str1, SourceString);
+> 					break;
+> 				}
+> 				SetLastError(ERROR_SUCCESS);
+> 			}
+> 		}
+> 		break;
+> 	default:
+> 		if (!DeleteFileOem(SourceString))
+> 			break;
+> 		SetLastError(ERROR_SUCCESS);
+> 		break;
+> 	}
+> 	dwRet = GetLastError();
+> 	if (dwRet && (dwRet == ERROR_INVALID_FUNCTION || dwRet > ERROR_PATH_NOT_FOUND))
+> 		SetLastError(ERROR_ACCESS_DENIED);
+> 
+> 	return GetLastError();
+> }
+> 
+> 
+Index: nt/private/mvdm/dos/dem/demgset.c
+===================================================================
+74,86c74,77
+<     if(*(PCHAR)lpPath != (CHAR)(getDL()+'A')){
+<        demPrintMsg(MSG_DEFAULT_DRIVE);
+<        setCF(1);
+<        setAX(1);
+<        return;
+<     }
+< 
+<     if (SetCurrentDirectoryOem (lpPath) == FALSE){
+<         demClientError(INVALID_HANDLE_VALUE, *lpPath);
+<         return;
+<     }
+< 
+<     setCF(0);
+---
+>     if (SetCurrentDirectoryOem (lpPath) || GetLastError() != ERROR_INVALID_DRIVE)
+>         setCF(0);
+>     else 
+>         setCF(1);
+Index: nt/private/mvdm/dos/dem/demhndl.c
+===================================================================
+446c446
+< VOID demFileTimes (VOID)
+---
+> VOID demFileTimes(VOID)
+448,450c448,449
+< HANDLE  hFile;
+< WORD    wDate,wTime;
+< FILETIME LastWriteTime,ftTemp;
+---
+> HANDLE hFile;
+> FILETIME LastWriteTime;
+453,462c452,462
+< 
+<     uchOpt = getBL();
+<     if(uchOpt != 2)
+< 	hFile = GETHANDLE(getAX(),getBP());
+< 
+<     if(uchOpt != 1){
+< 
+< 	if(!uchOpt) {
+< 	    if(GetFileTime (hFile,NULL,NULL,&LastWriteTime) == -1){
+< 		demClientError(hFile, (CHAR)-1);
+---
+> PDOSSFT pSFT = NULL;
+> HRESULT result;
+> DOSENV *pDosEnv;
+> DOSTIME DosTime;
+> 
+> 	uchOpt = getAL();
+> 	hFile = VDDRetrieveNtHandle(0, getBX(), &pSFT, NULL);
+> 	if (!pSFT && !hFile)
+> 	{
+> 		setAX(6);
+> 		setCF(1);
+464d463
+< 	    }
+466,469c465,505
+< 	else {		// Device case. We should return current time
+< 	    GetSystemTime(&stCurrentTime);
+< 	    SystemTimeToFileTime(&stCurrentTime, &LastWriteTime);
+< 
+---
+> 	switch (uchOpt)
+> 	{
+> 	case 1:	// DOS 2+ - SET FILE'S LAST-WRITTEN DATE AND TIME
+> 	case 5:	// MS-DOS 7/Windows95 - SET LAST ACCESS DATE AND TIME
+> 	case 7:	// MS-DOS 7/Windows95 - SET CREATION DATE AND TIME
+> 		if (!(pSFT->SFT_Flags & 0x80)) // Device handle?
+> 		{
+> 			DosTime.FatDate = getDX();
+> 			DosTime.FatTime = getCX();
+> 			DosTime.FatHundredths = getSI();
+> 			if (!SUCCEEDED(result = dempSetFileTimeByHandle(uchOpt, hFile, &DosTime)))
+> 				break;
+> 		}
+> 		setCF(0);
+> 		return;
+> 	case 0:	// DOS 2+ - GET FILE'S LAST-WRITTEN DATE AND TIME
+> 	case 2:	// DOS 4.x only - GET EXTENDED ATTRIBUTES FOR FILE
+> 	case 3:	// DOS 4.x only - GET EXTENDED ATTRIBUTE PROPERTIES
+> 	case 4:	// MS-DOS 7/Windows95 - GET LAST ACCESS DATE AND TIME
+> 	case 6:	// MS-DOS 7/Windows95 - GET CREATION DATE AND TIME
+> 		if (!(pSFT->SFT_Flags & 0x80)) // Device handle?
+> 		{
+> 			if (!SUCCEEDED(dempGetFileTimeByHandle(uchOpt, hFile, &DosTime)))
+> 				break;
+> 		}
+> 		else
+> 		{
+> 			GetSystemTime(&stCurrentTime);
+> 			SystemTimeToFileTime(&stCurrentTime, &LastWriteTime);
+> 			if (!SUCCEEDED(demLFNFileTimeControl(0, &LastWriteTime, &DosTime)))
+> 				break;
+> 		}
+> 		pDosEnv = dempGetDosUserEnvironment();
+> 		pDosEnv->dx = DosTime.FatDate;
+> 		pDosEnv->cx = DosTime.FatTime;
+> 		pDosEnv->si = uchOpt == 6 ? DosTime.FatHundredths : 0;  // BUG? Original source checks for uchOpt==8, doesn't make sense!
+> 		setCF(0);
+> 		return;
+> 	default:
+> 		result = HRESULT_FROM_WIN32(ERROR_INVALID_FUNCTION);
+> 		break;
+471,494c507,508
+< 
+< 	FileTimeToLocalFileTime (&LastWriteTime,&ftTemp);
+< 	if(FileTimeToDosDateTime(&ftTemp,
+<                                  (LPWORD)&wDate,
+<                                  (LPWORD)&wTime) == FALSE){
+<             demPrintMsg(MSG_TIMEDATE);
+< 	    setCF(0);
+<             return;
+<         }
+< 
+<         setCX(wTime);
+<         setDX(wDate);
+<         setCF(0);
+<         return;
+<     }
+< 
+<     wDate = getDX();
+<     wTime = getCX();
+< 
+<     if (DosDateTimeToFileTime(wDate,
+<                               wTime,
+<                               &LastWriteTime) == FALSE){
+< 	demPrintMsg(MSG_TIMEDATE);
+< 	setCF(0);
+---
+> 	SetLastError(RtlNtStatusToDosError(result));
+> 	demClientError(hFile, (CHAR)-1);
+496,505d509
+<     }
+<     LocalFileTimeToFileTime (&LastWriteTime,&ftTemp);
+< 
+<     if(!SetFileTime(hFile,NULL,NULL,&ftTemp)){
+<         demClientError(hFile, (CHAR)-1);
+<         return;
+<     }
+< 
+<     setCF(0);
+<     return;
+Index: nt/private/mvdm/dos/v86/doskrnl/dos/abort.asm
+===================================================================
+119c119,127
+< 	retc
+---
+> ;
+> ; Close all LFN search handles. Microsoft Implementation doesn't work (see below)
+> ; If you want original behaviour, replace the 5 following lines with retc
+> ;
+> 	jnb	chk_bsy
+> 	xor	ax, ax
+> 	HRDSVC SVC_DEMLFNENTRY
+> 	ret
+> chk_bsy:
+136a145,147
+> ; BUGBUG: Microsoft placed the code here. It will never be reached here:
+> ;	mov	ax, 0			; Close open search handles
+> ;	HRDSVC  SVC_DEMLFNENTRY
+Index: nt/private/mvdm/dos/v86/doskrnl/dos/file.asm
+===================================================================
+902a903,924
+> 	BREAK <$LFN - Long filename function>
+> 
+> ;**	$LFN - Windows95 - LONG FILENAME FUNCTIONS
+> ;
+> ;   Assembler usage:
+> ;	    MOV     AH,71h
+> ;	    MOV     AL,func
+> ;	    INT     21h
+> ;   Error returns:
+> ;	    AX = error code
+> ;	    CF set on error
+> ;
+> 
+> procedure $LFN,NEAR
+> 	ASSUME	CS:DOSCODE,SS:DOSDATA
+> 	HRDSVC  SVC_DEMLFNENTRY
+> 	JC	LfnE
+> 	transfer    Sys_Ret_OK
+> LfnE:
+> 	transfer    Sys_Ret_Err
+> EndProc $LFN
+> 
+Index: nt/private/mvdm/dos/v86/doskrnl/dos/getset.asm
+===================================================================
+779a780,782
+> 	lds	si,ThisCDS		; get current directory string
+> 	SVC     SVC_DEMSETDEFAULTDRIVE
+> 	jc	nsetret                 ; errors do not set
+Index: nt/private/mvdm/dos/v86/doskrnl/dos/handle.asm
+===================================================================
+820,839d819
+<         cmp     al, 2                   ; correct subfunction ?
+<         jae     inval_func
+< 
+<         call    SFFromHandle            ; get sft
+<         jnc     cont_ft
+<         jmp     LSeekError              ; bad handle
+< cont_ft:
+<         test    es:[di.sf_flags],devid_device
+< 
+<         jz      yst_contin              ; (YST)
+<         cmp     al, 1                   ; (YST)
+<         jz      ret_ok                  ; (YST)
+<         mov     al, 2                   ; (YST)
+< 
+< yst_contin:
+<         push    ax                          ;save ax for success case
+<         push    bp
+<         mov     bp, word ptr es:[di.sf_NTHandle]
+<         mov     bl,al
+<         mov     ax, word ptr es:[di.sf_NTHandle+2]
+841,854c821
+<         pop     bp
+<         jnc     short timesok
+<         add     sp,2                         ;ax=return code
+<         transfer Sys_Ret_Err
+< 
+< timesok:
+<         pop     ax                           ;restore caller's ax
+<         cmp     bl, 1               ; (YST)
+<         jz      ret_ok              ; (YST)
+< 
+<         invoke  Get_User_Stack
+<         mov     [si].user_CX, cx
+<         mov     [si].user_DX, dx
+< ret_ok:
+---
+>         jc     short ret_err
+856,861c823,825
+< 
+< inval_func:
+<         mov     ExtErr_Locus,errLoc_Unk ; Extended Error Locus  ;SS Override
+<         error   error_invalid_function  ; give bad return
+< 
+< EndProc $File_Times
+---
+> ret_err:
+> 	transfer Sys_Ret_Err
+> EndProc $File_Times	
+Index: nt/private/mvdm/dos/v86/doskrnl/dos/macro.asm
+===================================================================
+374,391d373
+<         ; If its the first time, sync NetCDS
+< 
+<         test    word ptr ds:[si.CURDIR_FLAGS],CURDIR_tosync
+<         jnz     net_first
+< 
+<         ; Check if the NetCDS is already for the same drive. If so dont sync.
+<         ; Be safe. Dont assume that drive letter in CDS will allways be upper
+<         ; case. Check for both upper and lower case.
+< 
+<         push    ax
+<         add     al,'A'
+<         cmp     al,byte ptr ds:[si.CURDIR_TEXT]
+<         je      net_in_sync
+<         add     al,20h                          ; 'A' is 41h and 'a' is 61h
+<         cmp     al,byte ptr ds:[si.CURDIR_TEXT]
+<         je      net_in_sync
+<         pop     ax
+< 
+Index: nt/private/mvdm/dos/v86/doskrnl/dos/msinit.asm
+===================================================================
+1169a1170,1172
+>         mov     word ptr [si.DWD_lpExterr + 2],ds
+>         mov     word ptr [si.DWD_lpExterrActionClass + 2],ds
+> 	SVC	SVC_SETDOSVARLOCATION
+Index: nt/private/mvdm/dos/v86/doskrnl/dos/path.asm
+===================================================================
+44c44,45
+< 	I_Need	DrvErr,BYTE							;AN000;
+---
+> 	I_Need	DrvErr,BYTE
+> 	I_Need  CURDRV,BYTE							;AN000;
+252,253d252
+< 	CALL	Check_PathLen		;PTM.					;AN000;
+< 	JA	ChDirErrP
+254a254
+> 	mov	al,[curdrv]
+256a257
+> 	les	di,ThisCDS
+258,261c259
+< 	jnc	UpdateCDS
+< 	jmp	ChDirErrP
+< UpdateCDS:
+< 	LES	DI,ThisCDS		; get logical CDS
+---
+> 	jb	ChDirErrP
+263d260
+< 	invoke	FStrCpy
+Index: nt/private/mvdm/dos/v86/inc/lmstub.asm
+===================================================================
+933c933,934
+<                     OFFSET DOSDATA:SCS_ToSync, OFFSET DOSDATA:sfTabl>
+---
+>                     OFFSET DOSDATA:SCS_ToSync, OFFSET DOSDATA:sfTabl,	\
+>                     OFFSET DOSDATA:ExtErr, OFFSET DOSDATA:ExtErr_Action>
+Index: nt/private/mvdm/inc/DOSSVC.INC
+===================================================================
+89c89,91
+< SVC_DEMLASTSVC	EQU	49H 
+---
+> SVC_DEMLFNENTRY         EQU	49H
+> SVC_SETDOSVARLOCATION   EQU	4AH
+> SVC_DEMLASTSVC          EQU	4BH
+Index: nt/private/mvdm/inc/DOSWOW.INC
+===================================================================
+11a12,13
+> DWD_lpExterr	DD	?
+> DWD_lpExterrActionClass	DD	?
+Index: nt/private/mvdm/inc/curdir.h
+===================================================================
+51a52,67
+> 
+> typedef struct CURDIR_LIST_JPN {
+>     CHAR    CurDirJPN_Text[DIRSTRLEN];      // text of assignment and curdir
+>     USHORT  CurDirJPN_Flags;                // various flags
+>     USHORT  CurDirJPN_End;                  // index to ".." backup limit -
+>     CHAR    CurDirJPN_Reserve[17];          // Reserved for application compatibility.
+>                                             // Ichitaro ver5 checks drive type by this structure size.
+> } CDS_JPN;                                  // see above
+> 
+> typedef CDS_JPN UNALIGNED *PCDS_JPN;
+> 
+> #define curdirLen_Jpn   sizeof(CURDIR_LIST_JPN)     // Needed for screwed up
+>                                                     // ASM87 which doesn't allow
+>                                                     // Size directive as a macro
+>                                                     // argument
+> 
+58a75
+> 
+67c84,85
+< typedef CDS UNALIGNED *PCDS;
+---
+> typedef CDS     UNALIGNED *PCDS;
+> typedef CDS_JPN UNALIGNED *PCDS_JPN;
+Index: nt/private/mvdm/inc/demexp.h
+===================================================================
+17a18
+> DWORD demFileDelete (LPSTR lpFile);
+21a23
+> ULONG demWOWLFNEntry(PVOID pUserFrame);
+Index: nt/private/mvdm/inc/dossvc.h
+===================================================================
+166c166,168
+< #define SVC_DEMLASTSVC		0x49
+---
+> #define SVC_DEMLFNENTRY         0x49
+> #define SVC_SETDOSVARLOCATION   0x4A
+> #define SVC_DEMLASTSVC          0x4B
+Index: nt/private/mvdm/inc/doswow.h
+===================================================================
+32c32
+<     DWORD lpExterrLocus;
+---
+>     DWORD lpExterrLocus; // byte
+34a35,36
+>     DWORD lpExterr;  // word
+>     DWORD lpExterrActionClass; // 2 bytes -- action and class
+Index: nt/private/mvdm/softpc.new/obj.vdm/ntvdm.src
+===================================================================
+220a221,236
+>     demLFNCleanup
+>     demFileDelete
+>     demWOWLFNInit
+>     demWOWLFNEntry
+>     demGetFileTimeByHandle_WOW
+>     demIsShortPathName
+>     demWOWLFNAllocateSearchHandle
+>     demWOWLFNGetSearchHandle
+>     demWOWLFNCloseSearchHandle
+>     demSetCurrentDirectoryGetDrive
+>     demLFNGetCurrentDirectory
+>     demGetCurrentDirectoryLCDS
+>     demSetCurrentDirectoryLCDS
+> 
+>     cmdCheckTempInit
+>     cmdCheckTemp
