@@ -1,2 +1,5 @@
 001-sb20	-	Adds the lousy Soundblaster 2.0 emulation of NTVDM starting with Windows XP
 002-demlfn	-	Long filename support for DOS emulation (71h functions of INT21h)
+003-romemu	-	Patch for the sole purpose of source reconstruction, not really 
+			needed for NTVDMX64 build (as it uses ROM emulation anyway for CCPU): 
+			Possibility to use ROM emulation in NTVDM when using Intel Graphics on ARCx86 CPUs.

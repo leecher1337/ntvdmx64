@@ -1,0 +1,256 @@
+Index: nt/private/mvdm/softpc.new/base/bios/reset.c
+===================================================================
+120a121,124
+> #if defined(NTVDM) && defined(X86GFX)
+> IMPORT BOOL UseEmulationROM;
+> #endif
+> 
+781c785,788
+< #if !defined(NTVDM) || (defined(NTVDM) && !defined(X86GFX))
+---
+> #if defined(NTVDM) && defined(X86GFX)
+> 	if ( UseEmulationROM )
+> 	{
+> #endif
+787c794,796
+< #endif /* !defined(NTVDM) || (defined(NTVDM) && !defined(X86GFX)) */
+---
+> #if defined(NTVDM) && defined(X86GFX)
+> 	}
+> #endif
+Index: nt/private/mvdm/softpc.new/base/system/rom.c
+===================================================================
+111a112,115
+> #if defined(NTVDM) && defined(X86GFX)
+> IMPORT BOOL UseEmulationROM;
+> #endif
+> 
+231a236,240
+> #if defined(NTVDM) && defined(X86GFX) && !defined(V7VGA)
+> 		if (UseEmulationROM)
+> 			romLength = read_rom (V7VGAROM_FILENAME, EGA_ROM_START);
+> 		else
+> #endif
+282c291,294
+< #if !defined(NTVDM) || ( defined(NTVDM) && !defined(X86GFX) )
+---
+> #if defined(NTVDM) && defined(X86GFX)
+> 	if (UseEmulationROM)
+> 	{
+> #endif
+295a308,312
+> #if defined(NTVDM) && defined(X86GFX)
+> 	sas_fills( ROM_START, BAD_OP, 0x8000);
+> 	sas_fills( BIOS_START, BAD_OP, 0x10000);
+> 
+> #else
+296a314
+> #endif
+330c348,349
+< #else	/* !NTVDM | (NTVDM & !X86GFX) */
+---
+> #if defined(NTVDM) && defined(X86GFX)
+> 	} else {
+341a361
+> 	}
+349d368
+< #if !(defined(NTVDM) && defined(MONITOR))
+352a372,374
+> #if defined(NTVDM) && defined(X86GFX)
+> 	if (!UseEmulationROM) return ( 0L );
+> #endif
+379,381d400
+< #else
+<     return ( 0L );
+< #endif	/* !(NTVDM && MONITOR) */
+624c643,646
+< #if !defined(NTVDM) || (defined(NTVDM) && !defined(X86GFX) )
+---
+> #if defined(NTVDM) && defined(X86GFX)
+> 	if ( UseEmulationROM )
+> 	{
+> #endif
+704a727,728
+> #if defined(NTVDM) && defined(X86GFX)
+> 	}
+Index: nt/private/mvdm/softpc.new/base/video/ega_vide.c
+===================================================================
+132a133
+> IMPORT BOOL UseEmulationROM;
+673,675c674,680
+< 	loadNativeBIOSfont( 25 );
+< 
+< #else
+---
+> 	if (!UseEmulationROM)
+> 	{
+> 		loadNativeBIOSfont( 25 );
+> 	}
+> 	else
+> 	{
+> #endif	/* NTVDM && X86GFX */
+703a709,710
+> #if defined(NTVDM) && defined(X86GFX)
+> 	}
+1662a1670,1671
+> 			if (!UseEmulationROM)
+> 			{
+1665c1674,1675
+< #else
+---
+> 			} else {
+> #endif
+1667a1678,1679
+> #if defined(NTVDM) && defined(X86GFX)
+> 			}
+1672a1685,1686
+> 			if (!UseEmulationROM)
+> 			{
+1675c1689,1690
+< #else
+---
+> 			} else {
+> #endif
+1677a1693,1694
+> #if defined(NTVDM) && defined(X86GFX)
+> 			}
+1683a1701,1702
+> 			if (!UseEmulationROM)
+> 			{
+1686c1705,1706
+< #else
+---
+> 			} else {
+> #endif
+1688a1709,1710
+> #if defined(NTVDM) && defined(X86GFX)
+> 			}
+1712a1735,1740
+> 					if (UseEmulationROM)
+> 					{
+> 						setBP(EGA_CGMN_OFF);
+> 						setES(EGA_SEG);
+> 						break;
+> 					}
+1716a1745,1750
+> 					if (UseEmulationROM)
+> 					{
+> 						setBP(EGA_CGDDOT_OFF);
+> 						setES(EGA_SEG);
+> 						break;
+> 					}
+1720a1755,1760
+> 					if (UseEmulationROM)
+> 					{
+> 						setBP(EGA_INT1F_OFF);
+> 						setES(EGA_SEG);
+> 						break;
+> 					}
+1724a1765,1770
+> 					if (UseEmulationROM)
+> 					{
+> 						setBP(EGA_CGMN_FDG_OFF);
+> 						setES(EGA_SEG);
+> 						break;
+> 					}
+1728a1775,1780
+> 					if (UseEmulationROM)
+> 					{
+> 						setBP(EGA_HIFONT_OFF);
+> 						setES(EGA_SEG);
+> 						break;
+> 					}
+1732a1785,1790
+> 					if (UseEmulationROM)
+> 					{
+> 						setBP(EGA_HIFONT_OFF);
+> 						setES(EGA_SEG);
+> 						break;
+> 					}
+1832c1890,1893
+< #if !defined(NTVDM) || ( defined(NTVDM) && !defined(X86GFX) )
+---
+> #if defined(NTVDM) && defined(X86GFX)
+> 	if ( UseEmulationROM )
+> 	{
+> #endif
+1846d1906
+< #endif	/* !NTVDM | (NTVDM & !X86GFX) */
+1847a1908
+> 	}
+Index: nt/private/mvdm/softpc.new/host/src/config.c
+===================================================================
+135a136,138
+> #ifdef X86GFX
+> GLOBAL BOOL UseEmulationROM = FALSE;	//Use ROM emulation for ARCx86 CPUs
+> #endif
+317a321,325
+> #ifdef X86GFX
+> 	ULONG	cbData;
+> 	HKEY	hKey;
+> 	char	Data[256];
+> #endif
+331a340,348
+> #ifdef X86GFX
+> 	  cbData = sizeof(Data);
+> 	  if (!RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System", 0, KEY_QUERY_VALUE, &hKey))
+> 	  {
+>           if (RegQueryValueExA(hKey, "Identifier", 0, 0, &Data, &cbData) == ERROR_SUCCESS && strstr(Data, "ARCx86"))
+> 		      UseEmulationROM = TRUE;
+> 		  RegCloseKey(hKey);
+> 	  }
+> #endif
+546a564,582
+>   if (UseEmulationROM)
+>   {
+>     int   mem = ROM_START;
+>     
+> 	cbData = 0x8000;
+>     if (!NT_SUCCESS(NtAllocateVirtualMemory(NtCurrentProcess(), (PVOID *)&mem, 
+> 		0, &cbData, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)))
+>       TerminateVDM();
+> 
+>     mem = BIOS_START;
+>     cbData = 0x10000;
+>     if (!NT_SUCCESS(NtAllocateVirtualMemory(NtCurrentProcess(), (PVOID *)&mem, 
+> 		0, &cbData, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)))
+>       TerminateVDM();
+> 
+>     rom_init();
+>   }
+>   else
+>   {
+547a584
+>   }
+Index: nt/private/mvdm/softpc.new/host/src/nt_fulsc.c
+===================================================================
+74a75
+> IMPORT BOOL UseEmulationROM;
+281a283,284
+> 	if (UseEmulationROM) return;
+> 
+Index: nt/private/mvdm/softpc.new/host/src/nt_umb.c
+===================================================================
+45a46,49
+> #ifdef X86GFX
+> IMPORT BOOL UseEmulationROM;
+> #endif
+> 
+866a871,872
+> #ifdef X86GFX
+> 	CM_ROM_BLOCK ROMs[2];
+867a874,876
+> 	if (!UseEmulationROM)
+> 	{
+> #endif
+960a970,979
+> #ifdef X86GFX
+> 	} else {
+> 		ROMs[0].Address = EGA_ROM_START;
+> 		ROMs[0].Size = 0x8000;
+> 		ROMs[1].Address = BIOS_START;
+> 		ROMs[1].Size = 0x10000;
+> 		Index = 2;
+> 		BiosBlock = ROMs;
+> 	}
+> #endif
