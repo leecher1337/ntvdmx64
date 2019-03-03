@@ -54,6 +54,7 @@ monitor.patch       - In a lot of #ifdefs, i386 is assumed to include V86
                       -DMONITOR should be added to some makefiles for the V86
                       build then as a consequence to be able to do both builds
                       lateron, when crude makefiles.patch gets cleaned up.
+ntvdmctl.patch      - Removes NtVdmControl calls not working on x64 Windows
 sas4gen.patch       - Fix sas4gen CCPU header file
 spurint.patch       - Fix crash on spurious Interrupts
 timers.patch        - Fix crash on startup caued by uninitialized timer 
