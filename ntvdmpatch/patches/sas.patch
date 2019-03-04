@@ -1,0 +1,709 @@
+Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
+===================================================================
+76a77
+> #define C_VID
+124a126
+> #ifndef i386
+126a129,132
+> #else
+> #define write_word(addr,wrd) *((IU16*)c_GetPhyAdd(addr)) = wrd
+> #define read_word(addr) *((IU16*)c_GetPhyAdd(addr))
+> #endif
+132a139
+> LOCAL IUM8 bios_read_accreq(void);
+184a192,203
+> // External Data
+> // Defined in base\inc\cpu_vid.h, interface to EVID/VID
+> #ifdef C_VID
+> // MEM_HANDLERS doesn't have DWORD interface yet, but C_VID has them
+> extern IU32 gvi_pc_low_regen;
+> extern IU32 read_dword_ev_glue IPT1(IU32, eaOff);
+> extern void write_dword_ev_glue IFN2(IU32, eaOff, IU32, eaVal);
+> extern void move_dword_fwd_ev_glue IFN4(IU32, eaOff, IHPE, fromOff, IU32, count, IBOOL, srcInRAM);
+> extern void fill_dword_ev_glue IFN3(IU32, eaOff, IU32, eaVal, IU32, count);
+> #endif
+> 
+> 
+308c327
+< readSelfMod IFN2(PHY_ADDR, addr, IUM8, typeSize)
+---
+> readSelfMod IFN2(PHY_ADDR, addr, IU32, typeSize)
+562a582,590
+> #if defined(i386) && !defined(BACK_M)
+> 		switch (typeSize)
+> 		{
+> 		case 1: return *getPtrToPhysAddrByte(addr);
+> 		case 2: return *((IU16*)getPtrToPhysAddrByte(addr));
+> 		case 4: return *((IU32*)getPtrToPhysAddrByte(addr));
+> 		}
+> #endif
+> 
+623a652,654
+> 	IU32 retVal;
+> 
+> #ifndef C_VIDxx /* FIXME: dword interface currently not working as expected? */
+633c664,669
+< 	return(((IU32)high << 16) + low);
+---
+> 	return(((IU32)high << 16) + low); 
+> #else
+> 	retVal = (IU32)phyR(addr, sizeof(IU32), read_dword_ev_glue, "dword");
+> 	sub_note_trace2(SAS_VERBOSE, "sas_PR32 addr=%x, val=%x\n", addr, retVal);
+> 	return(retVal);
+> #endif
+659a696,744
+> #ifndef BACK_M
+> 	sys_addr i, temp_val;
+> 
+> 	dest &= SasWrapMask;
+> 
+> 	switch (temp_val = readSelfMod(dest, length)) {
+> 		case SAS_RAM:
+> 			memcpy(getPtrToPhysAddrByte(dest), src, length);
+> 			break;
+> 
+> #ifdef	LIM
+> 		case SAS_MM_LIM:
+> 			memcpy(getPtrToPhysAddrByte(dest), src, length);
+> 			LIM_str_write(dest, length);
+> 			break;
+> #endif
+> 
+> 		case SAS_INACCESSIBLE:
+> 		case SAS_ROM:
+> 			/* No ROM_fix_sets !!! Yeh !!! */
+> 			break;
+> 
+> 		default:
+> 			printf("Unknown Sas type\n");
+> 			force_yoda();
+> 
+> 		case SAS_VIDEO:
+> #ifdef C_VID
+> 			temp_func = read_b_move_ptrs(temp_val);
+> 			(*temp_func)(dest, src, length, 1);
+> #else /* C_VID */
+> #ifdef i386
+> 			if (length % 2 == 0)
+> 			{
+> 				temp_func = read_w_write_ptrs(temp_val);
+> 				for (i=0; i<length; i+=2)
+> 					(*temp_func) (dest+i, *((IU16*)(src+i)));
+> 			}
+> 			else
+> #endif /* i386 */
+> 			{
+> 				temp_func = read_b_write_ptrs(temp_val);
+> 				for (i=0; i<length; i++)
+> 					(*temp_func) (dest+i, src[i]);
+> 			}
+> #endif /* C_VID */
+> 			break;
+> 	}
+> #else /* BACK_M */
+664a750
+> #endif
+717a804,831
+> #ifndef BACK_M
+> 	IU8 *destP;
+> 
+> 	src &= SasWrapMask;
+> 	switch (readSelfMod(src, length)) {
+> #ifdef	EGG
+> 	case SAS_VIDEO:
+> 		temp_func = read_pointers.str_read;
+> 		(*temp_func) (dest, src, length);
+> 		break;
+> #endif
+> 	case SAS_DANGEROUS:
+> 		for (destP = dest; destP < (dest + length); destP++) {
+> 			*destP = phy_r8(src);
+> 			src++;
+> 		}
+> 		break;
+> 	case SAS_INACCESSIBLE:
+> 		memset(dest, 0xFF, length);
+> 		break;
+> 
+> 	case SAS_ROM:
+> 	case SAS_RAM:
+> 	default:
+> 		memcpy(dest, getPtrToPhysAddrByte(src), length);
+> 		break;
+> 	}
+> #else /* BACK_M */
+722a837
+> #endif
+897a1013,1057
+> #if defined(i386) && !defined(BACK_M)
+> 	sys_addr	temp_val;
+> 
+> 	addr &= SasWrapMask;
+> 	checkAccess(addr);
+> 
+> 	if ((addr + 3) < Length_of_M_area) {
+> 		temp_val = readSelfMod(addr, sizeof(IU32));
+> 
+> 		switch (temp_val) {
+> 		case SAS_RAM:
+> 			(*(IU32 *) getPtrToPhysAddrByte(addr)) = val;
+> 			break;
+> 
+> #ifdef	LIM
+> 		case SAS_MM_LIM:
+> 			(*(IU32 *) getPtrToPhysAddrByte(addr)) = val;
+> 			LIM_w_write(addr);
+> 			LIM_w_write(addr+2);
+> 			break;
+> #endif
+> 
+> 		case SAS_INACCESSIBLE:
+> 		case SAS_ROM:
+> 			/* No ROM_fix_sets !!! Yeh !!! */
+> 			break;
+> 
+> 		default:
+> 			printf("Unknown Sas type\n");
+> 			force_yoda();
+> 
+> 		case SAS_VIDEO:
+> #ifdef C_VID
+> 			write_dword_ev_glue(addr, val);
+> #else
+> 			temp_func = read_w_write_ptrs(temp_val);
+> 			(*temp_func) (addr, (IU16)val);
+> 			(*temp_func) (addr+2, (IU16)(val >> 16));
+> #endif
+> 			break;
+> 		}
+> 
+> 	} else
+> 		printf("DWord written outside M %x\n", addr);
+> #else /* i386 && BACK_M */
+899a1060
+> #endif
+1005,1006c1166,1231
+< 	for (offset = 0; offset < len; offset++) {
+< 		c_sas_store(dest + offset, c_sas_hw_at(src + offset));
+---
+> 	if (getPG())
+> 	{
+> 		if (!xtrn2phy(src, bios_read_accreq(), &src))
+> 			return;
+> 	}
+> 
+> 	src &= SasWrapMask;
+> 	
+> 	switch (readSelfMod(src, len)) {
+> 		case SAS_MM_LIM:
+> 		case SAS_RAM:
+> 		case SAS_ROM:
+> 		default:
+> 			c_sas_stores(dest, getPtrToPhysAddrByte(src), len);
+> 			break;
+> 
+> #ifdef	EGG
+> 		case SAS_VIDEO:
+> 			if (getPG())
+> 			{
+> 				if (!xtrn2phy(dest, bios_read_accreq() | PG_W, &dest))
+> 					return;
+> 			}
+> 			dest &= SasWrapMask;
+> 
+> 			switch (readSelfMod(dest, len)) {
+> 				case SAS_RAM:	/* Video -> RAM */
+> 					temp_func = read_pointers.str_read;
+> 					(*temp_func) (getPtrToPhysAddrByte(dest), src, len);
+> 					break;
+> 
+> #ifdef	LIM
+> 				case SAS_MM_LIM:	/* Video -> LIM */
+> 					temp_func = read_pointers.str_read;
+> 					(*temp_func) (getPtrToPhysAddrByte(dest), src, len);
+> 					LIM_str_write(dest, len);
+> 					break;
+> #endif /*LIM */
+> 
+> 				case SAS_INACCESSIBLE:
+> 				case SAS_ROM:
+> 					/* No ROM_fix_sets !!! Yeh !!! */
+> 					break;
+> 
+> 				default:
+> 					printf("Unknown Sas type\n");
+> 					force_yoda();
+> 
+> #ifdef C_VID
+> 				case SAS_VIDEO:	/* Video -> Video */
+> 					temp_func = read_b_move_ptrs(SAS_VIDEO);
+> 					/* There seems to be a bug in move_byte_fwd_ev_glue */
+> 					src = (src - gvi_pc_low_regen)*2 + gvi_pc_low_regen;
+> 					(*temp_func)(dest, src, len, 0);
+> 					break;
+> #endif /* C_VID */
+> 			}
+> 			break;
+> #endif /* EGG */
+> 
+> 		case SAS_INACCESSIBLE:
+> 		case SAS_DANGEROUS:
+> 			for (offset = 0; offset < len; offset++) {
+> 				c_sas_store(dest + offset, phy_r8(src + offset));
+> 			}
+> 			break;
+1016a1242,1248
+> 	if (getPG())
+> 	{
+> 		if (!xtrn2phy(src, bios_read_accreq(), &src))
+> 			return;
+> 	}
+> 
+> 	src &= SasWrapMask;
+1018,1019c1250,1306
+< 	for (offset = 0; offset < len; offset += 2) {
+< 		c_sas_storew(dest + offset, c_sas_w_at(src + offset));
+---
+> 	
+> 	switch (readSelfMod(src, len)) {
+> 		case SAS_MM_LIM:
+> 		case SAS_RAM:
+> 		case SAS_ROM:
+> 		default:
+> 			sas_stores(dest, getPtrToPhysAddrByte(src), len);
+> 			break;
+> 
+> #ifdef	EGG
+> 		case SAS_VIDEO:
+> 			if (getPG())
+> 			{
+> 				if (!xtrn2phy(dest, bios_read_accreq() | PG_W, &dest))
+> 					return;
+> 			}
+> 			dest &= SasWrapMask;
+> 
+> 			switch (readSelfMod(dest, len)) {
+> 				case SAS_RAM:	/* Video -> RAM */
+> 					temp_func = read_pointers.str_read;
+> 					(*temp_func) (getPtrToPhysAddrByte(dest), src, len);
+> 					break;
+> 
+> #ifdef	LIM
+> 				case SAS_MM_LIM:	/* Video -> LIM */
+> 					temp_func = read_pointers.str_read;
+> 					(*temp_func) (getPtrToPhysAddrByte(dest), src, len);
+> 					LIM_str_write(dest, len);
+> 					break;
+> #endif /*LIM */
+> 
+> 				case SAS_INACCESSIBLE:
+> 				case SAS_ROM:
+> 					/* No ROM_fix_sets !!! Yeh !!! */
+> 					break;
+> 
+> 				default:
+> 					printf("Unknown Sas type\n");
+> 					force_yoda();
+> 
+> #ifdef C_VID
+> 				case SAS_VIDEO:	/* Video -> Video */
+> 					temp_func = read_w_move_ptrs(SAS_VIDEO);
+> 					(*temp_func)(dest, src, len/2, 0);
+> 					break;
+> #endif /* C_VID */
+> 			}
+> 			break;
+> #endif /* EGG */
+> 
+> 		case SAS_INACCESSIBLE:
+> 		case SAS_DANGEROUS:
+> 			for (offset = 0; offset < len; offset += 2) {
+> 				c_sas_storew(dest + offset, phy_r16(src + offset));
+> 			}
+> 			break;
+1029a1317,1323
+> 	if (getPG())
+> 	{
+> 		if (!xtrn2phy(src, bios_read_accreq(), &src))
+> 			return;
+> 	}
+> 
+> 	src &= SasWrapMask;
+1031,1032c1325,1380
+< 	for (offset = 0; offset < len; offset += 4) {
+< 		c_sas_storedw(dest + offset, c_sas_dw_at(src + offset));
+---
+> 	
+> 	switch (readSelfMod(src, len)) {
+> 		case SAS_MM_LIM:
+> 		case SAS_RAM:
+> 		case SAS_ROM:
+> 		default:
+> 			sas_stores(dest, getPtrToPhysAddrByte(src), len);
+> 			break;
+> 
+> #ifdef	EGG
+> 		case SAS_VIDEO:
+> 			if (getPG())
+> 			{
+> 				if (!xtrn2phy(dest, bios_read_accreq() | PG_W, &dest))
+> 					return;
+> 			}
+> 			dest &= SasWrapMask;
+> 
+> 			switch (readSelfMod(dest, len)) {
+> 				case SAS_RAM:	/* Video -> RAM */
+> 					temp_func = read_pointers.str_read;
+> 					(*temp_func) (getPtrToPhysAddrByte(dest), src, len);
+> 					break;
+> 
+> #ifdef	LIM
+> 				case SAS_MM_LIM:	/* Video -> LIM */
+> 					temp_func = read_pointers.str_read;
+> 					(*temp_func) (getPtrToPhysAddrByte(dest), src, len);
+> 					LIM_str_write(dest, len);
+> 					break;
+> #endif /*LIM */
+> 
+> 				case SAS_INACCESSIBLE:
+> 				case SAS_ROM:
+> 					/* No ROM_fix_sets !!! Yeh !!! */
+> 					break;
+> 
+> 				default:
+> 					printf("Unknown Sas type\n");
+> 					force_yoda();
+> 
+> #ifdef C_VID
+> 				case SAS_VIDEO:	/* Video -> Video */
+> 					move_dword_fwd_ev_glue(dest, src, len, 0);
+> 					break;
+> #endif /* C_VID */
+> 			}
+> 			break;
+> #endif /* EGG */
+> 
+> 		case SAS_INACCESSIBLE:
+> 		case SAS_DANGEROUS:
+> 			for (offset = 0; offset < len; offset += 4) {
+> 				c_sas_storedw(dest + offset, phy_r32(src + offset));
+> 			}
+> 			break;
+1068a1417,1454
+> #ifndef BACK_M
+> 	SAS_MEM_TYPE temp_val;
+> 
+> 	if (getPG())
+> 	{
+> 		if (!xtrn2phy(dest, bios_read_accreq() | PG_W, &dest))
+> 			return;
+> 	}
+> 	dest &= SasWrapMask;
+> 
+> 	switch (temp_val = readSelfMod(dest, len)) {
+> 		case SAS_RAM:
+> 			memset(getPtrToPhysAddrByte(dest), val, len);
+> 			break;
+> 
+> #ifdef	LIM
+> 		case SAS_MM_LIM:
+> 			memset(getPtrToPhysAddrByte(dest), val, len);
+> 			LIM_str_write(dest, len);
+> 			break;
+> #endif
+> 
+> 		case SAS_INACCESSIBLE:
+> 		case SAS_ROM:
+> 			/* No ROM_fix_sets !!! Yeh !!! */
+> 			break;
+> 
+> 		default:
+> 			printf("Unknown Sas type\n");
+> 			force_yoda();
+> 			break;
+> 
+> 		case SAS_VIDEO:
+> 			temp_func = read_b_fill_ptrs(temp_val);
+> 				(*temp_func) (dest, val, len);
+> 			break;
+> 	}
+> #else /* BACK_M */
+1082a1469
+> #endif
+1089a1477,1517
+> #ifndef BACK_M
+> 	LIN_ADDR i;
+> 	SAS_MEM_TYPE temp_val;
+> 	IU16 *dst;
+> 
+> 	if (getPG())
+> 	{
+> 		if (!xtrn2phy(dest, bios_read_accreq() | PG_W, &dest))
+> 			return;
+> 	}
+> 	dest &= SasWrapMask;
+> 
+> 	switch (temp_val = readSelfMod(dest, len<<1)) {
+> 		case SAS_RAM:
+> 			for (i=0, dst=(IU16*)getPtrToPhysAddrByte(dest); i<len; i++)
+> 				dst[i] = val;
+> 			break;
+> 
+> #ifdef	LIM
+> 		case SAS_MM_LIM:
+> 			for (i=0, dst=(IU16*)getPtrToPhysAddrByte(dest); i<len; i++)
+> 				dst[i] = val;
+> 			LIM_str_write(dest, len*2);
+> 			break;
+> #endif
+> 
+> 		case SAS_INACCESSIBLE:
+> 		case SAS_ROM:
+> 			/* No ROM_fix_sets !!! Yeh !!! */
+> 			break;
+> 
+> 		default:
+> 			printf("Unknown Sas type\n");
+> 			force_yoda();
+> 
+> 		case SAS_VIDEO:
+> 			temp_func = read_w_fill_ptrs(temp_val);
+> 			(*temp_func) (dest, val, len);
+> 			break;
+> 	}
+> #else /* BACK_M */
+1103a1532
+> #endif
+1111,1114c1540,1559
+<    /*
+<     * This is a linear address op, so just call the double word operation
+<     * lots of times.
+<     */
+---
+> #ifndef BACK_M
+>    LIN_ADDR i;
+>    SAS_MEM_TYPE temp_val;
+>    IU32 *dst;
+> 
+>    sub_note_trace3(SAS_VERBOSE, "c_sas_fillsdw dest=%x, val=%x, len=%d\n", dest, val, len);
+> 
+> 
+> 	if (getPG())
+> 	{
+> 		if (!xtrn2phy(dest, bios_read_accreq() | PG_W, &dest))
+> 			return;
+> 	}
+> 	dest &= SasWrapMask;
+> 
+> 	switch (temp_val = readSelfMod(dest, len<<2)) {
+> 		case SAS_RAM:
+> 			for (i=0, dst=(IU32*)getPtrToPhysAddrByte(dest); i<len; i++)
+> 				dst[i] = val;
+> 			break;
+1115a1561,1591
+> #ifdef	LIM
+> 		case SAS_MM_LIM:
+> 			for (i=0, dst=(IU32*)getPtrToPhysAddrByte(dest); i<len; i++)
+> 				dst[i] = val;
+> 			LIM_str_write(dest, len<<2);
+> 			break;
+> #endif
+> 
+> 		case SAS_INACCESSIBLE:
+> 		case SAS_ROM:
+> 			/* No ROM_fix_sets !!! Yeh !!! */
+> 			break;
+> 
+> 		default:
+> 			printf("Unknown Sas type\n");
+> 			force_yoda();
+> 			break;
+> 
+> 		case SAS_VIDEO:
+> #ifdef C_VID
+> 			fill_dword_ev_glue(dest, val, len);
+> #else
+> 			for (i=0; i<len<<2; i+=4) {
+> 				temp_func = read_w_write_ptrs(temp_val);
+> 				(*temp_func) (dest+i, (IU16)val);
+> 				(*temp_func) (dest+i+2, (IU16)(val >> 16));
+> 			}
+> #endif		
+> 			break;
+> 	}
+> #else /* BACK_M */
+1124a1601
+> #endif
+1203a1681
+> #if !defined(i386) || defined(BACK_M)
+1232a1711
+> #endif
+1555,1557c2034,2035
+< /* Read byte from memory, if V86 Mode let CPU do it. */
+< LOCAL IU8 
+< bios_read_byte IFN1(LIN_ADDR, linAddr)
+---
+> LOCAL IUM8 
+> bios_read_accreq(void)
+1559d2036
+< 	PHY_ADDR phyAddr;
+1564,1570d2040
+< 	/* If no paging on, then no problem */
+< 
+< 	if (!c_getPG())
+< 	{
+< 		return(phy_r8((PHY_ADDR)linAddr));
+< 	}
+< 
+1591a2062,2081
+> 	return access_request;
+> }
+> 
+> 
+> /* Read byte from memory, if V86 Mode let CPU do it. */
+> LOCAL IU8 
+> bios_read_byte IFN1(LIN_ADDR, linAddr)
+> {
+> 	PHY_ADDR phyAddr;
+> 	IUM8 access_request = 0; /* BIT 0 = R/W */
+> 				 /* BIT 1 = U/S */
+> 				 /* BIT 2 = Ensure A and D are valid */
+> 
+> 	/* If no paging on, then no problem */
+> 
+> 	if (!c_getPG())
+> 	{
+> 		return(phy_r8((PHY_ADDR)linAddr));
+> 	}
+> 
+1594c2084
+< 	if (xtrn2phy(linAddr, access_request, &phyAddr))
+---
+> 	if (xtrn2phy(linAddr, bios_read_accreq(), &phyAddr))
+1636,1656d2125
+< 	/* Note default access_request (0) is Supervisor Read */
+< 
+< 	/* We don't specifically disallow Protected Mode calls, they
+< 	   are not designed to happen, but the Video at least has a habit
+< 	   of reading BIOS variables on host timer ticks. We treat such
+< 	   requests more leniently than V86 Mode requests, by not insisting
+< 	   that the access and dirty bits are kosher.
+< 	 */
+< 
+< 	if ( getCPL() != 3 )
+< 	{
+< 		access_request = access_request | PG_U;
+< 	}
+< 
+< 	/* Beware V86 Mode, be strict about access and dirty bits */
+< 
+< 	if ( getVM() )
+< 	{
+< 		access_request = access_request | 0x4;
+< 	}
+< 
+1659c2128
+< 	if (xtrn2phy(linAddr, access_request, &phyAddr))
+---
+> 	if (xtrn2phy(linAddr, bios_read_accreq(), &phyAddr))
+1700,1720d2168
+< 	/* Note default access_request (0) is Supervisor Read */
+< 
+< 	/* We don't specifically disallow Protected Mode calls, they
+< 	   are not designed to happen, but the Video at least has a habit
+< 	   of reading BIOS variables on host timer ticks. We treat such
+< 	   requests more leniently than V86 Mode requests, by not insisting
+< 	   that the access and dirty bits are kosher.
+< 	 */
+< 
+< 	if ( getCPL() != 3 )
+< 	{
+< 		access_request = access_request | PG_U;
+< 	}
+< 
+< 	/* Beware V86 Mode, be strict about access and dirty bits */
+< 
+< 	if ( getVM() )
+< 	{
+< 		access_request = access_request | 0x4;
+< 	}
+< 
+1723c2171
+< 	if (xtrn2phy(linAddr, access_request, &phyAddr))
+---
+> 	if (xtrn2phy(linAddr, bios_read_accreq(), &phyAddr))
+1765,1784d2212
+< 	/* Note default access_request (0) is Supervisor Read */
+< 	access_request = access_request | PG_W;   /* So make it Right :-) */
+< 	
+< 	/* We don't specifically disallow Protected Mode calls, they
+< 	   are not designed to happen, but who knows. We treat such
+< 	   requests more leniently than V86 Mode requests, by not insisting
+< 	   that the access and dirty bits are kosher.
+< 	 */
+< 
+< 	if ( getCPL() != 3 )
+< 	{
+< 		access_request = access_request | PG_U;
+< 	}
+< 	
+< 	/* Beware V86 Mode, be strict about access and dirty bits */
+< 	if ( getVM() )
+< 	{
+< 		access_request = access_request | 0x4;
+< 	}
+< 	
+1786c2214
+< 	if (xtrn2phy(linAddr, access_request, &addr))
+---
+> 	if (xtrn2phy(linAddr, bios_read_accreq() | PG_W, &addr))
+1829,1836d2256
+< 	/* Note default access_request (0) is Supervisor Read */
+< 	access_request = access_request | PG_W;   /* So make it Right :-) */
+< 	
+< 	/* We don't specifically disallow Protected Mode calls, they
+< 	   are not designed to happen, but who knows. We treat such
+< 	   requests more leniently than V86 Mode requests, by not insisting
+< 	   that the access and dirty bits are kosher.
+< 	 */
+1838,1848d2257
+< 	if ( getCPL() != 3 )
+< 	{
+< 		access_request = access_request | PG_U;
+< 	}
+< 	
+< 	/* Beware V86 Mode, be strict about access and dirty bits */
+< 	if ( getVM() )
+< 	{
+< 		access_request = access_request | 0x4;
+< 	}
+< 	
+1850c2259
+< 	if (xtrn2phy(linAddr, access_request, &addr))
+---
+> 	if (xtrn2phy(linAddr, bios_read_accreq() | PG_W, &addr))
+1893,1912d2301
+< 	/* Note default access_request (0) is Supervisor Read */
+< 	access_request = access_request | PG_W;   /* So make it Right :-) */
+< 	
+< 	/* We don't specifically disallow Protected Mode calls, they
+< 	   are not designed to happen, but who knows. We treat such
+< 	   requests more leniently than V86 Mode requests, by not insisting
+< 	   that the access and dirty bits are kosher.
+< 	 */
+< 
+< 	if ( getCPL() != 3 )
+< 	{
+< 		access_request = access_request | PG_U;
+< 	}
+< 	
+< 	/* Beware V86 Mode, be strict about access and dirty bits */
+< 	if ( getVM() )
+< 	{
+< 		access_request = access_request | 0x4;
+< 	}
+< 	
+1914c2303
+< 	if (xtrn2phy(linAddr, access_request, &addr))
+---
+> 	if (xtrn2phy(linAddr, bios_read_accreq() | PG_W, &addr))

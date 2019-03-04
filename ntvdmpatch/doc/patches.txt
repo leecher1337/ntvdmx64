@@ -56,6 +56,8 @@ monitor.patch       - In a lot of #ifdefs, i386 is assumed to include V86
                       lateron, when crude makefiles.patch gets cleaned up.
 ntvdmctl.patch      - Removes NtVdmControl calls not working on x64 Windows
 sas4gen.patch       - Fix sas4gen CCPU header file
+sas.patch           - Optimize SAS-interface for faster memory access, 
+                      significantly speeding up i.e. text output on EGA emulation
 spurint.patch       - Fix crash on spurious Interrupts
 timers.patch        - Fix crash on startup caued by uninitialized timer 
                       defaults.
