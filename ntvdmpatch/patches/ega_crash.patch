@@ -1,21 +1,36 @@
---- NT4\private\mvdm\softpc.new\host\src\nt_ega.c
-+++ nt\private\mvdm\softpc.new\host\src\nt_ega.c
-608,610c608,613
+Index: nt/private/mvdm/softpc.new/host/src/nt_ega.c
+===================================================================
+590a591,592
+>     int max_width = sc.PC_W_Width >> 1,
+>         max_height = sc.PC_W_Height >> 1;
+608,610c610,617
 <     if( height>200 || width>40 ){
 < 	assert2( NO, "VDM: nt_ega_lo_graph_std() w=%d h=%d", width, height );
 < 	return;
 ---
->     if( height>200 || width>40 || screen_y+height>200 || offset+height*200 >= EGA_PLANE_SIZE>>1){
-> 	assert5( NO, "VDM: nt_ega_lo_graph_std() w=%d h=%d x=%d y=%d offset=%d", width, height, screen_x, screen_y, offset );
-> 	//return;
-> 	if (height>200) height=200;
-> 	if (width>40) width=40;
-> 	if (screen_y+height>200 || offset+height*200 >= EGA_PLANE_SIZE>>1) return;
-672c675
+> 
+>     /* If the image is completely outside the display area do nothing. */
+>     if ((screen_x >= max_width) || (screen_y >= max_height))
+>     {
+>         sub_note_trace2(EGA_HOST_VERBOSE,
+>                         "VDM: nt_ega_lo_graph_std() x=%d y=%d",
+>                         screen_x, screen_y);
+>         return;
+612a620,628
+>     /*
+>      * If image partially overlaps display area clip it so we don't start
+>      * overwriting invalid pieces of memory.
+>      */
+>     if (screen_x + width > max_width)
+>         width = max_width - screen_x;
+>     if (screen_y + height > max_height)
+>         height = max_height - screen_y;
+> 
+672c688
 <         while(--local_width);
 ---
 >         while((--local_width)>0);
-677c680
+677c693
 <     while(--local_height);
 ---
 >     while((--local_height)>0);
