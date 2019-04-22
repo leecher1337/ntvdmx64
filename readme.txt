@@ -202,6 +202,7 @@ Therefore writing REG_SZ Key named PIPE containing
    \\.\pipe\softpc
 to HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\WOW\CpuEnv
 you need.
+Setting empty REG_SZ named TRACE to CpuEnv you must.
 After running vdmdebug.exe, you will be enlighted by running vdmdebug.
 Do not call Yoda, Yoda will call you.
 

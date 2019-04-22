@@ -707,3 +707,33 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 < 	if (xtrn2phy(linAddr, access_request, &addr))
 ---
 > 	if (xtrn2phy(linAddr, bios_read_accreq() | PG_W, &addr))
+Index: nt/private/mvdm/softpc.new/base/cvidc/ev_glue.c
+===================================================================
+461c461,465
+< 	jccc_parm4 = (IUH)1;	/* destination in RAM */
+---
+> #ifdef BACK_M
+> 	jccc_parm4 = (IUH)1;	/* direction backwards */
+> #else
+> 	jccc_parm4 = (IUH)0;
+> #endif
+484c488,492
+< 	jccc_parm4 = (IUH)1;	/* destination in RAM */
+---
+> #ifdef BACK_M
+> 	jccc_parm4 = (IUH)1;	/* direction backwards */
+> #else
+> 	jccc_parm4 = (IUH)0;
+> #endif
+Index: nt/private/mvdm/softpc.new/base/cvidc/sevid019.c
+===================================================================
+1538a1539,1541
+> #ifndef BACK_M
+> 	*((IUH	*)(LocalIUH+5))	-=	2;	
+> #endif
+1543a1547
+> #ifdef BACK_M
+1544a1549,1551
+> #else
+> 	*((IUH	*)(LocalIUH+5))	=	*((IUH	*)(LocalIUH+5))	+	*((IUH	*)&(r21))	;	
+> #endif
