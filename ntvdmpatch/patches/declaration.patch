@@ -22,7 +22,98 @@
 > IMPORT VOID ega_mode2_chn_w_write IFN2(ULONG, value, ULONG, offset);
 --- NT4\private\mvdm\softpc.new\host\src\stubs.c
 +++ nt\private\mvdm\softpc.new\host\src\stubs.c
-612c612
+509,512c509,510
+< LOCAL ULONG   dummy()
+< {
+<         return(0);
+< }
+---
+> LOCAL void   clear_v7ptr_dummy IFN2(int, x, int, y) {}
+> LOCAL void   paint_v7ptr_dummy IFN3(int, pattern, int, x, int, y) {}
+514,515c512,513
+< GLOBAL  ULONG    (*clear_v7ptr)() = dummy;
+< GLOBAL  ULONG    (*paint_v7ptr)() = dummy;
+---
+> GLOBAL  void    (*clear_v7ptr)() = clear_v7ptr_dummy;
+> GLOBAL  void    (*paint_v7ptr)() = paint_v7ptr_dummy;
+612c610
 < void host_note_queue_added() 
 ---
 > void host_note_queue_added(unsigned long x) 
+--- NT4\private\mvdm\softpc.new\base\video\gfx_updt.c
++++ nt\private\mvdm\softpc.new\base\video\gfx_updt.c
+651a652,679
+> LOCAL	boolean simple_mark_byte IFN1(int, off_in)
+> {
+> 	UNUSED(off_in);
+> 
+> 	setVideodirty_total(getVideodirty_total() + 1);
+> 	return( FALSE );
+> }
+> 
+> LOCAL	boolean simple_mark_fill IFN2(int, laddr, int, haddr)
+> {
+> 	UNUSED(laddr);
+> 	UNUSED(haddr);
+> 
+> 	setVideodirty_total(getVideodirty_total() + 1);
+> 	return( FALSE );
+> }
+> 
+> LOCAL	boolean simple_mark_wfill IFN3(int, laddr, int, haddr, int, col)
+> {
+> 	UNUSED(laddr);
+> 	UNUSED(haddr);
+> 	UNUSED(col);
+> 
+> 	setVideodirty_total(getVideodirty_total() + 1);
+> 	return( FALSE );
+> }
+> 
+> 
+671,675c699,703
+< 	(T_mark_byte)simple_update,
+< 	(T_mark_word)simple_update,
+< 	(T_mark_fill)simple_update,
+< 	(T_mark_wfill)simple_update,
+< 	(T_mark_string)simple_update,
+---
+> 	(T_mark_byte)simple_mark_byte,
+> 	(T_mark_word)simple_mark_byte,
+> 	(T_mark_fill)simple_mark_fill,
+> 	(T_mark_wfill)simple_mark_wfill,
+> 	(T_mark_string)simple_mark_fill,
+704,708c732,736
+<     update_alg.mark_byte = (T_mark_byte)simple_update;
+<     update_alg.mark_word = (T_mark_word)simple_update;
+<     update_alg.mark_fill = (T_mark_fill)simple_update;
+<     update_alg.mark_wfill = (T_mark_wfill)simple_update;
+<     update_alg.mark_string = (T_mark_string)simple_update;
+---
+>     update_alg.mark_byte = (T_mark_byte)simple_mark_byte;
+>     update_alg.mark_word = (T_mark_word)simple_mark_byte;
+>     update_alg.mark_fill = (T_mark_fill)simple_mark_fill;
+>     update_alg.mark_wfill = (T_mark_wfill)simple_mark_wfill;
+>     update_alg.mark_string = (T_mark_string)simple_mark_fill;
+3489a3518,3522
+> GLOBAL VOID cga_mark_wfill IFN3(int, laddr, int, haddr, int, col)
+> {
+> 	cga_mark_string (laddr, haddr);
+> }
+> 
+3620,3624c3653,3657
+< 			update_alg.mark_byte = (T_mark_byte)simple_update;
+< 			update_alg.mark_word = (T_mark_word)simple_update;
+< 			update_alg.mark_fill = (T_mark_fill)simple_update;
+< 			update_alg.mark_wfill = (T_mark_wfill)simple_update;
+< 			update_alg.mark_string = (T_mark_string)simple_update;
+---
+> 			update_alg.mark_byte = (T_mark_byte)simple_mark_byte;
+> 			update_alg.mark_word = (T_mark_word)simple_mark_byte;
+> 			update_alg.mark_fill = (T_mark_fill)simple_mark_fill;
+> 			update_alg.mark_wfill = (T_mark_wfill)simple_mark_wfill;
+> 			update_alg.mark_string = (T_mark_string)simple_mark_fill;
+3640c3673
+< 			update_alg.mark_wfill = (boolean(*)())cga_mark_string;
+---
+> 			update_alg.mark_wfill = (boolean(*)())cga_mark_wfill;
