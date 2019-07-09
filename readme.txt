@@ -163,6 +163,7 @@ Here is a short howto on how to compile this:
    to the root of W: drive 
 3) Run the patch.cmd file inside the ntvdmpatch directory to patch 
    the sourcecode tree accordingly
+3a)If you want, you can apply the updates now (see next topic)
 4) Run zSHtst.cmd to enter build shell where you then type:
    a) bld-ntos.cmd 
       to build base components that are required for building NTVDM.
@@ -174,6 +175,21 @@ Here is a short howto on how to compile this:
 5) Run mkrelease.bat to create a redistributable package in the
    release\ subdirectory
 6) Pack release-Directory as installation package for target machine.
+
+There is a youtube video available that documents compilation steps:
+https://www.youtube.com/watch?v=Y1yF957BR4I
+
+Sourcecode updates
+==================
+NTVDM from NT4 sourcecode is quite dated. i.e. it lacks Long Filename (LFN)
+support and other stuff that got implemented in newer versions of NTVDM.
+As we don't have modern NTVDM sourcecode available, I tried to reconstruct
+some updates which are located in the updates directory. 
+To apply the a specific update, you must run the patch.cmd in the 
+appropriate update-directory. It is assumed that you apply the updates in
+the order of the directory numbers to ensure that the paches fit to each
+other. 
+A description of the updates is documented in doc\updates.txt
 
 How to install
 ==============
