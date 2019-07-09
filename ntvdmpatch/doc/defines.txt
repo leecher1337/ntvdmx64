@@ -1,0 +1,181 @@
+Matrixs of defines used in various configurations of the NTVDM:
+
+		MIPS	PPC	ALPHA	x86	
+CCPU		N	N	N	N	use the C CPU
+A2CPU		N	N	N	N	use the assembler CPU
+A3CPU		N	N	N	N	
+GISP_CPU	N	N	N	N	
+CPU_30_STYLE	Y	Y	Y	Y	
+CPU_40_STYLE	Y	Y	Y	N	
+SPC386		Y	Y	Y	N	
+SPC486 (softpc)	N	N	N	N	
+SPC486 (A4CPU)	Y	Y	Y	Y	
+PIG		N	N	N	N	
+A_VID		N	N	N	N	
+C_VID		N	N	N	Y	
+MSWDVR		N	N	N	N	spcmswd.drv for GDI interface
+GISP_SVGA	N	N	N	N	
+DPMI		N	N	N	N	
+IRET_HOOKS	N	N	N	N	
+SECURE		N	N	N	N	
+SYNCH_TIMERS	N	N	N	N	
+PROD		N	N	N	N	
+HUNTER		N	N	N	N	
+PIG		N	N	N	N	
+MONITOR		N	N	N	Y	
+REAL_VGA	N	N	N	N	
+V7VGA		Y	Y	Y	N	
+EGA_DUMP	N	N	N	N	
+X86GFX		N	N	N	Y	
+SIM32		Y	Y	Y	N	
+SUN_VA		N	N	N	N	
+NOVELL		N	N	N	N	
+					
+Always defined in host_def.h:					
+EGG	Y				
+VGG	Y				
+NTVDM	Y				
+					
+CPU style:	A2CPU	A3CPU	A4CPU	CCPU	
+CCPU		N	N	N	Y	
+A2CPU		Y	N	N	N	
+A3CPU		N	Y	N	N	
+					
+The Assembler 4.0 CPU					
+It seems to have a similar interface as the CCPU and also shares a bunch of 
+code (mainly c_main.c) with the CCPU.
+However the instruction emulation seems to be written in EDL (which can 
+generate intermediate JCODE that in turn can output the ugly, unoptimised 
+C-Code that we can see in the CVID VGA-emulation, but I suspect that it 
+also is able to output assembly code). However, not sure how this all 
+fits together yet, because the c_main.c still looks like our CCPU emulator.  
+The MIPS checked builds even include the EDL-compiler, I think 
+(look at BpiEfi_In_C function), but we don't have the EDL-files.
+The CPU is compiled into a4Pd.lib and then linked with softpc
+					
+Directory structure:					
+g:\4860716\base\Ccpu386\c_main.c					
+g:\4860716\base\Ccpu386\c_reg.c				\486alpha\base\Ccpu386\c_reg.c		
+g:\4860716\base\Ccpu386\c_tlb.c					
+g:\4860716\base\Ccpu386\ccpupig.c					
+g:\4860716\base\cpu\src\fm\FmDebug.c			\486alpha\base\cpu\src\fm\FmDebug.c		
+g:\4860716\base\cpu\src\fm\FmInit.c			\486alpha\base\cpu\src\fm\FmInit.c		
+g:\4860716\base\cpu\src\fm\FmStubs.c					
+g:\4860716\base\cpu\src\lc\lc_apiprof.c			\486alpha\base\cpu\src\lc\lc_apiprof.c		
+g:\4860716\base\cpu\src\lc\lc_driver.c					
+g:\4860716\base\cpu\src\lc\lc_file.c					
+g:\4860716\base\cpu\src\lc\lc_fixup.c			\486alpha\base\cpu\src\lc\lc_fixup.c		
+g:\4860716\base\cpu\src\lc\lc_mngr.c			\486alpha\base\cpu\src\lc\lc_mngr.c		
+g:\4860716\base\cpu\src\lc\lc_opt.c					
+g:\4860716\base\cpu\src\lc\lc_parse.c			\486alpha\base\cpu\src\lc\lc_parse.c		
+g:\4860716\base\cpu\src\pig\pigmem.c					
+g:\4860716\base\cpu\src\pig\state.c					
+g:\4860716\base\cpu\src\sad\bpi_emit.c					
+g:\4860716\base\cpu\src\sad\sad.c					
+g:\4860716\base\cpu\src\sad\sad_Dwnd.c					
+g:\4860716\base\cpu\src\sad\sad_Ireg.c					
+g:\4860716\base\cpu\src\sad\sad_PIG.c					
+g:\4860716\base\cpu\src\tr\trcommon.c			\486alpha\base\cpu\src\tr\trcommon.c		
+g:\4860716\base\cpu\src\tr\trparse.c					
+g:\4860716\base\jcode\hdigest\mip\patchrel.c					
+							\486alpha\base\jcode\hdigest\axp\host_dasm.c		
+g:\4860716\mnt\genOPg\src\CheckEdl.c			\486alpha\ant\genPg\src\CheckEdl.c		
+g:\4860716\mnt\gen\src\tr_lex.c				\486alpha\ant\gen\src\tr_lex.c		
+					
+EDL code files:					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/bldr/Bldr.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/evid/Chain2.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/evid/Chain4.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/evid/Copies.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/evid/EvPtrs.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/evid/Mark.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/evid/Ports.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/evid/Read.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/evid/Simple.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/evid/Unchn.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/fm/Api.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/fm/Bpi.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/fm/Buffer.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/fm/Contxt.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/fm/CpNote.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/fm/CpuMod.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/fm/CpuReg.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/fm/FmEvid.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/fm/PigReg.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/fm/Pigger.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/fm/Prof.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/fm/Sf.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/fm/Stub.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/fm/Trace.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/fm/Univer.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/host/Axphst.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/host/Hpphst.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/host/Sunhst.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Access.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Add.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Adjust.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/BTest.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Bound.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Bswap.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Cmp.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Conv.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Debug.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Dec.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Ea.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Enter.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Flags.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Frag.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/GdInit.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/GdMain.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Gldc.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/IdMain.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Inc.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Inst.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Light.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Logic.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/LxS.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Misc.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Move.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/MulDiv.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/PM.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Rotate.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Shift.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/StrInt.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/StrSub.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/String.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Sub.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Task.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Test.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Xchg.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/ie/Xlat.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/lc/Pti.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/nano/Nano.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/nano/NanoC.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/nano/NanoD.edl					
+/usr/vpc/users/paulc/mp/axp/base/cpu/src/nano/NanoE.edl					
+/usr/vpc/users/paulc/wd/Alpha/gen/src/C2CpuT.edl					
+/usr/vpc/users/paulc/wd/Alpha/gen/src/C2PriT.edl					
+/usr/vpc/users/paulc/wd/Alpha/gen/src/C2SasT.edl					
+/usr/vpc/users/paulc/wd/Alpha/gen/src/C2VidT.edl					
+/usr/vpc/users/paulc/wd/Alpha/gen/src/FlagTb.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/evid/Evid.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/evid/Gicvid.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/fm/CpuInt.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/fm/Fm.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/fm/Page.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/fm/Prot.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/fm/RdWr.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/fm/Sas.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/host/Host.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/host/Miphst.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/host/Ppchst.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/ie/Cpu.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/ie/Fpu.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/ie/IO.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/ie/PXcptn.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/ie/SegReg.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/ie/Stack.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/ie/Xfer.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/lc/Lc.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/nano/NanoA.edl					
+/usr/vpc/users/paulc/wd/base/cpu/src/nano/NanoB.edl					
