@@ -12,6 +12,8 @@ console.patch       - Fixes console startup bug that would otherwise not init
                       colors of console properly and would therefore cause
                       black chars on black screen.
 cvidc.patch         - Patches the Video controller CPU to work in i386
+cvidcheap.patch     - Speed up CVIDC video emulation by eliminating all the 
+                      unnecessary slow heap operations.
 debug.patch         - Adds some useful debugging settings to enable debugging
                       without needing to have master YODA in place.
 declaration.patch   - In cdecl calling convention, prototypes of functions

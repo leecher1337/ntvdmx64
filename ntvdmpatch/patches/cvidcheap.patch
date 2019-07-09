@@ -1,0 +1,14 @@
+Index: nt/private/mvdm/softpc.new/base/cvidc/j_c_lang.c
+===================================================================
+31a32,33
+> unsigned char g_cvid_stack_depth = 0;
+> unsigned char g_LocalIUHBuf[8][128];
+Index: nt/private/mvdm/softpc.new/base/cvidc/j_c_lang.h
+===================================================================
+48a49,54
+> 
+> /* leecher1337, HACK: Speed up the massive amount of heap operations in the slow CVIDC a bit by unsing static buffer */
+> extern unsigned char g_LocalIUHBuf[8][128], g_cvid_stack_depth;
+> #define malloc(x) (&g_LocalIUHBuf[g_cvid_stack_depth++][0])
+> #define free(x)	if (g_cvid_stack_depth>0) g_cvid_stack_depth--
+> 
