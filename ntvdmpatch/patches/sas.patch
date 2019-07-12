@@ -24,11 +24,51 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 > #endif
 > 
 > 
-308c327
+307,308c326,327
+< LOCAL SAS_MEM_TYPE
 < readSelfMod IFN2(PHY_ADDR, addr, IUM8, typeSize)
 ---
+> __inline LOCAL SAS_MEM_TYPE 
 > readSelfMod IFN2(PHY_ADDR, addr, IU32, typeSize)
-562a582,590
+515a535,552
+> LOCAL handle_junk()
+> {
+> 	SAVED IBOOL first = TRUE;
+> 	SAVED IU32 junk_value = 0xfefefefe;
+> 	if (first)
+> 	{
+> 		char *env = getenv("BEYOND_MEMORY_VALUE");
+> 		if (env != NULL)
+> 		{
+> 			junk_value = strtol(env, (char **)0, 16);
+> 			always_trace1("phyR: using %08x as value to read from outside physical M", junk_value)
+> 		}
+> 		first = FALSE;
+> 	}
+> 	always_trace2("phyR - %s read from outside physical M - address 0x%0x", name, addr)
+> 	return(junk_value);
+> }
+> 
+524,539c561
+< 	if ((addr + typeSize + 1) >= Length_of_M_area) {
+< 		SAVED IBOOL first = TRUE;
+< 		SAVED IU32 junk_value = 0xfefefefe;
+< 		if (first)
+< 		{
+< 			char *env = getenv("BEYOND_MEMORY_VALUE");
+< 			if (env != NULL)
+< 			{
+< 				junk_value = strtol(env, (char **)0, 16);
+< 				always_trace1("phyR: using %08x as value to read from outside physical M", junk_value)
+< 			}
+< 			first = FALSE;
+< 		}
+< 		always_trace2("phyR - %s read from outside physical M - address 0x%0x", name, addr)
+< 		return(junk_value);
+< 	}
+---
+> 	if ((addr + typeSize + 1) >= Length_of_M_area) return handle_junk();
+562a585,593
 > #if defined(i386) && !defined(BACK_M)
 > 		switch (typeSize)
 > 		{
@@ -38,20 +78,92 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 > 		}
 > #endif
 > 
-623a652,654
+604c635,661
+< 	retVal = (IU8)phyR(addr, sizeof(IU8), read_pointers.b_read, "byte");
+---
+> 	// Optimised for performance, so no phyR call
+> 	//retVal = (IU8)phyR(addr, sizeof(IU8), read_pointers.b_read, "byte");
+> 	addr &= SasWrapMask;
+> 
+> 	if ((addr + sizeof(IU8) + 1) >= Length_of_M_area) return handle_junk();
+> 
+> 	switch (readSelfMod(addr, sizeof(IU8))) {
+> 	case SAS_DANGEROUS:
+> 		retVal = 0;
+> 		break;
+> 
+> #ifdef	EGG
+> 	case SAS_VIDEO:
+> 		retVal = read_pointers.b_read(addr);
+> 		break;
+> #endif				/* EGG */
+> 
+> 	case SAS_INACCESSIBLE:
+> 		retVal = 0xffffffff;
+> 		break;
+> 
+> 	case SAS_ROM:
+> 	case SAS_RAM:
+> 	default:
+> 		retVal = *getPtrToPhysAddrByte(addr);
+> 	}
+> 
+613c670,701
+< 	IU16 retVal;
+---
+> 	IUM8	byte;
+> 	IU16	retVal;
+> 
+> 	// Optimised for performance, so no phyR call
+> 	//retVal = (IU16)phyR(addr, sizeof(IU16), read_pointers.w_read, "word");
+> 	addr &= SasWrapMask;
+> 
+> 	if ((addr + sizeof(IU16) + 1) >= Length_of_M_area) return handle_junk();
+> 
+> 	switch (readSelfMod(addr, sizeof(IU16))) {
+> 	case SAS_DANGEROUS:
+> 		retVal = phy_r8(addr) | ((IU16)phy_r8(addr+1)<<8);
+> 		break;
+> 
+> #ifdef	EGG
+> 	case SAS_VIDEO:
+> 		retVal = read_pointers.w_read(addr);
+> 		break;
+> #endif				/* EGG */
+> 
+> 	case SAS_INACCESSIBLE:
+> 		return (0xffffffff);
+> 
+> 	case SAS_ROM:
+> 	case SAS_RAM:
+> 	default:
+> #if defined(i386) && !defined(BACK_M)
+> 		retVal = *((IU16*)getPtrToPhysAddrByte(addr));
+> #else
+> 		retVal = (*(c_GetPhyAdd(addr+1))<<8) | *(c_GetPhyAdd(addr));
+> #endif
+> 	}
+615d702
+< 	retVal = (IU16)phyR(addr, sizeof(IU16), read_pointers.w_read, "word");
+623a711,713
 > 	IU32 retVal;
 > 
 > #ifndef C_VIDxx /* FIXME: dword interface currently not working as expected? */
-633c664,669
+628,633c718,723
+< 
+< 	IU16 low, high;
+< 	low = (IU16)phyR(addr, sizeof(IU16), read_pointers.w_read, "word");
+< 	high = (IU16)phyR(addr + 2, sizeof(IU16), read_pointers.w_read, "word");
+< 
 < 	return(((IU32)high << 16) + low);
 ---
-> 	return(((IU32)high << 16) + low); 
+> 	retVal = phy_r16(addr) | (phy_r16(addr+2)<<16);
 > #else
 > 	retVal = (IU32)phyR(addr, sizeof(IU32), read_dword_ev_glue, "dword");
+> #endif
 > 	sub_note_trace2(SAS_VERBOSE, "sas_PR32 addr=%x, val=%x\n", addr, retVal);
 > 	return(retVal);
-> #endif
-659a696,744
+659a750,798
 > #ifndef BACK_M
 > 	sys_addr i, temp_val;
 > 
@@ -101,9 +213,9 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 > 			break;
 > 	}
 > #else /* BACK_M */
-664a750
+664a804
 > #endif
-717a804,831
+717a858,885
 > #ifndef BACK_M
 > 	IU8 *destP;
 > 
@@ -132,9 +244,9 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 > 		break;
 > 	}
 > #else /* BACK_M */
-722a837
+722a891
 > #endif
-897a1013,1057
+897a1067,1111
 > #if defined(i386) && !defined(BACK_M)
 > 	sys_addr	temp_val;
 > 
@@ -180,9 +292,9 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 > 	} else
 > 		printf("DWord written outside M %x\n", addr);
 > #else /* i386 && BACK_M */
-899a1060
+899a1114
 > #endif
-1005,1006c1166,1231
+1005,1006c1220,1285
 < 	for (offset = 0; offset < len; offset++) {
 < 		c_sas_store(dest + offset, c_sas_hw_at(src + offset));
 ---
@@ -252,7 +364,7 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 > 				c_sas_store(dest + offset, phy_r8(src + offset));
 > 			}
 > 			break;
-1016a1242,1248
+1016a1296,1302
 > 	if (getPG())
 > 	{
 > 		if (!xtrn2phy(src, bios_read_accreq(), &src))
@@ -260,7 +372,7 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 > 	}
 > 
 > 	src &= SasWrapMask;
-1018,1019c1250,1306
+1018,1019c1304,1360
 < 	for (offset = 0; offset < len; offset += 2) {
 < 		c_sas_storew(dest + offset, c_sas_w_at(src + offset));
 ---
@@ -321,7 +433,7 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 > 				c_sas_storew(dest + offset, phy_r16(src + offset));
 > 			}
 > 			break;
-1029a1317,1323
+1029a1371,1377
 > 	if (getPG())
 > 	{
 > 		if (!xtrn2phy(src, bios_read_accreq(), &src))
@@ -329,7 +441,7 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 > 	}
 > 
 > 	src &= SasWrapMask;
-1031,1032c1325,1380
+1031,1032c1379,1434
 < 	for (offset = 0; offset < len; offset += 4) {
 < 		c_sas_storedw(dest + offset, c_sas_dw_at(src + offset));
 ---
@@ -389,7 +501,7 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 > 				c_sas_storedw(dest + offset, phy_r32(src + offset));
 > 			}
 > 			break;
-1068a1417,1454
+1068a1471,1508
 > #ifndef BACK_M
 > 	SAS_MEM_TYPE temp_val;
 > 
@@ -428,9 +540,9 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 > 			break;
 > 	}
 > #else /* BACK_M */
-1082a1469
+1082a1523
 > #endif
-1089a1477,1517
+1089a1531,1571
 > #ifndef BACK_M
 > 	LIN_ADDR i;
 > 	SAS_MEM_TYPE temp_val;
@@ -472,9 +584,9 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 > 			break;
 > 	}
 > #else /* BACK_M */
-1103a1532
+1103a1586
 > #endif
-1111,1114c1540,1559
+1111,1114c1594,1631
 <    /*
 <     * This is a linear address op, so just call the double word operation
 <     * lots of times.
@@ -500,7 +612,7 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 > 			for (i=0, dst=(IU32*)getPtrToPhysAddrByte(dest); i<len; i++)
 > 				dst[i] = val;
 > 			break;
-1115a1561,1591
+> 
 > #ifdef	LIM
 > 		case SAS_MM_LIM:
 > 			for (i=0, dst=(IU32*)getPtrToPhysAddrByte(dest); i<len; i++)
@@ -518,7 +630,7 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 > 			printf("Unknown Sas type\n");
 > 			force_yoda();
 > 			break;
-> 
+1115a1633,1645
 > 		case SAS_VIDEO:
 > #ifdef C_VID
 > 			fill_dword_ev_glue(dest, val, len);
@@ -532,22 +644,22 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 > 			break;
 > 	}
 > #else /* BACK_M */
-1124a1601
+1124a1655
 > #endif
-1203a1681
+1203a1735
 > #if !defined(i386) || defined(BACK_M)
-1232a1711
+1232a1765
 > #endif
-1555,1557c2034,2035
+1555,1557c2088,2089
 < /* Read byte from memory, if V86 Mode let CPU do it. */
 < LOCAL IU8 
 < bios_read_byte IFN1(LIN_ADDR, linAddr)
 ---
 > LOCAL IUM8 
 > bios_read_accreq(void)
-1559d2036
+1559d2090
 < 	PHY_ADDR phyAddr;
-1564,1570d2040
+1564,1570d2094
 < 	/* If no paging on, then no problem */
 < 
 < 	if (!c_getPG())
@@ -555,7 +667,7 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 < 		return(phy_r8((PHY_ADDR)linAddr));
 < 	}
 < 
-1591a2062,2081
+1591a2116,2135
 > 	return access_request;
 > }
 > 
@@ -576,11 +688,11 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 > 		return(phy_r8((PHY_ADDR)linAddr));
 > 	}
 > 
-1594c2084
+1594c2138
 < 	if (xtrn2phy(linAddr, access_request, &phyAddr))
 ---
 > 	if (xtrn2phy(linAddr, bios_read_accreq(), &phyAddr))
-1636,1656d2125
+1636,1656d2179
 < 	/* Note default access_request (0) is Supervisor Read */
 < 
 < 	/* We don't specifically disallow Protected Mode calls, they
@@ -602,11 +714,11 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 < 		access_request = access_request | 0x4;
 < 	}
 < 
-1659c2128
+1659c2182
 < 	if (xtrn2phy(linAddr, access_request, &phyAddr))
 ---
 > 	if (xtrn2phy(linAddr, bios_read_accreq(), &phyAddr))
-1700,1720d2168
+1700,1720d2222
 < 	/* Note default access_request (0) is Supervisor Read */
 < 
 < 	/* We don't specifically disallow Protected Mode calls, they
@@ -628,11 +740,11 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 < 		access_request = access_request | 0x4;
 < 	}
 < 
-1723c2171
+1723c2225
 < 	if (xtrn2phy(linAddr, access_request, &phyAddr))
 ---
 > 	if (xtrn2phy(linAddr, bios_read_accreq(), &phyAddr))
-1765,1784d2212
+1765,1784d2266
 < 	/* Note default access_request (0) is Supervisor Read */
 < 	access_request = access_request | PG_W;   /* So make it Right :-) */
 < 	
@@ -653,11 +765,11 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 < 		access_request = access_request | 0x4;
 < 	}
 < 	
-1786c2214
+1786c2268
 < 	if (xtrn2phy(linAddr, access_request, &addr))
 ---
 > 	if (xtrn2phy(linAddr, bios_read_accreq() | PG_W, &addr))
-1829,1836d2256
+1829,1836d2310
 < 	/* Note default access_request (0) is Supervisor Read */
 < 	access_request = access_request | PG_W;   /* So make it Right :-) */
 < 	
@@ -666,7 +778,7 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 < 	   requests more leniently than V86 Mode requests, by not insisting
 < 	   that the access and dirty bits are kosher.
 < 	 */
-1838,1848d2257
+1838,1848d2311
 < 	if ( getCPL() != 3 )
 < 	{
 < 		access_request = access_request | PG_U;
@@ -678,11 +790,11 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 < 		access_request = access_request | 0x4;
 < 	}
 < 	
-1850c2259
+1850c2313
 < 	if (xtrn2phy(linAddr, access_request, &addr))
 ---
 > 	if (xtrn2phy(linAddr, bios_read_accreq() | PG_W, &addr))
-1893,1912d2301
+1893,1912d2355
 < 	/* Note default access_request (0) is Supervisor Read */
 < 	access_request = access_request | PG_W;   /* So make it Right :-) */
 < 	
@@ -703,7 +815,7 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 < 		access_request = access_request | 0x4;
 < 	}
 < 	
-1914c2303
+1914c2357
 < 	if (xtrn2phy(linAddr, access_request, &addr))
 ---
 > 	if (xtrn2phy(linAddr, bios_read_accreq() | PG_W, &addr))
