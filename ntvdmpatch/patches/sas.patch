@@ -851,13 +851,13 @@ Index: nt/private/mvdm/softpc.new/base/cvidc/sevid019.c
 > #endif
 Index: nt/private/mvdm/softpc.new/base/video/gfx_updt.c
 ===================================================================
-2352a2353,2357
+2380a2381,2385
 > #ifdef NTVDM
 > 	// nt_scroll_up (host_scroll_up) returns FALSE, therefore optimize out this routine
 > 	return FALSE;
 > #endif
 > 
-2535a2541,2546
+2563a2569,2574
 > 
 > #ifdef NTVDM
 > 	// nt_scroll_down (host_scroll_down) returns FALSE, therefore optimize out this routine

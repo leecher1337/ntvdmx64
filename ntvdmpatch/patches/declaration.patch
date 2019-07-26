@@ -95,13 +95,13 @@
 >     update_alg.mark_fill = (T_mark_fill)simple_mark_fill;
 >     update_alg.mark_wfill = (T_mark_wfill)simple_mark_wfill;
 >     update_alg.mark_string = (T_mark_string)simple_mark_fill;
-3489a3518,3522
+3478a3507,3511
 > GLOBAL VOID cga_mark_wfill IFN3(int, laddr, int, haddr, int, col)
 > {
 > 	cga_mark_string (laddr, haddr);
 > }
 > 
-3620,3624c3653,3657
+3609,3613c3642,3646
 < 			update_alg.mark_byte = (T_mark_byte)simple_update;
 < 			update_alg.mark_word = (T_mark_word)simple_update;
 < 			update_alg.mark_fill = (T_mark_fill)simple_update;
@@ -113,7 +113,7 @@
 > 			update_alg.mark_fill = (T_mark_fill)simple_mark_fill;
 > 			update_alg.mark_wfill = (T_mark_wfill)simple_mark_wfill;
 > 			update_alg.mark_string = (T_mark_string)simple_mark_fill;
-3640c3673
+3629c3662
 < 			update_alg.mark_wfill = (boolean(*)())cga_mark_string;
 ---
 > 			update_alg.mark_wfill = (boolean(*)())cga_mark_wfill;

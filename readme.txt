@@ -147,6 +147,8 @@ x64 Windows users a NTVDM again, but I'm not very positive that this
 will happen, they seem to forget about us DOS-users. :-(
 
 Here is a short howto on how to compile this:
+Please be aware, that the build environment currently only works on
+Windows XP 32bit.
 1) Prepare your machine according the the OpenNT project build instructions:
    a) Unpack contents of old-src directory from 
       old-src.trunk.r687.20150728.7z to your working directory
@@ -235,3 +237,27 @@ Windows Server 2008 x64
 Windows 10 x64
 
 You are invited to improve this project to bring back DOS to Windows.
+
+
+FAQ
+===
+I want to have a proper soundcard emulation
+---------------------------------------------------------------------------
+http://www.softsystem.co.uk/products/soundfx.htm
+
+To remove time limit (as it's free nowadays anyway), please
+see:
+https://github.com/leecher1337/ntvdmx64/issues/40#issuecomment-510697281
+
+
+I want to run 16bit Windows applications
+---------------------------------------------------------------------------
+Sorry, NTVDMx64 isn't capable of it, as crucial system scheduler parts
+are not available on 64bit Windows.
+But I recommend installing https://github.com/otya128/winevdm
+additionally to NTVDMx64 so you get the best of both worlds.
+
+
+For other questions, I recommend looking at the Issue tracker:
+https://github.com/leecher1337/ntvdmx64
+
