@@ -861,3 +861,10 @@ Index: nt/private/mvdm/softpc.new/obj.vdm/ntvdm.src
 > 
 >     cmdCheckTempInit
 >     cmdCheckTemp
+Index: nt/private/mvdm/dos/dem/sources
+===================================================================
+56c56,57
+<     demlabel.c
+---
+>     demlabel.c  \
+>     demlfn.c

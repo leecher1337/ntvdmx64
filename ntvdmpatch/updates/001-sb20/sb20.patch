@@ -15,16 +15,7 @@ Index: nt/private/inc/vdm.h
  } VDMSERVICECLASS, *PVDMSERVICECLASS;
  
  
-@@ -121,7 +127,7 @@
- 
- #endif // _VDMNTOS_
- 
--#if defined (i386)
-+#if defined (i386) && defined(MONITOR)
-   // defined on x86 only since on mips we must reference thru sas
- #define  pNtVDMState                ((PULONG)FIXED_NTVDMSTATE_LINEAR)
- #endif
-@@ -227,7 +233,32 @@
+@@ -227,6 +233,31 @@
      IN OUT PVOID ServiceData
      );
  

@@ -1,0 +1,23 @@
+--- NT4\private\mvdm\inc\doswow.h
++++ NT4\private\mvdm\inc\doswow.h
+45,46c45,48
+< typedef struct _DOSPDB {			// DOS Process Data Block
+<     CHAR   PDB_Not_Interested[50];	// Fields we are not interested in
+---
+> typedef struct _DOSPDB {                        // DOS Process Data Block
+>     CHAR   PDB_Not_Interested[44];      // Fields we are not interested in
+>     USHORT PDB_environ;             // segment of environment
+>     DWORD  PDB_User_stack;
+82a85,96
+> // these are demLFN structures that work with wow and dem
+> 
+> typedef VOID (*PDOSWOWUPDATETDBDIR)(UCHAR, LPSTR);
+> typedef BOOL (*PDOSWOWGETTDBDIR)(UCHAR Drive, LPSTR pCurrentDirectory);
+> typedef BOOL (*PDOSWOWDODIRECTHDPOPUP)(VOID);
+> 
+> typedef struct tagWOWLFNInit {
+>    PDOSWOWUPDATETDBDIR pDosWowUpdateTDBDir;
+>    PDOSWOWGETTDBDIR pDosWowGetTDBDir;
+>    PDOSWOWDODIRECTHDPOPUP pDosWowDoDirectHDPopup;
+> }  WOWLFNINIT, *PWOWLFNINIT;
+> 
