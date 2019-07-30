@@ -18,7 +18,7 @@
 #include <nturtl.h>
 #include <windows.h>
 #include <mmsystem.h>
-#include <vdm.h>
+#include "../../../../inc/vdm.h"
 #include "insignia.h"
 #include "host_def.h"
 #include "xt.h"

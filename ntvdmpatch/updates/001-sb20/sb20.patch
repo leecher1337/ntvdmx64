@@ -31,7 +31,7 @@ Index: nt/private/inc/vdm.h
 +        USHORT Action;
 +}VDM_ADLIB_DATA, *PVDM_ADLIB_DATA;
 +
- //
++//
 +// Definitions for Protected Mode DOS apps cli control
 +//
 +
@@ -44,7 +44,7 @@ Index: nt/private/inc/vdm.h
 +typedef struct _VDM_PM_CLI_DATA {
 +        ULONG Control;
 +}VDM_PM_CLI_DATA, *PVDM_PM_CLI_DATA;
-+//
+ //
  // Interrupt handler flags
  //
  
