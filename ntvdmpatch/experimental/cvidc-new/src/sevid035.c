@@ -1,0 +1,62 @@
+#include "sevid000.h"
+
+void S_2909_Chain4DwordWrite_00000002_00000008 (IU32 eaOff, IU32 eaVal)
+{
+  C4DWRTF(2909, S_2893_Chain4WordWrite_00000002_00000008);
+}
+
+void S_2910_Chain4DwordWrite_00000002_00000009 (IU32 eaOff, IU32 eaVal)
+{
+  C4DWRTF(2910, S_2894_Chain4WordWrite_00000002_00000009);
+}
+
+void S_2911_Chain4DwordWrite_00000002_0000000e (IU32 eaOff, IU32 eaVal)
+{
+  C4DWRTF(2911, S_2895_Chain4WordWrite_00000002_0000000e);
+}
+
+void S_2912_Chain4DwordWrite_00000002_0000000f (IU32 eaOff, IU32 eaVal)
+{
+  C4DWRTF(2912, S_2896_Chain4WordWrite_00000002_0000000f);
+}
+
+void S_2913_Chain4DwordFill_00000002_00000008 (IU32 eaOff, IU32 eaVal, IU32 count)
+{
+  C4DFLL(2913, S_2897_Chain4WordFill_00000002_00000008);
+}
+
+void S_2914_Chain4DwordFill_00000002_00000009 (IU32 eaOff, IU32 eaVal, IU32 count)
+{
+  C4DFLL(2914, S_2898_Chain4WordFill_00000002_00000009);
+}
+
+void S_2915_Chain4DwordFill_00000002_0000000e (IU32 eaOff, IU32 eaVal, IU32 count)
+{
+  C4DFLL(2915, S_2899_Chain4WordFill_00000002_0000000e);
+}
+
+void S_2916_Chain4DwordFill_00000002_0000000f (IU32 eaOff, IU32 eaVal, IU32 count)
+{
+  C4DFLL(2916, S_2900_Chain4WordFill_00000002_0000000f);
+}
+
+void S_2917_Chain4DwordMove_00000002_00000008_00000000 (IU32 eaOff, IHPE fromOff, IU32 count, IBOOL srcInRAM)
+{
+  C4DMOVFW(2917, S_2901_Chain4WordMove_00000002_00000008_00000000);
+}
+
+void S_2918_Chain4DwordMove_00000002_00000009_00000000 (IU32 eaOff, IHPE fromOff, IHPE destOff, IU32 count, IBOOL srcInRAM)
+{
+  C4DMOVFW(2918, S_2903_Chain4WordMove_00000002_00000009_00000000);
+}
+
+void S_2919_Chain4DwordMove_00000002_0000000e_00000000 (IU32 eaOff, IHPE fromOff, IU32 count, IBOOL srcInRAM)
+{
+  C4DMOVFW(2919, S_2905_Chain4WordMove_00000002_0000000e_00000000);
+}
+
+void S_2920_Chain4DwordMove_00000002_0000000f_00000000 (IU32 eaOff, IHPE fromOff, IU32 count, IBOOL srcInRAM)
+{
+  C4DMOVFW(2920, S_2907_Chain4WordMove_00000002_0000000f_00000000);
+}
+

@@ -1,0 +1,30 @@
+The experimental folder contains some not-ready-for-production patches and 
+enhancements by me, that can be further developed and may be of use in the 
+future. You are invited to experiment with it and fix them for production use.
+
+Here is a very short explanation:
+
+cvidc-new
+---------
+The CVIDC interface is a little inefficient, as it is basically generated 
+C-code from EDL-code. Therefore it has the following disadvantages:
+
+ - The code is barely readable and hard to understand, as we don't have the
+   EDL-files it originates from.
+ - The code is SLOWER than it could be, as all registers are global variables,
+   which cause a lot of unneccessary instructions that prevent the compiler
+   from optimizing certain functionality by using local registers.
+ - The code gets called very often, therefore optimization may be useful.
+
+Therefore the generated code of every function has been analyzed and 
+hand-crafted together into a rewrite. The interface plugs cleanly into NTVDM
+and therefore to use it, one just has to link to cvidc-new instead of
+cvidc to use the reimplementation.
+We rely on the preprocessor a lot to generate the code.
+
+Attention: The code currently is BUGGY and not working as it should yet, 
+therefore it is just experimental until we write complete tests that can test
+old CVIDC-code and this implementation and compare the results to find buggy
+functions in the implementation. 
+The performance gain also isn't as good as I had expected, but feel free
+to correct it. Still work-in-progress.
