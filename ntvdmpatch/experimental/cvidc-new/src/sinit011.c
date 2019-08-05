@@ -7,17 +7,17 @@ void  S_0402_CiSetVideolatches_00000027 (IHPE value)
 
 void  S_0403_CiSetVideorplane_00000028 (IHPE value)
 {
-  Gdp->VGAGlobals.VGA_rplane = (IU8)value;
+  Gdp->VGAGlobals.VGA_rplane = value;
 }
 
 void  S_0404_CiSetVideowplane_00000029 (IHPE value)
 {
-  Gdp->VGAGlobals.VGA_wplane = (IU8)value;
+  Gdp->VGAGlobals.VGA_wplane = value;
 }
 
 void  S_0405_CiSetVideoscratch_0000002a (IHPE value)
 {
-  Gdp->VGAGlobals.scratch = (IU8)value;
+  Gdp->VGAGlobals.scratch = value;
 }
 
 void  S_0406_CiSetVideosr_masked_val_0000002b (IHPE value)
@@ -92,7 +92,7 @@ void  S_0419_CiSetVideodirty_high_00000038 (IHPE value)
 
 void  S_0420_CiSetVideovideo_copy_00000039 (IHPE value)
 {
-  Gdp->VGAGlobals.video_copy = (IU8)value;
+  Gdp->VGAGlobals.video_copy = value;
 }
 
 void  S_0421_CiSetVideomark_byte_0000003a (IHPE value)
@@ -137,7 +137,7 @@ void  S_0428_CiSetVideov7_bank_vid_copy_off_00000041 (IHPE value)
 
 void  S_0429_CiSetVideoscreen_ptr_00000042 (IHPE value)
 {
-  Gdp->VGAGlobals.screen_ptr = (IU8)value;
+  Gdp->VGAGlobals.screen_ptr = value;
 }
 
 void  S_0430_CiSetVideorotate_00000043 (IHPE value)
@@ -172,26 +172,26 @@ void  S_0435_CiSetVideoGC_regs_00000048 (IHPE value)
 
 void  S_0436_CiSetVideolast_GC_index_00000049 (IHPE value)
 {
-  Gdp->VGAGlobals.lastGCindex = (IU8)value;
+  Gdp->VGAGlobals.lastGCindex = value;
 }
 
 void  S_0437_CiSetVideodither_0000004a (IHPE value)
 {
-  Gdp->VGAGlobals.dither = (IU8)value;
+  Gdp->VGAGlobals.dither = value;
 }
 
 void  S_0438_CiSetVideowrmode_0000004b (IHPE value)
 {
-  Gdp->VGAGlobals.wrmode = (IU8)value;
+  Gdp->VGAGlobals.wrmode = value;
 }
 
 void  S_0439_CiSetVideochain_0000004c (IHPE value)
 {
-  Gdp->VGAGlobals.chain = (IU8)value;
+  Gdp->VGAGlobals.chain = value;
 }
 
 void  S_0440_CiSetVideowrstate_0000004d (IHPE value)
 {
-  Gdp->VGAGlobals.wrstate = (IU8)value;
+  Gdp->VGAGlobals.wrstate = value;
 }
 

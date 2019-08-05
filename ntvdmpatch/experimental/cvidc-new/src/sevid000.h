@@ -27,7 +27,7 @@
  * As soon as implementation and testing finished, we can remove this and also the
  * hacks that reverse memory:
  */
-//#define BACK_M
+#define BACK_M
 
 // May be needed for yoda, disabled for performance reasons
 #ifdef DEBUG_EVID
@@ -382,10 +382,10 @@
 #define UCWCPYW1PLN(funcnum,dir,shf,trans,macro)  UCBCPYB1PLNC(funcnum,dir,shf,trans,macro,count*2)
 
 // Copy Byte4 Plane Unchained
-#define UCBCPYB4PLNC(funcnum,dir,trans,macro,cnt) \
+#define UCBCPYB4PLNC(funcnum,dir,trans,macro,dstsz,cnt) \
 { \
   IU32 data, *rplane; \
-  IU8 *dest; \
+  dstsz *dest; \
   ENTER_FUNC(funcnum); \
   count = cnt; \
   if ( srcInRAM ) \
@@ -413,8 +413,8 @@
     } \
   } \
 }
-#define UCBCPYB4PLN(funcnum,dir,trans,macro)  UCBCPYB4PLNC(funcnum,dir,trans,macro,count)
-#define UCWCPYW4PLN(funcnum,dir,trans,macro)  UCBCPYB4PLNC(funcnum,dir,trans,macro,count*2)
+#define UCBCPYB4PLN(funcnum,dir,trans,macro,dstsz)  UCBCPYB4PLNC(funcnum,dir,trans,macro,IU32,count)
+#define UCWCPYW4PLN(funcnum,dir,trans,macro,dstsz)  UCBCPYB4PLNC(funcnum,dir,trans,macro,IU32,count*2)
 
 
 /*-----------------+
@@ -460,8 +460,9 @@
     } \
   } \
 }
-#define C4BCPYB4PLN UCBCPYB4PLN
-#define C4WCPYW4PLN UCWCPYW4PLN
+#define C4BCPYB4PLN(funcnum,dir,trans,macro,dstsz)  UCBCPYB4PLNC(funcnum,dir,trans,macro,IU8,count)
+#define C4WCPYW4PLN(funcnum,dir,trans,macro,dstsz)  UCBCPYB4PLNC(funcnum,dir,trans,macro,IU8,count*2)
+
 #define C4BCPYB4PLN1(funcnum,dir,trans,macro)  C4CPYB4PLNC1(funcnum,dir,trans,macro,count)
 #define C4WCPYW4PLN1(funcnum,dir,trans,macro)  C4CPYB4PLNC1(funcnum,dir,trans,macro,count*2)
 
@@ -700,12 +701,12 @@
   ENTER_FUNC(func) \
   GDP->VGAGlobals.mark_string(eaOff + dir - count * dir, count * fact); \
   if ( srcInRAM ) \
-    cpf(eaOff, fromOff, -1, count * fact, srcInRAM); \
+    cpf(eaOff, fromOff, -1, count, srcInRAM); \
   else \
   { \
     BUGGY_IN_CVID(GDP->VGAGlobals.scratch = eaOff + dir - count * dir); \
     GDP->VGAGlobals.readfunc(GDP->VGAGlobals.scratch, fromOff - count * (dir?1:0), count, srcInRAM); \
-    cpf(eaOff, GDP->VGAGlobals.scratch, fromOff, count * fact, srcInRAM); \
+    cpf(eaOff, GDP->VGAGlobals.scratch, fromOff, count, srcInRAM); \
   }
 
 #define C4BMOVFW(func,cpf) C4MOV(1,0,func,cpf,fwd_str_read_addr)

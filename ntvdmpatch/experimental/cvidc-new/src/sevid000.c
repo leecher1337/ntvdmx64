@@ -206,8 +206,8 @@ GLOBAL void S_2120_RdMode0Chain4StringReadBwd(IU8 * dest, IU32 eaOff, IU32 count
 GLOBAL IU32 S_2095_RdMode0UnchainedByteRead (IU32 eaOff)
 {
   ENTER_FUNC(2095);
+  
   SET_LATCHES(eaOff * 4);
-
   return GDP->VGAGlobals.read_shift_count<32?(IU8)(GDP->VGAGlobals.latches >> GDP->VGAGlobals.read_shift_count):0;
 }
 
@@ -605,7 +605,7 @@ GLOBAL void S_2114_DisabledRAMStringReadFwd(IU8 * dest, IU32 eaOff, IU32 count, 
 #ifdef BACK_M
   if (destInRam)
   {
-    memset(dest-count, -1, count);
+    memset(dest-count+1, -1, count);
     dest-=count;
   }
   else
@@ -629,7 +629,7 @@ GLOBAL void S_2125_DisabledRAMStringReadBwd(IU8 * dest, IU32 eaOff, IU32 count, 
   else
 #endif
   {
-    memset(dest-count, -1, count);
+    memset(dest-count+1, -1, count);
     dest-=count;
   }
   GDP->VGAGlobals.latches = -1;
