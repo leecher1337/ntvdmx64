@@ -27,7 +27,7 @@
  * As soon as implementation and testing finished, we can remove this and also the
  * hacks that reverse memory:
  */
-#define BACK_M
+//#define BACK_M
 
 // May be needed for yoda, disabled for performance reasons
 #ifdef DEBUG_EVID
@@ -43,6 +43,10 @@
 #else
 #define RAM_DIR +1
 #endif
+
+// This macro marks code that is present in original CVIDC but is buggy there
+// and thus shouldn't be there
+#define BUGGY_IN_CVID(x)
 
 
 /******************************************************************
@@ -381,7 +385,7 @@
 #define UCBCPYB4PLNC(funcnum,dir,trans,macro,cnt) \
 { \
   IU32 data, *rplane; \
-  IU32 *dest; \
+  IU8 *dest; \
   ENTER_FUNC(funcnum); \
   count = cnt; \
   if ( srcInRAM ) \
@@ -423,7 +427,7 @@
 #define C4CPYB4PLNC1(funcnum,dir,trans,macro,count) \
 { \
   IU32 data, *rplane; \
-  IU32 *dest; \
+  IU8 *dest; \
   ENTER_FUNC(funcnum); \
   if ( srcInRAM ) \
   { \
@@ -476,7 +480,7 @@
     cpf(4 * eaOff, fromOff, -1, count, srcInRAM); \
   else \
   { \
-    GDP->VGAGlobals.scratch = eaOff + dir - count * dir; \
+    BUGGY_IN_CVID(GDP->VGAGlobals.scratch = eaOff + dir - count * dir;) \
     GDP->VGAGlobals.fwd_str_read_addr(GDP->VGAGlobals.scratch, fromOff - count * (dir?1:0), count, srcInRAM); \
     cpf(4 * eaOff, GDP->VGAGlobals.scratch, fromOff, count, srcInRAM); \
   }
@@ -550,13 +554,14 @@
       wrf(eaOff + 1,  *(IU8*)fromOff); \
       fromOff += RAM_DIR * dir; \
       eaOff += 4 * dir; \
+      count--; \
     } \
     if (count == 1) \
       wrf(eaOff,  *(IU8*)fromOff); \
   } \
   else \
   { \
-    GDP->VGAGlobals.scratch = eaOff; \
+    BUGGY_IN_CVID(GDP->VGAGlobals.scratch = eaOff); \
     GDP->VGAGlobals.fwd_str_read_addr(GDP->VGAGlobals.scratch, fromOff, count, srcInRAM); \
     fromOff = dir>0?0:count-1; \
     if (((eaOff & 1) && dir>0) || (!(eaOff & 1) && dir<0)) \
@@ -606,7 +611,7 @@
   } \
   else \
   { \
-    GDP->VGAGlobals.scratch = eaOff; \
+    BUGGY_IN_CVID(GDP->VGAGlobals.scratch = eaOff); \
     GDP->VGAGlobals.fwd_str_read_addr(GDP->VGAGlobals.scratch, fromOff, count, srcInRAM); \
     fromOff = 0; \
     if (((eaOff & 1) && dir>0) || (!(eaOff & 1) && dir<0)) \
@@ -645,7 +650,7 @@
   { \
     if (eaOff & 1) \
     { \
-      dst = &GDP->VGAGlobals.VGA_wplane[2 * eaOff & (~3) + 1]; \
+      dst = &GDP->VGAGlobals.VGA_wplane[(2 * eaOff & (~3)) | 1]; \
       inc = dir>0?3:1; \
     } \
     else \
@@ -665,7 +670,7 @@
   { \
     if (eaOff & 1) \
     { \
-      dst = &GDP->VGAGlobals.VGA_wplane[2 * eaOff & (~1) + 1]; \
+      dst = &GDP->VGAGlobals.VGA_wplane[(2 * eaOff & (~1)) | 1]; \
       inc = dir>0?3:1; \
     } \
     else \
@@ -698,7 +703,7 @@
     cpf(eaOff, fromOff, -1, count * fact, srcInRAM); \
   else \
   { \
-    GDP->VGAGlobals.scratch = eaOff + dir - count * dir; \
+    BUGGY_IN_CVID(GDP->VGAGlobals.scratch = eaOff + dir - count * dir); \
     GDP->VGAGlobals.readfunc(GDP->VGAGlobals.scratch, fromOff - count * (dir?1:0), count, srcInRAM); \
     cpf(eaOff, GDP->VGAGlobals.scratch, fromOff, count * fact, srcInRAM); \
   }

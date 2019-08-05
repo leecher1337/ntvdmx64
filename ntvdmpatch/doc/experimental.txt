@@ -15,6 +15,94 @@ C-code from EDL-code. Therefore it has the following disadvantages:
    which cause a lot of unneccessary instructions that prevent the compiler
    from optimizing certain functionality by using local registers.
  - The code gets called very often, therefore optimization may be useful.
+ - The CVIDC is written for BACK_M memory, which we don't have on X86
+ - The CVIDC code is BUGGY:
+   The generated code even mentions it:
+   J_SAVE_RETURN	NOT	IMPLIMENTED
+   So if the J-code calls a subfunction like i.e:
+
+	{	extern	IUH	S_2238_GenericByteWrite()	;	
+		IUH	returnValue,v1=0,v2=0,v3=0,v4=0;	
+		returnValue	=	S_2238_GenericByteWrite(v1,v2,v3,v4);	}
+
+   it expects the called function to preserve its LocalIUH, because it may
+   be used afterwards. Let's take the example of S_2239_GenericByteFill where
+   code above originates from.
+   Line 4113 in sevid004.c calls it.
+   The function then calls crules with the jump target S_2238_GenericByteWrite_id.
+   crules has the following declarations:
+
+	IUH		 *CopyLocalIUH = (IUH *)0; 
+	SAVED IUH		 *LocalIUH = (IUH *)0; 
+
+   SAVED means static (base_def.h). LocalIUH is static and therefore gets 
+   preserved accross calls and can also be overwritten which is the case here:
+
+	/* ENTER_SECTION */ CopyLocalIUH=LocalIUH; CopyLocalFPH=LocalFPH;	
+	if(28>0) LocalIUH = (IUH*)malloc(28);
+	if(0>0)	LocalFPH = (EXTENDED *)malloc	(0);
+
+   Now it's still OK, CopyLocalIUH holds old IUH and an exit of function,
+   there is:
+
+	/*J_LEAVE_SECTION*/
+	if(LocalIUH)	free(LocalIUH)	;
+	if(LocalFPH)	free(LocalFPH);
+	LocalIUH=CopyLocalIUH	;LocalFPH=CopyLocalFPH;
+
+   The problem lies in between. Let's have a look at the Code of 
+   S_2238_GenericByteWrite_id:
+
+	*((IU32	*)(LocalIUH+2)+REGLONG) = *((IU32*)((*((IHPE*)&(r1))) + *((IHPE	*)&(r21))));
+	{ extern	IUH L24_1if_d();
+	IUH returnValue,v1=0,v2=0,v3=0,v4=0; returnValue = L24_1if_d(v1,v2,v3,v4); return(returnValue);}
+
+   Basically this code offloads restoration of IUH to the L24_1if_d function,
+   which is fine in that regard that the code execution really reaches the
+   restoration paragraph shown above before return.
+   BUT calling the code as a function in this way calls crules() again and
+   as seen above, CopyLocalIUH is a LOCAL variable on the stack and not
+   static. So the restore function will restore LocalIUH from its own stack
+   frame where it is 0 and not from the stack frame where it was originally 
+   saved. Thus, LocalIUH always gets restored to 0 and then you get a SEGFAULT
+   when the callee tries to access its LocalIUH. Abviously, if the caller
+   wouldn't access its LocalIUH afterwards again, you still leak memory.
+   So what could be done about it?
+
+   Would setting CopyLocalIUH static help?
+   No, functions that call functions that save LocalIUH would be ruined, as
+   CopyLocalIUH is not on their stack then but global.
+
+   Would removing SAVED from LocalIUH declaration help?
+   No, function like L24_1if_d rely on an existing LocalIUH that they can
+   continue to use.
+
+   What would probably help as a quick bugfix?
+   Replace	";	return(returnValue);	}	" with a goto to a cleanup
+   label, i.e. L24_27if_d in the example of sevid004.c
+   LocalIUH is 0 at this point anyway, so free() doesn't kick in and risk a 
+   double free. But LocalIUH gets restored.
+   Another even more efficient solution would be, to replace these calls 
+   with just a simple goto, mostly the calls to these L* functions are
+   just labels and it is unclear why it opens a new stackframe for no reason
+   and doesn't just jump to the appropriate label which is already done on 
+   other places.
+
+   One could replace this with i.e.:
+   sed -i 's/\tIUH\treturnValue,v1=0,v2=0,v3=0,v4=0;\t\treturnValue\t=\t\(.*\)(v1,v2,v3,v4);\treturn(returnValue);\t/goto \1;/g' sevid*.c 
+
+ - The CVIDC has even more bugs:
+   The handling of the function that use fwd_str_read_addr handlers seems
+   to be broken. First, the fwd_str_read_addr doesn't get set anywhere.
+   I guess it should be set in setReadPointers() function. But even if it
+   gets set there, it the handling of the GDP->VGAGlobals.scratch looks pretty
+   funny: Even thoug this gets allocated as a scratch buffer, it is overwritten
+   with the target parameter pointer so that the functions that get called
+   afterwards and rely on the GDP->VGAGlobals.scratch buffer have a bogus 
+   pointer. The correct way would be to not overrite the Scratch pointer
+   and to setup the fwd_str_read_addr and bwd_str_read_addr addresses 
+   correctly so that data could be read to the scratch buffer. 
+
 
 Therefore the generated code of every function has been analyzed and 
 hand-crafted together into a rewrite. The interface plugs cleanly into NTVDM

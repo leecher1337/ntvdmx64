@@ -207,7 +207,8 @@ GLOBAL IU32 S_2095_RdMode0UnchainedByteRead (IU32 eaOff)
 {
   ENTER_FUNC(2095);
   SET_LATCHES(eaOff * 4);
-  return (IU8)(GDP->VGAGlobals.latches >> GDP->VGAGlobals.read_shift_count);
+
+  return GDP->VGAGlobals.read_shift_count<32?(IU8)(GDP->VGAGlobals.latches >> GDP->VGAGlobals.read_shift_count):0;
 }
 
 GLOBAL IU32 S_2096_RdMode0UnchainedWordRead (IU32 eaOff)
@@ -215,9 +216,11 @@ GLOBAL IU32 S_2096_RdMode0UnchainedWordRead (IU32 eaOff)
   IU16 ret;
 
   ENTER_FUNC(2096);
-  SET_LATCHES(eaOff * 4 + 4);
-  ret = GDP->VGAGlobals.read_shift_count<32?(IU8)(*(IU32 *)&GDP->VGAGlobals.VGA_rplane[eaOff * 4] >> GDP->VGAGlobals.read_shift_count) : 4;
-  return ret | ((GDP->VGAGlobals.latches >> GDP->VGAGlobals.read_shift_count)<<8);
+  ret = (IU8)(GDP->VGAGlobals.read_shift_count<32?(IU8)(*(IU32 *)&GDP->VGAGlobals.VGA_rplane[eaOff * 4] >> GDP->VGAGlobals.read_shift_count) : 4);
+  eaOff++;
+  SET_LATCHES(eaOff * 4);
+  if (GDP->VGAGlobals.read_shift_count < 32) ret |= (Gdp->VGAGlobals.latches >> GDP->VGAGlobals.read_shift_count)<<8;
+  return ret;
 }
 
 GLOBAL IU32 S_2097_RdMode0UnchainedDwordRead(IU32 eaOff)

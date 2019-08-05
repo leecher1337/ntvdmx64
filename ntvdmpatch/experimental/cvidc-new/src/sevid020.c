@@ -109,7 +109,7 @@ void S_2702_Chain2DwordWrite_Copy (IU32 eaOff, IU32 eaVal)
   GDP->VGAGlobals.VGA_wplane[eaOff] = (IU8)(eaVal>>24);
 }
 
-void S_2703_Chain2DwordFill_Copy (IU32 eaOff, IU16 eaVal, IU32 count)
+void S_2703_Chain2DwordFill_Copy (IU32 eaOff, IU32 eaVal, IU32 count)
 {
   ENTER_FUNC(2703);
   CGA_MARK_STRING(count, sizeof(IU32));
