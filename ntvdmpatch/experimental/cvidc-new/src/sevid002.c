@@ -75,7 +75,7 @@ void S_2318_UnchainedWordFill_00000000_00000009_00000000 (IU32 eaOff, IU16 eaVal
   UCWFLLF(2318,UCB4MSK,UCB3DATA,S_2319_Unchained4PlaneWordFill);
 }
 
-void S_2319_Unchained4PlaneWordFill(IU32 eaOff, IU8 eaValLo, IU8 eaValHi, IU32 count)
+void S_2319_Unchained4PlaneWordFill(IU32 eaOff, IU32 eaValLo, IU32 eaValHi, IU32 count)
 {
   IU32 *dest;
 

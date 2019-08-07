@@ -27,7 +27,7 @@
  * As soon as implementation and testing finished, we can remove this and also the
  * hacks that reverse memory:
  */
-#define BACK_M
+//#define BACK_M
 
 // May be needed for yoda, disabled for performance reasons
 #ifdef DEBUG_EVID
@@ -282,31 +282,32 @@
   ENTER_FUNC(func); \
   GDP->VGAGlobals.mark_string(eaOff, count); \
   eaVal = mask(trans(eaVal)); \
-  if (GDP->VGAGlobals.plane_enable & (1 << ((eaVal + 0) & 3))) \
+  if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 0) & 3))) \
     S_2745_Chain41PlaneByteFill(eaOff + 0, (IU8)eaVal, count/4); \
-  if (GDP->VGAGlobals.plane_enable & (1 << ((eaVal + 1) & 3))) \
+  if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 1) & 3))) \
     S_2745_Chain41PlaneByteFill(eaOff + 1, (IU8)eaVal, count/4); \
-  if (GDP->VGAGlobals.plane_enable & (1 << ((eaVal + 2) & 3))) \
+  if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 2) & 3))) \
     S_2745_Chain41PlaneByteFill(eaOff + 2, (IU8)eaVal, count/4); \
-  if (GDP->VGAGlobals.plane_enable & (1 << ((eaVal + 3) & 3))) \
+  if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 3) & 3))) \
     S_2745_Chain41PlaneByteFill(eaOff + 3, (IU8)eaVal, count/4); 
 // ^^ NB: eaval+3 is +2 again in S_2744_Chain4ByteFill_00000000_00000008 ???
 
 #define C4BFLL1(func, mask, trans) \
   ENTER_FUNC(func); \
-  S_2747_Chain44PlaneByteFill(eaOff, (IU8)mask(trans(eaVal)), count);
+  GDP->VGAGlobals.mark_string(eaOff, count); \
+  S_2747_Chain44PlaneByteFill(eaOff, (IU8)mask(trans((IU32)eaVal)), count);
 
 #define C4WFLL(func, mask, trans) \
 { \
   ENTER_FUNC(func); \
   GDP->VGAGlobals.mark_string(eaOff, count * sizeof(IU16)); \
-  if (GDP->VGAGlobals.plane_enable & (1 << ((eaVal + 0) & 3))) \
+  if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 0) & 3))) \
     S_2745_Chain41PlaneByteFill(eaOff + 0, (IU8)mask(trans((IU8)(eaVal   ))), count/4); \
-  if (GDP->VGAGlobals.plane_enable & (1 << ((eaVal + 1) & 3))) \
+  if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 1) & 3))) \
     S_2745_Chain41PlaneByteFill(eaOff + 1, (IU8)mask(trans((IU8)(eaVal>>8))), count/4); \
-  if (GDP->VGAGlobals.plane_enable & (1 << ((eaVal + 2) & 3))) \
+  if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 2) & 3))) \
     S_2745_Chain41PlaneByteFill(eaOff + 2, (IU8)mask(trans((IU8)(eaVal   ))), count/4); \
-  if (GDP->VGAGlobals.plane_enable & (1 << ((eaVal + 3) & 3))) \
+  if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 3) & 3))) \
     S_2745_Chain41PlaneByteFill(eaOff + 3, (IU8)mask(trans((IU8)(eaVal>>8))), count/4); \
 }
 

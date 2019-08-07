@@ -167,9 +167,10 @@ GLOBAL void S_2094_RdMode0Chain4StringReadFwd(IU8 * dest, IU32 eaOff, IU32 count
 #endif
   {
     memcpy (dest, &GDP->VGAGlobals.VGA_rplane[offs], count);
-    dest += offs;
+	offs += count;
   }
-  SET_LATCHES((offs-1) & (~3));
+  offs--;
+  SET_LATCHES(offs & (~3));
 }
 
 GLOBAL void S_2120_RdMode0Chain4StringReadBwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam)
@@ -195,9 +196,9 @@ GLOBAL void S_2120_RdMode0Chain4StringReadBwd(IU8 * dest, IU32 eaOff, IU32 count
       *dest = GDP->VGAGlobals.VGA_rplane[offs--];
       dest--;	/* Backwards */
     }
-
   }
-  SET_LATCHES((offs+1) & (~3));
+  offs++;
+  SET_LATCHES(offs & (~3));
 }
 
 /******************************************************
@@ -512,66 +513,34 @@ GLOBAL IU32 S_2109_RdMode1UnchainedDwordRead(IU32 eaOff)
 
 GLOBAL void S_2110_RdMode1UnchainedStringReadFwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam)
 {
-  IU32 tmp;
-  IU32 offs;
-
   ENTER_FUNC(2110);
-  offs = GDP->VGAGlobals.read_mapped_plane + 4 * eaOff;
 #ifdef BACK_M
   if (destInRam)
   {
-    while(count--)
-    {
-      tmp = M1DWORD(offs);
-      *dest = M1UNC(tmp);
-      offs += 4;
-      dest--;	/* Backwards */
-    }
+	memset(dest-count+1, 0, count);
   }
   else
 #endif
   {
-    while(count--)
-    {
-      tmp = M1DWORD(offs);
-      *dest = M1UNC(tmp);
-      offs += 4;
-      dest++;	/* Forward */
-    }
+	memset(dest, 0, count);
   }
-  SET_LATCHES(offs-4-GDP->VGAGlobals.read_mapped_plane);
+  SET_LATCHES(4*eaOff + 4*count - 4);
 }
 
 GLOBAL void S_2124_RdMode1UnchainedStringReadBwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam)
 {
-  IU32 tmp;
-  IU32 offs;
-
   ENTER_FUNC(2124);
-  offs = GDP->VGAGlobals.read_mapped_plane + 4 * eaOff;
 #ifdef BACK_M
   if (destInRam)
   {
-    while(count--)
-    {
-      tmp = M1DWORD(offs);
-      *dest = M1UNC(tmp);
-      offs -= 4;
-      dest++;
-    }
+	memset(dest, 0, count);
   }
   else
 #endif
   {
-    while(count--)
-    {
-      tmp = M1DWORD(offs);
-      *dest = M1UNC(tmp);
-      offs -= 4;
-      dest--;
-    }
+	memset(dest-count+1, 0, count);	
   }
-  SET_LATCHES(offs+4-GDP->VGAGlobals.read_mapped_plane);
+  SET_LATCHES(4*eaOff + 4*count - 4);
 }
 
 

@@ -76,7 +76,7 @@ void S_2263_UnchainedByteFill_00000000_00000009_00000000 (IU32 eaOff, IU8 eaVal,
   UCBFLLF(2163,UCB4MSK,UCB3DATA,S_2264_Unchained4PlaneByteFill);
 }
 
-void S_2264_Unchained4PlaneByteFill(IU32 eaOff, IU8 eaVal, IU32 count)
+void S_2264_Unchained4PlaneByteFill(IU32 eaOff, IU32 eaVal, IU32 count)
 {
   IU32 *dest;
 
