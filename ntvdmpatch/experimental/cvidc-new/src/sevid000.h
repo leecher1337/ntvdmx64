@@ -129,14 +129,20 @@
 /******************************************************************
  * MARK                                                           *
  ******************************************************************/
+
+ /*
+ * Given an offset into CGA memory return the offset
+ * within an 8K bank of video memory.
+ */
+#define BANK_OFFSET(off) ((off) & 0xDFFF)
+
 #define CGA_MARK_STRING(count,sz) \
 { \
-  IU32 mark_offs; \
+  register	int	offset = BANK_OFFSET(eaOff); \
+  if (offset < GDP->VGAGlobals.dirty_low ) GDP->VGAGlobals.dirty_low  = offset; \
+  offset = BANK_OFFSET(eaOff + count * sz); \
+  if (offset > GDP->VGAGlobals.dirty_high) GDP->VGAGlobals.dirty_high = offset; \
   GDP->VGAGlobals.dirty_total += count; \
-  mark_offs = eaOff & 0xDFFF; \
-  if (mark_offs < GDP->VGAGlobals.dirty_low ) GDP->VGAGlobals.dirty_low  = mark_offs; \
-  mark_offs = (eaOff + count * sz) & 0xDFFF; \
-  if (mark_offs > GDP->VGAGlobals.dirty_high) GDP->VGAGlobals.dirty_high = mark_offs; \
 }
 
 
@@ -239,20 +245,21 @@
 }
 
 // Chain 2 Mode X word fill
-#define C2MXWFLLF(func,mask,trans,wrt) \
+#define C2MXWFLLF(func,mask,trans,wrt,wrtw) \
   ENTER_FUNC(func); \
   eaVal = mask(trans(eaVal)); \
   if (eaOff & 1) \
   { \
     wrt(eaOff, eaVal); \
     count--; \
+    eaOff--; \
     wrt(eaOff + 4 * count - 1, eaVal>>8); \
-    eaOff += 3; \
+    eaOff += 4; \
     eaVal = (IU16)(eaVal<<8) | (IU8)(eaVal>>8); \
   } \
   while (count--) \
   { \
-    wrt(eaOff, eaVal); \
+    wrtw(eaOff, eaVal); \
     eaOff += 4; \
   }
 
@@ -766,11 +773,10 @@
  +-----------------*/
 #define C2MXBWRTF(func,mask,trans,wrt) \
   ENTER_FUNC(func) \
-  GDP->VGAGlobals.dirty_total++; \
-  if ((eaOff & 0xDFFF) < GDP->VGAGlobals.dirty_low) \
-    GDP->VGAGlobals.dirty_low = eaOff & 0xDFFF; \
-  if ((eaOff & 0xDFFF) > GDP->VGAGlobals.dirty_high) \
-    GDP->VGAGlobals.dirty_high = eaOff & 0xDFFF; \
+  register	int	offset = BANK_OFFSET(eaOff); \
+  if (offset < GDP->VGAGlobals.dirty_low ) GDP->VGAGlobals.dirty_low  = offset; \
+  if (offset > GDP->VGAGlobals.dirty_high) GDP->VGAGlobals.dirty_high = offset; \
+  GDP->VGAGlobals.dirty_total ++; \
   wrt(eaOff, mask(trans(eaVal)));
 
 #define C2MXWWRTF(func,mask,trans,wrt) \

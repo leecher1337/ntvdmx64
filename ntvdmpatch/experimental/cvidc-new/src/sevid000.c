@@ -492,10 +492,11 @@ GLOBAL IU32 S_2108_RdMode1UnchainedWordRead (IU32 eaOff)
   IU16 ret;
 
   ENTER_FUNC(2108);
-  SET_LATCHES(eaOff * 4 + 4);
   tmp = M1DWORD(eaOff * 4);
   ret = (IU8)M1UNC(tmp);
-  tmp = M1DWORD(eaOff * 4 + 4);
+  eaOff++;
+  tmp = M1DWORD(eaOff * 4);
+  SET_LATCHES(eaOff * 4);
   return ret | (((IU16)M1UNC(tmp))<<8);
 }
 
@@ -508,7 +509,7 @@ GLOBAL IU32 S_2109_RdMode1UnchainedDwordRead(IU32 eaOff)
    */
   ENTER_FUNC(2109);
   ret = S_2108_RdMode1UnchainedWordRead (eaOff);
-  return ret | ((IU32)S_2108_RdMode1UnchainedWordRead (eaOff + 8)<<16);
+  return ret | ((IU32)S_2108_RdMode1UnchainedWordRead (eaOff + 2)<<16);
 }
 
 GLOBAL void S_2110_RdMode1UnchainedStringReadFwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam)
@@ -663,43 +664,40 @@ GLOBAL IU32 S_2126_SimpleMark ()
 /******************************************************
  * CGA mode                                           *
  ******************************************************/
-
 GLOBAL IU32 S_2127_CGAMarkByte(IU32 eaOff)
 {
+  register	int	offset = BANK_OFFSET(eaOff);
+
   ENTER_FUNC(2127);
+  if (offset < GDP->VGAGlobals.dirty_low ) GDP->VGAGlobals.dirty_low  = offset;
+  if (offset > GDP->VGAGlobals.dirty_high) GDP->VGAGlobals.dirty_high = offset;
   GDP->VGAGlobals.dirty_total++;
-  eaOff &= 0xDFFF;
-  if (eaOff < GDP->VGAGlobals.dirty_low ) GDP->VGAGlobals.dirty_low  = eaOff;
-  if (eaOff > GDP->VGAGlobals.dirty_high) GDP->VGAGlobals.dirty_high = eaOff;
 }
 
 GLOBAL IU32 S_2128_CGAMarkWord(IU32 eaOff)
 {
-  IU16 offs;
+  register int offset = BANK_OFFSET(eaOff);
 
   ENTER_FUNC(2128);
+  if (offset < GDP->VGAGlobals.dirty_low ) GDP->VGAGlobals.dirty_low  = offset;
+  if (offset > GDP->VGAGlobals.dirty_high) GDP->VGAGlobals.dirty_high = offset + 1;
   GDP->VGAGlobals.dirty_total += 2;
-  offs = eaOff & 0xDFFF;
-  if (offs < GDP->VGAGlobals.dirty_low ) GDP->VGAGlobals.dirty_low  = offs;
-  offs = ((IU16)eaOff + 1) & 0xDFFF;
-  if (offs > GDP->VGAGlobals.dirty_high) GDP->VGAGlobals.dirty_high = offs;
 }
 
 GLOBAL IU32 S_2129_CGAMarkDword(IU32 eaOff)
 {
-  IU16 offs;
+  register int offset = BANK_OFFSET(eaOff);
 
   ENTER_FUNC(2129);
+  if (offset < GDP->VGAGlobals.dirty_low ) GDP->VGAGlobals.dirty_low  = offset;
+  offset = BANK_OFFSET((IU16)eaOff + 3);
+  if (offset > GDP->VGAGlobals.dirty_high) GDP->VGAGlobals.dirty_high = offset;
   GDP->VGAGlobals.dirty_total += 4;
-  offs = eaOff & 0xDFFF;
-  if (offs < GDP->VGAGlobals.dirty_low ) GDP->VGAGlobals.dirty_low  = offs;
-  offs = ((IU16)eaOff + 3) & 0xDFFF;
-  if (offs > GDP->VGAGlobals.dirty_high) GDP->VGAGlobals.dirty_high = offs;
 }
 
 GLOBAL IU32 S_2130_CGAMarkString(IU32 eaOff, IU32 count)
 {
-  ENTER_FUNC(2129);
+  ENTER_FUNC(2130);
   CGA_MARK_STRING(count,sizeof(IU8));
 }
 
@@ -710,7 +708,7 @@ GLOBAL IU32 S_2130_CGAMarkString(IU32 eaOff, IU32 count)
  ******************************************************/
 GLOBAL IU32 S_2131_UnchainedMarkByte(IU32 eaOff)
 {
-  IUH offs;
+  IS32 offs;
 
   ENTER_FUNC(2131);
   GDP->VGAGlobals.dirty_total++;
@@ -722,7 +720,7 @@ GLOBAL IU32 S_2131_UnchainedMarkByte(IU32 eaOff)
 
 GLOBAL IU32 S_2132_UnchainedMarkWord(IU32 eaOff)
 {
-  IUH offs;
+  IS32 offs;
 
   ENTER_FUNC(2132);
   GDP->VGAGlobals.dirty_total += 2;
@@ -738,7 +736,7 @@ GLOBAL IU32 S_2132_UnchainedMarkWord(IU32 eaOff)
 
 GLOBAL IU32 S_2133_UnchainedMarkDword(IU32 eaOff)
 {
-  IUH offs;
+  IS32 offs;
 
   ENTER_FUNC(2133);
   // BUGBUG? In EVID src, it's 2, but that doesn't make sense to me:
@@ -754,7 +752,7 @@ GLOBAL IU32 S_2133_UnchainedMarkDword(IU32 eaOff)
 
 GLOBAL IU32 S_2134_UnchainedMarkString(IU32 eaOff, IU32 count)
 {
-  IUH offs, offslo;
+  IS32 offs, offslo;
 
   ENTER_FUNC(2134);
   GDP->VGAGlobals.dirty_total += count;
@@ -889,7 +887,7 @@ GLOBAL void S_2144_SimpleWordMove_Fwd (IU32 eaOff, IHPE fromOff, IU32 count, IBO
   } 
 }
 
-GLOBAL void S_2145_SimpleDwordWrite (IU32 eaOff, IU16 eaVal)
+GLOBAL void S_2145_SimpleDwordWrite (IU32 eaOff, IU32 eaVal)
 {
   ENTER_FUNC(2145);
   GDP->VGAGlobals.dirty_total += 4;
@@ -1555,7 +1553,7 @@ void S_2238_GenericByteWrite(int eaOff, IU8 eaVal)
     if (GDP->VGAGlobals.chain == 0 && GDP->VGAGlobals.dither)
       pattern = GDP->VGAGlobals.v7_fg_latches;
     else
-      pattern = GDP->VGAGlobals.sr_lookup[eaVal & 0xF];
+      pattern = TRANS1(eaVal);
     pattern = UCBMSK(pattern);
     break;
 
@@ -1725,9 +1723,10 @@ void S_2241_GenericWordWrite(int eaOff, IU16 eaVal)
 
   if (GDP->VGAGlobals.chain == 0)
   {
+    UCBWRTWPL(4 * eaOff,pattern);
+    eaOff++;
+    UCBWRTWPL(4 * eaOff,patternHi);
     GDP->VGAGlobals.mark_byte(4 * eaOff);
-    UCBWRTWPL(4 * (eaOff+0),pattern);
-    UCBWRTWPL(4 * (eaOff+1),patternHi);
   }
   else 
   {

@@ -38,15 +38,15 @@ void S_2698_Chain2ByteMove_Copy_Fwd (IU32 eaOff, IHPE fromOff, IU32 count, IBOOL
 void S_2699_Chain2WordWrite_Copy (IU32 eaOff, IU16 eaVal)
 {
   IU8 noteven;
+  register	int	offset = BANK_OFFSET(eaOff);
 
   ENTER_FUNC(2699);
   noteven = eaOff & 1;
   GDP->VGAGlobals.dirty_total++;
-  if ((eaOff & 0xDFFE) < GDP->VGAGlobals.dirty_low)
-    GDP->VGAGlobals.dirty_low = eaOff & 0xDFFE;
-  eaOff &= 0xFFFFFFFE;
-  if (((eaOff + 1) & 0xDFFF) > GDP->VGAGlobals.dirty_high)
-    GDP->VGAGlobals.dirty_high = ((eaOff + 1) & 0xDFFF);
+  if (offset < GDP->VGAGlobals.dirty_low) GDP->VGAGlobals.dirty_low = offset;
+  eaOff &= (~1);
+  offset = BANK_OFFSET(eaOff+1);
+  if (offset > GDP->VGAGlobals.dirty_high) GDP->VGAGlobals.dirty_high = offset;
   eaOff *= sizeof(IU16);
   GDP->VGAGlobals.VGA_wplane[eaOff + noteven] = (IU8)eaVal; 
   eaOff += 2*noteven + 1;
