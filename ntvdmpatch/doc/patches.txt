@@ -27,6 +27,8 @@ ega_crash.patch     - Console graphics is required, as newer Windows display
                       crashes when not properly checked, so added checks for 
                       this.
 emm.patch           - Fixes a little problem in the EMM-Manager
+framerate.patch     - Increase screen refresh rate so that Video graphics 
+                      output is smoother and not so choppy anymore.
 fixexe.patch        - It seems like the creator of the OpenNT package 
                       accidentally compiled the fixexe.c with a 32bit Compiler
                       instead of the DOS compiler which caused int data

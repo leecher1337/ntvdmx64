@@ -1,0 +1,7 @@
+--- NT4\private\mvdm\softpc.new\base\ccpu386\c_main.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\c_main.c
+51a52,53
+> #include <gmi.h>
+> #include <gfx_upd.h>
+505a508
+> 				host_graphics_tick(); \
