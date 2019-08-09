@@ -110,9 +110,19 @@ and therefore to use it, one just has to link to cvidc-new instead of
 cvidc to use the reimplementation.
 We rely on the preprocessor a lot to generate the code.
 
-Attention: The code currently is BUGGY and not working as it should yet, 
-therefore it is just experimental until we write complete tests that can test
-old CVIDC-code and this implementation and compare the results to find buggy
-functions in the implementation. 
-The performance gain also isn't as good as I had expected, but feel free
-to correct it. Still work-in-progress.
+The performance gain also isn't as good as I had expected.
+
+There is a little test suite included that facilitated testing and finding the
+worst bugs in my implementation. Testing works as follows:
+1) Compile cvidc and cvidc-new, if not done yet
+2) cd cvidc-new\test\libtest && build
+3) cd cvidc-new\test\libprod && build
+4) cd cvidc-new\test && build
+The libraries are DLL versions of the appropriate library exposing the 
+cvid_interface declared in cfid_if.h with export name CVID_IF
+So both interfaces can run in their own DLL space without interference or 
+name collissions. These libraries then get loaded by the testpln.c test 
+program and the test program operates on both and compares internal states
+to check whether they are the same or not and returns a validation result.
+There are some errors reported, as the original CVID interface has some
+bugs in it, which the cvidc-new interface should fix.

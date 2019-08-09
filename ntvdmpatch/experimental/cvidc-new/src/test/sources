@@ -1,0 +1,55 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+
+MAJORCOMP=spc
+MINORCOMP=ntvdm
+TARGETNAME=cvidtst
+
+
+#EXEPROFILEINPUT=yes
+
+SOFTPC_TREE=$(BASEDIR)\private\mvdm\softpc.new
+
+INCLUDES=$(SOFTPC_TREE)\host\inc;$(SOFTPC_TREE)\base\inc;$(BASEDIR)\private\windows\inc
+
+
+TARGETPATH=$(SOFTPC_TREE)\base\cvidc-new\test
+TARGETTYPE=PROGRAM
+TARGETLIBS=
+
+#BACKGROUND_USE=1
+
+#SYNCHRONIZE_DRAIN=1
+#SYNCHRONIZE_BLOCK=1
+
+#BLDCRT=1 
+
+SOURCES=testpln.c
+
+
+#!INCLUDE CDEFINE.INC
+
+UMTYPE=console
+386_STDCALL=0
