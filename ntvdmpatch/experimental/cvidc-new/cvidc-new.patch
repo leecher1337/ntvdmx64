@@ -1,5 +1,5 @@
---- NT4\private\mvdm\softpc.new\base\cvidc-new\ev_glue.c
-+++ nt\private\mvdm\softpc.new\base\cvidc-new\ev_glue.c
+--- NT4\private\mvdm\softpc.new\base\cvidcnew\ev_glue.c
++++ nt\private\mvdm\softpc.new\base\cvidcnew\ev_glue.c
 36d35
 < #include "j_c_lang.h"   /* jcode to ccode register definition header */
 48c47
@@ -223,8 +223,8 @@
 < 	jccc_gdp = (IUH)Gdp;
 812d698
 < 	j_Gdp = Gdp ;
---- NT4\private\mvdm\softpc.new\base\cvidc-new\evid_c.h
-+++ nt\private\mvdm\softpc.new\base\cvidc-new\evid_c.h
+--- NT4\private\mvdm\softpc.new\base\cvidcnew\evid_c.h
++++ nt\private\mvdm\softpc.new\base\cvidcnew\evid_c.h
 74,75c74,75
 < 	IUH *fwd_str_read_addr;
 < 	IUH *bwd_str_read_addr;
@@ -246,10 +246,10 @@
 --- NT4\private\mvdm\softpc.new\base\dirs
 +++ nt\private\mvdm\softpc.new\base\dirs
 29a30
->         cvidc-new \
+>         cvidcnew \
 --- NT4\private\mvdm\softpc.new\obj.vdm\sources
 +++ nt\private\mvdm\softpc.new\obj.vdm\sources
 136c136
 < CPULIBS=$(SOFTPC_TREE)\base\ccpu386\obj\*\ccpu386.lib $(SOFTPC_TREE)\base\cvidc\obj\*\cvidc.lib
 ---
-> CPULIBS=$(SOFTPC_TREE)\base\ccpu386\obj\*\ccpu386.lib $(SOFTPC_TREE)\base\cvidc-new\obj\*\cvidc.lib
+> CPULIBS=$(SOFTPC_TREE)\base\ccpu386\obj\*\ccpu386.lib $(SOFTPC_TREE)\base\cvidcnew\obj\*\cvidc.lib
