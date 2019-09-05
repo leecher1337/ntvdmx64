@@ -1467,8 +1467,11 @@ Return Value:
 #ifdef C_VID
 				case SAS_VIDEO:	/* Video -> Video */
 					temp_func = read_b_move_ptrs(SAS_VIDEO);
-					/* There seems to be a bug in move_byte_fwd_ev_glue in generated jcode CVIDC */
-					//Source = (Source - gvi_pc_low_regen)*2 + gvi_pc_low_regen;
+					/* There seems to be a bug in move_byte_fwd_ev_glue in CVIDC.
+					 * It assumed that source is a 2cell video area and dest is 4-cell
+					 * If you check ega_copy_move, there 4byte->4byte is assumed.
+					 * So we compensate for it: */
+					Source = (Source - gvi_pc_low_regen)*2 + gvi_pc_low_regen;
 					(*temp_func)(Destination, Source, Length, 0);
 #if VIDEO_STRATEGY == 1
 					RtlCopyMemory(getPtrToPhysAddrByte(Destination), getPtrToPhysAddrByte(Source), Length);
