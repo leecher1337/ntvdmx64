@@ -1,9 +1,3 @@
-The experimental folder contains some not-ready-for-production patches and 
-enhancements by me, that can be further developed and may be of use in the 
-future. You are invited to experiment with it and fix them for production use.
-
-Here is a very short explanation:
-
 cvidc-new
 ---------
 The CVIDC interface is a little inefficient, as it is basically generated 

@@ -1,0 +1,24 @@
+--- NT4\private\mvdm\softpc.new\host\src\nt_inthk.c
++++ nt\private\mvdm\softpc.new\host\src\nt_inthk.c
+49c49
+< #if defined(CCPU) || !defined(PROD)
+---
+> #if defined(CCPU) || defined(HAXM) || !defined(PROD)
+114c114
+< #ifdef CCPU
+---
+> #if defined(CCPU) || defined(HAXM)
+177c177
+< #ifdef CCPU
+---
+> #if defined(CCPU) || defined(HAXM)
+241c241
+< #ifdef CCPU
+---
+> #if defined(CCPU) || defined(HAXM)
+--- NT4\private\mvdm\dpmi32\dpmiint.c
++++ nt\private\mvdm\dpmi32\dpmiint.c
+105a106,108
+> #endif      //i386
+> #ifdef HAXM
+> 	HaxmSetProtectedModeInterrupt(IntNumber);

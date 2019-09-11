@@ -1,0 +1,34 @@
+--- NT4\private\mvdm\softpc.new\base\video\video.c
++++ nt\private\mvdm\softpc.new\base\video\video.c
+1514a1515,1517
+> #ifdef HAXM
+> 			if (1
+> #else /* HAXM */
+1517a1521
+> #endif
+1582a1587,1589
+> #ifdef HAXM
+> 			if (1
+> #else /* HAXM */
+1585a1593
+> #endif
+2045a2054,2056
+> #ifdef HAXM
+> 			if (1
+> #else /* HAXM */
+2048a2060
+> #endif
+--- NT4\private\mvdm\softpc.new\host\src\nt_graph.c
++++ nt\private\mvdm\softpc.new\host\src\nt_graph.c
+615a616
+> #ifdef HAXM
+616c618,624
+< #ifdef MONITOR
+---
+> 	if(!video_copy)
+> 	{
+> 		video_copy = (byte *) VirtualAlloc(NULL, 0x20000,
+> 			MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+> 		if(video_copy) haxm_alloc(video_copy, 0x20000);
+> 	}
+> #elif defined(MONITOR)

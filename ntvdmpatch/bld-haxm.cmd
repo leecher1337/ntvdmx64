@@ -23,7 +23,7 @@ if exist zUPDRES.cmd (
 
 echo Building mvdm
 cd %_NTROOT%\private\mvdm
-set CCPU=1
+set HAXM=1
 build %BldFlags%
 if errorlevel 1 goto Error
 cd %_NTROOT%\private

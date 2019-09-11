@@ -1,5 +1,5 @@
---- NT4\private\mvdm\softpc.new\base\ccpu386\sas4gen.h
-+++ nt\private\mvdm\softpc.new\base\ccpu386\sas4gen.h
+--- NT4\private\mvdm\softpc.new\host\inc\x86\prod\sas4gen.h
++++ nt\private\mvdm\softpc.new\host\inc\x86\prod\sas4gen.h
 59a60
 > typedef	IU8 *	TYPE_sas_touch	IPT2(IU32,	addr, IU32,	length);
 60a62,63

@@ -1,5 +1,5 @@
---- NT4\private\mvdm\softpc.new\base\ccpu386\gdpvar.h
-+++ nt\private\mvdm\softpc.new\base\ccpu386\gdpvar.h
+--- NT4\private\mvdm\softpc.new\host\inc\x86\prod\gdpvar.h
++++ nt\private\mvdm\softpc.new\host\inc\x86\prod\gdpvar.h
 693c693,695
 < #define GLOBAL_TraceVector ((IU8 *)((IUH)Gdp + 3512))
 ---

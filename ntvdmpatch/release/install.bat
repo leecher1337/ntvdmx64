@@ -62,6 +62,7 @@ echo ---------------------------------------------
 echo Installing, please wait...
 echo ---------------------------------------------
 echo Please check for completion-message from installer in taskbar.
+if exist haxm\IntelHaxm.sys RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultInstall 132 %CD%\ntvdmx64-haxm.inf
 rundll32.exe advpack.dll,LaunchINFSection %CD%\ntvdmx64.inf
 goto fini
 
@@ -89,6 +90,8 @@ for /F "skip=2 tokens=2*" %%r in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Micros
 )
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs /f /d "%AppInit%"
 set AppInit=
+
+if exist %windir%\inf\ntvdmx64-haxm.inf RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultUninstall 132 %windir%\inf\ntvdmx64-haxm.inf
 goto fini
 
 :fini

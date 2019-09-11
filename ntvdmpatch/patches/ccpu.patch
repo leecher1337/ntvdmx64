@@ -454,7 +454,11 @@
 > 	FXTRACT(0);
 --- NT4\private\mvdm\softpc.new\base\ccpu386\sources
 +++ nt\private\mvdm\softpc.new\base\ccpu386\sources
-178c178,179
+44c44
+< INCLUDES=$(SOFTPC_TREE)\Ccpu386;$(SOFTPC_TREE)\host\inc;$(SOFTPC_TREE)\base\inc;$(SOFTPC_TREE)\host\genPg\inc
+---
+> INCLUDES=$(SOFTPC_TREE)\Ccpu386;$(SOFTPC_TREE)\host\inc;$(SOFTPC_TREE)\base\inc;$(SOFTPC_TREE)\host\genPg\inc;$(BASEDIR)\private\inc;$(SOFTPC_TREE)\host\inc\$(PROCESSOR_ARCHITECTURE)\prod
+178c179,180
 <     ntthread.c
 ---
 >     ntthread.c \

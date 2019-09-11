@@ -3,5 +3,4 @@ i386_SOURCES=i386\monitor.c \
 			 i386\spcstubs.c \
              i386\thread.c \
 			 i386\debug.c \
-             i386\int.c \
-			 i386\vglob.c
+             i386\int.c 

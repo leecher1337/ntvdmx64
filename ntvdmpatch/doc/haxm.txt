@@ -1,0 +1,119 @@
+HAXM support
+------------
+
+This is an EXPERIMENTAL patch for NTVDMx64. It tries to speed up the VM by not
+using the emulated CCPU, but instead using the Intel VT-X virtualisation 
+features to run code.
+
+Prerequisites
+-------------
+You need the special Intel HAXM driver that I built for use with NTVDM. It 
+needs support for BOPping and memory address translation.
+It is available at 
+
+https://github.com/leecher1337/haxm
+
+However currently not all functions that the modified driver includes are 
+available in this repository, so for now, you are better off with taking
+the compiled driver from haxm subdirectory.
+Of course the prerequisites of HAXM apply, so you need an Intel CPU with
+the VT-X feature available. The CPU needs to have the ability to run in UG
+(unrestricted guest) mode, some old Intel CPUs may not be capable of this.
+The installation and start of the HAXM driver is described lateron.
+Also, as I don't have a code signing certificate,this will only work if 
+your system is running in test mode and is therefore able to run unsigned
+drivers.
+
+Limitations
+-----------
+As the current implementation is only experimental, there is currently NO
+SUPPORT for protected mode!
+In order to be able to even get it up and running, you therefore need to
+remove the DOSX call in AUTOEXEC.NT file, otherwise, NTVDM will just crash
+(and thus, it will also crash with other applications that try to use
+protected mode).
+
+Graphic output currently also is a bit weird, depending on the application
+(but some applications work), so it will only work properly with text mode 
+applications.
+These limitations are due to the following problems and if you have a solution
+for them, I'd be interested to see your patches:
+HAXM provides the possibility to call back into the Hypervisor, if there is
+memory/port access to a memory area that i.e. belongs to an emulated device, 
+like the VGA adapter. This is useful and desirable, as memory access to an 
+adapter needs to get handled by the adapter emulation.
+However the process of switching between CPU and hypervisor on every access
+significally slows down the emulation, as there always needs to be a huge chunk
+of code to be run for switching. I.e. take a loop where text mode memory gets
+filled with characters or gets copied: On every byte being read or written, 
+there is a switch between hypervisor and virtual machine.
+When trying to execute a text mode application for instance, you can try this
+out by setting the VIDEO_STRATEGY define to 3 in v86\haxm\i386\monitorp.h and 
+you will see that if you start edit.com for instance, the screen output works 
+but is incredibly slow, a lot slower than using the CCPU, so there is no 
+more point for using the VT-x accelleration.
+In order to speed this up at least a bit, we make use of the same strategy
+that the V86 MONITOR uses: In textmode, the data that gets written to the MMIO
+area is the same on reading and writing, so no special planar treatment is 
+needed for emulation.
+A copy buffer named haxm_videocmp_copy gets used and the video memory is
+connected as normal memory to let the application write to and on every transition
+from HAXM to NTVDM hypervisor, the difference to the last call is being synced
+into the virtual video adapter.
+For a detailed graphic ybout this, please have a look at sas.c function 
+hax_set_ram.
+This somewhat works, but for planar graphics access, it obviously doesn't, so
+you are far better off with the classic CCPU for this type of applications.
+Normal V86 NTVDM itself did graphics only in fullscreen so that the application
+could write to the card directly, most likely for the same reasons.
+
+There are also issues with the timer, timer tick checking doesn't seem to work
+in these builds for some applications leading to invalid results when profiling, 
+i.e. using a CPU speed tester or just measuring execution time. The reason for 
+this has to be investigated further.
+
+The performance improvements largely depend on the application, but at least
+on some operations, we get better performance than with the slow CCPU (i.e.
+testing datasets in a database), however we still don't reach V86 mode 32bit
+NTVDM preformance. Therefore it's questionable if HAXM support should be developed
+any further. If somebody is interested in it, you are invited to improve these
+patches to make it stable. You'll need YODA debugger in order to analyze the
+issues with Protected mode. DPMI interrupt hooking is currently not 
+implemented properly which leads to various problems i.e. with DOSX.EXE
+
+Compilation
+-----------
+The patches are applied automatically on execution of main patch.cmd
+The only difference is that you have to run bld-haxm.cmd instead of bld.cmd
+on building the NTVDM.
+For creating the release Installation-package, use mkrelease-haxm.bat 
+
+
+Usage/Installation
+------------------
+The NTVDM stops an IntelHaxm driver instance, if it detects one, as the original
+driver doesn't offer the features required by NTVDMx64.
+If there is a service named IntelHaxmNtvdm on the system, it tries to start it,
+if not already running. 
+
+So, first you have to take preparations to ensure that HAXM runs on your system.
+See HAXM installation instruction page for details:
+https://github.com/intel/haxm/blob/master/docs/manual-windows.md#testing-on-windows
+Basically:
+  * Enable VT-x in BIOS, if not present
+  * bcdedit /set hypervisorlaunchtype off
+  * bcdedit /set testsigning on
+  * certmgr /add haxm\IntelHaxm.cer /s /r localMachine root
+
+
+To use the modified HAXM driver, you can just use the installer in the 
+release directory, that should install the driver with the name 
+IntelHaxmNtvdm into the system and copy it to the drivers directory.
+
+If you do not want to install the driver to your system, you can 
+load it manually by using the HaxmLoader.exe from HAXM project 
+(then you don't need to install the driver into the system,
+remove haxm directory from release folder in this case prior
+to installation, so that it doesn't get installed).
+  * HaxmLoader.exe -i X:\path\to\IntelHaxm.sys
+

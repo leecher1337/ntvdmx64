@@ -1,0 +1,15 @@
+--- NT4\private\mvdm\softpc.new\host\src\nt_mem.c
++++ nt\private\mvdm\softpc.new\host\src\nt_mem.c
+445a446,452
+> #ifdef HAXM
+> 	if (commitSize && Commit)
+> 	{
+> 		haxm_alloc(Start_of_M_area + *INTELAddress, Size);
+> 		sas_connect_memory(*INTELAddress, *INTELAddress + Size - 1, SAS_RAM);
+> 	}
+> #endif
+492a500,503
+> #ifdef HAXM
+> 	haxm_alloc(Start_of_M_area + INTELAddress, Size);
+> 	sas_connect_memory(INTELAddress, INTELAddress + Size - 1, SAS_RAM);
+> #endif

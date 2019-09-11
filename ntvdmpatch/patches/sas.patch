@@ -488,7 +488,7 @@ Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
 > 
 > #ifdef C_VID
 > 				case SAS_VIDEO:	/* Video -> Video */
-> 					move_dword_fwd_ev_glue(dest, src, len, 0);
+> 					move_dword_fwd_ev_glue(dest, src, len/4, 0);
 > 					break;
 > #endif /* C_VID */
 > 			}

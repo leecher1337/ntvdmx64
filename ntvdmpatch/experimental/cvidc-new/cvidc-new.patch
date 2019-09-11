@@ -2,12 +2,6 @@
 +++ nt\private\mvdm\softpc.new\base\cvidcnew\ev_glue.c
 36d35
 < #include "j_c_lang.h"   /* jcode to ccode register definition header */
-48c47
-< /* defines in j_c_lang.h
----
-> extern IU32 gvi_pc_low_regen;
-54d50
-< extern IU32 gvi_pc_low_regen;
 64,65d58
 < IHPE EvidPortFuncs;	/* CEvid extern */
 < IHPE AdapCOutb;		/* CEvid extern */
@@ -249,7 +243,11 @@
 >         cvidcnew \
 --- NT4\private\mvdm\softpc.new\obj.vdm\sources
 +++ nt\private\mvdm\softpc.new\obj.vdm\sources
-136c136
+143c143
 < CPULIBS=$(SOFTPC_TREE)\base\ccpu386\obj\*\ccpu386.lib $(SOFTPC_TREE)\base\cvidc\obj\*\cvidc.lib
 ---
 > CPULIBS=$(SOFTPC_TREE)\base\ccpu386\obj\*\ccpu386.lib $(SOFTPC_TREE)\base\cvidcnew\obj\*\cvidc.lib
+150c150
+< CPULIBS=$(BASEDIR)\public\sdk\lib\*\haxm.lib $(SOFTPC_TREE)\base\cvidc\obj\*\cvidc.lib
+---
+> CPULIBS=$(BASEDIR)\public\sdk\lib\*\haxm.lib $(SOFTPC_TREE)\base\cvidcnew\obj\*\cvidc.lib

@@ -1,0 +1,76 @@
+;-------------------------------------------------------------------------
+; haxm.inf -- Intel HAXM special build for NTVDMx64
+;-------------------------------------------------------------------------
+[Version]
+ Signature   = "$Windows NT$"
+ Class       = System
+ ClassGUID   = {8ECC055D-047F-11D1-A537-0000F8753ED1}
+ Provider    = %CompanyName%
+ DriverVer   = 01/09/2019,4.1.0.0
+
+;-------------------------------------------------------------------------
+; Installation Section
+;-------------------------------------------------------------------------
+[DefaultInstall]
+ CopyFiles       = HAXM.CopyFiles.Sys, HAXM.Inf.Files.Add
+
+[DefaultUninstall]
+ DelFiles        = HAXM.DelFiles.Sys, HAXM.Inf.Files.Del
+
+; ------------------------------------------------------------------------
+; File copy
+; ------------------------------------------------------------------------
+[SourceDisksNames]
+ 1=%DiskDescription%,"",,"\haxm"
+
+[SourceDisksFiles]
+ IntelHaxm.sys=1
+
+[DestinationDirs]
+ DefaultDestDir = 12
+ HAXM.CopyFiles.Sys   = 12   ; %windir%\System32\drivers
+ HAXM.DelFiles.Sys = 12
+ HAXM.Inf.Files.Add = 17
+ HAXM.Inf.Files.Del = 17
+
+[HAXM.CopyFiles.Sys]
+ IntelHaxmNtvdm.sys,IntelHaxm.sys
+
+[HAXM.DelFiles.Sys]
+ IntelHaxmNtvdm.sys
+
+[HAXM.Inf.Files.Add]
+ntvdmx64-haxm.inf
+
+[HAXM.Inf.Files.Del]
+ntvdmx64-haxm.inf
+ntvdmx64-haxm.PNF
+
+;-------------------------------------------------------------------------
+; Service installation support
+;-------------------------------------------------------------------------
+[DefaultInstall.Services]
+ AddService=IntelHaxmNtvdm,0,HAXM.Service
+
+[HAXM.Service]
+ DisplayName     = %HAXM_Desc%
+ ServiceType     = 1 ;SERVICE_KERNEL_DRIVER
+ StartType       = 2 ;SERVICE_AUTO_START
+ ErrorControl    = 0 ;SERVICE_ERROR_IGNORE
+ ServiceBinary   = %12%\IntelHaxmNtvdm.sys
+ Description     = %HAXM_Desc%
+
+;-------------------------------------------------------------------------
+; Support for removal
+;-------------------------------------------------------------------------
+[DefaultUninstall.Services]
+ DelService=IntelHaxmNtvdm,0x200
+
+;-------------------------------------------------------------------------
+; String definitions
+;-------------------------------------------------------------------------
+[Strings]
+ CompanyName = "Intel"
+ HAXM_Desc = "Intel HAXM driver with enhancements for NTVDMx64"
+ DiskDescription = "IntelHaxmNtvdm install disk"
+ REG_DWORD = 0x10001
