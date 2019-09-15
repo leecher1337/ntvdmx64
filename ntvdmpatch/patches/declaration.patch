@@ -117,3 +117,9 @@
 < 			update_alg.mark_wfill = (boolean(*)())cga_mark_string;
 ---
 > 			update_alg.mark_wfill = (boolean(*)())cga_mark_wfill;
+--- NT4\private\mvdm\dos\command\cmdexec.c
++++ nt\private\mvdm\dos\command\cmdexec.c
+604c604
+< VDMINFO VDMInfo;
+---
+> VDMINFO VDMInfo={0};
