@@ -1,0 +1,75 @@
+About MinNT
+===========
+Stephanos Ioannidis, who thankfully gave us the build environment for NT
+and the OpenNT project also created a NT build system that just features a 
+minimal NT core to build Project in the subtree of NT, which has the following
+advantages over the original NT build system
+
+ * It contains a more recent NTVDM sourcecode version!
+ * It also operates on newer Windows Versions than XP, thus it can be used
+   for building on the target machine
+ * The newer source is multilingual and allows you building non-English
+   NTVDM versions
+
+As there are significant advantages in using this build system, I made some
+patches for it to actually get it working with NTVDMx64.
+As it lacks some libraries/headers, you still need the old NT4 sourcecode
+to pull in some required dependencies.
+
+As the sourcecode version is different, NTVDMx64 patches need to be ported to
+this sourcecode version. This is currently work in progress.
+This document will be enhanced as soon as patches are ported.
+
+Requirements
+============
+ * MinNT repository with NTVDM with latest commits as of Apr 16, 2017 
+   (q160765803-minint4-85fac4faadc7)
+   opennt.net site contains some hints on where to find it.
+ * Windows NT4 repository old-src.trunk.r687.20150728.7z
+ * Windows Driver Kit Version 7.1.0 
+   https://www.microsoft.com/en-us/download/details.aspx?id=11800
+ * Microsoft Windows SDK for Windows 7 and .NET Framework 4 (ISO) 
+   https://www.microsoft.com/en-us/download/details.aspx?id=8442
+ * NTOSBE-master build environment
+   https://github.com/stephanosio/NTOSBE
+
+
+Setup MINNT build environment
+=============================
+
+1) Place the following directories in your build directory:
+
+ * Extract NTOSBE-master
+ * Create minnt directory and extract contents of minnt (q160765803-minint4-85fac4faadc7) to it
+ * Extract our ntvdmpatch repository 
+
+You now have:
+
+  minnt
+  NTOSBE-master
+  ntvdmpatch
+
+2) Download required SDK ISOs and old-src.trunk.r687.20150728.7z and place them in
+   ntvdmpatch\minnt\work
+
+ * https://www.microsoft.com/en-us/download/details.aspx?id=11800
+ * https://www.microsoft.com/en-us/download/details.aspx?id=8442
+ * Google old-src.trunk.r687.20150728.7z 
+
+You now have in ntvdmpatch\minnt\work:
+
+  GRMSDK_EN_DVD.iso
+  GRMWDK_EN_7600_1.ISO
+  old-src.trunk.r687.20150728.7z
+
+3) Go to ntvdmpatch\minnt\ and run prepare.cmd
+minntfix directory will now be prepared with the missing files that need to be 
+added to minnt but cannot be supplied by me due to legal reasons.
+
+4) In ntvdmpatch\minnt\ now run patch.cmd to create a working minnt repository
+
+5) Go to NTOSBE-master directory and run sizzle_minnt.cmd
+
+6) As you can see, on first run, you need to now execute buildrepoidw.cmd on 
+   OpeNT shell
+

@@ -1,0 +1,16 @@
+--- NTOSBE-master\src\sdktools\build\buildutl.c
++++ NTOSBE-master\src\sdktools\build\buildutl.c
+16a17,19
+> #ifndef INVALID_FILE_ATTRIBUTES
+> #define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
+> #endif
+294,295c297,298
+<         pmh->pmhNext->pmhPrev = pmh->pmhPrev;
+<         pmh->pmhPrev->pmhNext = pmh->pmhNext;
+---
+>         if (pmh->pmhNext) pmh->pmhNext->pmhPrev = pmh->pmhPrev;
+>         if (pmh->pmhPrev) pmh->pmhPrev->pmhNext = pmh->pmhNext;
+--- NTOSBE-master\src\sdktools\build\sources
++++ NTOSBE-master\src\sdktools\build\sources
+32a33
+> NO_SAFESEH=1

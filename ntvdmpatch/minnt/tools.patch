@@ -1,0 +1,10 @@
+--- base\mvdm\dos\v86\tools\src\buildidx\buildidx.c
++++ base\mvdm\dos\v86\tools\src\buildidx\buildidx.c
+99c99
+<    while ( !feof(msgfile) && !feof(idxfile) && comparable )
+---
+>    while ( comparable && !feof(msgfile) && !feof(idxfile) )
+151c151
+<      fclose(idxfile) ;
+---
+>      if (idxfile) fclose(idxfile) ;
