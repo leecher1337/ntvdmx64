@@ -421,8 +421,8 @@
     } \
   } \
 }
-#define UCBCPYB4PLN(funcnum,dir,trans,macro,dstsz)  UCBCPYB4PLNC(funcnum,dir,trans,macro,IU32,count)
-#define UCWCPYW4PLN(funcnum,dir,trans,macro,dstsz)  UCBCPYB4PLNC(funcnum,dir,trans,macro,IU32,count*2)
+#define UCBCPYB4PLN(funcnum,dir,trans,macro)  UCBCPYB4PLNC(funcnum,dir,trans,macro,IU32,count)
+#define UCWCPYW4PLN(funcnum,dir,trans,macro)  UCBCPYB4PLNC(funcnum,dir,trans,macro,IU32,count*2)
 
 
 /*-----------------+
@@ -468,8 +468,8 @@
     } \
   } \
 }
-#define C4BCPYB4PLN(funcnum,dir,trans,macro,dstsz)  UCBCPYB4PLNC(funcnum,dir,trans,macro,IU8,count)
-#define C4WCPYW4PLN(funcnum,dir,trans,macro,dstsz)  UCBCPYB4PLNC(funcnum,dir,trans,macro,IU8,count*2)
+#define C4BCPYB4PLN(funcnum,dir,trans,macro)  UCBCPYB4PLNC(funcnum,dir,trans,macro,IU8,count)
+#define C4WCPYW4PLN(funcnum,dir,trans,macro)  UCBCPYB4PLNC(funcnum,dir,trans,macro,IU8,count*2)
 
 #define C4BCPYB4PLN1(funcnum,dir,trans,macro)  C4CPYB4PLNC1(funcnum,dir,trans,macro,count)
 #define C4WCPYW4PLN1(funcnum,dir,trans,macro)  C4CPYB4PLNC1(funcnum,dir,trans,macro,count*2)
