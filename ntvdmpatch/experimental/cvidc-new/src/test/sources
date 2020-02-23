@@ -35,7 +35,7 @@ SOFTPC_TREE=$(BASEDIR)\private\mvdm\softpc.new
 INCLUDES=$(SOFTPC_TREE)\host\inc;$(SOFTPC_TREE)\base\inc;$(BASEDIR)\private\windows\inc
 
 
-TARGETPATH=$(SOFTPC_TREE)\base\cvidc-new\test
+TARGETPATH=$(SOFTPC_TREE)\base\cvidcnew\test
 TARGETTYPE=PROGRAM
 TARGETLIBS=
 

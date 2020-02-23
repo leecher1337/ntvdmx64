@@ -30,7 +30,7 @@ UMTYPE=windows
 #EXEPROFILEINPUT=yes
 
 SOFTPC_TREE=$(BASEDIR)\private\mvdm\softpc.new
-TARGETLIBS=$(SOFTPC_TREE)\base\cvidc-new\obj\*\cvidc.lib \
+TARGETLIBS=$(SOFTPC_TREE)\base\cvidcnew\obj\*\cvidc.lib \
 	$(BASEDIR)\public\sdk\lib\*\kernel32.lib 
 
 INCLUDES=$(SOFTPC_TREE)\host\inc;$(SOFTPC_TREE)\base\inc;$(BASEDIR)\private\windows\inc
