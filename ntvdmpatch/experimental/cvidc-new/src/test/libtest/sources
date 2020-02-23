@@ -36,7 +36,7 @@ TARGETLIBS=$(SOFTPC_TREE)\base\cvidcnew\obj\*\cvidc.lib \
 INCLUDES=$(SOFTPC_TREE)\host\inc;$(SOFTPC_TREE)\base\inc;$(BASEDIR)\private\windows\inc
 
 
-TARGETPATH=$(SOFTPC_TREE)\base\cvidc-new\test
+TARGETPATH=$(SOFTPC_TREE)\base\cvidcnew\test
 DLLENTRY=InitializeDLL
 DLLBASE=0x68300000
 

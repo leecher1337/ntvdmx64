@@ -2,6 +2,7 @@
 #include <ntrtl.h>
 #include <nturtl.h>
 #include <windows.h>
+#include <malloc.h>
 #include "host_def.h"
 #include "insignia.h"
 #include "cpu_vid.h"
