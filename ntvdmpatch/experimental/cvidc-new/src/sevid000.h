@@ -263,7 +263,7 @@
     eaOff += 4; \
   }
 
-#define C2MXDFLLF(func,mask,trans,wrt) \
+#define C2MXDFLLF(func,mask,trans,wrt,wrtw) \
   ENTER_FUNC(func); \
   eaVal = mask(trans(eaVal)); \
   if (eaOff & 1) \
@@ -271,14 +271,14 @@
     wrt(eaOff, eaVal); \
     count--; \
     wrt(eaOff + 8 * count - 1, eaVal>>24); \
+    wrtw(eaOff + 3, eaVal & 0xFFFF0000 | eaVal >> 24); \
     eaOff += 7; \
-    wrt(eaOff + 3, eaVal >> 24); \
-    eaVal = (IU16)(eaVal<<8) | (IU8)(eaVal>>8) | (eaVal>>24>>16); \
+    eaVal = (IU16)(eaVal<<8) | (IU8)(eaVal>>8) | (eaVal>>24<<16); \
   } \
   while (count--) \
   { \
-    wrt(eaOff, eaVal); \
-    wrt(eaOff + 4, eaVal>>16); \
+    wrtw(eaOff, eaVal); \
+    wrtw(eaOff + 4, eaVal & 0xFFFF0000 | (eaVal>>16)); \
     eaOff += 8; \
   }
 
@@ -398,7 +398,7 @@
   count = cnt; \
   if ( srcInRAM ) \
   { \
-    dest = &GDP->VGAGlobals.VGA_wplane[eaOff]; \
+    dest = (dstsz *)&GDP->VGAGlobals.VGA_wplane[eaOff]; \
     while(count--) \
     { \
       data = trans(*((IU8*)fromOff)); \
@@ -409,7 +409,7 @@
   } \
   else \
   { \
-    dest = &GDP->VGAGlobals.VGA_wplane[eaOff]; \
+    dest = (dstsz *)&GDP->VGAGlobals.VGA_wplane[eaOff]; \
     rplane = (IU32*)&GDP->VGAGlobals.VGA_rplane[destOff]; \
     while(count--) \
     { \
@@ -563,7 +563,7 @@
       wrf(eaOff + 1,  *(IU8*)fromOff); \
       fromOff += RAM_DIR * dir; \
       eaOff += 4 * dir; \
-      count--; \
+      count-=2; \
     } \
     if (count == 1) \
       wrf(eaOff,  *(IU8*)fromOff); \
@@ -587,7 +587,7 @@
       wrf(eaOff + (dir),  GDP->VGAGlobals.scratch[fromOff]); \
       fromOff += dir; \
       eaOff += 4 * dir; \
-      count--; \
+      count-=2; \
     } \
     if (count == 1) \
       wrf(eaOff,  GDP->VGAGlobals.scratch[fromOff]); \
@@ -598,24 +598,24 @@
 
 #define C2MXWMOV(func,dir,wrbf,wrwf) \
   ENTER_FUNC(func); \
-  CGA_MARK_STRING(count,sizeof(IU16)*dir); \
+  CGA_MARK_STRING(count,sizeof(IU16)*(dir)); \
   if (srcInRAM) \
   { \
     if (((eaOff & 1) && dir>0) || (!(eaOff & 1) && dir<0)) \
     { \
       wrbf(eaOff, *(IU8*)fromOff); \
       count--; \
-      wrbf(eaOff + (4 * count - 1) * dir, *((IU8*)fromOff + ((count * sizeof(IU16) - 1) * RAM_DIR * dir))); \
-      fromOff += RAM_DIR * dir; \
-      eaOff+=3 * dir; \
+      wrbf(eaOff + (4 * count - 1) * (dir), *((IU8*)fromOff + ((count * sizeof(IU16) - 1) * RAM_DIR * (dir)))); \
+      fromOff += RAM_DIR * (dir); \
+      eaOff+=3 * (dir); \
     } \
     if (RAM_DIR<0) fromOff+=RAM_DIR; \
     while (count) \
     { \
       wrwf(eaOff,  *(IU16*)(fromOff)); \
-      fromOff += RAM_DIR * dir * sizeof(IU16); \
+      fromOff += RAM_DIR * (dir) * sizeof(IU16); \
       count--; \
-      eaOff += 4 * dir; \
+      eaOff += 4 * (dir); \
     } \
   } \
   else \
@@ -628,14 +628,14 @@
       wrbf(eaOff, GDP->VGAGlobals.scratch[fromOff]); \
       fromOff+=(dir>0?1:-2); \
       count--; \
-      wrbf(eaOff + (4 * count - 1) * dir, GDP->VGAGlobals.scratch[(count * sizeof(IU16) - 1) * dir]); \
+      wrbf(eaOff + (4 * count - 1) * (dir), GDP->VGAGlobals.scratch[(count * sizeof(IU16) - 1) * (dir)]); \
       eaOff+=(dir>0?2:-4); \
     } \
     while (count) \
     { \
       wrwf(eaOff,  *(IU16*)GDP->VGAGlobals.scratch[fromOff]); \
-      eaOff += 4 * dir; \
-      fromOff += sizeof(IU16) * dir; \
+      eaOff += 4 * (dir); \
+      fromOff += sizeof(IU16) * (dir); \
       count--; \
     } \
   }

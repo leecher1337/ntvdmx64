@@ -22,9 +22,9 @@ void S_2720_Chain2ModeXBwdWordMove_00000002 (IU32 eaOff, IHPE fromOff, IU32 coun
   C2MXWMOVBWD(2720, S_2661_Chain2ModeXByteWrite_00000002, S_2667_Chain2ModeXWordWrite_00000002);
 }
 
-void S_2721_Chain2DwordMove_00000002_Bwd (IU32 eaOff, IU32 eaVal)
+void S_2721_Chain2DwordMove_00000002_Bwd (IU32 eaOff, IHPE fromOff, IU32 count, IBOOL srcInRAM) 
 {
-  S_2722_Chain2ModeXBwdDwordMove_00000002(eaOff, eaVal);
+  S_2722_Chain2ModeXBwdDwordMove_00000002(eaOff, fromOff, count, srcInRAM);
 }
 
 void S_2722_Chain2ModeXBwdDwordMove_00000002 (IU32 eaOff, IHPE fromOff, IU32 count, IBOOL srcInRAM) 

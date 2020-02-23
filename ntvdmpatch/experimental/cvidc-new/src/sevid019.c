@@ -86,7 +86,7 @@ void S_2692_Chain2DwordFill_00000003 (IU32 eaOff, IU32 eaVal, IU32 count)
 
 void S_2693_Chain2ModeXDwordFill_00000003 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C2MXDFLLF(2693,NOTRANS,NOTRANS,S_2679_Chain2ModeXByteWrite_00000003);
+  C2MXDFLLF(2693,NOTRANS,NOTRANS,S_2679_Chain2ModeXByteWrite_00000003,S_2685_Chain2ModeXWordWrite_00000003);
 }
 
 void S_2694_Chain2DwordMove_00000003_Fwd (IU32 eaOff, IHPE fromOff, IU32 count, IBOOL srcInRAM)

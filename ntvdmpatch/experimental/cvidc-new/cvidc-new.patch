@@ -241,6 +241,56 @@
 +++ nt\private\mvdm\softpc.new\base\dirs
 29a30
 >         cvidcnew \
+--- NT4\private\mvdm\softpc.new\base\cvidcnew\evidfunc.h
++++ nt\private\mvdm\softpc.new\base\cvidcnew\evidfunc.h
+
+665,666c666
+< extern void S_2118_SimpleStringRead IPT3(IU8 *, dest, IU32, eaOff, IU32, count);
+< extern void S_2118_SimpleStringRead IPT3(IU8 *, dest, IU32, eaOff, IU32, count);
+---
+> extern void S_2118_SimpleStringRead(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam);
+670,671c670,671
+< extern void S_2114_DisabledRAMStringReadFwd IPT3(IU8 *, dest, IU32, eaOff, IU32, count);
+< extern void S_2125_DisabledRAMStringReadBwd IPT3(IU8 *, dest, IU32, eaOff, IU32, count);
+---
+> extern void S_2114_DisabledRAMStringReadFwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam);
+> extern void S_2125_DisabledRAMStringReadBwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam);
+675,676c675,676
+< extern void S_2098_RdMode0UnchainedStringReadFwd IPT3(IU8 *, dest, IU32, eaOff, IU32, count);
+< extern void S_2121_RdMode0UnchainedStringReadBwd IPT3(IU8 *, dest, IU32, eaOff, IU32, count);
+---
+> extern void S_2098_RdMode0UnchainedStringReadFwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam);
+> extern void S_2121_RdMode0UnchainedStringReadBwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam);
+680,681c680,681
+< extern void S_2110_RdMode1UnchainedStringReadFwd IPT3(IU8 *, dest, IU32, eaOff, IU32, count);
+< extern void S_2124_RdMode1UnchainedStringReadBwd IPT3(IU8 *, dest, IU32, eaOff, IU32, count);
+---
+> extern void S_2110_RdMode1UnchainedStringReadFwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam);
+> extern void S_2124_RdMode1UnchainedStringReadBwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam);
+685,686c685,686
+< extern void S_2090_RdMode0Chain2StringReadFwd IPT3(IU8 *, dest, IU32, eaOff, IU32, count);
+< extern void S_2119_RdMode0Chain2StringReadBwd IPT3(IU8 *, dest, IU32, eaOff, IU32, count);
+---
+> extern void S_2090_RdMode0Chain2StringReadFwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam);
+> extern void S_2119_RdMode0Chain2StringReadBwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam);
+690,691c690,691
+< extern void S_2102_RdMode1Chain2StringReadFwd IPT3(IU8 *, dest, IU32, eaOff, IU32, count);
+< extern void S_2122_RdMode1Chain2StringReadBwd IPT3(IU8 *, dest, IU32, eaOff, IU32, count);
+---
+> extern void S_2102_RdMode1Chain2StringReadFwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam);
+> extern void S_2122_RdMode1Chain2StringReadBwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam);
+695,696c695,696
+< extern void S_2094_RdMode0Chain4StringReadFwd IPT3(IU8 *, dest, IU32, eaOff, IU32, count);
+< extern void S_2120_RdMode0Chain4StringReadBwd IPT3(IU8 *, dest, IU32, eaOff, IU32, count);
+---
+> extern void S_2094_RdMode0Chain4StringReadFwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam);
+> extern void S_2120_RdMode0Chain4StringReadBwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam);
+700,701c700,701
+< extern void S_2106_RdMode1Chain4StringReadFwd IPT3(IU8 *, dest, IU32, eaOff, IU32, count);
+< extern void S_2123_RdMode1Chain4StringReadBwd IPT3(IU8 *, dest, IU32, eaOff, IU32, count);
+---
+> extern void S_2106_RdMode1Chain4StringReadFwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam);
+> extern void S_2123_RdMode1Chain4StringReadBwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam);
 --- NT4\private\mvdm\softpc.new\obj.vdm\sources
 +++ nt\private\mvdm\softpc.new\obj.vdm\sources
 143c143

@@ -52,6 +52,7 @@ GLOBAL IU32 S_2089_RdMode0Chain2DwordRead(IU32 eaOff)
 
   ENTER_FUNC(2089);
   ret = S_2088_RdMode0Chain2WordRead (eaOff);
+  // NB: cvidc buggy here, doesn't use hiword (<<16), discards it instead
   return ret | ((IU32)S_2088_RdMode0Chain2WordRead (eaOff + 4)<<16);
 }
 
@@ -866,7 +867,7 @@ GLOBAL void S_2144_SimpleWordMove_Fwd (IU32 eaOff, IHPE fromOff, IU32 count, IBO
 
   ENTER_FUNC(2143);
   GDP->VGAGlobals.dirty_total += 2 * count;
-  dest = (IU16*)&GDP->VGAGlobals.screen_ptr[eaOff];
+  dest = (IU8*)&GDP->VGAGlobals.screen_ptr[eaOff];
   if (srcInRAM)
   {
 #ifdef BACK_M
@@ -967,7 +968,7 @@ GLOBAL void S_2149_SimpleWordMove_Bwd (IU32 eaOff, IHPE fromOff, IU32 count, IBO
 
   ENTER_FUNC(2149);
   GDP->VGAGlobals.dirty_total += 2 * count;
-  dest = (IU16*)&GDP->VGAGlobals.screen_ptr[eaOff];
+  dest = (IU8*)&GDP->VGAGlobals.screen_ptr[eaOff];
   if (srcInRAM)
   {
 #ifdef BACK_M
@@ -1111,7 +1112,7 @@ void S_2162_CopyWord1PlaneUnchained_00000000_0000000e_00000001_00000000 (IU32 ea
 {
   // NB: Original routines do all the stuff, but I think it's no different to:
   ENTER_FUNC(2162);
-  return S_2156_CopyByte1PlaneUnchained_00000000_0000000e_00000001_00000000(eaOff, fromOff, destOff, count * 2, srcInRAM, shift);
+  S_2156_CopyByte1PlaneUnchained_00000000_0000000e_00000001_00000000(eaOff, fromOff, destOff, count * 2, srcInRAM, shift);
 }
 
 void S_2163_UnchainedDwordWrite_00000000_0000000e_00000001(IU32 eaOff, IU32 eaVal)
@@ -1286,7 +1287,7 @@ void S_2188_CopyWord1PlaneUnchained_00000002_0000000e_00000001_00000000 (IU32 ea
 {
   ENTER_FUNC(2188);
   // NB: Original routines do all the stuff, but I think it's no different to:
-  return S_2183_CopyByte1PlaneUnchained_00000002_0000000e_00000001_00000000(eaOff, fromOff, destOff, count * 2, srcInRAM, shift);
+  S_2183_CopyByte1PlaneUnchained_00000002_0000000e_00000001_00000000(eaOff, fromOff, destOff, count * 2, srcInRAM, shift);
 }
 
 void S_2189_UnchainedDwordWrite_00000002_0000000e_00000001(IU32 eaOff, IU32 eaVal)

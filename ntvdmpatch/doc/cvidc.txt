@@ -120,3 +120,6 @@ program and the test program operates on both and compares internal states
 to check whether they are the same or not and returns a validation result.
 There are some errors reported, as the original CVID interface has some
 bugs in it, which the cvidc-new interface should fix.
+Please note, that the original CVIDC interface is BACK_M only, so you need
+to set BACK_M #define in both CVIDC and CVIDCNEW and also in testpln.c 
+for verification. For Production, DON'T use BACK_M!

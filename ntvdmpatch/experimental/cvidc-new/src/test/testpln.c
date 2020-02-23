@@ -21,6 +21,8 @@ struct cvid_interface *Itst, *Iprd;
 IU8 *EGA_planestst, *EGA_planesprd;
 IU8 *video_copytst, *video_copyprd;
 
+void dump_planes();
+
 #define TEST_RW_FUNC(wrfunc,rdfunc,mask) \
 	IU32 datatst, dataprod; \
 	int ret = 0; \
@@ -30,6 +32,8 @@ IU8 *video_copytst, *video_copyprd;
 	{ \
 		fprintf (STDERR, #wrfunc" failed, plane buffers differ!\n"); \
 		dump_planes(); \
+		check_vgaglobals(#rdfunc); \
+		dump_vgaglobals(); \
 		exit(-1); \
 		ret = -1; \
 	} \
@@ -50,7 +54,7 @@ IU8 *video_copytst, *video_copyprd;
 #define MEM_OFFS 0
 #endif
 
-int hexdump(unsigned char *buf, int len)
+void hexdump(unsigned char *buf, int len)
 {
 	int i;
 	for (i=0; i<len; i++) fprintf(STDERR, "%02X", buf[i]);
@@ -66,8 +70,37 @@ int compare_val(char *pszFunc, unsigned int prd, unsigned int tst, char *pszWhat
 		exit(-1);
 		return -1;
 	}
+	return 0;
 }
 
+void dump_val(unsigned int prd, unsigned int tst, char *pszWhat)
+{
+	printf ("%-16s:\t%08X\t%08X\n", pszWhat, prd, tst);
+}
+
+void check_vgaglobals(char *pszFunc)
+{
+	compare_val(pszFunc, Iprd->Video->GetVideolatches(), Itst->Video->GetVideolatches(), "video latches");
+	compare_val(pszFunc, Iprd->Video->GetVideobit_prot_mask(), Itst->Video->GetVideobit_prot_mask(), "bit_prot_mask");
+	compare_val(pszFunc, Iprd->Video->GetVideosr_masked_val(), Itst->Video->GetVideosr_masked_val(), "sr_masked_val");
+	compare_val(pszFunc, Iprd->Video->GetVideodirty_total(), Itst->Video->GetVideodirty_total(), "dirty_total");
+	compare_val(pszFunc, Iprd->Video->GetVideodirty_low(), Itst->Video->GetVideodirty_low(), "dirty_low");
+	compare_val(pszFunc, Iprd->Video->GetVideodirty_high(), Itst->Video->GetVideodirty_high(), "dirty_high");
+}
+
+void dump_vgaglobals()
+{
+	printf ("VGA Globals:     \tPRODUCTION\tTEST\n");
+	dump_val(Iprd->Video->GetVideolatches(), Itst->Video->GetVideolatches(), "video latches");
+	dump_val(Iprd->Video->GetVideobit_prot_mask(), Itst->Video->GetVideobit_prot_mask(), "bit_prot_mask");
+	dump_val(Iprd->Video->GetVideosr_masked_val(), Itst->Video->GetVideosr_masked_val(), "sr_masked_val");
+	dump_val(Iprd->Video->GetVideosr_nmask(), Itst->Video->GetVideosr_nmask(), "sr_nmask");
+	dump_val(Iprd->Video->GetVideodirty_total(), Itst->Video->GetVideodirty_total(), "dirty_total");
+	dump_val(Iprd->Video->GetVideodirty_low(), Itst->Video->GetVideodirty_low(), "dirty_low");
+	dump_val(Iprd->Video->GetVideodirty_high(), Itst->Video->GetVideodirty_high(), "dirty_high");
+	dump_val(Iprd->Video->GetVideoplane_enable(), Itst->Video->GetVideoplane_enable(), "plane_enable");
+	dump_val(Iprd->Video->GetVideoplane_enable_mask(), Itst->Video->GetVideoplane_enable_mask(), "plane_enable_mask");
+}
 
 int check_states(char *pszFunc, int c)
 {
@@ -75,6 +108,8 @@ int check_states(char *pszFunc, int c)
 	{
 		fprintf (STDERR, "%s %d failed, plane buffers differ!\n", pszFunc, c);
 		dump_planes();
+		check_vgaglobals(pszFunc);
+		dump_vgaglobals();
 		exit(-1);
 		return -1;
 	}
@@ -85,12 +120,7 @@ int check_states(char *pszFunc, int c)
 		exit(-1);
 		return -1;
 	}
-	compare_val(pszFunc, Iprd->Video->GetVideolatches(), Itst->Video->GetVideolatches(), "video latches");
-	compare_val(pszFunc, Iprd->Video->GetVideobit_prot_mask(), Itst->Video->GetVideobit_prot_mask(), "bit_prot_mask");
-	compare_val(pszFunc, Iprd->Video->GetVideosr_masked_val(), Itst->Video->GetVideosr_masked_val(), "sr_masked_val");
-	compare_val(pszFunc, Iprd->Video->GetVideodirty_total(), Itst->Video->GetVideodirty_total(), "dirty_total");
-	compare_val(pszFunc, Iprd->Video->GetVideodirty_low(), Itst->Video->GetVideodirty_low(), "dirty_low");
-	compare_val(pszFunc, Iprd->Video->GetVideodirty_high(), Itst->Video->GetVideodirty_high(), "dirty_high");
+	check_vgaglobals(pszFunc);
 	return 0;
 }
 
@@ -103,10 +133,12 @@ int check_states(char *pszFunc, int c)
 	{ \
 		fprintf (STDERR, #wrfunc" %d failed, plane buffers differ!\n", c); \
 		dump_planes(); \
+		check_vgaglobals(#wrfunc); \
+		dump_vgaglobals(); \
 		exit(-1); \
 		ret = -1; \
 	} \
-    Iprd->rdfunc(bufprd+MEM_OFFS, MEM_START+offs, MEM_START); \
+	Iprd->rdfunc(bufprd+MEM_OFFS, MEM_START+offs, MEM_START); \
 	Itst->rdfunc(buftst+MEM_OFFS, MEM_START+offs, MEM_START); \
 	if (memcmp(buftst, bufprd, MEM_START)) \
 	{ \
@@ -119,7 +151,16 @@ int check_states(char *pszFunc, int c)
 	check_states(#rdfunc, c); \
 	return ret;
 
-int dump_planes()
+void dump_ram(unsigned char *bufram, int sz)
+{
+	FILE *fp;
+
+	fp=fopen("planeram.bin", "wb");
+	fwrite(bufram, sz, 1, fp);
+	fclose(fp);
+}
+
+void dump_planes()
 {
 	FILE *fp;
 
@@ -140,10 +181,13 @@ int dump_planes()
 	{ \
 		fprintf (STDERR, #wrfunc" failed, plane buffers differ!\n"); \
 		dump_planes(); \
+		dump_ram(bufram+MEM_OFFS, MEM_START/sz); \
+		check_vgaglobals(#wrfunc); \
+		dump_vgaglobals(); \
 		exit(-1); \
 		ret = -1; \
 	} \
-    Iprd->rdfunc(bufprd+MEM_OFFS, MEM_START, MEM_START); \
+	Iprd->rdfunc(bufprd+MEM_OFFS, MEM_START, MEM_START); \
 	Itst->rdfunc(buftst+MEM_OFFS, MEM_START, MEM_START); \
 	if (memcmp(buftst, bufprd, MEM_START)) \
 	{ \
@@ -174,7 +218,7 @@ int dump_planes()
 	} \
 	Iprd->fill_byte_ev_glue(MEM_START, 0xEE, MEM_START); \
 	Itst->wrfunc(MEM_START, MEM_START*2, MEM_START/sz, 0); \
-    Iprd->rdfunc(bufprd+MEM_OFFS, MEM_START, MEM_START); \
+	Iprd->rdfunc(bufprd+MEM_OFFS, MEM_START, MEM_START); \
 	if (memcmp(buftst, bufprd, MEM_START)) \
 	{ \
 		fprintf (STDERR, #wrfunc" failed:\nTestbuf:\n"); \
@@ -377,7 +421,7 @@ int test_wrmode(char *pszName, int mode, int *idxs, int nIdxs, int rdmode)
 	return ret;
 }
 
-int test_func_all_wrmodes_rw(const char *pszName, int rdmode)
+void test_func_all_wrmodes_rw(const char *pszName, int rdmode)
 {
 	char szName[64];
 	int idx_0[] = {0, 1, 2, 3, 16, 17, 18, 19, 22, 23},
@@ -390,7 +434,7 @@ int test_func_all_wrmodes_rw(const char *pszName, int rdmode)
 	test_wrmode(pszName, 3, idx_2, sizeof(idx_2)/sizeof(idx_2[0]), rdmode);
 }
 
-int test_chain2_rw(const char *pszName, int rdmode)
+void test_chain2_rw(const char *pszName, int rdmode)
 {
 	int i, idx_1[] = {0};
 
@@ -398,7 +442,7 @@ int test_chain2_rw(const char *pszName, int rdmode)
 		test_wrmode(pszName, i, idx_1, 1, rdmode);
 }
 
-int rdmode_probe(const char *pszName, int (*fpfunc)(const char *,int))
+void rdmode_probe(const char *pszName, int (*fpfunc)(const char *,int))
 {
 	int i;
 	char szName[64];
@@ -412,7 +456,7 @@ int rdmode_probe(const char *pszName, int (*fpfunc)(const char *,int))
 	}
 }
 
-int set_chain(int chain)
+void set_chain(int chain)
 {
 	Itst->Video->SetVideochain(chain);
 	Iprd->Video->SetVideochain(chain);
@@ -497,17 +541,23 @@ int main(int argc, CHAR ** argv)
 	Iprd->Video->SetVideorotate(1);
 	Itst->setMarkPointers(2);
 	Iprd->setMarkPointers(2);
+	Itst->Video->SetVideoplane_enable(15);
+	Iprd->Video->SetVideoplane_enable(15);
 	set_chain(UNCHAINED);
 	rdmode_probe("gricvid_evid",test_func_all_wrmodes_rw);
 
 
 	Itst->Video->SetVideorotate(0);
 	Iprd->Video->SetVideorotate(0);
+
 	rdmode_probe("unchained_evid", test_func_all_wrmodes_rw);
 
 	set_chain(CHAIN_4);
 	Itst->setMarkPointers(3);
 	Iprd->setMarkPointers(3);
+	// original CVIDC is buggy (see note at C4BFLL), therefore set to 0:
+	Itst->Video->SetVideoplane_enable(0);
+	Iprd->Video->SetVideoplane_enable(0);
 	rdmode_probe("chain4_evid", test_func_all_wrmodes_rw);
 
 	set_chain(CHAIN_2);
