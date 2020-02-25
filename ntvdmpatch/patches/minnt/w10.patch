@@ -1,0 +1,46 @@
+--- NT4\private\..\public\internal\windows\inc\conapi.h
++++ NT4\private\..\public\internal\windows\inc\conapi.h
+134a135,148
+> #ifdef W10
+> BOOL
+> RegisterConsoleVDM(
+>     IN BOOL bRegister,
+>     IN HANDLE hStartHardwareEvent,
+>     IN HANDLE hEndHardwareEvent,
+>     IN LPWSTR lpStateSectionName,
+>     IN DWORD dwStateSectionNameLength,
+>     OUT LPDWORD lpStateLength,
+>     OUT PVOID *lpState,
+>     COORD VDMBufferSize OPTIONAL,
+>     OUT PVOID *lpVDMBuffer
+>     );
+> #else
+148a163
+> #endif
+--- NT4\private\mvdm\dos\command\sources.inc
++++ nt\private\mvdm\dos\command\sources.inc
+43c43
+< C_DEFINES=-DWIN_32
+---
+> C_DEFINES=-DWIN_32 -DW10
+--- NT4\private\mvdm\softpc.new\host\inc\host_def.h
++++ nt\private\mvdm\softpc.new\host\inc\host_def.h
+240a242,243
+> /* NtGetTickCount() works differently in newer Windows versions than in Win2k */
+> #define NtGetTickCount GetTickCount
+--- NT4\private\mvdm\softpc.new\host\src\nt_det.c
++++ nt\private\mvdm\softpc.new\host\src\nt_det.c
+201a202
+> #ifndef W10
+203a205
+> #endif
+273a276
+> #ifndef W10
+275a279
+> #endif
+--- NT4\private\mvdm\softpc.new\host\src\nt_fulsc.c
++++ nt\private\mvdm\softpc.new\host\src\nt_fulsc.c
+2049a2050
+> #ifndef W10
+2051a2053
+> #endif

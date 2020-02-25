@@ -1,0 +1,22 @@
+--- NT4\private\mvdm\wow32\wkgthunk.c
++++ nt\private\mvdm\wow32\wkgthunk.c
+504c504
+< #ifndef i386
+---
+> #ifndef MONITOR
+--- NT4\private\mvdm\wow32\wow32.c
++++ nt\private\mvdm\wow32\wow32.c
+1944c1944
+< #ifdef _X86_
+---
+> #ifdef _X86xx_
+--- NT4\private\mvdm\wow32\wkman.c
++++ nt\private\mvdm\wow32\wkman.c
+1561c1561
+< #ifdef i386
+---
+> #ifdef i386xx
+1959c1959
+< #ifdef i386
+---
+> #ifdef i386xx

@@ -1,0 +1,6 @@
+--- NT4\private\mvdm\softpc.new\host\src\nt_error.c
++++ nt\private\mvdm\softpc.new\host\src\nt_error.c
+1184c1184
+<     ASSERT(4 < MAXIMUM_HARDERROR_PARAMETERS);
+---
+>     ASSERT(4 <= MAXIMUM_HARDERROR_PARAMETERS);

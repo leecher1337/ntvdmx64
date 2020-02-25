@@ -413,21 +413,11 @@
 < struct VideoVector C_Video = 
 ---
 > struct VideoVector C_Video, Video = 
---- NT4\private\mvdm\softpc.new\base\cvidc\sources
-+++ nt\private\mvdm\softpc.new\base\cvidc\sources
-87d86
-<                         accessfn.c  \
-88a88
-> #                        accessfn.c
-92a93
-> 386_STDCALL=0
-\ No newline at end of file
---- NT4\private\mvdm\softpc.new\base\inc\video.h
-+++ nt\private\mvdm\softpc.new\base\inc\video.h
-242a243,246
-> #if (i386)
-> IMPORT VOID (__stdcall *bios_ch2_byte_wrt_fn) IPT2(ULONG, ch_attr, ULONG, ch_addr);
-> IMPORT VOID (__stdcall *bios_ch2_word_wrt_fn) IPT2(ULONG, ch_attr, ULONG, ch_addr);
-> #else
-244a249
-> #endif
+--- NT4\private\mvdm\softpc.new\base\inc\cpu_vid.h
++++ nt\private\mvdm\softpc.new\base\inc\cpu_vid.h
+51,52c51,52
+< 	void	(*b_write) IPT2(IU8, eaOff, IU32, eaVal);
+< 	void	(*w_write) IPT2(IU16, eaOff, IU32, eaVal);
+---
+> 	void	(*b_write) IPT2(IU32, eaOff, IU8, eaVal);
+> 	void	(*w_write) IPT2(IU32, eaOff, IU16, eaVal);

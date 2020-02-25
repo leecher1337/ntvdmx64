@@ -1,0 +1,6 @@
+Index: nt/private/mvdm/dos/dem/demsrch.c
+===================================================================
+1310a1311
+> #if !defined(i386) || defined(MONITOR)
+1340a1342
+> #endif

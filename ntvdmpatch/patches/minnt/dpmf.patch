@@ -1,0 +1,6 @@
+--- NT4\private\mvdm\inc\dpmf_fio.h
++++ nt\private\mvdm\inc\dpmf_fio.h
+879c879
+<                      GetLongPathNameW,
+---
+>                      //GetLongPathNameW,

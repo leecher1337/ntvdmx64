@@ -1,0 +1,18 @@
+NAME NTVDMD
+
+;DESCRIPTION 'NTVDM Debugger interface'
+
+EXPORTS
+    DbgDllInitialize
+    xxxDbgBPInt
+    xxxDbgDispatch
+    xxxDbgDosAppStart
+    xxxDbgFault
+    xxxDbgInit
+    xxxDbgIsDebuggee
+    xxxDbgNotifyDebugged
+    xxxDbgNotifyNewTask
+    xxxDbgNotifyRemoteThreadAddress
+    xxxDbgSegmentNotice
+    xxxDbgTraceEvent
+    xxxDbgTraceInt

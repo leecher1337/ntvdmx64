@@ -1,0 +1,194 @@
+--- NT4\private\mvdm\dpmi\makefile.sub
++++ nt\private\mvdm\dpmi\makefile.sub
+diff -r 
+5c5,6
+< PLATFORM=$(TARGET_DIRECTORY)
+---
+> #PLATFORM=$(TARGET_DIRECTORY)
+> PLATFORM=PPC
+27,30c28,31
+< !IF $(X86)
+< EXTRA_OPTIONS = -Di386 -DMD
+< OPTIONS = -DDEBUG=0 $(DBGOPTS) -DWOW -DWOW_x86 $(EXTRA_OPTIONS) -D?QUIET
+< !ELSE
+---
+> #!IF $(X86)
+> #EXTRA_OPTIONS = -Di386 -DMD
+> #OPTIONS = -DDEBUG=0 $(DBGOPTS) -DWOW -DWOW_x86 $(EXTRA_OPTIONS) -D?QUIET
+> #!ELSE
+32c33
+< !ENDIF
+---
+> #!ENDIF
+48,50c49,51
+< !IF $(X86)
+<         $(DEST)\ntnpxem.obj     \
+< !ENDIF
+---
+> #!IF $(X86)
+> #        $(DEST)\ntnpxem.obj     \
+> #!ENDIF
+70,72c71,73
+< !IF $(X86)
+<     @echo $(DEST)\ntnpxem.obj  +    >>$(DEST)\tmp.lnk
+< !ENDIF
+---
+> #!IF $(X86)
+> #    @echo $(DEST)\ntnpxem.obj  +    >>$(DEST)\tmp.lnk
+> #!ENDIF
+--- NT4\private\mvdm\dpmi32\sources.inc
++++ nt\private\mvdm\dpmi32\sources.inc
+53c53,54
+< X86_SOURCES=..\i386\dpmi386.c ..\i386\dpmimem.c
+---
+> #X86_SOURCES=..\i386\dpmi386.c ..\i386\dpmimem.c
+> X86_SOURCES=dpmimemr.c
+59c60
+< C_DEFINES=-DLINKED_INTO_MONITOR
+---
+> #C_DEFINES=-DLINKED_INTO_MONITOR
+--- NT4\private\mvdm\dpmi32\data.c
++++ nt\private\mvdm\dpmi32\data.c
+144c144
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\dpmi32.c
++++ nt\private\mvdm\dpmi32\dpmi32.c
+220c220
+< #ifdef _X86_
+---
+> #if defined(_X86_) && defined(MONITOR)
+305c305
+< #ifdef _X86_
+---
+> #if defined(_X86_) && defined(MONITOR)
+385c385
+< #ifndef _X86_
+---
+> #if !defined(_X86_) || !defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\dpmi32.h
++++ nt\private\mvdm\dpmi32\dpmi32.h
+138c138
+< #ifdef _X86_
+---
+> #if defined(_X86_) && defined(MONITOR)
+197a198
+> #if 0
+221a223
+> #endif
+221a225,230
+> #if defined(MONITOR) && defined(LINKED_INTO_MONITOR)
+> #define DECLARE_LocalVdmContext VDM_TIB * _LocalVdmTib = (VDM_TIB *)(NtCurrentTeb()->Vdm); \
+>                                 CONTEXT * _LocalVdmContext = &(*_LocalVdmTib).VdmContext
+> #else // not linked into monitor
+> #define DECLARE_LocalVdmContext void * xxxxxxxxx
+> #endif
+268c277
+< #ifdef _X86_
+---
+> #if defined(_X86_) && defined(MONITOR)
+313c322
+< #ifdef _X86_
+---
+> #if defined(_X86_) && defined(MONITOR)
+496c505
+< #ifndef _X86_
+---
+> #if !defined(_X86_) || !defined(MONITOR)
+778c787
+< #ifdef _X86_
+---
+> #if defined(_X86_) && defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\dpmiint.c
++++ nt\private\mvdm\dpmi32\dpmiint.c
+116c116
+< #ifdef _X86_
+---
+> #if defined(_X86_) && defined(MONITOR)
+470c470
+< #ifdef _X86_
+---
+> #if defined(_X86_) && defined(MONITOR)
+680c680
+< #ifdef _X86_
+---
+> #if defined(_X86_) && defined(MONITOR)
+789c789
+< #ifdef _X86_
+---
+> #if defined(_X86_) && defined(MONITOR)
+849c849
+< #ifndef _X86_
+---
+> #if !defined(_X86_) || !defined(MONITOR)
+1161c1161
+< #ifndef _X86_
+---
+> #if !defined(_X86_) || !defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\dpmiint.h
++++ nt\private\mvdm\dpmi32\dpmiint.h
+23c23
+< #ifndef _X86_
+---
+> #if !defined(_X86_) || !defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\dpmiselr.c
++++ nt\private\mvdm\dpmi32\dpmiselr.c
+36c36
+< #ifndef _X86_
+---
+> #if !defined(_X86_) || !defined(MONITOR)
+212c212
+< #ifndef _X86_
+---
+> #if !defined(_X86_) || !defined(MONITOR)
+235c235
+< #ifdef _X86_
+---
+> #if defined(_X86_) && defined(MONITOR)
+243c243
+< #ifndef _X86_
+---
+> #if !defined(_X86_) || !defined(MONITOR)
+307c307
+< #ifndef _X86_
+---
+> #if !defined(_X86_) || !defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\modesw.c
++++ nt\private\mvdm\dpmi32\modesw.c
+103c103
+< #ifndef _X86_
+---
+> #if !defined(_X86_) || !defined(MONITOR)
+165c165
+< #ifndef _X86_
+---
+> #if !defined(_X86_) || !defined(MONITOR)
+590c590
+< #ifndef _X86_
+---
+> #if !defined(_X86_) || !defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\int31.c
++++ nt\private\mvdm\dpmi32\int31.c
+1050c1050
+< #ifndef _X86_
+---
+> #if !defined(_X86_) || !defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\dpmimscr.c
++++ nt\private\mvdm\dpmi32\dpmimscr.c
+48c48
+< #ifdef _X86_
+---
+> #if defined(_X86_) && defined(MONITOR)
+--- NT4\private\mvdm\dpmi\dxdma.asm
++++ nt\private\mvdm\dpmi\dxdma.asm
+612c612
+< ; in the extended DDS.
+---
+> ; in the extended DDS -- silly, but easy enough...
+--- NT4\private\mvdm\dpmi\intmac.inc
++++ nt\private\mvdm\dpmi\intmac.inc
+325a326,328
+> rpopf386 macro
+>     popf
+>     endm

@@ -1,0 +1,30 @@
+--- NT4\private\mvdm\softpc.new\host\src\nt_ega.c
++++ nt\private\mvdm\softpc.new\host\src\nt_ega.c
+590a591,592
+>     int max_width = sc.PC_W_Width >> 1,
+>         max_height = sc.PC_W_Height >> 1;
+608c610
+<     if( height>200 || width>40 ){
+---
+> 
+609c612,616
+<    assert2( NO, "VDM: nt_ega_lo_graph_std() w=%d h=%d", width, height );
+---
+>     if ((screen_x >= max_width) || (screen_y >= max_height))
+>     {
+>         sub_note_trace2(EGA_HOST_VERBOSE,
+>                         "VDM: nt_ega_lo_graph_std() x=%d y=%d",
+>                         screen_x, screen_y);
+611a624,627
+>     if (screen_x + width > max_width)
+>         width = max_width - screen_x;
+>     if (screen_y + height > max_height)
+>         height = max_height - screen_y;
+672c688
+<         while(--local_width);
+---
+>         while((--local_width)>0);
+677c693
+<     while(--local_height);
+---
+>     while((--local_height)>0);

@@ -1,0 +1,8 @@
+--- NT4\private\mvdm\softpc.new\host\src\nt_timer.c
++++ nt\private\mvdm\softpc.new\host\src\nt_timer.c
+688c688
+< 
+---
+> if (CurrHeartBeat.QuadPart > CumUSec.QuadPart)
+689a690
+> else DiffTime.QuadPart = 0;

@@ -1,0 +1,14 @@
+Index: nt/private/mvdm/softpc.new/base/video/gfx_updt.c
+===================================================================
+2376a2377
+> #ifdef NTVDM
+2376a2379,2380
+> 	return FALSE;
+> #endif 
+2559a2565
+> #ifdef NTVDM
+2560c2567,2568
+< 
+---
+> 	return FALSE;
+> #endif 

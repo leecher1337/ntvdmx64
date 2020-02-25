@@ -1,0 +1,213 @@
+--- NT4\private\mvdm\dpmi\makefile.sub
++++ nt\private\mvdm\dpmi\makefile.sub
+5c5,6
+< PLATFORM=$(TARGET_DIRECTORY)
+---
+> #PLATFORM=$(TARGET_DIRECTORY)
+> PLATFORM=PPC
+27,32c28,33
+< !IF $(X86)
+< EXTRA_OPTIONS = -Di386 -DMD
+< OPTIONS = -DDEBUG=0 $(DBGOPTS) -DWOW -DWOW_x86 $(EXTRA_OPTIONS) -D?QUIET
+< !ELSE
+< OPTIONS = -DDEBUG=0 $(DBGOPTS) -DWOW -DWOW_$(PLATFORM) $(EXTRA_OPTIONS) -D?QUIET
+< !ENDIF
+---
+> #!IF $(X86)
+> #EXTRA_OPTIONS = -Di386 -DMD
+> #OPTIONS = -DDEBUG=0 $(DBGOPTS) -DWOW -DWOW_x86 $(EXTRA_OPTIONS) -D?QUIET
+> #!ELSE
+> OPTIONS = -DDEBUG=0 $(DBGOPTS) -DWOW -DWOW_$(PLATFORM) -DFLATAPIXLAT $(EXTRA_OPTIONS) -D?QUIET -DWHEN_COMMAND_COM_WORKS
+> #!ENDIF
+43c44
+<         $(DEST)\dxend.obj \
+---
+>         $(DEST)\dxmmgr.obj   $(DEST)\dxend.obj \
+45c46
+<         $(DEST)\dxnetbio.obj    $(DEST)\dxdisk.obj  \
+---
+>         $(DEST)\dxnetbio.obj    $(DEST)\dxint31.obj   $(DEST)\dxdisk.obj  \
+48,50c49,51
+< !IF $(X86)
+<         $(DEST)\ntnpxem.obj     \
+< !ENDIF
+---
+> #!IF $(X86)
+> #        $(DEST)\ntnpxem.obj     \
+> #!ENDIF
+65a67
+>     @echo $(DEST)\dxint31.obj +    >>$(DEST)\tmp.lnk
+67a70
+>     @echo $(DEST)\dxmmgr.obj  +    >>$(DEST)\tmp.lnk
+70,72c73,75
+< !IF $(X86)
+<     @echo $(DEST)\ntnpxem.obj  +    >>$(DEST)\tmp.lnk
+< !ENDIF
+---
+> #!IF $(X86)
+> #    @echo $(DEST)\ntnpxem.obj  +    >>$(DEST)\tmp.lnk
+> #!ENDIF
+96c99
+< $(DEST)\dxboot.obj dxboot.lst: dxboot.asm ./cmacros.inc \
+---
+> $(DEST)\dxboot.obj dxboot.lst: 486\dxboot.asm ./cmacros.inc \
+99c102
+<         $(ASM) dxboot,$(DEST)\;
+---
+>         $(ASM) 486\dxboot,$(DEST)\;
+130c133
+< $(DEST)\dxfunc.obj dxfunc.lst: dxfunc.asm ../wow16/inc/dosx.inc ./cmacros.inc \
+---
+> $(DEST)\dxfunc.obj dxfunc.lst: 486\dxfunc.asm ../wow16/inc/dosx.inc ./cmacros.inc \
+133c136
+<         $(ASM) dxfunc,$(DEST)\;
+---
+>         $(ASM) 486\dxfunc,$(DEST)\;
+139c142
+< $(DEST)\dxintr.obj dxintr.lst: dxintr.asm ./cmacros.inc \
+---
+> $(DEST)\dxintr.obj dxintr.lst: 486\dxintr.asm ./cmacros.inc \
+142c145
+<         $(ASM) dxintr,$(DEST)\;
+---
+>         $(ASM) 486\dxintr,$(DEST)\;
+143a147,150
+> $(DEST)\dxint31.obj dxint31.lst: 486\dxint31.asm ../wow16/inc/int31.inc ./cmacros.inc \
+>         dxrom.inc gendefs.inc interupt.inc pmdefs.inc segdefs.inc intmac.inc \
+>         stackchk.inc
+>         $(ASM) 486\dxint31,$(DEST)\;
+144c152
+< $(DEST)\dxmain.obj dxmain.lst: dxmain.asm ./cmacros.inc gendefs.inc \
+---
+> $(DEST)\dxmain.obj dxmain.lst: 486\dxmain.asm ./cmacros.inc gendefs.inc \
+146c154
+<         $(ASM) dxmain,$(DEST)\;
+---
+>         $(ASM) 486\dxmain,$(DEST)\;
+146a156,158
+> $(DEST)\dxmmgr.obj dxmmgr.lst: dxmmgr.asm ./cmacros.inc dxvcpi.inc gendefs.inc \
+>         pmdefs.inc segdefs.inc woaswapi.inc
+>         $(ASM) dxmmgr,$(DEST)\;
+160c172
+< $(DEST)\dxstrt.obj dxstrt.lst: dxstrt.asm ./cmacros.inc \
+---
+> $(DEST)\dxstrt.obj dxstrt.lst: 486\dxstrt.asm ./cmacros.inc \
+162c174
+<         $(ASM) dxstrt,$(DEST)\;
+---
+>         $(ASM) 486\dxstrt,$(DEST)\;
+164c176
+< $(DEST)\dxutil.obj dxutil.lst: dxutil.asm ../inc/bop.inc ../inc/dpmi.inc \
+---
+> $(DEST)\dxutil.obj dxutil.lst: 486\dxutil.asm ../inc/bop.inc ../inc/dpmi.inc \
+166c178
+<         $(ASM) dxutil,$(DEST)\;
+---
+>         $(ASM) 486\dxutil,$(DEST)\;
+--- NT4\private\mvdm\dpmi32\dpmimscr.c
++++ nt\private\mvdm\dpmi32\dpmimscr.c
+83c83
+<     EnableEmulatorIretHooks();
+---
+>     //EnableEmulatorIretHooks();
+108c108
+<     DisableEmulatorIretHooks();
+---
+>     //DisableEmulatorIretHooks();
+--- NT4\private\mvdm\softpc.new\obj.vdm\ntvdm.src
++++ nt\private\mvdm\softpc.new\obj.vdm\ntvdm.src
+260c260
+< #ifdef  _X86_
+---
+> #ifdef  _X86dpmi_
+--- NT4\private\mvdm\dpmi32\sources.inc
++++ nt\private\mvdm\dpmi32\sources.inc
+36c36
+<         ..\dosmem.c    \
+---
+>         ..\debug.c    \
+44,45d43
+<         ..\int2f.c     \
+<         ..\int31.c     \
+53c51,52
+< X86_SOURCES=..\i386\dpmi386.c ..\i386\dpmimem.c
+---
+> #X86_SOURCES=..\i386\dpmi386.c ..\i386\dpmimem.c
+> X86_SOURCES=dpmimemr.c
+59c58
+< C_DEFINES=-DLINKED_INTO_MONITOR
+---
+> #C_DEFINES=-DLINKED_INTO_MONITOR
+--- NT4\private\mvdm\vdmexts\dpmi.c
++++ nt\private\mvdm\vdmexts\dpmi.c
+176a177
+> #ifdef  _X86dpmi_
+224c225
+< 
+---
+> #endif
+232a234
+> #ifdef  _X86dpmi_
+275c277
+< 
+---
+> #endif
+--- NT4\private\mvdm\vdmexts\trace.c
++++ nt\private\mvdm\vdmexts\trace.c
+97,99c97,99
+<                                  "InitDosxRM",
+<                                  "InitDosx",
+<                                  "InitLDT",
+---
+>                                  "SetDescriptorTableEntries",
+>                                  "DPMISwitchToProtectedMode",
+>                                  "SetProtectedmodeInterrupt",
+101,102c101
+<                                  "InitIDT",
+<                                  "InitExceptionHandlers",
+---
+>                                  "InitDosx",
+103a103,112
+>                                  "XlatInt21Call",
+>                                  "AllocXmem",
+>                                  "FreeXmem",
+>                                  "ReallocXmem",
+>                                  "SetFaultHandler",
+>                                  "GetMemoryInformation",
+>                                  "DpmiInUse",
+>                                  "DpmiNoLongerInUse",
+>                                  "SetDebugRegisters",
+>                                  "PassTableAddress",
+105,118c114
+<                                  "InUse",
+<                                  "NoLongerInUse",
+<                                  "switch_to_protected_mode",
+<                                  "switch_to_real_mode",
+<                                  "SetAltRegs",
+<                                  "IntHandlerIret16",
+<                                  "IntHandlerIret32",
+<                                  "FaultHandlerIret16",
+<                                  "FaultHandlerIret32",
+<                                  "UnhandledExceptionHandler",
+<                                  "RMCallBackCall",
+<                                  "ReflectIntrToPM",
+<                                  "ReflectIntrToV86",
+<                                  "InitPmStackInfo",
+---
+>                                  "InitializePmStackInfo",
+120,123c116,121
+<                                  "SetDescriptorEntry",
+<                                  "ResetLDTUserBase",
+<                                  "XlatInt21Call",
+<                                  "Int31"
+---
+>                                  "FreeAllXmem",
+>                                  "IntHandlerIret",
+>                                  "IntHandlerIretd",
+>                                  "FaultHandlerIret",
+>                                  "FaultHandlerIretd",
+>                                  "DpmiUnhandledException"
+--- NT4\private\mvdm\dpmi32\dpmi32.c
++++ nt\private\mvdm\dpmi32\dpmi32.c
+297a299
+> VOID DpmiEnableIntHooks(VOID) { }

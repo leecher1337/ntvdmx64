@@ -1,0 +1,116 @@
+--- NT4\private\mvdm\dpmi32\data.c
++++ nt\private\mvdm\dpmi32\data.c
+126c126
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\dpmi32.c
++++ nt\private\mvdm\dpmi32\dpmi32.c
+247c247
+< #if defined(i386)
+---
+> #if defined(i386) && defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\dpmi32p.h
++++ nt\private\mvdm\dpmi32\dpmi32p.h
+29c29
+< #ifdef i386
+---
+> #if defined(i386) && defined(MONITOR)
+53c53
+< #ifdef i386
+---
+> #if defined(i386) && defined(MONITOR)
+109c109
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\dpmidata.h
++++ nt\private\mvdm\dpmi32\dpmidata.h
+31c31
+< #ifdef i386 
+---
+> #if defined(i386) && defined(MONITOR) 
+57a58
+> #ifndef i386
+81a83
+> #endif
+--- NT4\private\mvdm\dpmi32\dpmiint.c
++++ nt\private\mvdm\dpmi32\dpmiint.c
+88c88
+< #ifdef i386
+---
+> #if defined(i386) && defined(MONITOR)
+387c387
+< #ifdef i386
+---
+> #if defined(i386) && defined(MONITOR)
+689c689
+< #ifdef i386
+---
+> #if defined(i386) && defined(MONITOR)
+798c798
+< #ifdef i386
+---
+> #if defined(i386) && defined(MONITOR)
+859c859
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+1167c1167
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+1201c1201
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+1237c1237
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\dpmiint.h
++++ nt\private\mvdm\dpmi32\dpmiint.h
+23c23
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\dpmiselr.c
++++ nt\private\mvdm\dpmi32\dpmiselr.c
+40c40
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+147c147
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+164c164
+< #ifdef i386
+---
+> #if defined(i386) && defined(MONITOR)
+172c172
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+185c185
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+--- NT4\private\mvdm\dpmi32\modesw.c
++++ nt\private\mvdm\dpmi32\modesw.c
+49c49
+< #if defined(i386)
+---
+> #if defined(i386) && defined(MONITOR)
+68c68
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+97c97
+< #if defined(i386)
+---
+> #if defined(i386) && defined(MONITOR)
+114c114
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)

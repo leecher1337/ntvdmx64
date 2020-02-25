@@ -291,13 +291,3 @@
 ---
 > extern void S_2106_RdMode1Chain4StringReadFwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam);
 > extern void S_2123_RdMode1Chain4StringReadBwd(IU8 * dest, IU32 eaOff, IU32 count, IUH destInRam);
---- NT4\private\mvdm\softpc.new\obj.vdm\sources
-+++ nt\private\mvdm\softpc.new\obj.vdm\sources
-143c143
-< CPULIBS=$(SOFTPC_TREE)\base\ccpu386\obj\*\ccpu386.lib $(SOFTPC_TREE)\base\cvidc\obj\*\cvidc.lib
----
-> CPULIBS=$(SOFTPC_TREE)\base\ccpu386\obj\*\ccpu386.lib $(SOFTPC_TREE)\base\cvidcnew\obj\*\cvidc.lib
-150c150
-< CPULIBS=$(BASEDIR)\public\sdk\lib\*\haxm.lib $(SOFTPC_TREE)\base\cvidc\obj\*\cvidc.lib
----
-> CPULIBS=$(BASEDIR)\public\sdk\lib\*\haxm.lib $(SOFTPC_TREE)\base\cvidcnew\obj\*\cvidc.lib

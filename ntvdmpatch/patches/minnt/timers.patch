@@ -1,0 +1,18 @@
+--- NT4\private\mvdm\softpc.new\base\system\idetect.c
++++ nt\private\mvdm\softpc.new\base\system\idetect.c
+221c221
+< #if defined(NEC_98)
+---
+> #if defined(NEC_98) || defined(i386)
+232c232
+< #if defined(NEC_98)
+---
+> #if defined(NEC_98) || defined(i386)
+239c239
+< #if defined(NEC_98)
+---
+> #if defined(NEC_98) || defined(i386)
+246c246
+< #if defined(NEC_98)
+---
+> #if defined(NEC_98) || defined(i386)

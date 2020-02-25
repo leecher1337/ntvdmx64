@@ -129,11 +129,24 @@ if errorlevel 1 (
 )
 copy /y "%NTTREE%\idw\build.exe" "%NATIVEBEREPOIDW%\build.exe"
 
-cd %NTROOT%\base\mvdm\dos\v86\tools\src\buildidx
-nmake
-md %BEROOT%\tools\tools16 2>nul
-copy /Y ..\..\bin\x86\buildidx.exe %BEROOT%\tools\tools16\
+md %BEROOT%\tools\x86\tools16 2>nul
+for /D %%I in (%NTROOT%\base\mvdm\dos\v86\tools\src\*.*) do (
+  pushd %%I
+  nmake
+  popd
+)
+copy /Y %NTROOT%\base\mvdm\dos\v86\tools\bin\x86\*.exe %BEROOT%\tools\x86\tools16\
 
+REM //
+REM // leecher1337: Fix broken message indices
+REM //
+cd %NTROOT%\base\mvdm\dos\v86\messages
+for /D %%I in (*) do (
+  cd %%I
+  del %%I.idx 2>nul
+  %BEROOT%\tools\x86\tools16\buildidx %%I.msg
+  cd..
+)
 
 REM //
 REM // Done.

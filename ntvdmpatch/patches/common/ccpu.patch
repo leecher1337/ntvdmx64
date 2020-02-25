@@ -474,39 +474,6 @@
 < #else	/* !CPU_40_STYLE */
 221d218
 < #endif	/* !CPU_40_STYLE */
---- NT4\private\mvdm\softpc.new\host\src\nt_cpu.c
-+++ nt\private\mvdm\softpc.new\host\src\nt_cpu.c
-155a156
-> #endif
-156a158,159
-> #if defined(A3CPU) || defined(CCPU)
-> #undef setSTATUS
-170a174
-> #endif
-171a176
-> #ifdef A3CPU
-276a282,284
-> #ifdef i386
->     nt_cpu_info.in_nano_cpu = (BOOL *) ((IUH)Gdp + 560 + 3);
-> #else
-278,279c286,288
-< #endif /* ALPHA */
-< #ifndef PROD
----
-> #endif /* i386 */
-> #endif /* ALPHA */
-> #if !defined(PROD) && !defined(i386)
-294a304,306
-> #ifdef i386
->     nt_cpu_info.stack_is_big = (BOOL *) ((IUH)Gdp + 3096 + 3);
-> #else
-296,297c308,310
-< #endif /* ALPHA */
-< #ifndef PROD
----
-> #endif /* i386 */
-> #endif /* ALPHA */
-> #if !defined(PROD) && !defined(i386)
 --- NT4\private\mvdm\softpc.new\base\ccpu386\stubs.c
 +++ nt\private\mvdm\softpc.new\base\ccpu386\stubs.c
 8a9

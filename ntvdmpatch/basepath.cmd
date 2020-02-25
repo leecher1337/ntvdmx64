@@ -29,4 +29,10 @@ if "%NT_ROOT%"=="" (
 ) else ( 
   set BASEPATH=%NT_ROOT%\private
 )
+rem Determine the repository we use
+if exist %BASEPATH%\mvdm\softpc.new\obj.vdm\sources.inc (
+  set REPO=minnt
+) else (
+  set REPO=old-src
+)
 :fini

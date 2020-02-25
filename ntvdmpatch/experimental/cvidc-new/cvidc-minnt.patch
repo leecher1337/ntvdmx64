@@ -1,0 +1,28 @@
+--- NT4\private\mvdm\softpc.new\base\cvidcnew\test\libtest\sources
++++ nt\private\mvdm\softpc.new\base\cvidcnew\test\libtest\sources
+32,34c32,34
+< SOFTPC_TREE=$(BASEDIR)\private\mvdm\softpc.new
+< TARGETLIBS=$(SOFTPC_TREE)\base\cvidcnew\obj\*\cvidc.lib \
+< 	$(BASEDIR)\public\sdk\lib\*\kernel32.lib 
+---
+> SOFTPC_TREE=$(PROJECT_ROOT)\mvdm\softpc.new
+> TARGETLIBS=$(SOFTPC_TREE)\base\cvidcnew\objchk\*\Cvidc.lib \
+> 	$(SDK_LIB_PATH)\kernel32.lib
+48c48
+< 386_STDCALL=0
+---
+> X86_STDCALL=0
+--- NT4\private\mvdm\softpc.new\base\cvidcnew\test\libprod\sources
++++ nt\private\mvdm\softpc.new\base\cvidcnew\test\libprod\sources
+32,34c32,34
+< SOFTPC_TREE=$(BASEDIR)\private\mvdm\softpc.new
+< TARGETLIBS=$(SOFTPC_TREE)\base\cvidc\obj\*\cvidc.lib \
+< 	$(BASEDIR)\public\sdk\lib\*\kernel32.lib 
+---
+> SOFTPC_TREE=$(PROJECT_ROOT)\mvdm\softpc.new
+> TARGETLIBS=$(SOFTPC_TREE)\base\cvidc\objchk\*\cvidc.lib \
+> 	$(SDK_LIB_PATH)\kernel32.lib
+48c48
+< 386_STDCALL=0
+---
+> X86_STDCALL=0

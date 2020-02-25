@@ -1,0 +1,51 @@
+--- NT4\private\mvdm\softpc.new\host\src\nt_cpu.c
++++ nt\private\mvdm\softpc.new\host\src\nt_cpu.c
+159a160
+> #endif
+160a162,163
+> #if defined(A3CPU) || defined(CCPU)
+> #undef setSTATUS
+174a178
+> #endif
+175a180
+> #ifdef A3CPU
+280a286,288
+> #ifdef i386
+>     nt_cpu_info.in_nano_cpu = (BOOL *) ((IUH)Gdp + 560 + 3);
+> #else
+283c291,292
+< #ifndef PROD
+---
+> #endif /* ALPHA */
+> #if !defined(PROD) && !defined(i386)
+298a308,310
+> #ifdef i386
+>     nt_cpu_info.stack_is_big = (BOOL *) ((IUH)Gdp + 3096 + 3);
+> #else
+301c313,314
+< #ifndef PROD
+---
+> #endif /* ALPHA */
+> #if !defined(PROD) && !defined(i386)
+--- NT4\private\mvdm\softpc.new\base\ccpu386\sources
++++ nt\private\mvdm\softpc.new\base\ccpu386\sources
+42c42
+< SOFTPC_TREE=$(BASEDIR)\private\mvdm\softpc.new
+---
+> SOFTPC_TREE=$(PROJECT_ROOT)\mvdm\softpc.new
+--- NT4\private\mvdm\softpc.new\base\ccpu386\ntstubs.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\ntstubs.c
+31a32
+> #if 0
+32a34,36
+> #else
+> extern GLOBAL IBOOL AlreadyInYoda;
+> #endif
+91d94
+< #endif
+103a107
+> #endif
+154a159
+> #if 0
+159a165
+> #endif

@@ -1,0 +1,17 @@
+DIRS= USA \
+      JPN \
+      CHS \
+      CHT \	
+      KOR \
+      BR \
+      CS \
+      ES \
+      FR \
+      GER \
+      HU \
+      IT \
+      NL \
+      PL \
+      PT \
+      RU \
+      SV

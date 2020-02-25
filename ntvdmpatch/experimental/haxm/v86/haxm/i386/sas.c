@@ -280,6 +280,12 @@ GLOBAL VOID haxm_mprotect(
 /* This was just a test to see, if circumventing the 
  * NtMapViewOfSection MEM_DOS_LIM check helps in re-enabling this functionslity in
  * Winx64. Seems it is not possible, though, MiMapViewOfSection doesn't like it.
+ * However, I found:
+ *   https://blogs.msdn.microsoft.com/wsl/2016/05/23/pico-process-overview/
+ *   "Windows normally manages the user-mode address space in 64KB chunks, but was 
+ *    updated to allow management at single-page 4KB granularity for pico processes."
+ *   Maybe we need to become a pico-process...? But it seems that Patch guard doesn't like that:
+ *   http://www.alex-ionescu.com/publications/BlueHat/bluehat2016.pdf
  */
 GLOBAL NTSTATUS
 NTAPI

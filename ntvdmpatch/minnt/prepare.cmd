@@ -4,6 +4,7 @@ echo Preparing MINNT repository
 echo ----------------------------------------------------
 echo.
 
+if exist "%ProgramFiles%\7-Zip" set PATH=%PATH%;"%ProgramFiles%\7-Zip"
 7z >nul 2>&1
 if errorlevel 255 (
 echo Please install 7zip first, then run again
@@ -28,6 +29,9 @@ md %minntfix%\minnt\base\mvdm\wow16
 md %minntfix%\minnt\public\ddk\lib\x86
 md %minntfix%\minnt\public\internal\base\inc
 md %minntfix%\minnt\public\sdk\lib\x86
+md %minntfix%\minnt\base\mvdm\softpc.new\host\inc\alpha
+md %minntfix%\minnt\base\mvdm\softpc.new\host\inc\mips
+md %minntfix%\minnt\base\mvdm\softpc.new\host\inc\ppc
 md %workdir%
 
 if not exist %minntfix%\minnt\public\ddk\lib\x86\umpdddi.lib goto doddk
@@ -41,6 +45,13 @@ if exist %workdir%\WDK\wxplibs_x86fre_cab001.cab (
 call :expandf %workdir%\WDK\wxplibs_x86fre_cab001.cab _umpdddi.lib_00315 %minntfix%\minnt\public\ddk\lib\x86\umpdddi.lib
 call :expandf %workdir%\WDK\wxplibs_x86fre_cab001.cab _winspool.lib_00345 %minntfix%\minnt\public\sdk\lib\x86\winspool.lib
 ) else goto ddkisoex
+if exist %workdir%\WDK\libs_x86fre_cab001.cab (
+rem For RegisterConsoleVDM with fewer parameters starting with Win7
+call :expandf %workdir%\WDK\libs_x86fre_cab001.cab _kernl32p.lib_00256 %minntfix%\minnt\public\sdk\lib\x86\kernl32p.lib
+rem For GetStringBitmapA
+call :expandf %workdir%\WDK\libs_x86fre_cab001.cab _gdi32.lib_00234 %minntfix%\minnt\public\sdk\lib\x86\gdi32.lib
+) else goto ddkisoex
+
 rem
 rem Current DDK headers not really working with build system/older headers, so we take the headers from
 rem old-src and adapt them
@@ -60,11 +71,12 @@ pause
 goto fini
 )
 call :expandiso GRMWDK_EN_7600_1.ISO WDK\wxplibs_x86fre_cab001.cab 
+call :expandiso GRMWDK_EN_7600_1.ISO WDK\libs_x86fre_cab001.cab
 rem call :expandiso GRMWDK_EN_7600_1.ISO WDK\headers_cab001.cab
 goto redoddk
 
 :ddkok
-for %%a in (dbgeng.dll dbghelp.dll symbolcheck.dll symchk.exe) do if not exist "%minntfix%\minnt\public\internal\base\inc\%%~a" goto dosdk
+for %%a in (dbgeng.dll dbghelp.dll) do if not exist "%minntfix%\minnt\public\internal\base\inc\%%~a" goto dosdk
 goto sdkok
 :dosdk
 echo Need to extract SDK files.
@@ -74,10 +86,6 @@ call :expandiso Setup\WinSDKDebuggingTools\dbg_x86.msi DbgengDLL
 move /y %workdir%\DbgengDLL %minntfix%\NTOSBE-master\tools\x86\idw\dbgeng.dll
 call :expandiso Setup\WinSDKDebuggingTools\dbg_x86.msi _DbghelpDLL
 move /y %workdir%\_DbghelpDLL %minntfix%\NTOSBE-master\tools\x86\idw\dbghelp.dll
-call :expandiso Setup\WinSDKDebuggingTools\dbg_x86.msi SymbolcheckDLL
-move /y %workdir%\SymbolcheckDLL %minntfix%\NTOSBE-master\tools\x86\idw\symbolcheck.dll
-call :expandiso Setup\WinSDKDebuggingTools\dbg_x86.msi SymchkEXE
-move /y %workdir%\SymchkEXE %minntfix%\NTOSBE-master\tools\x86\idw\symchk.exe
 goto sdkok
 )
 if not exist %workdir%\GRMSDK_EN_DVD.iso  (
@@ -97,16 +105,18 @@ goto oldsrcok
 :dooldsrc
 echo Need to copy missing files from old-src
 :redooldsrc
-if not exist %workdir%\old-src.trunk.r687.20150728.7z (
-echo In order to get the missing header files, download old-src.trunk.r687.20150728.7z
+set OLDSRC=old-src.trunk.r687.20150728.7z
+if exist %workdir%\old-src-sr687.7z set OLDSRC=old-src-sr687.7z
+if not exist %workdir%\%OLDSRC% (
+echo In order to get the missing header files, download %OLDSRC%
 echo Place it in %workdir% and then try again.
 echo You have to find this yourself on the Internet
 pause
 goto fini
 )
-7z x -y %workdir%\old-src.trunk.r687.20150728.7z old-src\nt\private\windows\inc\gdispool.h old-src\nt\private\windows\spooler\inc\splapip.h old-src\nt\public\oak\inc\winddiui.h old-src\nt\public\oak\inc\compstui.h old-src\nt\private\mvdm\wow16 -o%workdir%
+7z x -y %workdir%\%OLDSRC% old-src\nt\private\windows\inc\gdispool.h old-src\nt\private\windows\spooler\inc\splapip.h old-src\nt\public\oak\inc\winddiui.h old-src\nt\public\oak\inc\compstui.h old-src\nt\private\mvdm\wow16 old-src\nt\private\mvdm\softpc.new\host\inc\alpha old-src\nt\private\mvdm\softpc.new\host\inc\mips old-src\nt\private\mvdm\softpc.new\host\inc\ppc old-src\nt\private\mvdm\dpmi old-src\nt\private\mvdm\dpmi32 old-src\nt\private\mvdm\inc\intmac.inc old-src\nt\private\mvdm\inc\dpmi.h -o%workdir%
 if not exist %workdir%\old-src\nt\private\windows\inc\gdispool.h (
-echo Cannot expand %workdir%\old-src\nt\private\windows\inc\gdispool.h from %workdir%\old-src.trunk.r687.20150728.7z. 
+echo Cannot expand %workdir%\old-src\nt\private\windows\inc\gdispool.h from %workdir%\%OLDSRC%
 echo Cannot continue.
 pause
 goto fini
@@ -120,8 +130,21 @@ echo #include "winddiui_xp.h" >>%minntfix%\minnt\public\oak\inc\winddiui.h
 
 
 xcopy /s /y %workdir%\old-src\nt\private\mvdm\wow16 %minntfix%\minnt\base\mvdm\wow16\
+xcopy /s /y %workdir%\old-src\nt\private\mvdm\softpc.new\host\inc\alpha %minntfix%\minnt\base\mvdm\softpc.new\host\inc\alpha\
+xcopy /s /y %workdir%\old-src\nt\private\mvdm\softpc.new\host\inc\mips %minntfix%\minnt\base\mvdm\softpc.new\host\inc\mips\
+xcopy /s /y %workdir%\old-src\nt\private\mvdm\softpc.new\host\inc\ppc %minntfix%\minnt\base\mvdm\softpc.new\host\inc\ppc\
 del %minntfix%\minnt\base\mvdm\wow16\inc\ime.h
+xcopy /s /y %workdir%\old-src\nt\private\mvdm\dpmi %minntfix%\minnt\base\mvdm\dpmi.old\
+xcopy /s /y %workdir%\old-src\nt\private\mvdm\dpmi32 %minntfix%\minnt\base\mvdm\dpmi32.old\
+xcopy /Y %workdir%\old-src\nt\private\mvdm\inc\intmac.inc %minntfix%\minnt\base\mvdm\dpmi.old\
+md %minntfix%\minnt\base\mvdm\inc
+copy /Y %workdir%\old-src\nt\private\mvdm\inc\dpmi.h %minntfix%\minnt\base\mvdm\inc\dpmi.h.old
+xcopy /Y %minntfix%\minnt\base\mvdm\dos\v86\cmd\append\dirs %minntfix%\minnt\base\mvdm\dpmi.old\
 
+for %%I in (command debug edlin exe2bin graphics keyb loadfix mem nlsfunc setver) do (
+  md %minntfix%\minnt\base\mvdm\dos\v86\cmd\%%I
+  xcopy /Y %minntfix%\minnt\base\mvdm\dos\v86\cmd\append\dirs %minntfix%\minnt\base\mvdm\dos\v86\cmd\%%I\
+)
 
 :oldsrcok
 echo The patch directory is now prepared. You may delete the contents of the 

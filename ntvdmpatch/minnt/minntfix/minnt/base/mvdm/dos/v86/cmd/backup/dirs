@@ -1,0 +1,7 @@
+DIRS= USA \
+      CHS \
+      CHT \
+      KOR \
+      GER \
+	  JPN
+

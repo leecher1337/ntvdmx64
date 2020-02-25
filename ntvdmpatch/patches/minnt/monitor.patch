@@ -1,0 +1,175 @@
+--- NT4\private\mvdm\bde\bdeutil.c
++++ nt\private\mvdm\bde\bdeutil.c
+39c39
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+--- NT4\private\mvdm\dbg\dbg.c
++++ nt\private\mvdm\dbg\dbg.c
+38c38
+< #ifdef i386
+---
+> #ifdef MONITOR
+--- NT4\private\mvdm\inc\softpc.h
++++ nt\private\mvdm\inc\softpc.h
+229c229
+< #ifdef i386
+---
+> #ifdef MONITOR
+257,258d255
+< #define DECLARE_LocalVdmContext VDM_TIB * _LocalVdmTib = (VDM_TIB *)(NtCurrentTeb()->Vdm); \
+<                                 CONTEXT * _LocalVdmContext = &(*_LocalVdmTib).VdmContext
+
+--- NT4\private\mvdm\inc\wow.h
++++ nt\private\mvdm\inc\wow.h
+29c29
+< #ifdef i386
+---
+> #ifdef MONITOR
+--- NT4\private\mvdm\softpc.new\host\src\config.c
++++ nt\private\mvdm\softpc.new\host\src\config.c
+566c566
+< #ifdef i386
+---
+> #ifdef MONITOR
+570c570
+<          vdmMemorySize = 16L * 1024L
+---
+>          vdmMemorySize = 16L * 1024L;
+--- NT4\private\mvdm\softpc.new\host\src\nt_msscs.c
++++ nt\private\mvdm\softpc.new\host\src\nt_msscs.c
+131c131
+< #ifndef i386
+---
+> #if !defined(i386) || !defined(MONITOR)
+--- NT4\private\mvdm\xms.486\xms.c
++++ nt\private\mvdm\xms.486\xms.c
+47c47
+< #ifndef i386
+---
+> #ifndef MONITOR
+67c67
+< #ifndef i386
+---
+> #ifndef MONITOR
+--- NT4\private\mvdm\xms.486\xms.h
++++ nt\private\mvdm\xms.486\xms.h
+60c60
+< #ifndef i386
+---
+> #ifndef MONITOR
+149c149
+< #ifndef i386
+---
+> #ifndef MONITOR
+--- NT4\private\mvdm\xms.486\xmsblock.c
++++ nt\private\mvdm\xms.486\xmsblock.c
+200c200
+< #ifdef i386
+---
+> #ifdef MONITOR
+--- NT4\private\..\public\sdk\inc\nt_vdd.h
++++ nt\private\..\public\sdk\inc\nt_vdd.h
+267c267
+< #ifdef _X86_
+---
+> #if defined(_X86_) && defined(MONITOR)
+--- NT4\private\mvdm\softpc.new\host\src\nt_fulsc.c
++++ nt\private\mvdm\softpc.new\host\src\nt_fulsc.c
+2019a2020
+> 	ResetEvent(hErrorHardwareEvent);
+2030d2030
+<     ResetEvent(hErrorHardwareEvent);
+2280c2280
+<     #ifdef i386
+---
+>     #if defined(i386) && defined(X86GFX)
+3372a3373
+> #ifdef X86GFX
+3378a3380
+> #endif
+--- NT4\private\mvdm\softpc.new\host\src\nt_det.c
++++ nt\private\mvdm\softpc.new\host\src\nt_det.c
+255c255
+< 
+---
+>     ResetEvent(hErrorHardwareEvent);
+260d259
+<     ResetEvent(hErrorHardwareEvent);
+--- NT4\private\mvdm\softpc.new\base\keymouse\mouse_io.c
++++ nt\private\mvdm\softpc.new\base\keymouse\mouse_io.c
+1797a1798
+> #ifdef X86GFX
+1820a1822
+> #endif
+--- NT4\private\mvdm\softpc.new\host\src\nt_bop.c
++++ nt\private\mvdm\softpc.new\host\src\nt_bop.c
+754a755
+> #ifdef X86GFX
+762a764
+> #endif
+--- NT4\private\mvdm\v86\monitor\x86\monitor.c
++++ nt\private\mvdm\v86\monitor\x86\monitor.c
+106a107
+> #ifdef X86GFX 
+110a112
+> #endif
+1597a1600
+> #ifdef X86GFX
+1631a1635
+> #endif
+--- NT4\private\mvdm\softpc.new\base\video\video.c
++++ nt\private\mvdm\softpc.new\base\video\video.c
+4729c4729
+<     #ifndef i386   // !!! remeber to change DISP_WIN.SYS since it relies on this.
+---
+>     #ifndef X86GFX   // !!! remeber to change DISP_WIN.SYS since it relies on this.
+--- NT4\private\mvdm\inc\dpmtbls.h
++++ nt\private\mvdm\inc\dpmtbls.h
+23a24
+> #ifdef MONITOR
+24a26,29
+> #else
+> extern PFAMILY_TABLE  *pgDpmVdmFamTbls;
+> #define DPMFAMTBLS()     pgDpmVdmFamTbls
+> #endif
+--- NT4\private\mvdm\softpc.new\host\src\nt_sb.c
++++ nt\private\mvdm\softpc.new\host\src\nt_sb.c
+300a301
+> #ifdef MONITOR
+304a306
+> #endif
+352a355
+> #ifdef MONITOR
+356a360
+> #endif
+--- NT4\private\mvdm\softpc.new\host\src\nt_sbfm.c
++++ nt\private\mvdm\softpc.new\host\src\nt_sbfm.c
+302a303
+> #ifdef MONITOR
+308c309,311
+<             } else {
+---
+>             } else 
+> #endif
+> 			{
+312a316
+> #ifdef MONITOR
+322a327
+> #endif
+356a362
+> #ifdef MONITOR
+362a369
+> #endif
+--- NT4\private\mvdm\softpc.new\host\inc\nt_reset.h
++++ nt\private\mvdm\softpc.new\host\inc\nt_reset.h
+19a20
+> #ifdef X86GFX
+27c28,32
+< 
+---
+> #else
+> #define CheckScreenSwitchRequest(handle)
+> #define EnableScreenSwitch(OnlyFullScreenMode, handle)
+> #define DisableScreenSwitch(handle)
+> #endif

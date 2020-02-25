@@ -1,0 +1,17 @@
+//---------------------------------------------------------------------------
+// ntvdmd.rc
+//
+// Copyright (c) Microsoft Corporation, 1990-
+//---------------------------------------------------------------------------
+
+#define WIN31 1
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_INTERNALNAME_STR            "NTVDMD"
+#define VER_ORIGINALFILENAME_STR	"NTVDMD"
+#define VER_FILEDESCRIPTION_STR 	"NTVDMD.DLL"
+
+#include "common.ver"

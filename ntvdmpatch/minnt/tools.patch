@@ -8,3 +8,32 @@
 <      fclose(idxfile) ;
 ---
 >      if (idxfile) fclose(idxfile) ;
+--- base\mvdm\dos\v86\cmd\command\buildmsg.c
++++ base\mvdm\dos\v86\cmd\command\buildmsg.c
+493c493
+< 	char	out[128];
+---
+> 	char	out[256];
+--- base\mvdm\dos\v86\tools\src\h2inc\h2inc.c
++++ base\mvdm\dos\v86\tools\src\h2inc\h2inc.c
+308a309
+>     char        tmpf[]="H2XXXXXX";
+371c372
+< 		    pchtmp = mktemp("H2XXXXXX");
+---
+> 		    pchtmp = mktemp(tmpf);
+--- base\mvdm\dos\v86\tools\src\stripdd\stripdd.c
++++ base\mvdm\dos\v86\tools\src\stripdd\stripdd.c
+
+74c75
+< unsigned int	HeadLen, *HeadPtr ;
+---
+> unsigned short	HeadLen, *HeadPtr ;
+82c83
+< 	int	*tptr ;
+---
+> 	short	*tptr ;
+95c96
+< 	tptr = (int *)tempbuf ;
+---
+> 	tptr = (short *)tempbuf ;

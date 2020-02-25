@@ -1,0 +1,23 @@
+--- NT4\private\mvdm\softpc.new\base\inc\video.h
++++ nt\private\mvdm\softpc.new\base\inc\video.h
+324a325,328
+> #if (i386)
+> IMPORT VOID (__stdcall *bios_ch2_byte_wrt_fn) IPT2(ULONG, ch_attr, ULONG, ch_addr);
+> IMPORT VOID (__stdcall *bios_ch2_word_wrt_fn) IPT2(ULONG, ch_attr, ULONG, ch_addr);
+> #else
+326a331
+> #endif
+--- NT4\private\mvdm\softpc.new\base\cvidc\sources
++++ nt\private\mvdm\softpc.new\base\cvidc\sources
+81c81
+<         accessfn.c  \
+---
+> #        accessfn.c  \
+86a87
+> X86_STDCALL=0
+--- NT4\private\mvdm\softpc.new\base\cvidc\sources
++++ nt\private\mvdm\softpc.new\base\cvidc\sources
+37c37
+< SOFTPC_TREE=$(BASEDIR)\private\mvdm\softpc.new
+---
+> SOFTPC_TREE=$(PROJECT_ROOT)\mvdm\softpc.new

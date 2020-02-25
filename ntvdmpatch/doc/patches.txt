@@ -11,6 +11,9 @@ ccpu_segperm.patch  - Patches a potential bug in the CCPU that causes
 console.patch       - Fixes console startup bug that would otherwise not init
                       colors of console properly and would therefore cause
                       black chars on black screen.
+comments.patch      - Adds back the fun to MINNT source where some lamers
+                      removed all filthy comments and even the easteregg in 
+                      YODA
 cvidc.patch         - Patches the Video controller CPU to work in i386
 cvidcheap.patch     - Speed up CVIDC video emulation by eliminating all the 
                       unnecessary slow heap operations.
@@ -20,6 +23,9 @@ declaration.patch   - In cdecl calling convention, prototypes of functions
                       without parameters are possible, but on Windows with
                       __sdtcall, this would cause linking errors.
                       This patch fixes wrong declarations.
+dpmf.patch          - GetLongPathNameW signature is no good
+dpmi.patch          - Patches to DPMI sourcecode (MINNT and old-src need to
+                      use the same old DPMI code from old-src).
 ega_crash.patch     - Console graphics is required, as newer Windows display 
                       drivers with WDDM driver model do not support fullscreen
                       anymore. Some DOS programs, like i.e. Commander Keen 4, 

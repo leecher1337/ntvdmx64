@@ -1,0 +1,122 @@
+--- NT4\private\mvdm\softpc.new\base\debug\dasm.c
++++ nt\private\mvdm\softpc.new\base\debug\dasm.c
+51a52,57
+> #if defined(CPU_40_STYLE) && !defined(HOST_SAS)
+> #define inc_M_ptr(p,o)	(p+(o))
+> #define get_byte_addr(addr) ((IU8 *)((IHPE)Start_of_M_area + (PHY_ADDR)(addr)))
+> #define M_get_dw_ptr(address) ((IHPE)Start_of_M_area + (long)(address))
+> #endif
+> 
+--- NT4\private\mvdm\softpc.new\base\debug\yoda.c
++++ nt\private\mvdm\softpc.new\base\debug\yoda.c
+19a20,22
+> #if !defined(macintosh) && !defined(SFELLOW)
+> #include <time.h>
+> #endif
+1975c1978
+< 
+---
+> #endif /* GISP_CPU */
+1991c1994
+< #endif /* GISP_CPU */
+---
+> 
+5015a5019
+> #endif	/* GISP_CPU */
+5018d5021
+< #endif	/* GISP_CPU */
+--- NT4\private\mvdm\softpc.new\host\src\fprt.c
++++ nt\private\mvdm\softpc.new\host\src\fprt.c
+148a149
+> 	int len;
+150c151
+<     if (getenv("TRACE") == NULL)        //JonLu request to limit debugs
+---
+>     if (getenv("TRACE") == NULL && tf==stdout)        //JonLu request to limit debugs
+154c155
+<     vsprintf(buf, str, ap);
+---
+>     len = vsprintf(buf, str, ap);
+156c157
+<     OutputString(buf);
+---
+>     fwrite(buf,len,1,tf);
+226a229,234
+>     if(stream != stdout)
+>     {
+> 	int i;
+> 	for (i=0; i<size*len && (fputc(((unsigned char*)buf)[i], stream)) != EOF; i++);
+> 	return (len);
+>     }
+227c236
+<     tmp_buf[len] = 0;		// write into a const ptr!
+---
+>     if (tmp_buf[size*len]) tmp_buf[size*len] = 0;		// Bullshit write into a const ptr!
+--- NT4\private\mvdm\softpc.new\base\comms\com.c
++++ nt\private\mvdm\softpc.new\base\comms\com.c
+61a62
+> extern FILE *in_stream;
+287c289
+< FILE     *com_trace_fd = NULL;
+---
+> FILE     *com_trace_fd = NULL, *com_trace_rawfd = NULL;
+802a805
+> 				if (com_trace_rawfd) fwrite(&value, 1, 1, com_trace_rawfd); 
+3844a3848,3850
+> 	if (com_trace_rawfd)
+> 		fclose (com_trace_rawfd);
+> 	com_trace_rawfd = NULL;
+4023a4030,4036
+> static int yscanf(char *format, void *arg)
+> {
+> 	char str [81];
+> 	if (fgets (str, 80, in_stream))
+> 		return sscanf(str, format, arg);
+> 	return 0;
+> }
+4032c4045
+< 	scanf ("%s", ref);
+---
+> 	yscanf ("%s", ref);
+4134c4147
+< 		scanf ("%x", &val1);
+---
+> 		yscanf ("%x", &val1);
+4172c4185
+< 	scanf ("%s", com_reg);
+---
+> 	yscanf ("%s", com_reg);
+4190c4203
+< 	scanf ("%s", com_reg);
+---
+> 	yscanf ("%s", com_reg);
+4197c4210
+< 	scanf ("%x", &val);
+---
+> 	yscanf ("%x", &val);
+4211c4224
+< 	scanf ("%s", filename);
+---
+> 	yscanf ("%s", filename);
+4276c4289
+< 	scanf ("%s", filename);
+---
+> 	yscanf ("%s", filename);
+4303c4316,4328
+< 
+---
+> int com_o_rawfd ()
+> {
+> 	char filename[100];
+> 	printf ("FILE > ");
+> 	yscanf ("%s", filename);
+> 	if (!(com_trace_rawfd = fopen (filename, "w")))
+> 	{
+> 		printf ("Cannot open %s\n", filename);
+> 		return (0);
+> 	}
+> 	printf ("Com raw debug output file = '%s'\n", filename);
+> 	return (0);
+> }
+4444a4470
+> 	{"rawo",   com_o_rawfd,      "  Open raw output logfile"},

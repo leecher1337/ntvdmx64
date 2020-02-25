@@ -1,0 +1,138 @@
+--- NT4\private\mvdm\softpc.new\base\ccpu386\ccpudefs.inc
++++ nt\private\mvdm\softpc.new\base\ccpu386\ccpudefs.inc
+1c1
+< C_DEFINES= -DCPU_30_STYLE -DCPU_40_STYLE -DNEW_CPU -DCCPU -DSPC386 -DANSI -DNTVDM
+---
+> C_DEFINES= -DCPU_30_STYLE -DCPU_40_STYLE -DNEW_CPU -DCCPU -DSPC386 -DANSI -DNTVDM -DPROD
+--- NT4\private\mvdm\softpc.new\base\dasm386\sources
++++ nt\private\mvdm\softpc.new\base\dasm386\sources
+35c35
+< X86_SOURCES=
+---
+> X86_SOURCES=$(ALPHA_SOURCES)
+--- NT4\private\mvdm\softpc.new\base\dirs
++++ nt\private\mvdm\softpc.new\base\dirs
+27a28,29
+> 	ccpu386 \
+> 	cvidc \
+--- NT4\private\mvdm\softpc.new\base\system\sources.inc
++++ nt\private\mvdm\softpc.new\base\system\sources.inc
+38c38,39
+<         ..\qevnt.c       \
+---
+> #        ..\qevnt.c       \
+>         ..\quick_ev.c    \
+--- NT4\private\mvdm\softpc.new\host\src\sources.inc
++++ nt\private\mvdm\softpc.new\host\src\sources.inc
+97c97,99
+<     ..\nt_sbmid.c
+---
+>     ..\nt_sbmid.c      \
+>     ..\longpath.c      \
+>     ..\vdpm.c
+99a102
+> X86_SOURCES=..\nt_aorc.c
+--- NT4\private\mvdm\softpc.new\obj.vdm\cdefine.inc
++++ nt\private\mvdm\softpc.new\obj.vdm\cdefine.inc
+34c34
+< !IF $(X86)
+---
+> !IF $(X86) && "$(CCPU)" == "" && "$(HAXM)" == ""
+51c52
+< 
+---
+> !IF "$(HAXM)" == ""
+56a58,60
+> !ELSE
+> CPU_DEFS=     -DCPU_40_STYLE -DHAXM -DC_VID -DSPC486
+> !ENDIF
+62c66,67
+< 	      -DV7VGA
+---
+> 	      -DV7VGA \
+> 	      -DW10
+--- NT4\private\mvdm\softpc.new\obj.vdm\sources.inc
++++ nt\private\mvdm\softpc.new\obj.vdm\sources.inc
+32c32
+< INCLUDES=$(SOFTPC_TREE)\host\inc;$(SOFTPC_TREE)\base\inc
+---
+> INCLUDES=$(SOFTPC_TREE)\host\inc;$(SOFTPC_TREE)\base\inc;$(BASEDIR)\private\windows\inc
+46c46
+< !if !$(X86)
+---
+> !if !$(X86)  && "$(CCPU)" == "" && "$(HAXM)" == ""
+49,50c49,51
+<         $(SDK_LIB_PATH)\advapi32.lib
+< #       $(SDK_LIB_PATH)\kernl32p.lib    \
+---
+>         $(SDK_LIB_PATH)\advapi32.lib    \
+>         $(SDK_LIB_PATH)\kernl32p.lib    \
+>         $(SDK_LIB_PATH)\gdi32.lib
+80c81
+< !if $(X86)
+---
+> !if $(X86)  && "$(CCPU)" == "" && "$(HAXM)" == ""
+99a101,105
+> # Use Monitor, HAXM or CCPU?
+> !if $(X86) && "$(CCPU)" == "" && "$(HAXM)" == ""
+> CPULIBS=$(BASEDIR)\public\sdk\lib\*\monitor.lib
+> !else
+> !if "$(HAXM)" == ""
+104a111,113
+> !if $(X86)
+> CPULIBS=$(SOFTPC_TREE)\base\ccpu386\$(O)\ccpu386.lib $(SOFTPC_TREE)\base\cvidc\$(O)\cvidc.lib
+> !else
+106a116,120
+> !endif
+> !else
+> CPULIBS=$(BASEDIR)\public\sdk\lib\*\haxm.lib $(SOFTPC_TREE)\base\cvidc\$(O)\cvidc.lib
+> !endif
+> !endif
+115a130
+>         ..\fmstubs.c \
+--- NT4\private\mvdm\xms.486\sources.inc
++++ nt\private\mvdm\xms.486\sources.inc
+45c45,46
+< X86_SOURCES=..\x86\xmsmem86.c
+---
+> #X86_SOURCES=..\x86\xmsmem86.c
+> X86_SOURCES=..\xmsmemr.c
+--- NT4\private\mvdm\wow32\x86\sources
++++ nt\private\mvdm\wow32\x86\sources
+1,2c1,2
+< X86_SOURCES=         \
+<     ..\x86\callpr32.asm
+---
+> #X86_SOURCES=         \
+> #    ..\x86\callpr32.asm
+--- NT4\private\mvdm\softpc.new\obj.vdm\ntvdm.src
++++ nt\private\mvdm\softpc.new\obj.vdm\ntvdm.src
+4c4
+< #ifdef _X86_
+---
+> #ifdef MONITOR
+74a75
+>     MGetVdmPointer = ExpSim32GetVDMPointer      ; for 1.0 VDD compatibility
+75a77
+>     pgDpmVdmFamTbls
+--- NT4\private\mvdm\inc\makefile.inc
++++ nt\private\mvdm\inc\makefile.inc
+30c30
+<      doswow.inc curdir.inc vdmtib.inc
+---
+>      doswow.inc curdir.inc
+--- NT4\private\mvdm\dbg\dirs
++++ nt\private\mvdm\dbg\dirs
+13c13
+< OPTIONAL_DIRS= daytona
+---
+> DIRS= daytona
+--- NT4\private\mvdm\v86\monitor\x86\sources.inc
++++ nt\private\mvdm\v86\monitor\x86\sources.inc
+9,11c9,10
+<             x86\vdpm.c     \
+<             x86\int.c      \
+<             x86\longpath.c
+---
+>             x86\int.c
+> 

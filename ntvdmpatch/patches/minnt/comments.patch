@@ -1,0 +1,173 @@
+--- NT4\private\mvdm\softpc.new\bios\sysinit1.asm
++++ nt\private\mvdm\softpc.new\bios\sysinit1.asm
+1783c1783
+< 	call	AllocMemForDOS			; 
+---
+> 	call	AllocMemForDOS			; incestuosly!!!
+--- NT4\private\mvdm\softpc.new\base\debug\yoda.c
++++ nt\private\mvdm\softpc.new\base\debug\yoda.c
+2391a2392,2416
+> #ifndef macintosh
+> LOCAL char * fff_strings[] = {
+> "Hmm, looks like a hardware problem to me.",
+> "Unexpected unary expression",
+> "\n/tmp> rm -rf $WD/*\n\nProblem cured.",
+> "It's probably the optimiser again.",
+> "So how long have you thought that you had these problems?",
+> "Looks like the SoftWindows team have broken the base again.",
+> "I think it's another management screw-up.",
+> "It's the hair - I'm sorry, but you're going to have to do something about\nthat hair.",
+> "Wearing silk underwear will cure most static problems.",
+> "You have an unitialised variable.",
+> "You always get that sort of problem with Quick Events.",
+> "Say \"William, have you seen this very interesting bug?\".",
+> "Time for a coffee, I think.",
+> "Your problem is that you are attempting to emulate an Intel processor.",
+> "Whoever wrote this code must have been drunk at the time.",
+> "It's not a bug, it's a feature",
+> "Why are you always finding fault? Can't you appreciate me for what I am?",
+> #ifdef SUNOS50
+> "You're running Solaris, and you don't KNOW what the problem is?????",
+> #endif /* SUNOS50 */
+> "Sorry, there is no faul                             "
+> };
+> #endif /* !macintosh */
+2401a2427,2432
+> #ifdef macintosh
+> 	printf("Sorry, the Macintosh doesn't have faults.\n");
+> #else
+> 	if (chewy)
+> 		printf("%s\n", fff_strings[(rand()/3) % (sizeof(fff_strings) / sizeof(char *))]);
+> #endif /* macintosh else */
+--- NT4\private\mvdm\dos\v86\redir\netapis.asm
++++ nt\private\mvdm\dos\v86\redir\netapis.asm
+262c262
+< ; meaningful values in them. This function
+---
+> ; meaningful values in them. The reason: WinUnPack is brain-dead. This function
+264c264
+< ; the returned EntriesRead in BX to do so. It's bad because it doesn't
+---
+> ; the returned EntriesRead in BX to do so. It's brain-dead because it doesn't
+266c266
+< ; buffer. This took me a day to find out why its
+---
+> ; buffer, which probably contains crap. This took me a day to find out why its
+--- NT4\private\mvdm\dos\v86\doskrnl\bios\sysinit1.asm
++++ nt\private\mvdm\dos\v86\doskrnl\bios\sysinit1.asm
+1968c1968
+< 	call	AllocMemForDOS			; 
+---
+> 	call	AllocMemForDOS			; incestuosly!!!
+--- NT4\private\mvdm\dos\v86\doskrnl\dos\cpmio.asm
++++ nt\private\mvdm\dos\v86\doskrnl\dos\cpmio.asm
+306c306
+< ; Tim Patterson ignored ^F in case his BIOS did not flush the
+---
+> ; Brain-damaged Tim Patterson ignored ^F in case his BIOS did not flush the
+--- NT4\private\mvdm\dos\v86\doskrnl\dos\dir2.asm
++++ nt\private\mvdm\dos\v86\doskrnl\dos\dir2.asm
+171c171
+< 					; certain problems reported
+---
+> 					; certain idiotic problems reported
+--- NT4\private\mvdm\dos\v86\doskrnl\dos\msproc.asm
++++ nt\private\mvdm\dos\v86\doskrnl\dos\msproc.asm
+1315c1315
+< 	push	[SI.user_CS]		; take out the CS and IP
+---
+> 	push	[SI.user_CS]		; suck out the CS and IP
+1317c1317
+< 	push	[SI.user_CS]		; take out the CS and IP
+---
+> 	push	[SI.user_CS]		; suck out the CS and IP
+--- NT4\private\mvdm\dos\v86\doskrnl\dos\path.asm
++++ nt\private\mvdm\dos\v86\doskrnl\dos\path.asm
+22c22
+< ;		 MZ 19 Jan 1983     some applications rely on success
+---
+> ;		 MZ 19 Jan 1983     Brain damaged applications rely on success
+--- NT4\private\mvdm\dos\v86\doskrnl\dos\search.asm
++++ nt\private\mvdm\dos\v86\doskrnl\dos\search.asm
+266c266
+< ; BUGBUG Sudeepb 15-sept-91 This xor ax,ax is done for the PageMaker 4.0
+---
+> ; BUGBUG Sudeepb 15-sept-91 This xor ax,ax is done for stupid PageMaker 4.0
+294c294
+< ; BUGBUG 13-Jun-1992 Jonle  This xor ax,ax is done for list.com,
+---
+> ; BUGBUG 13-Jun-1992 Jonle  This xor ax,ax is done for stupid list.com,
+--- NT4\private\mvdm\dos\v86\doskrnl\dos\util.asm
++++ nt\private\mvdm\dos\v86\doskrnl\dos\util.asm
+106c106
+< 	JNZ     GetSF                   ; nope, take out SF
+---
+> 	JNZ     GetSF                   ; nope, suck out SF
+--- NT4\private\mvdm\dos\v86\dev\himem\himem2.asm
++++ nt\private\mvdm\dos\v86\dev\himem\himem2.asm
+806c806
+< 	shl	dx,1		; multiply DX by 10
+---
+> 	shl	dx,1		; Stupid multiply DX by 10
+--- NT4\private\mvdm\dos\v86\dev\himem\himem.asm
++++ nt\private\mvdm\dos\v86\dev\himem\himem.asm
+2399c2399
+< ;	   Now put the block at [bx] up into our block in registers so
+---
+> ;	   Now suck the block at [bx] up into our block in registers so
+--- NT4\private\mvdm\dos\v86\cmd\command\path2.asm
++++ nt\private\mvdm\dos\v86\cmd\command\path2.asm
+147c147
+< 	and	DL, NOT 20H			; uppercase it
+---
+> 	and	DL, NOT 20H			; uppercase the sucker
+420c420
+< 	rep	movsb				; move it
+---
+> 	rep	movsb				; move that sucker!
+--- NT4\private\mvdm\dos\v86\cmd\command\rdata.asm
++++ nt\private\mvdm\dos\v86\cmd\command\rdata.asm
+668c668
+<     jc  nomem_err       ;something is really messed up
+---
+>     jc	nomem_err	;something is really screwed up
+--- NT4\private\mvdm\dos\v86\cmd\command\tbatch2.asm
++++ nt\private\mvdm\dos\v86\cmd\command\tbatch2.asm
+264c264
+< ;This was part of the old code. Because,
+---
+> ;This was part of the old code, thanks to some brain-damaged coding. Because,
+839c839
+< ;we are fine.
+---
+> ;we are fine. I know, I know, what a massive hack from hell!! God help us!!
+--- NT4\private\mvdm\dos\v86\cmd\command\tbatch.asm
++++ nt\private\mvdm\dos\v86\cmd\command\tbatch.asm
+537c537
+< 	JNZ	GETENV1 			; no, go take out more characters
+---
+> 	JNZ	GETENV1 			; no, go suck out more characters
+--- NT4\private\mvdm\dos\v86\cmd\command\tcode.asm
++++ nt\private\mvdm\dos\v86\cmd\command\tcode.asm
+1014c1014
+<         and     DL, NOT 20H                     ; uppercase it
+---
+>         and     DL, NOT 20H                     ; uppercase the sucker
+--- NT4\private\mvdm\dos\v86\cmd\command\tmisc1.asm
++++ nt\private\mvdm\dos\v86\cmd\command\tmisc1.asm
+336c336
+< ; Note that thisdoes not mess up the arg structure; it points into COMBUF not
+---
+> ; Note that thisdoes not screw up the arg structure; it points into COMBUF not
+--- NT4\private\mvdm\dos\v86\cmd\debug\debcom2.asm
++++ nt\private\mvdm\dos\v86\cmd\debug\debcom2.asm
+1090c1090
+< 	POP	[RETSAVE]		; pull up return addr
+---
+> 	POP	[RETSAVE]		; Suck up return addr
+--- NT4\private\mvdm\dos\v86\cmd\graphics\grload2.asm
++++ nt\private\mvdm\dos\v86\cmd\graphics\grload2.asm
+456c456
+<      MOV  [BP+DI].NUM_DISP_MODE,0      ;; Get ready to INC this 		;AN000;
+---
+>      MOV  [BP+DI].NUM_DISP_MODE,0      ;; Get ready to INC this sucker		;AN000;

@@ -16,26 +16,32 @@ patches for it to actually get it working with NTVDMx64.
 As it lacks some libraries/headers, you still need the old NT4 sourcecode
 to pull in some required dependencies.
 
-As the sourcecode version is different, NTVDMx64 patches need to be ported to
-this sourcecode version. This is currently work in progress.
-This document will be enhanced as soon as patches are ported.
-
 Requirements
 ============
  * MinNT repository with NTVDM with latest commits as of Apr 16, 2017 
-   (q160765803-minint4-85fac4faadc7)
+   (q160765803-minint4-85fac4faadc7 or more specifically 
+    MinNT-20170416-85fac4faadc77203db8ddc66af280a75c1b717b0.zip)
    opennt.net site contains some hints on where to find it.
  * Windows NT4 repository old-src.trunk.r687.20150728.7z
+   (a.k.a. old-src-sr687.7z)
  * Windows Driver Kit Version 7.1.0 
    https://www.microsoft.com/en-us/download/details.aspx?id=11800
  * Microsoft Windows SDK for Windows 7 and .NET Framework 4 (ISO) 
    https://www.microsoft.com/en-us/download/details.aspx?id=8442
  * NTOSBE-master build environment
    https://github.com/stephanosio/NTOSBE
+ * An installed version of 7-zip file manager
+   https://www.7-zip.de
 
 
 Setup MINNT build environment
 =============================
+
+Please ensure that your build root is in a directory with a very short path 
+length, otherwise the build process will fail.
+So i.e. C:\WORK
+Alternatively, map the build root to a seperate drive letter, i.e. W: with
+subst W: .
 
 1) Place the following directories in your build directory:
 
@@ -46,15 +52,24 @@ Setup MINNT build environment
 You now have:
 
   minnt
+    base
+    ds
+    ...
   NTOSBE-master
+    doc
+    profiles
+    ...
   ntvdmpatch
+    doc
+    experimental
+    ...
 
 2) Download required SDK ISOs and old-src.trunk.r687.20150728.7z and place them in
    ntvdmpatch\minnt\work
 
  * https://www.microsoft.com/en-us/download/details.aspx?id=11800
  * https://www.microsoft.com/en-us/download/details.aspx?id=8442
- * Google old-src.trunk.r687.20150728.7z 
+ * Google old-src.trunk.r687.20150728.7z or old-src-sr687.7z
 
 You now have in ntvdmpatch\minnt\work:
 
@@ -62,14 +77,67 @@ You now have in ntvdmpatch\minnt\work:
   GRMWDK_EN_7600_1.ISO
   old-src.trunk.r687.20150728.7z
 
-3) Go to ntvdmpatch\minnt\ and run prepare.cmd
-minntfix directory will now be prepared with the missing files that need to be 
-added to minnt but cannot be supplied by me due to legal reasons.
+3) Run ntvdmpatch\minnt\prepare.cmd
+   minntfix directory will now be prepared with the missing files that need to be 
+   added to minnt but cannot be supplied by me due to legal reasons.
 
-4) In ntvdmpatch\minnt\ now run patch.cmd to create a working minnt repository
+4) Run ntvdmpatch\minnt\patch.cmd
+   to create a working minnt repository
 
-5) Go to NTOSBE-master directory and run sizzle_minnt.cmd
+5) Run ntvdmpatch\minnt\mktools.cmd
+   to prepare the build environment tools
 
-6) As you can see, on first run, you need to now execute buildrepoidw.cmd on 
-   OpeNT shell
+6) Run NTOSBE-master\sizzle_minnt.cmd
+   to open build shell
 
+7) Run buildrepoidw.cmd -y
+   on OpenNT shell
+
+Patch and compile
+=================
+
+8) cd %NTROOT%\..\ntvdmpatch
+   patch.cmd
+
+9) cd %NTROOT%\..\ntvdmpatch
+   bld-minnt.cmd 
+
+In case you have to update ntvdmpatch after you once prepared the
+repository like mentioned before, it's usually enough to delete 
+minnt\base\mvdm directory, reextract it from minnt zip file and then 
+do steps 4, 6-9
+
+Create release
+==============
+9) Depending on the language you want to use, you can use the language
+   as a parameter to the mkrelease-minnt command:
+
+   cd %NTROOT%\..\ntvdmpatch
+   mkrelease-minnt
+
+If you do not supply a language parameter, release for all languages is built.
+Language codes available:
+br	-	Brazilian
+chs	-	Simplified Chinese
+cht	-	Traditional Chinese
+cs	-	Czech
+es	-	Spanish
+fr	-	French
+GER	-	German
+hu	-	Hungarian
+it	-	Italian
+JPN	-	Japanese
+KOR	-	Korean
+nl	-	Dutch
+pl	-	Polish
+pt	-	Portuguese
+ru	-	Russian
+sv	-	Swedish
+
+The result is built in newly created releases\ directory where you have
+one release-folder per language that you can use.
+
+Tutorial
+========
+A video tutorial showing step-by-step instructions can be found at
+https://youtu.be/YPVfvF-6uOs

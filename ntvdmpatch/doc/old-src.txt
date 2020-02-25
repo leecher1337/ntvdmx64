@@ -1,0 +1,54 @@
+Hot to compile
+==============
+
+Here is a short howto on how to compile this:
+Please be aware, that the build environment currently only works on
+Windows XP 32bit.
+1) Prepare your machine according the the OpenNT project build instructions:
+   a) Unpack contents of old-src directory from 
+      old-src.trunk.r687.20150728.7z to your working directory
+      You do not need to extract the .svn folder in it
+   b) Create directory nt\public\sdk in your working directory and 
+      unpack the contentes of old-sdk directory from 
+      old-sdk.trunk_r57.20150728.7z to it.
+      You do not need to extract the .svn folder in it
+   c) Ensure that you don't have w: drive already assigned and then
+      setup w: drive to point to the working directory by typing
+      SUBST W: .
+      inside the working directory and then switch to W:
+2) Now extract the ntvdmpatch directory from this source repository
+   to the root of W: drive 
+3) Run the patch.cmd file inside the ntvdmpatch directory to patch 
+   the sourcecode tree accordingly
+3a)If you want, you can apply the updates now (see next topic)
+4) Run zSHtst.cmd to enter build shell where you then type:
+   a) bld-ntos.cmd 
+      to build base components that are required for building NTVDM.
+      errors after build can be ignored
+   b) bld.cmd 
+      to build now patched NTVDM
+      "Build error" in the end isn't a problem as long as ntvdm.exe
+      is built.
+5) Run mkrelease.bat to create a redistributable package in the
+   release\ subdirectory
+6) Pack release-Directory as installation package for target machine.
+
+There is a youtube video available that documents compilation steps:
+https://www.youtube.com/watch?v=Y1yF957BR4I
+
+Youtube-user enderman also made a video about it:
+https://www.youtube.com/watch?v=unU7uyFJWmo
+
+Sourcecode updates
+==================
+NTVDM from NT4 sourcecode is quite dated. i.e. it lacks Long Filename (LFN)
+support and other stuff that got implemented in newer versions of NTVDM.
+At the time of writig, I didn't have the modern NTVDM sourcecode available, 
+so I tried to reconstruct some updates which are located in the updates 
+directory. I found out too late, that MINNT source tree actually contained
+all these updates.
+To apply the a specific update, you must run the patch.cmd in the 
+appropriate update-directory. It is assumed that you apply the updates in
+the order of the directory numbers to ensure that the paches fit to each
+other. 
+A description of the updates is documented in doc\updates.txt
