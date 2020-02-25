@@ -146,52 +146,31 @@ Of course it would be nice if Microsoft would do that themselves to provide
 x64 Windows users a NTVDM again, but I'm not very positive that this 
 will happen, they seem to forget about us DOS-users. :-(
 
-Here is a short howto on how to compile this:
-Please be aware, that the build environment currently only works on
-Windows XP 32bit.
-1) Prepare your machine according the the OpenNT project build instructions:
-   a) Unpack contents of old-src directory from 
-      old-src.trunk.r687.20150728.7z to your working directory
-      You do not need to extract the .svn folder in it
-   b) Create directory nt\public\sdk in your working directory and 
-      unpack the contentes of old-sdk directory from 
-      old-sdk.trunk_r57.20150728.7z to it.
-      You do not need to extract the .svn folder in it
-   c) Ensure that you don't have w: drive already assigned and then
-      setup w: drive to point to the working directory by typing
-      SUBST W: .
-      inside the working directory and then switch to W:
-2) Now extract the ntvdmpatch directory from this source repository
-   to the root of W: drive 
-3) Run the patch.cmd file inside the ntvdmpatch directory to patch 
-   the sourcecode tree accordingly
-3a)If you want, you can apply the updates now (see next topic)
-4) Run zSHtst.cmd to enter build shell where you then type:
-   a) bld-ntos.cmd 
-      to build base components that are required for building NTVDM.
-      errors after build can be ignored
-   b) bld.cmd 
-      to build now patched NTVDM
-      "Build error" in the end isn't a problem as long as ntvdm.exe
-      is built.
-5) Run mkrelease.bat to create a redistributable package in the
-   release\ subdirectory
-6) Pack release-Directory as installation package for target machine.
+There are various "flavours" of NTVDM that can be built:
+ * old-src
+   The original NT4 NTVDM. Maybe the easiest version to build, but
+   it doesn't have multilanguage and lacks some features like LFN
+   This has been the default repository until Feb/2020 where 
+   development has been switches to MINNT tree.
+   Please note that you need Windows XP for building.
+   Build instructions in: doc\old-src.txt
+ * HAXM
+   This is basically old-src, but instead of using the emulated
+   CCPU, it uses HAXM VT-x hardware accelleration (CPU needs to
+   support it), so it is significally faster in textmode.
+   But it doesn't support DPMI yet and will probably never support
+   graphics, as it is technically impossible to emulate a real VGA
+   card with sufficient performance on VT-x
+   Build instructions in: doc\haxm.txt, doc\old-src.txt
+ * MINNT
+   This is the most recent NTVDM source code, it supports multiple
+   languages, but is probably harder to build.
+   It is planned to continue development on this source tree as of
+   Feb/2020
+   old-src will still be maintaned, as long as HAXM build relies on it.
+   Build instructions in: doc\minnt.txt
 
-There is a youtube video available that documents compilation steps:
-https://www.youtube.com/watch?v=Y1yF957BR4I
-
-Sourcecode updates
-==================
-NTVDM from NT4 sourcecode is quite dated. i.e. it lacks Long Filename (LFN)
-support and other stuff that got implemented in newer versions of NTVDM.
-As we don't have modern NTVDM sourcecode available, I tried to reconstruct
-some updates which are located in the updates directory. 
-To apply the a specific update, you must run the patch.cmd in the 
-appropriate update-directory. It is assumed that you apply the updates in
-the order of the directory numbers to ensure that the paches fit to each
-other. 
-A description of the updates is documented in doc\updates.txt
+In case you want a fully compiled build, I recommend Googling for ntvdmx64
 
 How to install
 ==============
@@ -256,6 +235,13 @@ Sorry, NTVDMx64 isn't capable of it, as crucial system scheduler parts
 are not available on 64bit Windows.
 But I recommend installing https://github.com/otya128/winevdm
 additionally to NTVDMx64 so you get the best of both worlds.
+
+
+Are there any documents that describe the inner workings of the NTVDM 
+subsystem?
+---------------------------------------------------------------------------
+Not much documentation available, but this slide may be interesting to you:
+https://de.slideshare.net/daniel_bilar/2013-syscan360-wang-yuntvdm
 
 
 For other questions, I recommend looking at the Issue tracker:
