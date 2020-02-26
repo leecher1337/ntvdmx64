@@ -118,8 +118,8 @@ Create release
 If you do not supply a language parameter, release for all languages is built.
 Language codes available:
 br	-	Brazilian
-chs	-	Simplified Chinese
-cht	-	Traditional Chinese
+chs	-	Chinese
+cht	-	Taiwanese
 cs	-	Czech
 es	-	Spanish
 fr	-	French

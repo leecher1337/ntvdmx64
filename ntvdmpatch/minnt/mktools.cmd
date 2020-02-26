@@ -1,4 +1,5 @@
 @echo off
 call ..\basepath.cmd
 cd %BASEPATH%\..\..\NTOSBE-master
-buildlocaltools.cmd x86
+set PATH=
+call buildlocaltools.cmd x86

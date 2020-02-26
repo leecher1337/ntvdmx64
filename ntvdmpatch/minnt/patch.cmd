@@ -63,7 +63,11 @@ pushd %BASEPATH%\..\
 %PATCHROOT%\util\patch -N -p0 -i %~dp0\tools.patch
 cd ..
 %PATCHROOT%\util\patch -N -p0 -i %~dp0\be.patch
+rem Also ensure .mc file has CRLF line endings
+more /p <NTOSBE-master\src\sdktools\rcdll\rcmsgs.mc >tmp.msg
+move tmp.msg NTOSBE-master\src\sdktools\rcdll\rcmsgs.mc
 popd
+
 
 echo Done, now your MINNT build environment should be in a working condition.
 echo Run sizzle_minnt.cmd in Build environment directory next and do 
