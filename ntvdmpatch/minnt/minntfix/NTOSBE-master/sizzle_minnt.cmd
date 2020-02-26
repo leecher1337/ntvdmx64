@@ -26,6 +26,11 @@ popd
 if not exist %SIZ_NTTREE% md %SIZ_NTTREE%
 
 REM //
+REM // Set global PATH so that we don't get interference from local tools
+REM //
+set PATH=%SystemRoot%\System32;%SystemRoot%
+
+REM //
 REM // SIZ_NTARCH: Target build architecture [x86, amd64, arm, mips, alpha, ppc]
 REM //
 
