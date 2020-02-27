@@ -52,9 +52,7 @@ del "%BASEPATH%\mvdm\dpmi32\makefile"
 echo Ensuring that msg files have CRLF
 pushd %BASEPATH%\mvdm\dos\v86\messages
 for /R %%f in (*.msg) do (
-  more /p <%%f >tmp.msg
-  %PATCHROOT%\util\sed -i "s/^        /\t/g" tmp.msg
-  move tmp.msg %%f
+  %PATCHROOT%\util\sed -i "s/\r$/\n$/" %%f 
 )
 popd
 
