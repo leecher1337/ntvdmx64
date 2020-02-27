@@ -24,7 +24,6 @@
 > 		    pchtmp = mktemp(tmpf);
 --- base\mvdm\dos\v86\tools\src\stripdd\stripdd.c
 +++ base\mvdm\dos\v86\tools\src\stripdd\stripdd.c
-
 74c75
 < unsigned int	HeadLen, *HeadPtr ;
 ---
@@ -37,3 +36,214 @@
 < 	tptr = (int *)tempbuf ;
 ---
 > 	tptr = (short *)tempbuf ;
+--- base\mvdm\dos\v86\cmd\command\buildmsg.c
++++ base\mvdm\dos\v86\cmd\command\buildmsg.c
+8a9
+> #ifndef WIN32
+9a11
+> #endif
+17a20,28
+> #ifdef WIN32
+> #define far
+> #define near
+> #define MSGNRFMT "%05hXH"
+> #define strnicmp _strnicmp
+> #define strupr _strupr
+> #else
+> #define MSGNRFMT "%05XH"
+> #endif
+27,29c40,42
+< #define MAXUTILERROR	       300
+< #define MAXEXTENDEDERROR       100
+< #define MAXPARSERERROR		20
+---
+> #define MAXUTILERROR	       500
+> #define MAXEXTENDEDERROR       200
+> #define MAXPARSERERROR		30
+93a107
+> 	char ClRec1[]=" 1 ", ClRec2[]=" 2 ";
+98a114
+> #ifndef WIN32
+102a119,128
+> #else
+> #include <io.h>
+> #include <fcntl.h>
+> #include <errno.h>
+> #include <sys/stat.h>
+> #define DosRead _read
+> #define DosWrite _write
+> #define DosLSeek _lseek
+> #define DosClose _close
+> #endif
+137a164
+> #ifndef WIN32
+148a176
+> #endif
+152c181
+< 	if ( (argc < 3) && (*argv[1] == (char) '?') )
+---
+> 	if ( (argc < 3) || (*argv[1] == (char) '?') )
+180a210
+> #ifndef WIN32
+207a238
+> #endif
+221c252
+< 
+---
+> #ifndef WIN32
+224a256
+> #endif
+261,267c293
+< 		InRegs.x.ax = 0x4200;
+< 		InRegs.x.bx = SkeletonHandle;
+< 		InRegs.x.cx = 0;
+< 		InRegs.x.dx = 0;
+< 		intdosx(&InRegs,&OutRegs,&SegRegs);
+< 		if (OutRegs.x.cflag)
+< 			error(&InRegs,&OutRegs,&SegRegs);
+---
+> 		DosLSeek(SkeletonHandle, 0, 0);
+320,321c346,347
+< 		if (!ClassFlag1) ClassRecord(" 1 ");
+< 		if (!ClassFlag2) ClassRecord(" 2 ");
+---
+> 		if (!ClassFlag1) ClassRecord(ClRec1);
+> 		if (!ClassFlag2) ClassRecord(ClRec2);
+385c411
+< 
+---
+> #ifndef WIN32
+388a415
+> #endif
+443,449c470
+< 		InRegs.x.ax = 0x4202;
+< 		InRegs.x.bx = ClassHandle;
+< 		InRegs.x.cx = 0;
+< 		InRegs.x.dx = 0;
+< 		intdosx(&InRegs,&OutRegs,&SegRegs);
+< 		if (OutRegs.x.cflag)
+< 			error(&InRegs,&OutRegs,&SegRegs);
+---
+> 		DosLSeek(ClassHandle, 0, 2);
+485c506
+< 
+---
+> #ifndef WIN32
+488a510
+> #endif
+520c542
+< 		i = sprintf(out,"$M_%c_%05XH_STRUC LABEL BYTE\x0d\x0a",CurrentClass,CurrentMessageNumber);
+---
+> 		i = sprintf(out,"$M_%c_"MSGNRFMT"_STRUC LABEL BYTE\x0d\x0a",CurrentClass,CurrentMessageNumber);
+523c545
+< 		i = sprintf(out,"        $M_ID   <%05XH,$M_%c_%05XH_MSG-$M_%c_%05XH_STRUC>\x0d\x0a",    /* Mar 88, SWN */
+---
+> 		i = sprintf(out,"        $M_ID   <"MSGNRFMT",$M_%c_"MSGNRFMT"_MSG-$M_%c_"MSGNRFMT"_STRUC>\x0d\x0a",    /* Mar 88, SWN */
+533c555
+< 		i = sprintf(out,"$M_%c_%05XH_MSG LABEL BYTE\x0d\x0a",CurrentClass,CurrentMessageNumber);
+---
+> 		i = sprintf(out,"$M_%c_"MSGNRFMT"_MSG LABEL BYTE\x0d\x0a",CurrentClass,CurrentMessageNumber);
+536c558
+< 		i = sprintf(out,"        DB      $M_%c_%05XH_END-$M_%c_%05XH_MSG-1\x0d\x0a",    /* Mar 88, SWN */
+---
+> 		i = sprintf(out,"        DB      $M_%c_"MSGNRFMT"_END-$M_%c_"MSGNRFMT"_MSG-1\x0d\x0a",    /* Mar 88, SWN */
+569c591
+< 
+---
+> #ifndef WIN32
+572a595
+> #endif
+700c723
+< 		i = sprintf(out,"$M_%c_%05XH_STRUC LABEL BYTE\x0d\x0a",CurrentClass,CurrentMessageNumber);
+---
+> 		i = sprintf(out,"$M_%c_"MSGNRFMT"_STRUC LABEL BYTE\x0d\x0a",CurrentClass,CurrentMessageNumber);
+703c726
+< 		i = sprintf(out,"        $M_ID   <%05XH,$M_%c_%05XH_MSG-$M_%c_%05XH_STRUC>\x0d\x0a",    /* Mar 88, SWN */
+---
+> 		i = sprintf(out,"        $M_ID   <"MSGNRFMT",$M_%c_"MSGNRFMT"_MSG-$M_%c_"MSGNRFMT"_STRUC>\x0d\x0a",    /* Mar 88, SWN */
+747c770
+< 	  i = sprintf(out,"$M_%c_%05XH_MSG LABEL BYTE\x0d\x0a",CurrentClass,CurrentMessageNumber);
+---
+> 	  i = sprintf(out,"$M_%c_"MSGNRFMT"_MSG LABEL BYTE\x0d\x0a",CurrentClass,CurrentMessageNumber);
+750c773
+< 	  i = sprintf(out,"        DB      $M_%c_%05XH_END-$M_%c_%05XH_MSG-1\x0d\x0a",    /* Mar 88, SWN */
+---
+> 	  i = sprintf(out,"        DB      $M_%c_"MSGNRFMT"_END-$M_%c_"MSGNRFMT"_MSG-1\x0d\x0a",    /* Mar 88, SWN */
+797a821
+> 	char rec[]="   ";
+799,800c823,824
+< 	if (!ClassFlag1) ClassRecord(" 1 ");
+< 	if (!ClassFlag2) ClassRecord(" 2 ");
+---
+> 	if (!ClassFlag1) ClassRecord(ClRec1);
+> 	if (!ClassFlag2) ClassRecord(ClRec2);
+819c843
+< 		sprintf(out,"$M_%c_%05XH_END LABEL BYTE\x0d\x0a",CurrentClass,CurrentMessageNumber);
+---
+> 		sprintf(out,"$M_%c_"MSGNRFMT"_END LABEL BYTE\x0d\x0a",CurrentClass,CurrentMessageNumber);
+1006a1031
+> #ifndef WIN32
+1020c1045,1050
+< 
+---
+> #else
+> 	int fd = _open(FileNamePtr, OpenType | O_BINARY);
+> 	if (fd<0) 
+> 	{
+> 		printf("Error DosOpen(%s): %s\n", FileNamePtr, strerror(errno));
+> 		exit(1);
+1021a1052,1055
+> 	EofFlags[fd] = FALSE;
+> 	return fd;
+> #endif
+> }
+1024a1060
+> #ifndef WIN32
+1046a1083
+> #endif
+1054c1091
+< 
+---
+> #ifndef WIN32
+1068a1106,1115
+> #else
+> 	int fd = _open(FileNamePtr, Attributes | _O_BINARY | _O_TRUNC | _O_CREAT | _O_RDWR, _S_IREAD | _S_IWRITE);
+> 	if (fd<0) 
+> 	{
+> 		printf("Error DosCreate(%s): %s\n", FileNamePtr, strerror(errno));
+> 		exit(1);
+> 	}
+> 	EofFlags[fd] = FALSE;
+> 	return fd;
+> #endif
+1073a1121
+> #ifndef WIN32
+1149a1198
+> #endif
+1183a1233
+> #ifndef WIN32
+1231a1282
+> #endif
+--- base\mvdm\dos\v86\cmd\command\makefile.sub
++++ base\mvdm\dos\v86\cmd\command\makefile.sub
+23,27c23,24
+<         cl16 /Zl /Gs -c -I$(ALT_PROJECT) -I..\..\h -Fo$(DEST)\buildmsg.obj buildmsg.c
+<         $(LINK) /stack:4096/onerror:noexe $(DEST)\buildmsg.obj,$(ALT_PROJECT)\buildmsg.exe,,..\..\lib\slibce.lib;
+<         msdos32 -c$(ALT_PROJECT)\buildmsg32.exe $(ALT_PROJECT)\buildmsg.exe
+<         -del $(ALT_PROJECT)\buildmsg.exe
+<         -move $(ALT_PROJECT)\buildmsg32.exe $(ALT_PROJECT)\buildmsg.exe
+---
+> 		cl $(CFLAGS) -c -I$(CRT_INC_PATH) -I$(ALT_PROJECT) -DWIN32 -Fo$(DEST)\buildmsg.obj buildmsg.c
+> 		link /ignore:4001,4037,4039,4065,4070,4078,4087,4089 $(DEST)\buildmsg.obj /out:$(ALT_PROJECT)\buildmsg.exe libc.lib kernel32.lib /libpath:$(SDK_LIB_PATH)\..\x86
+33,35c30,32
+< !if "$(ALT_PROJECT)" == "JPN" || "$(ALT_PROJECT)" == "KOR"
+<         buildmsg.exe ..\..\..\$(msg)\$(ALT_PROJECT) ..\..\command.skl
+< !else
+---
+> #!if "$(ALT_PROJECT)" == "JPN" || "$(ALT_PROJECT)" == "KOR"
+> #        buildmsg.exe ..\..\..\$(msg)\$(ALT_PROJECT) ..\..\command.skl
+> #!else
+37c34
+< !endif
+---
+> #!endif
