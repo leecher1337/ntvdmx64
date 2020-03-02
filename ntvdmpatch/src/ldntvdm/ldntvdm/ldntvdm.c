@@ -49,6 +49,8 @@
 #define KRNL32_CALL __fastcall
 #endif
 
+#define ProcessConsoleHostProcess 49
+
 typedef INT_PTR(BASEP_CALL *fpBasepProcessInvalidImage)(NTSTATUS Error, HANDLE TokenHandle,
 	LPCWSTR dosname, LPCWSTR *lppApplicationName,
 	LPCWSTR *lppCommandLine, LPCWSTR lpCurrentDirectory,
@@ -161,7 +163,7 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 	return LastCreateUserProcessError;
 #endif
 }
-#endif
+#endif /* defined(WOW16_SUPPORT) || (defined(TARGET_WIN7) && !defined(CREATEPROCESS_HOOK)) */
 
 #ifdef TRACING
 fpsprintf sprintf;
@@ -364,7 +366,7 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 		}
 	} else if (Error == STATUS_INVALID_IMAGE_WIN_16) {
 		//*pdwCreationFlags |= CREATE_SEPARATE_WOW_VDM;
-#endif
+#endif /* WOW_HACK */
 	}
 	ret = BasepProcessInvalidImageReal(Error, TokenHandle, dosname, lppApplicationName, lppCommandLine, lpCurrentDirectory,
 		pdwCreationFlags, pbInheritHandles, PathName, a10, lppEnvironment, lpStartupInfo, m, piTask, pVdmNameString,
@@ -420,11 +422,11 @@ HMODULE WINAPI LoadLibraryExWHook(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwF
 	return hRet;
 }
 
+#define myNtQueryInformationProcess NtQueryInformationProcess
+
 #define SUBSYS_OFFSET 0x128
 #else	// _WIN32
 #define SUBSYS_OFFSET 0xB4
-
-#define ProcessConsoleHostProcess 49
 
 NTSTATUS
 NTAPI
@@ -610,7 +612,7 @@ void WINAPI NotifyWinEventHook(DWORD event, HWND  hwnd, LONG  idObject, LONG  id
 	}
 	NotifyWinEventReal(event, hwnd, idObject, idChild);
 }
-#endif
+#endif /* _WIN64 */
 #endif /* CREATEPROCESS_HOOK*/
 
 #ifdef TARGET_WIN7
@@ -711,7 +713,7 @@ BOOL UpdateSymbolCache()
 
 	return bUpdated;
 }
-#endif
+#endif /* TARGET_WIN7 */
 
 #ifdef CREATEPROCESS_HOOK
 typedef BOOL(WINAPI *CreateProcessAFunc)(LPCSTR lpApplicationName, LPSTR lpCommandLine, 
@@ -766,7 +768,7 @@ BOOL WINAPI CreateProcessWHook(LPCWSTR lpApplicationName, LPWSTR lpCommandLine, 
 	}
 	return bRet;
 }
-#endif
+#endif /* CREATEPROCESS_HOOK */
 
 typedef BOOL(WINAPI *fpSetConsolePalette)(IN HANDLE hConsoleOutput, IN HPALETTE hPalette, IN UINT dwUsage);
 fpSetConsolePalette SetConsolePaletteReal;
@@ -804,7 +806,7 @@ BOOL WINAPI mySetConsolePalette(IN HANDLE hConsoleOutput, IN HPALETTE hPalette, 
 	pCloseClipboard();
 
 	bRet = SetConsolePaletteReal(hConsoleOutput, hPalette, dwUsage);
-	TRACE("SetConsolePalette = %d", bRet);
+	//TRACE("SetConsolePalette = %d", bRet);
 	return bRet;
 }
 
@@ -816,6 +818,43 @@ TCHAR *GetProcessName(void)
 	while (*p != '\\') p--;
 	return ++p;
 }
+
+#if !defined(TARGET_WIN7) && !defined(TARGET_WIN80)
+HANDLE GetConsoleHost(void)
+{
+	static ULONG_PTR hConHost = NULL;
+
+	if (!hConHost)
+	{
+		if (myNtQueryInformationProcess(-1, ProcessConsoleHostProcess, &hConHost, sizeof(hConHost), NULL) != STATUS_SUCCESS)
+			return -1;
+		if (hConHost & 1) hConHost &= ~1; else hConHost = 0;
+	}
+	return hConHost;
+}
+
+#ifdef _WIN64
+NTSTATUS NTAPI CsrClientCallServer(BASE_API_MSG *m, PCSR_CAPTURE_HEADER CaptureHeader, CSR_API_NUMBER ApiNumber, ULONG ArgLength);
+#define myCsrClientCallServer CsrClientCallServer
+#else
+NTSTATUS NTAPI myCsrClientCallServer(BASE_API_MSG *m, PCSR_CAPTURE_HEADER CaptureHeader, CSR_API_NUMBER ApiNumber, ULONG ArgLength);
+#endif
+
+VOID APIENTRY myCmdBatNotification(IN ULONG fBeginEnd)
+{
+	BASE_API_MSG m;
+	BASE_BAT_NOTIFICATION_MSG *a = (BASE_BAT_NOTIFICATION_MSG*)&m.u.BatNotification;
+
+	a->ConsoleHandle = GetConsoleHost();
+	if (a->ConsoleHandle == (HANDLE)-1)
+		return;
+
+	a->fBeginEnd = fBeginEnd;
+	myCsrClientCallServer((struct _CSR_API_MESSAGE *)&m, NULL, CSR_MAKE_API_NUMBER(BASESRV_SERVERDLL_INDEX, 
+		BasepBatNotification),	sizeof(*a));
+}
+#endif /* Win10 only */
+
 
 #ifndef _WIN64
 void NTAPI HookSetConsolePaletteAPC(ULONG_PTR Parameter)
@@ -839,7 +878,7 @@ void NTAPI HookSetConsolePaletteAPC(ULONG_PTR Parameter)
 		iTries++;
 	}
 }
-#endif
+#endif /* WIN32 */
 
 BOOL WINAPI _DllMainCRTStartup(
 	HANDLE  hDllHandle,
@@ -928,8 +967,13 @@ BOOL WINAPI _DllMainCRTStartup(
 		lpProcII = (LPBYTE)GetProcAddress(hKrnl32, "BasepProcessInvalidImage");
 		BasepProcessInvalidImageReal = (fpBasepProcessInvalidImage)lpProcII;
 		BaseIsDosApplication = GetProcAddress(hKrnl32, "BaseIsDosApplication");
-		Hook_IAT_x64((LPBYTE)hKernelBase, "KERNEL32.DLL", "ext-ms-win-kernelbase-processthread-l1-1-0.dll",
+		Hook_IAT_x64((LPBYTE)hKernelBase, "ext-ms-win-kernelbase-processthread-l1-1-0.dll",
 			"BasepProcessInvalidImage", BasepProcessInvalidImage);
+#ifndef TARGET_WIN80
+		// These idiots recently replaced CmdBatNotification function with a nullstub?!?
+		if (__wcsicmp(GetProcessName(), _T("cmd.exe")) == 0)
+			Hook_IAT_x64((LPBYTE)GetModuleHandle(NULL), "ext-ms-win-cmd-util-l1-1-0.dll", "CmdBatNotificationStub", myCmdBatNotification, NULL);
+#endif
 #ifdef CREATEPROCESS_HOOK
 		/* Newer Windows Versions use l1-1-0 instead of l1-1-2 */
 		if (Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-2.dll", "CreateProcessA", CreateProcessAHook, &CreateProcessAReal)<0)
@@ -940,7 +984,7 @@ BOOL WINAPI _DllMainCRTStartup(
 #ifdef WOW16_SUPPORT
 		Hook_IAT_x64_IAT((LPBYTE)hKernelBase, "ntdll.dll", "NtCreateUserProcess", NtCreateUserProcessHook, &NtCreateUserProcessReal);
 #endif	// WOW16_SUPPORT
-#endif 
+#endif /* TARGET_WIN7 */
 		TRACE("LDNTVDM: BasepProcessInvalidImageReal = %08X", BasepProcessInvalidImageReal);
 		TRACE("LDNTVDM: BaseIsDosApplication = %08X", BaseIsDosApplication);
 
@@ -970,7 +1014,7 @@ BOOL WINAPI _DllMainCRTStartup(
 					else
 						Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "api-ms-win-core-libraryloader-l1-2-0.dll", "LoadLibraryExW", LoadLibraryExWHook, &LoadLibraryExWReal);
 				}
-#endif
+#endif /* TARGET_WIN7 */
 #ifndef CREATEPROCESS_HOOK
 				// We want notification when new console process gets started so that we can inject
 #ifdef TARGET_WIN7
@@ -979,21 +1023,21 @@ BOOL WINAPI _DllMainCRTStartup(
 				if (bIsWindows8) Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "user32.dll", "NotifyWinEvent", NotifyWinEventHook, &NotifyWinEventReal); else
 				if (hKrnl32) Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "user32.dll", "NotifyWinEvent", NotifyWinEventHook, &NotifyWinEventReal);
 #endif
-#endif
+#endif /* CREATEPROCESS_HOOK */
 			}
 		}
 #else /* WIN64 */
 #ifndef WOW16_SUPPORT
 		// Only fix NTDLL in ntvdm.exe where it is needed, don't interfere with other applications like ovdm, until we natively support Win16
 		if (__wcsicmp(GetProcessName(), _T("ntvdm.exe")) == 0)
-#endif
+#endif /* WOW16_SUPPORT */
 		FixNTDLL();
 		HookCsrClientCallServer();
 		/* SetConsolePalette bug */
 		HookSetConsolePaletteAPC(NULL);
 		Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "ntdll.dll", "NtQueryInformationProcess", myNtQueryInformationProcess, NULL);
 		Hook_IAT_x64_IAT((LPBYTE)hKernelBase, "ntdll.dll", "NtQueryInformationProcess", myNtQueryInformationProcess, NULL);
-#endif
+#endif /* WIN64 */
 		TRACE("ldntvdm Init done");
 		break;
 	}

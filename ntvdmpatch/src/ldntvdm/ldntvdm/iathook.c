@@ -134,13 +134,14 @@ int Hook_IAT_x64_IAT(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char Fu
 }
 
 
-BOOL Hook_IAT_x64(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char *LibDelayImpName, char *FunName, LPVOID NewFun) 
+BOOL Hook_IAT_x64(LPBYTE hMod, char *LibDelayImpName, char *FunName, LPVOID NewFun) 
 {
 	PIMAGE_DOS_HEADER DosHeader = (PIMAGE_DOS_HEADER)hMod;
 	PIMAGE_NT_HEADERS NtHeaders = (PIMAGE_NT_HEADERS)(hMod + DosHeader->e_lfanew);
 	DWORD delayImportStartRVA, delayImportSize, nDelaySizeLeft;
 	PCImgDelayDescr pDelayDesc;
 
+	TRACE("Hook_IAT_x64(%08X, %s, %s, %08X)", hMod, LibDelayImpName, FunName, NewFun);
 	// Look up where the delay imports section is (normally in the .didat
 	/// section) but not necessarily so.
 	delayImportStartRVA = GetImgDirEntryRVA(NtHeaders, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT);
@@ -200,7 +201,7 @@ BOOL Hook_IAT_x64(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char *LibD
 						VirtualProtect(&thunkIAT[i].u1.Function, sizeof(ULONG_PTR), PAGE_READWRITE, &OldProt);
 						thunkIAT[i].u1.Function = (ULONG_PTR)NewFun;
 						VirtualProtect(&thunkIAT[i].u1.Function, sizeof(ULONG_PTR), OldProt, &OldProt);
-						OutputDebugStringA("NTVDM hook installed");
+						TRACE("Hooked -> %08X", NewFun);
 						return TRUE;
 					}
 				}
@@ -211,6 +212,6 @@ BOOL Hook_IAT_x64(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char *LibD
 		nDelaySizeLeft -= sizeof(ImgDelayDescr);
 	}
 
-	OutputDebugStringA("NTVDM hook install failed");
+	TRACE("Hook_IAT_x64 failed");
 	return FALSE;
 }

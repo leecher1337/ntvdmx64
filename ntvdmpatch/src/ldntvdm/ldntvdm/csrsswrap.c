@@ -117,6 +117,23 @@ NTSTATUS CallBaseExitVDM(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 	return Status;
 }
 
+NTSTATUS CallBasepBatNotification(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
+{
+	BASE_API_MSG64 m;
+	BASE_BAT_NOTIFICATION_MSG64 *b = (BASE_BAT_NOTIFICATION_MSG64*)&m.u.BatNotification;
+	BASE_BAT_NOTIFICATION_MSG *b32 = (BASE_BAT_NOTIFICATION_MSG*)&m32->u.BatNotification;
+	NTSTATUS Status;
+
+	b->ConsoleHandle = (ULONGLONG)b32->ConsoleHandle;
+	b->fBeginEnd = b32->fBeginEnd;
+	Status = CsrClientCallServer((struct _CSR_API_MESSAGE*)&m, NULL, ApiNumber, sizeof(*b));
+	TRACE("BasepBatNotification(%d) = %08X", ApiNumber, Status);
+	m32->ReturnValue = m.ReturnValue;
+
+	return Status;
+}
+
+
 NTSTATUS CallBaseGetSetVDMCurDirs(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber, BOOL bGet)
 {
 	BASE_API_MSG64 m;
@@ -516,6 +533,8 @@ NTSTATUS NTAPI myCsrClientCallServer(BASE_API_MSG *m, PCSR_CAPTURE_HEADER Captur
 			return CallBaseGetSetVDMCurDirs(m, ApiNumber, FALSE);
 		case BasepRegisterWowExec:
 			return CallBaseRegisterWowExec(m, ApiNumber);
+		case BasepBatNotification:
+			return CallBasepBatNotification(m, ApiNumber);
 		}
 	}
 	Status = CsrClientCallServerReal(m, CaptureHeader, ApiNumber, ArgLength);
