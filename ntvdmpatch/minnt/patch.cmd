@@ -1,4 +1,4 @@
-@echo off
+@echo on
 setlocal ENABLEDELAYEDEXPANSION
 
 echo ----------------------------------------------------
@@ -26,9 +26,10 @@ if not exist %minntfix%\minnt\public\internal\base\inc\splapip.h (
 echo Copying fixed files to minnt repository
 xcopy /E /R /Y %minntfix% %BASEPATH%\..\..\
 echo #include "winddi_xp.h" >>%BASEPATH%\..\..\minnt\public\oak\inc\winddi.h
-ren %BASEPATH%\mvdm\bin86\jpn\_disp.sys %BASEPATH%\mvdm\bin86\jpn\$disp.sys
-ren %BASEPATH%\mvdm\bin86\jpn\_ias.sys %BASEPATH%\mvdm\bin86\jpn\$ias.sys
-ren %BASEPATH%\mvdm\bin86\jpn\_prnescp.sys %BASEPATH%\mvdm\bin86\jpn\$prnescp.sys
+rem ... But in makefile, it's with _ ..?
+rem ren %BASEPATH%\mvdm\bin86\jpn\_disp.sys $disp.sys
+rem ren %BASEPATH%\mvdm\bin86\jpn\_ias.sys $ias.sys
+rem ren %BASEPATH%\mvdm\bin86\jpn\_prnescp.sys $prnescp.sys
 xcopy /Y %BASEPATH%\mvdm\dos\v86\cmd\backup\kor\makefile %BASEPATH%\mvdm\dos\v86\cmd\backup\jpn\
 
 echo Enabling old DPMI code

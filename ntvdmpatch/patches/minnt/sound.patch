@@ -1,0 +1,10 @@
+--- NT4\private\mvdm\softpc.new\host\src\nt_sound.c
++++ nt\private\mvdm\softpc.new\host\src\nt_sound.c
+107a108,109
+> 	static BOOL bInitialized = FALSE;
+> 
+110c112,113
+<     } else {
+---
+> 		bInitialized = TRUE;
+>     } else if (bInitialized) {

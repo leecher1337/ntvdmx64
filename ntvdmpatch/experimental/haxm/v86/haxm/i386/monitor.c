@@ -27,6 +27,7 @@ Revision History:
 #include "host_def.h"
 #include "gvi.h"
 #include "../../../softpc.new/base/cvidc/gdpvar.h"
+#include "yoda.h"
 
 extern host_addr Start_of_M_area;
 extern host_addr Length_of_M_area;
@@ -42,6 +43,10 @@ struct hax_debug_t haxdbg={0};
  */
 BOOL show_exceptions = FALSE;
 BOOL trap_exceptions = FALSE;
+
+
+extern int ErrorDialogBox(char *message, char *Edit, DWORD dwOptions);
+extern GLOBAL VOID haxm_sync_vram(VOID);
 
 
 //
@@ -391,7 +396,11 @@ Return Value:
     //
     // Do the rest of thread initialization
     //
-    cpu_createthread( NtCurrentThread() );
+    cpu_createthread( NtCurrentThread() 
+#ifdef MINNT
+		,NULL
+#endif
+		);
 
     InterruptInit();
 

@@ -29,6 +29,7 @@ md %minntfix%\minnt\base\mvdm\wow16
 md %minntfix%\minnt\public\ddk\lib\x86
 md %minntfix%\minnt\public\internal\base\inc
 md %minntfix%\minnt\public\sdk\lib\x86
+md %minntfix%\minnt\public\sdk\inc
 md %minntfix%\minnt\base\mvdm\softpc.new\host\inc\alpha
 md %minntfix%\minnt\base\mvdm\softpc.new\host\inc\mips
 md %minntfix%\minnt\base\mvdm\softpc.new\host\inc\ppc
@@ -114,7 +115,7 @@ echo You have to find this yourself on the Internet
 pause
 goto fini
 )
-7z x -y %workdir%\%OLDSRC% old-src\nt\private\windows\inc\gdispool.h old-src\nt\private\windows\spooler\inc\splapip.h old-src\nt\public\oak\inc\winddiui.h old-src\nt\public\oak\inc\compstui.h old-src\nt\private\mvdm\wow16 old-src\nt\private\mvdm\softpc.new\host\inc\alpha old-src\nt\private\mvdm\softpc.new\host\inc\mips old-src\nt\private\mvdm\softpc.new\host\inc\ppc old-src\nt\private\mvdm\dpmi old-src\nt\private\mvdm\dpmi32 old-src\nt\private\mvdm\inc\intmac.inc old-src\nt\private\mvdm\inc\dpmi.h -o%workdir%
+7z x -y %workdir%\%OLDSRC% old-src\nt\private\windows\inc\gdispool.h old-src\nt\private\windows\spooler\inc\splapip.h old-src\nt\public\oak\inc\winddiui.h old-src\nt\private\sdktools\jetadmin\inc\winioctl.h old-src\nt\public\oak\inc\compstui.h old-src\nt\private\mvdm\wow16 old-src\nt\private\mvdm\softpc.new\host\inc\alpha old-src\nt\private\mvdm\softpc.new\host\inc\mips old-src\nt\private\mvdm\softpc.new\host\inc\ppc old-src\nt\private\mvdm\dpmi old-src\nt\private\mvdm\dpmi32 old-src\nt\private\mvdm\inc\intmac.inc old-src\nt\private\mvdm\inc\dpmi.h -o%workdir%
 if not exist %workdir%\old-src\nt\private\windows\inc\gdispool.h (
 echo Cannot expand %workdir%\old-src\nt\private\windows\inc\gdispool.h from %workdir%\%OLDSRC%
 echo Cannot continue.
@@ -125,6 +126,7 @@ goto fini
 move /y %workdir%\old-src\nt\private\windows\inc\gdispool.h %minntfix%\minnt\public\internal\base\inc\
 move /y %workdir%\old-src\nt\private\windows\spooler\inc\splapip.h %minntfix%\minnt\public\internal\base\inc\
 move /y %workdir%\old-src\nt\public\oak\inc\compstui.h %minntfix%\minnt\public\oak\inc\
+move /y %workdir%\old-src\nt\private\sdktools\jetadmin\inc\winioctl.h %minntfix%\minnt\public\sdk\inc\
 move /y %workdir%\old-src\nt\public\oak\inc\winddiui.h %minntfix%\minnt\public\oak\inc\
 echo #include "winddiui_xp.h" >>%minntfix%\minnt\public\oak\inc\winddiui.h
 

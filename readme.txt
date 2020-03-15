@@ -155,19 +155,19 @@ There are various "flavours" of NTVDM that can be built:
    Please note that you need Windows XP for building.
    Build instructions in: doc\old-src.txt
  * HAXM
-   This is basically old-src, but instead of using the emulated
-   CCPU, it uses HAXM VT-x hardware accelleration (CPU needs to
-   support it), so it is significally faster in textmode.
+   Instead of using the emulated CCPU, it uses HAXM VT-x hardware 
+   accelleration (CPU needs to support it), so it is significally 
+   faster in textmode.
    But it doesn't support DPMI yet and will probably never support
    graphics, as it is technically impossible to emulate a real VGA
    card with sufficient performance on VT-x
-   Build instructions in: doc\haxm.txt, doc\old-src.txt
+   Works with minnt and old-src build.
+   Build instructions in: doc\haxm.txt
  * MINNT
    This is the most recent NTVDM source code, it supports multiple
    languages, but is probably harder to build.
    It is planned to continue development on this source tree as of
    Feb/2020
-   old-src will still be maintaned, as long as HAXM build relies on it.
    Build instructions in: doc\minnt.txt
 
 In case you want a fully compiled build, I recommend Googling for ntvdmx64

@@ -44,3 +44,9 @@
 > #ifndef W10
 2051a2053
 > #endif
+--- NT4\private\..\public\sdk\inc\ntexapi.h 
++++ nt\private\..\public\sdk\inc\ntexapi.h 
+1316c1316
+< #define MAXIMUM_HARDERROR_PARAMETERS 4
+---
+> #define MAXIMUM_HARDERROR_PARAMETERS 5

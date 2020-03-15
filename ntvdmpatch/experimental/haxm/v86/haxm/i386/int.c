@@ -53,6 +53,12 @@ extern host_addr Start_of_M_area;
 #undef pNtVDMState
 #define pNtVDMState   ((ULONG *)(Start_of_M_area + FIXED_NTVDMSTATE_LINEAR))
 
+#ifdef MINNT
+#define DPMIFLAGS VdmTib.DpmiInfo.Flags
+#else
+#define DPMIFLAGS VdmTib.PmStackInfo.Flags
+#endif
+
 BOOLEAN IRQ13BeingHandled;  // true until IRQ13 eoi'ed
 
 
@@ -327,7 +333,7 @@ Return Value:
     DpmiHwIntHandler(InterruptNumber);
 
     if (IretHookAddress) {
-        BOOL Frame32 = (BOOL) VdmTib.PmStackInfo.Flags;
+		BOOL Frame32 = (BOOL) DPMIFLAGS;
         BOOL Stack32;
         USHORT SegSs, VdmCs;
         ULONG VdmSp, VdmEip;
@@ -429,7 +435,7 @@ Return Value:
     PVOID VdmStackPointer;
 
     if (getMSW() & MSW_PE) {
-        BOOL Frame32 = (BOOL) VdmTib.PmStackInfo.Flags;
+        BOOL Frame32 = (BOOL) DPMIFLAGS;
         ULONG FrameSize;
 
         if (Frame32) {

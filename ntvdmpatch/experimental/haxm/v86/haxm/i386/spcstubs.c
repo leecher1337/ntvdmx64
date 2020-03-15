@@ -1,4 +1,5 @@
 #include "monitorp.h"
+#include "host_def.h"
 
 static LONG stub_q_ev_count = 0;	// holder for below
 

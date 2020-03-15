@@ -80,12 +80,12 @@
 > !if "$(HAXM)" == ""
 104a111,113
 > !if $(X86)
-> CPULIBS=$(SOFTPC_TREE)\base\ccpu386\$(O)\ccpu386.lib $(SOFTPC_TREE)\base\cvidc\$(O)\cvidc.lib
+> CPULIBS=$(SOFTPC_TREE)\base\ccpu386\$(O)\ccpu386.lib $(SOFTPC_TREE)\base\cvidcnew\$(O)\cvidc.lib
 > !else
 106a116,120
 > !endif
 > !else
-> CPULIBS=$(BASEDIR)\public\sdk\lib\*\haxm.lib $(SOFTPC_TREE)\base\cvidc\$(O)\cvidc.lib
+> CPULIBS=$(MVDM_TREE)\v86\haxm\$(ALT_PROJECT_OBJS)\$(O)\haxm.lib $(SOFTPC_TREE)\base\cvidcnew\$(O)\cvidc.lib
 > !endif
 > !endif
 115a130

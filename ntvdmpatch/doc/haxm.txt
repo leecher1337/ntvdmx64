@@ -84,9 +84,11 @@ implemented properly which leads to various problems i.e. with DOSX.EXE
 Compilation
 -----------
 The patches are applied automatically on execution of main patch.cmd
-The only difference is that you have to run bld-haxm.cmd instead of bld.cmd
-on building the NTVDM.
+The only difference is that you have to run bld-haxm.cmd (respectively
+bld-haxm-minnt.cmd for MINNT repository) instead of bld.cmd (respectively
+bld-minnt.cmd) on building the NTVDM.
 For creating the release Installation-package, use mkrelease-haxm.bat 
+(respectively mkrelease-minnt-haxm.bat for MINNT builds).
 
 
 Usage/Installation

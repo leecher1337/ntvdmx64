@@ -22,10 +22,9 @@
 > IMPORT VOID ega_mode2_chn_w_write IFN2(ULONG, value, ULONG, offset);
 --- NT4\private\mvdm\softpc.new\host\src\stubs.c
 +++ nt\private\mvdm\softpc.new\host\src\stubs.c
-35a36,37
-> #else
+36a37
 > typedef PVOID PVDM_TIB; // Hack
-516,519c518,519
+516,519c517,518
 < LOCAL ULONG   dummy()
 < {
 <         return(0);
@@ -33,13 +32,13 @@
 ---
 > LOCAL void   clear_v7ptr_dummy IFN2(int, x, int, y) {}
 > LOCAL void   paint_v7ptr_dummy IFN3(int, pattern, int, x, int, y) {}
-521,522c521,522
+521,522c520,521
 < GLOBAL  ULONG    (*clear_v7ptr)() = dummy;
 < GLOBAL  ULONG    (*paint_v7ptr)() = dummy;
 ---
 > GLOBAL  void    (*clear_v7ptr)() = clear_v7ptr_dummy;
 > GLOBAL  void    (*paint_v7ptr)() = paint_v7ptr_dummy;
-622c622
+622c621
 < void host_note_queue_added()
 ---
 > void host_note_queue_added(unsigned long x) 

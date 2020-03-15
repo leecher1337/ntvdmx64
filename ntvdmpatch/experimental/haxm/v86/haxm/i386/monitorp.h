@@ -34,7 +34,12 @@ typedef unsigned int UINT;
 #include <nt_mon.h>   // for softpc base definitions
 #include <nt_reset.h>
 #include <monregs.h>
+#ifdef MINNT
+extern VDM_TIB VdmTib;
+#else
 #include <vdmtib.h>
+#endif
+
 
 /* Configure the video strategy... All of them are horrible!
  *

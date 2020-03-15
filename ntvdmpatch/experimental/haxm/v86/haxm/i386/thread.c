@@ -41,6 +41,9 @@ PMONITORTHREAD ThreadList = NULL;          // List of all threads registered
 VOID
 cpu_createthread(
     HANDLE Thread
+#ifdef MINNT
+	, PVDM_TIB VdmTib 
+#endif
     )
 /*++
 

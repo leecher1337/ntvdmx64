@@ -1,0 +1,169 @@
+--- NT4\private\mvdm\softpc.new\host\src\stubs.c
++++ nt\private\mvdm\softpc.new\host\src\stubs.c
+19c19
+< #ifdef MONITOR
+---
+> #if defined(MONITOR) || defined(HAXM)
+529c529
+< #ifndef MONITOR
+---
+> #if !defined(MONITOR) && !defined(HAXM)
+--- NT4\private\mvdm\softpc.new\host\src\nt_timer.c
++++ nt\private\mvdm\softpc.new\host\src\nt_timer.c
+202c202
+< #ifndef MONITOR
+---
+> #if !defined(MONITOR) && !defined(HAXM)
+417c417
+< #ifndef MONITOR
+---
+> #if !defined(MONITOR) && !defined(HAXM)
+491c491
+< #ifndef MONITOR
+---
+> #if !defined(MONITOR) && !defined(HAXM)
+--- NT4\private\mvdm\softpc.new\base\keymouse\mouse_io.c
++++ nt\private\mvdm\softpc.new\base\keymouse\mouse_io.c
+202c202,206
+< IMPORT VOID (**get_outb_ptr())();
+---
+> #ifdef NTVDM
+> void (** hack)(io_addr address, half_word value);
+> #define OUTB( port, val ) {  hack=get_outb_ptr(port); \
+>                              (**hack)(port,val); }
+> #else
+203a208
+> #endif /* NTVDM */
+--- NT4\private\mvdm\softpc.new\base\debug\yoda.c
++++ nt\private\mvdm\softpc.new\base\debug\yoda.c
+4166a4167,4169
+> #ifdef HAXM
+> 	return sas_hw_at(addr);
+> #else
+4167a4171
+> #endif
+5248c5252
+< #ifdef CPU_40_STYLE
+---
+> #if defined(CPU_40_STYLE) && !defined(HAXM)
+5468c5472
+< #ifdef CPU_40_STYLE
+---
+> #if defined(CPU_40_STYLE) && !defined(HAXM)
+6248c6252
+< #ifndef	CCPU
+---
+> #if !defined(CCPU) && !defined(HAXM)
+--- NT4\private\mvdm\softpc.new\base\support\main.c
++++ nt\private\mvdm\softpc.new\base\support\main.c
+256a257,259
+> #ifndef A3CPU
+> 	(VOID) setup_global_data_ptr();
+> #endif	/* not A3CPU */
+284,286d286
+< #ifndef A3CPU
+< 	(VOID) setup_global_data_ptr();
+< #endif	/* not A3CPU */
+--- NT4\private\mvdm\softpc.new\base\support\xt.c
++++ nt\private\mvdm\softpc.new\base\support\xt.c
+164c164
+< #if defined(CPU_40_STYLE) && defined(PROD) && !defined(CCPU)
+---
+> #if defined(CPU_40_STYLE) && defined(PROD) && !defined(CCPU) && !defined(HAXM)
+171c171
+< #if !(defined(NTVDM) && defined(MONITOR))  /* MS NT monitor has own effective_addr fn */
+---
+> #if !(defined(NTVDM) && (defined(MONITOR) || defined(HAXM)))  /* MS NT monitor has own effective_addr fn */
+--- NT4\private\mvdm\softpc.new\base\inc\sas.h
++++ nt\private\mvdm\softpc.new\base\inc\sas.h
+42d41
+< #define SAS_VDD SAS_IO
+57a57
+> #define SAS_VDD SAS_IO
+--- NT4\private\mvdm\softpc.new\host\inc\host_def.h
++++ nt\private\mvdm\softpc.new\host\inc\host_def.h
+37c37
+< #ifdef MONITOR
+---
+> #if defined(MONITOR) || (defined(HAXM)  && !defined(CPU_40_STYLE))
+--- NT4\private\mvdm\softpc.new\base\inc\cpu.h
++++ nt\private\mvdm\softpc.new\base\inc\cpu.h
+19c19
+< #if defined(NTVDM) && defined(MONITOR)
+---
+> #if defined(NTVDM) && (defined(MONITOR) || defined(HAXM))
+--- NT4\private\mvdm\softpc.new\base\dasm386\dasm386.c
++++ nt\private\mvdm\softpc.new\base\dasm386\dasm386.c
+670c670
+< 	IU8 res = Sas.Sas_hw_at(linAddr);
+---
+> 	IU8 res = sas_hw_at(linAddr);
+--- NT4\private\mvdm\softpc.new\base\bios\bios.c
++++ nt\private\mvdm\softpc.new\base\bios\bios.c
+661c661
+< #if defined(NTVDM) && defined(MONITOR)
+---
+> #if defined(NTVDM) && (defined(MONITOR) || defined(HAXM))
+--- NT4\private\mvdm\softpc.new\base\system\timer.c
++++ nt\private\mvdm\softpc.new\base\system\timer.c
+2061c2061
+< #ifndef MONITOR
+---
+> #if !defined(MONITOR) && !defined(HAXM)
+--- NT4\private\mvdm\softpc.new\base\system\qevnt.c
++++ nt\private\mvdm\softpc.new\base\system\qevnt.c
+106c106
+< #ifndef MONITOR
+---
+> #if !defined(MONITOR) && !defined(HAXM)
+146c146
+< #ifndef MONITOR
+---
+> #if !defined(MONITOR) && !defined(HAXM)
+206c206
+< #ifdef MONITOR
+---
+> #if defined(MONITOR) || defined(HAXM)
+330c330
+< #ifndef MONITOR
+---
+> #if !defined(MONITOR) && !defined(HAXM)
+375c375
+< #ifndef MONITOR
+---
+> #if !defined(MONITOR) && !defined(HAXM)
+449c449
+< #ifndef MONITOR
+---
+> #if !defined(MONITOR) && !defined(HAXM)
+--- NT4\private\mvdm\softpc.new\base\system\quick_ev.c
++++ nt\private\mvdm\softpc.new\base\system\quick_ev.c
+536c536
+< #if (defined(NTVDM) && defined(MONITOR)) || defined(GISP_CPU)	/* No quick events - just call func */
+---
+> #if (defined(NTVDM) && (defined(MONITOR) || defined(HAXM))) || defined(GISP_CPU)	/* No quick events - just call func */
+--- NT4\private\mvdm\v86\dirs
++++ nt\private\mvdm\v86\dirs
+24c24,25
+< DIRS= monitor 
+---
+> DIRS= monitor \
+>       haxm
+--- NT4\private\mvdm\softpc.new\host\src\nt_cpu.c
++++ nt\private\mvdm\softpc.new\host\src\nt_cpu.c
+127c127
+< #ifndef MONITOR
+---
+> #if !defined(MONITOR) && !defined(HAXM)
+--- NT4\private\mvdm\dbg\dbg.c
++++ nt\private\mvdm\dbg\dbg.c
+50a51
+> #ifndef HAXM
+51a53
+> #endif
+--- NT4\private\mvdm\dbg\sources.inc
++++ nt\private\mvdm\dbg\sources.inc
+29a30,32
+> !IF "$(HAXM)" != ""
+> C_DEFINES=$(C_DEFINES) -DHAXM
+> !ENDIF
