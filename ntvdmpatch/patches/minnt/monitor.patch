@@ -145,21 +145,33 @@
 > #endif
 --- NT4\private\mvdm\softpc.new\host\src\nt_sbfm.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_sbfm.c
-302a303
+diff -r F:\Windows.Source.Code.w2k.nt4.wxp\minnt\q160765803-minint4-85fac4faadc7\base\mvdm\softpc.new\host\src\nt_sbfm.c Z:\tmp\nt_sbfm.c
+282a283
 > #ifdef MONITOR
-308c309,311
-<             } else {
----
->             } else 
+322a324,339
+> #else
+>     DWORD dwBytesReturned;
+>     LPVOID lpMsgBuf;
+> 
+>     // attempt to open device file adlib.mid or adlib.mid0
+>     HFM = CreateFile("\\\\.\\adlib.mid", GENERIC_READ | GENERIC_WRITE,
+>       FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+>     if (HFM == INVALID_HANDLE_VALUE) {
+>         HFM = CreateFile("\\\\.\\adlib.mid0", GENERIC_READ | GENERIC_WRITE,
+>           FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+>     }
+>     if (HFM == INVALID_HANDLE_VALUE) {
+> 		HFM = NULL;
+> 		return FALSE;
+>     }
 > #endif
-> 			{
-312a316
-> #ifdef MONITOR
-322a327
+353a371,373
+> #ifndef MONITOR
+> 		CloseHandle(HFM);
 > #endif
-356a362
+356a377
 > #ifdef MONITOR
-362a369
+362a384
 > #endif
 --- NT4\private\mvdm\softpc.new\host\inc\nt_reset.h
 +++ nt\private\mvdm\softpc.new\host\inc\nt_reset.h

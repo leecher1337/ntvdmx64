@@ -1,0 +1,118 @@
+--- NT4\private\mvdm\softpc.new\host\src\nt_sb.c
++++ nt\private\mvdm\softpc.new\host\src\nt_sb.c
+45a46,50
+> TIMEKILLEVENTPROC        timeKillEventProc;
+> TIMESETEVENTPROC         timeSetEventProc;
+> TIMEGETTIMEPROC          timeGetTimeProc;
+> 
+> 
+260a266,269
+>     timeKillEventProc = (TIMEKILLEVENTPROC) GetProcAddress(hWinmm, "timeKillEvent");
+>     timeSetEventProc = (TIMESETEVENTPROC) GetProcAddress(hWinmm, "timeSetEvent");
+>     timeGetTimeProc = (TIMEGETTIMEPROC) GetProcAddress(hWinmm, "timeGetTime");
+> 
+269c278,279
+<         MidiPrepareHeaderProc && MidiUnprepareHeaderProc && GetMidiVolumeProc) {
+---
+>         MidiPrepareHeaderProc && MidiUnprepareHeaderProc && GetMidiVolumeProc &&
+> 		timeKillEventProc && timeSetEventProc && timeGetTimeProc) {
+599a610,611
+> 	case 0x0:
+> 	case 0x2:
+633a646
+> 	case ADLIB_STATUS_PORT+2:
+703a717
+> 	case 0x0:
+707a722,724
+> 	case 0x02:
+>         port = ADLIB_REGISTER_SELECT_PORT+2;
+>         break;
+708a726,727
+> 	case 0x1:
+> 	case 0x3:
+800a820,824
+> 	case ADLIB_REGISTER_SELECT_PORT+2:
+>         DisplaySbMode(DISPLAY_ADLIB);
+>         FMRegisterSelectWord(data);
+>         break;
+> 
+801a826
+> 	case ADLIB_DATA_PORT+2:
+--- NT4\private\mvdm\softpc.new\host\src\nt_sbfm.c
++++ nt\private\mvdm\softpc.new\host\src\nt_sbfm.c
+19a20
+> #include "nt_sbfmemu.h"
+32a34
+> static SDs* m_pDS = NULL;// Directsound handle for emulator
+64a67,72
+> 	if (m_pDS)
+> 	{
+> 		*data = FmStatus((SFm*)HFM);
+> 		return;
+> 	}
+> 
+107a116
+> 	if (m_pDS) FmAddress((SFm*)HFM, data);
+110a120,126
+> VOID FMRegisterSelectWord(
+>     BYTE data
+>     )
+> {
+> 	if (m_pDS) FmAddress((SFm*)HFM, (WORD)(data + 0x100));
+> }
+> 
+115a132,137
+> 	if (m_pDS)
+> 	{
+> 		FmWrite((SFm*)HFM, TRUE, data);
+> 		return;
+> 	}
+> 
+334a357
+> 
+336,337c359,366
+< 		HFM = NULL;
+< 		return FALSE;
+---
+> 		// Not successful, therefore we try use emulator
+> 		if (!(m_pDS = DirectSoundInit())) return FALSE;
+> 		if (!(HFM = (HMIDIOUT)FmInit(m_pDS)))
+> 		{
+> 			DirectSoundFinal(m_pDS);
+> 			m_pDS = NULL;
+> 			return FALSE;
+> 		}
+372c401,406
+< 		CloseHandle(HFM);
+---
+> 		if (!m_pDS) CloseHandle(HFM);
+> 		else {
+> 			FmFinal((SFm*)HFM);
+> 			DirectSoundFinal(m_pDS);
+> 			m_pDS = NULL;
+> 		}
+--- NT4\private\mvdm\softpc.new\host\inc\nt_sb.h
++++ nt\private\mvdm\softpc.new\host\inc\nt_sb.h
+33a34,37
+> typedef MMRESULT (WINAPI* TIMEKILLEVENTPROC)(UINT);
+> typedef MMRESULT (WINAPI* TIMESETEVENTPROC)(UINT, UINT, LPTIMECALLBACK, DWORD, UINT);
+> typedef MMRESULT (WINAPI* TIMEGETTIMEPROC)(VOID);
+> 
+58a63,67
+> 
+> extern TIMEKILLEVENTPROC        timeKillEventProc;
+> extern TIMESETEVENTPROC         timeSetEventProc;
+> extern TIMEGETTIMEPROC          timeGetTimeProc;
+> 
+202a212,216
+> VOID
+> FMRegisterSelectWord(
+>     BYTE data
+>     );
+> 
+--- NT4\private\mvdm\softpc.new\host\src\sources.inc
++++ nt\private\mvdm\softpc.new\host\src\sources.inc
+95a96,98
+>     ..\nt_sbfmemu.c    \
+>     ..\nt_sbfmwave.c   \
+>     ..\nt_sbds.c       \

@@ -222,11 +222,28 @@ FAQ
 ===
 I want to have a proper soundcard emulation
 ---------------------------------------------------------------------------
+MINNT build supports AdLib soundcard emulation by incorporating code parts
+of SoundFX2000 into NTVDM SB20 emulation.
+
+But you can also try to use the real
+
 http://www.softsystem.co.uk/products/soundfx.htm
 
 To remove time limit (as it's free nowadays anyway), please
 see:
 https://github.com/leecher1337/ntvdmx64/issues/40#issuecomment-510697281
+
+But it sometimes causes applications to hang and not react to keyboard
+input.
+
+
+The PC speaker output is choppy and generally inaccurate, I want my PC
+speaker sound back
+---------------------------------------------------------------------------
+This is not NTVDMx64's fault, it is related to a bad design change in 
+Windows starting with Windows 7.
+It can be solved by installing a proper PC Speaker driver:
+https://www.vogons.org/viewtopic.php?f=46&t=58233
 
 
 I want to run 16bit Windows applications
