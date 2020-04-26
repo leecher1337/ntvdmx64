@@ -1038,6 +1038,7 @@ BOOL WINAPI _DllMainCRTStartup(
 		Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "ntdll.dll", "NtQueryInformationProcess", myNtQueryInformationProcess, NULL);
 		Hook_IAT_x64_IAT((LPBYTE)hKernelBase, "ntdll.dll", "NtQueryInformationProcess", myNtQueryInformationProcess, NULL);
 #endif /* WIN64 */
+		HookExtractIcon();
 		TRACE("ldntvdm Init done");
 		break;
 	}

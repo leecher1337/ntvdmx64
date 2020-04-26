@@ -7,8 +7,9 @@
 */
 
 #include "ldntvdm.h"
+#include <inttypes.h>
 
-#ifdef TARGET_WIN7
+#if defined(TARGET_WIN7) || defined(EXTRACTICON_HOOK)
 
 static PBYTE Hook_FindAddr(PVOID src)
 {
@@ -27,7 +28,7 @@ static PBYTE Hook_FindAddr(PVOID src)
 		if (mbi.State == MEM_FREE)
 		{
 			PBYTE ret;
-			TRACE("About to alloc page @%08X", mbi.BaseAddress);
+			TRACE("About to alloc page @%"PRIxPTR, mbi.BaseAddress);
 			if ((ret = VirtualAlloc(mbi.BaseAddress, 0x1000, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE)))
 				return ret;
 		}
@@ -79,7 +80,7 @@ LPBYTE Hook_Inline(PVOID src, PVOID tgt)
 	DWORD flOld = 0, OldProt = 0, dwOrigSize;
 	static DWORD SectOffset = 0;
 
-	TRACE("Hook_Inline(%08X, %08X, %d)", src, tgt, dwOrigSize);
+	TRACE("Hook_Inline(%"PRIxPTR", %"PRIxPTR", %d)", src, tgt, dwOrigSize);
 
 	// Determine dwOrigSize with LDASM. We need at least 2 + sizeof(DWORD) bytes 
 	dwOrigSize = Hook_DetermineLength(src, 2 + sizeof(DWORD));
@@ -133,7 +134,7 @@ LPBYTE Hook_Inline(PVOID src, PVOID tgt)
 	RtlMoveMemory(src, context + dwOrigSize + 1 + sizeof(DWORD) + sizeof(ULONG_PTR), 2 + sizeof(DWORD));
 	VirtualProtect(src, 2 + sizeof(DWORD), flOld, &flOld);
 
-	TRACE("Hook_Inline context=%08X", context);
+	TRACE("Hook_Inline context=%"PRIxPTR, context);
 	return context;
 }
 #endif

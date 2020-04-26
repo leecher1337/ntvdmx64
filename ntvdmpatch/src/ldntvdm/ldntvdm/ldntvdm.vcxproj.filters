@@ -51,6 +51,12 @@
     <ClCompile Include="reg.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="extract.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="extracticon.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="basemsg64.h">
@@ -93,6 +99,15 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="reg.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="newexe.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="extract.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="newres.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

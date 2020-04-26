@@ -9,6 +9,10 @@
 // If set (i.e. via project workspace settings), this is Windows 7/Server 2008 version, if not set, it's Win10 version
 //#define TARGET_WIN7	
 
+// If set, we place some hooks for PrivateExtractIconsW so that 16bit icon support gets enabled again
+// which was disabled starting with Windows 7
+#define EXTRACTICON_HOOK
+
 // Enable debug tracing via Debug console. Recommended, as it helps diagnosing loader issues, but makes DLL bigger
 // due to debug strings
 #define TRACING
