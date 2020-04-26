@@ -254,6 +254,17 @@ But I recommend installing https://github.com/otya128/winevdm
 additionally to NTVDMx64 so you get the best of both worlds.
 
 
+I want to use my mouse in my textmode application and not select text 
+---------------------------------------------------------------------------
+You forgot to disable QuickEdit mode of the windows console.
+See: https://github.com/leecher1337/ntvdmx64/issues/80
+
+
+I want to print to my windows GDI printer
+---------------------------------------------------------------------------
+Google "DOSPR.ZIP"
+
+
 Are there any documents that describe the inner workings of the NTVDM 
 subsystem?
 ---------------------------------------------------------------------------
