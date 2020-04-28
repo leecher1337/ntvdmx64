@@ -6,7 +6,7 @@
  * Changes: 01.04.2016  - Created
  */
 
-#ifndef _WIN64
+#if !defined(_WIN64) && defined(CREATEPROCESS_HOOK)
 #include "ldntvdm.h"
 
 #ifdef NO_XOR
@@ -154,9 +154,9 @@ void inject_dll_init()
 	int i;
 
 	if (bInizialized) return;
-	for (i = 0; i < sizeof(migrate_executex64); i++) migrate_executex64[i] ^= 55;
-	for (i = 0; i < sizeof(migrate_wownativex); i++) migrate_wownativex[i] ^= 55;
-	for (i = 0; i < sizeof(ldr_load_library_x64); i++) ldr_load_library_x64[i] ^= 55;
+	for (i = 0; i < sizeof(migrate_executex64); i++) migrate_executex64[i] ^= 0x55;
+	for (i = 0; i < sizeof(migrate_wownativex); i++) migrate_wownativex[i] ^= 0x55;
+	for (i = 0; i < sizeof(ldr_load_library_x64); i++) ldr_load_library_x64[i] ^= 0x55;
 	bInizialized = TRUE;
 #endif
 }

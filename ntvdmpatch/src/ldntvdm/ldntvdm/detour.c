@@ -80,7 +80,7 @@ LPBYTE Hook_Inline(PVOID src, PVOID tgt)
 	DWORD flOld = 0, OldProt = 0, dwOrigSize;
 	static DWORD SectOffset = 0;
 
-	TRACE("Hook_Inline(%"PRIxPTR", %"PRIxPTR", %d)", src, tgt, dwOrigSize);
+	TRACE("Hook_Inline(%"PRIxPTR", %"PRIxPTR")", src, tgt);
 
 	// Determine dwOrigSize with LDASM. We need at least 2 + sizeof(DWORD) bytes 
 	dwOrigSize = Hook_DetermineLength(src, 2 + sizeof(DWORD));
