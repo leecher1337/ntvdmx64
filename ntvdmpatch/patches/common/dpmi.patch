@@ -24,6 +24,10 @@
 < #ifndef i386
 ---
 > #if !defined(i386) || !defined(MONITOR)
+205c205
+< BOOL
+---
+> NTSTATUS
 --- NT4\private\mvdm\dpmi32\dpmidata.h
 +++ nt\private\mvdm\dpmi32\dpmidata.h
 31c31
@@ -123,3 +127,13 @@
 +++ nt\private\mvdm\softpc.new\base\ccpu386\c_main.c
 4416a4417
 > 	 if(!(GET_PE() && host_hwint_hook((IS32) cpu_hw_interrupt_number)))
+--- NT4\private\mvdm\dpmi32\dpmimemr.c
++++ nt\private\mvdm\dpmi32\dpmimemr.c
+136c136
+< BOOL
+---
+> NTSTATUS
+189c189
+<     return NT_SUCCESS(Status);
+---
+>     return Status;
