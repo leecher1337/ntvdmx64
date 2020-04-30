@@ -3,7 +3,7 @@
 1c1
 < C_DEFINES= -DCPU_30_STYLE -DCPU_40_STYLE -DNEW_CPU -DCCPU -DSPC386 -DANSI -DNTVDM
 ---
-> C_DEFINES= -DCPU_30_STYLE -DCPU_40_STYLE -DNEW_CPU -DCCPU -DSPC386 -DANSI -DNTVDM -DPROD
+> C_DEFINES= -DCPU_30_STYLE -DCPU_40_STYLE -DNEW_CPU -DCCPU -DSPC386 -DANSI -DNTVDM -DPROD -DSPC486 
 --- NT4\private\mvdm\softpc.new\base\dasm386\sources
 +++ nt\private\mvdm\softpc.new\base\dasm386\sources
 35c35
@@ -38,15 +38,19 @@
 < !IF $(X86)
 ---
 > !IF $(X86) && "$(CCPU)" == "" && "$(HAXM)" == ""
-51c52
+51c51
 < 
 ---
 > !IF "$(HAXM)" == ""
-56a58,60
+55c55
+< CPU_DEFS=     -DCPU_40_STYLE  -DCCPU -DC_VID
+---
+> CPU_DEFS=     -DCPU_40_STYLE  -DCCPU -DC_VID -DSPC486
+56a57,59
 > !ELSE
 > CPU_DEFS=     -DCPU_40_STYLE -DHAXM -DC_VID -DSPC486
 > !ENDIF
-62c66,67
+62c65,66
 < 	      -DV7VGA
 ---
 > 	      -DV7VGA \
