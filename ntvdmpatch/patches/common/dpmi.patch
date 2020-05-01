@@ -137,3 +137,14 @@
 <     return NT_SUCCESS(Status);
 ---
 >     return Status;
+--- NT4\private\mvdm\dpmi\486\dxstrt.asm
++++ nt\private\mvdm\dpmi\486\dxstrt.asm
+1260a1261,1268
+> 	; HACKHACK - Seems to fix DPMI applications running after termination,
+> 	; but is this the correct way to do..??
+> .386
+> 	xor	ax, ax
+> 	mov	fs, ax
+> 	mov	gs, ax
+> .286p
+> 
