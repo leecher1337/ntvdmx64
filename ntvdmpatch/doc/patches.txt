@@ -14,6 +14,10 @@ console.patch       - Fixes console startup bug that would otherwise not init
 comments.patch      - Adds back the fun to MINNT source where some lamers
                       removed all filthy comments and even the easteregg in 
                       YODA
+cvdump.patch        - Not NTVDM-specific, but patches a >20 year old bug in
+                      cvdump Visual C tool for dumping CodeView NB02 debug
+                      info (Utility complains about invalid exe, even though,
+                      exe is correct), also enhances hexdump to display text
 cvidc.patch         - Patches the Video controller CPU to work in i386
 cvidcheap.patch     - Speed up CVIDC video emulation by eliminating all the 
                       unnecessary slow heap operations.

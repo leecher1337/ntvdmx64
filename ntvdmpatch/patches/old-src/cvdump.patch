@@ -1,0 +1,33 @@
+--- NT4\private\sdktools\vctools\cvdump\cvdump.c
++++ nt\private\sdktools\vctools\cvdump\cvdump.c
+41a42
+> #pragma pack(1)
+42a44
+> #pragma pack()
+
+--- NT4\private\sdktools\vctools\cvdump\type6.c
++++ nt\private\sdktools\vctools\cvdump\type6.c
+210c210
+<     unsigned char *p = Buf;
+---
+>     unsigned char *p = Buf, *t = Txt;
+213c213,214
+<         printf (" 0x%02x", update ? getbyte () : *p++);
+---
+>         printf (" 0x%02x", update ? getbyte () : *p);
+> 		*t=*p>=32&&*p<127?*p:' '; p++; t++;
+215c216,218
+<             printf ("\n");
+---
+> 			*t=0;
+>             printf ("\t%s\n", Txt);
+> 			t=Txt;
+217c220,225
+<     }
+---
+>     }
+> 	if (t!=Txt)
+> 	{
+> 		*t=0;
+> 		printf ("%-*s\t%s\n", (8-(num_on_line % 8))*5, "", Txt);
+> 	}
