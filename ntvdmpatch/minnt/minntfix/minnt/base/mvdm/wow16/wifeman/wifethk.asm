@@ -1,11 +1,11 @@
-    TITLE   WMTHUNKS.ASM
+    TITLE   WIFETHK.ASM
     PAGE    ,132
 ;
 ; WOW v1.0
 ;
 ; Copyright (c) 1991-1992, Microsoft Corporation
 ;
-; WMTHUNKS.ASM
+; WIFETHK.ASM
 ; Thunks in 16-bit space to route Windows API calls to WOW32
 ;
 ; History:

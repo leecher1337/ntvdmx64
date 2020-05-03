@@ -88,20 +88,17 @@ cleanup:
     if exist *.sym del *.sym
     if exist *.res del *.res
 
-wmthunks.obj: $*.asm ..\..\inc\wow.inc ..\..\inc\wowth.inc 
-    masm $(AOBJ) $*;
-
-libentry.obj: $*.asm 
+wifethk.obj: $*.asm ..\..\inc\wow.inc ..\..\inc\wowwife.inc
     masm $(AOBJ) $*;
 
 wifeman.lrf: makefile
-    echo $*.obj wmthunks.obj libentry.obj >$@
+    echo $*.obj wifethk.obj libentry.obj fakewife.obj >$@
     echo $*.dll>>$@
     echo $* $(LINK)>>$@
     echo ..\lib\libw.lib /nod>>$@
     echo $*;>>$@
 
-wifeman.dll: wmthunks.obj libentry.obj $*.obj $*.lrf $*.def $*.res
+wifeman.dll: wifethk.obj libentry.obj fakewife.obj $*.obj $*.lrf $*.def $*.res
     link16 @$*.lrf;
     rc16 -t $*.res $@
 
