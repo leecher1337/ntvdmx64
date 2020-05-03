@@ -132,13 +132,13 @@ move /y %workdir%\old-src\nt\public\oak\inc\winddiui.h %minntfix%\minnt\public\o
 echo #include "winddiui_xp.h" >>%minntfix%\minnt\public\oak\inc\winddiui.h
 
 
-xcopy /s /y %workdir%\old-src\nt\private\mvdm\wow16 %minntfix%\minnt\base\mvdm\wow16\
-xcopy /s /y %workdir%\old-src\nt\private\mvdm\softpc.new\host\inc\alpha %minntfix%\minnt\base\mvdm\softpc.new\host\inc\alpha\
-xcopy /s /y %workdir%\old-src\nt\private\mvdm\softpc.new\host\inc\mips %minntfix%\minnt\base\mvdm\softpc.new\host\inc\mips\
-xcopy /s /y %workdir%\old-src\nt\private\mvdm\softpc.new\host\inc\ppc %minntfix%\minnt\base\mvdm\softpc.new\host\inc\ppc\
+xcopy /e /y %workdir%\old-src\nt\private\mvdm\wow16 %minntfix%\minnt\base\mvdm\wow16\
+xcopy /e /y %workdir%\old-src\nt\private\mvdm\softpc.new\host\inc\alpha %minntfix%\minnt\base\mvdm\softpc.new\host\inc\alpha\
+xcopy /e /y %workdir%\old-src\nt\private\mvdm\softpc.new\host\inc\mips %minntfix%\minnt\base\mvdm\softpc.new\host\inc\mips\
+xcopy /e /y %workdir%\old-src\nt\private\mvdm\softpc.new\host\inc\ppc %minntfix%\minnt\base\mvdm\softpc.new\host\inc\ppc\
 del %minntfix%\minnt\base\mvdm\wow16\inc\ime.h
-xcopy /s /y %workdir%\old-src\nt\private\mvdm\dpmi %minntfix%\minnt\base\mvdm\dpmi.old\
-xcopy /s /y %workdir%\old-src\nt\private\mvdm\dpmi32 %minntfix%\minnt\base\mvdm\dpmi32.old\
+xcopy /e /y %workdir%\old-src\nt\private\mvdm\dpmi %minntfix%\minnt\base\mvdm\dpmi.old\
+xcopy /e /y %workdir%\old-src\nt\private\mvdm\dpmi32 %minntfix%\minnt\base\mvdm\dpmi32.old\
 xcopy /Y %workdir%\old-src\nt\private\mvdm\inc\intmac.inc %minntfix%\minnt\base\mvdm\dpmi.old\
 md %minntfix%\minnt\base\mvdm\inc
 copy /Y %workdir%\old-src\nt\private\mvdm\inc\dpmi.h %minntfix%\minnt\base\mvdm\inc\dpmi.h.old
