@@ -1,0 +1,12 @@
+/********************************************************************/
+/*        WIFEMAN.RCV                                               */
+/********************************************************************/
+#include <version.h>
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR		"WIFE interface core component"
+#define VER_INTERNALNAME_STR		"WIFEMAN"
+#define VER_ORIGINALFILENAME_STR        "WIFEMAN.DLL"
+
+#include <common.ver>

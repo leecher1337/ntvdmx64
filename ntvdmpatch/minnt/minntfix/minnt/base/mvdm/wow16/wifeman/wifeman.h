@@ -1,0 +1,2 @@
+#define IDS_FUNCNOTSUPP	200
+#define IDS_APPTITLE    201

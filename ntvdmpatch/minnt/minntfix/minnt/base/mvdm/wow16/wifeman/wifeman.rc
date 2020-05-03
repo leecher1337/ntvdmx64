@@ -1,0 +1,25 @@
+/****************************** Module Header ******************************\
+* Module Name: WIFEMAN.RC
+*
+* Copyright (c) 1991, Microsoft Corporation
+*
+* Resources
+*
+* History:
+* 20-05-01  leecher1337  Created
+\***************************************************************************/
+
+#define OEMRESOURCE
+
+#include "windows.h"
+#include "wifeman.h"
+
+/* Version Stamping */
+#include "wifeman.rcv"
+
+STRINGTABLE PRELOAD
+BEGIN
+    IDS_FUNCNOTSUPP,        "The WIFE font function not supported by Windows 2000 was called.\nThis program may not run correctly. Do you want to continue?"
+    IDS_APPTITLE,           "WIFE Font manager"
+END
+
