@@ -1,0 +1,12 @@
+/********************************************************************/
+/*        WINNLS.RCV                                                */
+/********************************************************************/
+#include <version.h>
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR		"Windows IME interface core component"
+#define VER_INTERNALNAME_STR		"WINNLS"
+#define VER_ORIGINALFILENAME_STR        "WINNLS.DLL"
+
+#include <common.ver>

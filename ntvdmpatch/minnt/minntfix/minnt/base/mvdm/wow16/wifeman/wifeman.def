@@ -19,7 +19,7 @@ CODE            PRELOAD         FIXED
 ;DATA must be SINGLE and at a FIXED location since this is a DLL
 DATA            PRELOAD         FIXED           SINGLE
 
-HEAPSIZE        4000
+HEAPSIZE        1024
 
 ; All functions that will be called by any Windows routine
 ; must be exported

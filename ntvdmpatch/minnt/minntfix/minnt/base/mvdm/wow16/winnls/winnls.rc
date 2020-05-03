@@ -1,0 +1,18 @@
+/****************************** Module Header ******************************\
+* Module Name: WIFEMAN.RC
+*
+* Copyright (c) 1991, Microsoft Corporation
+*
+* Resources
+*
+* History:
+* 20-05-01  leecher1337  Created
+\***************************************************************************/
+
+#define OEMRESOURCE
+
+#include "windows.h"
+
+/* Version Stamping */
+#include "winnls.rcv"
+

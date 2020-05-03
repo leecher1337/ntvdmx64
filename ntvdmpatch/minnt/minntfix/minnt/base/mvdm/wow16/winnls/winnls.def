@@ -1,0 +1,67 @@
+;
+;         File: winnls.def
+;       System: MS-Windows 3.x
+;      Summary: Module definition file for Winnls DLL.
+;
+
+LIBRARY         WINNLS         ; Application's module name
+
+DESCRIPTION     'WOW REPLACEMENT WINNLS'
+
+EXETYPE         WINDOWS         ; required for all windows applications
+
+;STUB            'WINSTUB.EXE'   ; generates error message if application
+;                                ; is run without Windows
+
+;CODE can be FIXED in memory because of potential upcalls
+CODE            PRELOAD         FIXED
+
+;DATA must be SINGLE and at a FIXED location since this is a DLL
+DATA            PRELOAD         FIXED           SINGLE
+
+HEAPSIZE        1024
+
+; All functions that will be called by any Windows routine
+; must be exported
+
+EXPORTS
+		InquireWINNLS                   @1
+		HookKeyboardMessage             @2
+		WEP                             @3
+		SendIMEMessage                  @4
+		SendIMEMessageEx                @5
+		ControlIMEMessage               @8
+		WINNLSSetKeyboardHook           @10
+		WINNLSSetIMEHandle              @11
+		WINNLSSetIMEStatus              @12
+		WINNLSSetIMEHotkey              @14
+		WINNLSGetIMEHotkey              @15
+		WINNLSEnableIME                 @16
+		WINNLSSetSysIME                 @17
+		WINNLSGetSysIME                 @18
+		WINNLSIMEControl                @19
+		IMPAddIME                       @20
+		IMPDeleteIME                    @21
+		IMPQueryIME                     @22
+		IMPGetIME                       @23
+		IMPSetIME                       @24
+		IMPModifyIME                    @25
+		IMPGetDefaultIME                @26
+		IMPSetDefaultIME                @27
+		WINNLSSendString                @30
+		WINNLSPostAppMessage            @31
+		WINNLSSendAppMessage            @32
+		WINNLSSendControl               @33
+		WINNLSGetKeyState               @37
+		WINNLSGetEnableStatus           @38
+		WINNLSSetKeyState               @39
+		WINNLSQueryIMEInfo              @40
+		IMPEnableIME                    @41
+		IMPSetFirstIME                  @42
+		IMPGetFirstIME                  @43
+		IMPSetUsrFont                   @44
+		IMPRetrieveIME                  @51
+		WINNLSDefIMEProc                @52
+		InquireIME                      @53
+
+;eof 
