@@ -3,6 +3,9 @@ Setlocal EnableDelayedExpansion
 
 if "%1"=="install" goto addappinit
 if "%1"=="uninstall" goto delappinit
+if "%1"=="instwow" goto instwow
+if "%1"=="delwow" goto delwow
+if "%1"=="link" goto hardlink
 
 >nul 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system"
 if '%errorlevel%' NEQ '0' (
@@ -92,6 +95,25 @@ reg add "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVer
 set AppInit=
 
 if exist %windir%\inf\ntvdmx64-haxm.inf RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultUninstall 132 %windir%\inf\ntvdmx64-haxm.inf
+goto fini
+
+:instwow
+md %3
+takeown /f %2\wow32.dll
+move %2\wow32.dll %3\
+takeown /f %2\user.exe
+move %2\user.exe %3\
+goto fini
+
+:delwow
+if exist %3\wow32.dll move %3\wow32.dll %2\
+if exist %3\user.exe move %3\user.exe %2\
+goto fini
+
+:hardlink
+if exist %2\%4 del %2\%4
+if exist %2\%4 echo %2\%4 is in use, please delete manually and then install again
+fsutil hardlink create %2\%4 %3\%4 
 goto fini
 
 :fini

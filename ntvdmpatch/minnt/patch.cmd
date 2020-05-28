@@ -60,10 +60,15 @@ popd
 echo Patching broken utilities
 pushd %BASEPATH%\..\
 %PATCHROOT%\util\patch -N -p0 -i %~dp0\tools.patch
+
+find "W10" public\internal\windows\inc\wowuserp.h >nul
+if errorlevel 1 %PATCHROOT%\util\patch -N -p0 -i %~dp0\w10.patch
 cd ..
 %PATCHROOT%\util\patch -N -p0 -i %~dp0\be.patch
 rem Also ensure .mc file has CRLF line endings
 %PATCHROOT%\util\sed -i "s/\r$/\n$/" NTOSBE-master\src\sdktools\rcdll\rcmsgs.mc
+rem Work around broken rc16
+del NTOSBE-master\tools\x86\tools16\rc16.exe
 popd
 
 

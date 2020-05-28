@@ -1,0 +1,131 @@
+[Version]
+Signature=$Windows NT$
+AdvancedINF= 2.5,"advpack.dll" 
+
+[Ntvdmx64.amd64.AddReg]
+HKLM,SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers,%11%\ntvdm.exe,0x00000000,"~ DISABLETHEMES DISABLETHEMEMENUS DISABLEDWM"
+HKLM,SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers,%16425%\ntvdm.exe,0x00000000,"~ DISABLETHEMES DISABLETHEMEMENUS DISABLEDWM"
+
+[SourceDisksNames.amd64]
+1="WOW32",,,"\wow32"
+
+[SourceDisksFiles.amd64]
+comm.drv=1
+commdlg.dll=1
+ctl3dv2.dll=1
+ddeml.dll=1
+drwatson.exe=1
+gdi.exe=1
+keyboard.drv=1
+krnl386.exe=1
+lanman.drv=1
+lzexpand.dll=1
+mciole16.dll=1
+mmsystem.dll=1
+mmtask.tsk=1
+mouse.drv=1
+netapi.dll=1
+olecli.dll=1
+olesvr.dll=1
+pmspl.dll=1
+regedt16.exe=1
+shell.dll=1
+sound.drv=1
+sysedit.exe=1
+system.drv=1
+timer.drv=1
+toolhelp.dll=1
+user.exe=1
+ver.dll=1
+vga.drv=1
+wfwnet.drv=1
+wifeman.dll=1
+win.com=1
+win87em.dll=1
+winhelp.exe=1
+winnls.dll=1
+winoldap.mod=1
+winsock.dll=1
+winspool.exe=1
+wow32.dll=1
+wowdeb.exe=1
+wowexec.exe=1
+wowfax.dll=1
+wowfaxui.dll=1
+
+[Ntvdmx64.amd64.System.Files]
+comm.drv,,,0x41
+commdlg.dll,,,0x41
+ctl3dv2.dll,,,0x41
+ddeml.dll,,,0x41
+drwatson.exe,,,0x41
+gdi.exe,,,0x41
+keyboard.drv,,,0x41
+krnl386.exe,,,0x41
+lanman.drv,,,0x41
+lzexpand.dll,,,0x41
+mciole16.dll,,,0x41
+mmsystem.dll,,,0x41
+mmtask.tsk,,,0x41
+mouse.drv,,,0x41
+netapi.dll,,,0x41
+olecli.dll,,,0x41
+olesvr.dll,,,0x41
+pmspl.dll,,,0x41
+regedt16.exe,,,0x41
+shell.dll,,,0x41
+sound.drv,,,0x41
+sysedit.exe,,,0x41
+system.drv,,,0x41
+timer.drv,,,0x41
+toolhelp.dll,,,0x41
+user.exe,,,0x4002
+ver.dll,,,0x41
+vga.drv,,,0x41
+wfwnet.drv,,,0x41
+wifeman.dll,,,0x41
+win.com,,,0x41
+win87em.dll,,,0x41
+winhelp.exe,,,0x41
+winnls.dll,,,0x41
+winoldap.mod,,,0x41
+winsock.dll,,,0x41
+winspool.exe,,,0x41
+wow32.dll,,,0x4002
+wowdeb.exe,,,0x41
+wowexec.exe,,,0x41
+wowfax.dll,,,0x41
+wowfaxui.dll,,,0x41
+
+
+[Ntvdmx64.amd64.Inf.Files.Add]
+wow32.inf
+
+[Ntvdmx64.amd64.Inf.Files.Del]
+wow32.inf
+wow32.PNF
+
+[DestinationDirs]
+Ntvdmx64.amd64.System.Files   = 16425
+Ntvdmx64.amd64.Inf.Files.Add = 17
+Ntvdmx64.amd64.Inf.Files.Del = 17
+
+[InstallCmdsPre]
+%10%\Symbols\instntvdmx64.bat instwow "%16425%" "%10%\Symbols\Backup"
+
+
+[UninstallCmds]
+%10%\Symbols\instntvdmx64.bat delwow  "%16425%" "%10%\Symbols\Backup"
+
+[DefaultInstall.ntamd64]
+;CheckAdminRights = 1
+RunPreSetupCommands = InstallCmdsPre
+SmartReboot = N
+CopyFiles   = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Inf.Files.Add
+AddReg      = Ntvdmx64.amd64.AddReg
+
+[DefaultUninstall.ntamd64]
+RunPreSetupCommands = UninstallCmds
+CleanUp = 1
+DelFiles    = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Inf.Files.Del
+Delreg      = Ntvdmx64.amd64.AddReg

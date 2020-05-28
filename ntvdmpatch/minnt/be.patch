@@ -1,10 +1,6 @@
 --- NTOSBE-master\src\sdktools\build\buildutl.c
 +++ NTOSBE-master\src\sdktools\build\buildutl.c
-16a17,19
-> #ifndef INVALID_FILE_ATTRIBUTES
-> #define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
-> #endif
-294,295c297,298
+294,295c294,295
 <         pmh->pmhNext->pmhPrev = pmh->pmhPrev;
 <         pmh->pmhPrev->pmhNext = pmh->pmhNext;
 ---
@@ -14,3 +10,74 @@
 +++ NTOSBE-master\src\sdktools\build\sources
 32a33
 > NO_SAFESEH=1
+--- NTOSBE-master\src\placefil.txt
++++ NTOSBE-master\src\placefil.txt
+66a67
+> qgrep.exe           idw
+70a72
+> upd.exe             idw
+--- NTOSBE-master\src\sdktools\dirs
++++ NTOSBE-master\src\sdktools\dirs
+17a18,19
+>       qgrep       \
+>       upd         \
+--- NTOSBE-master\buildlocaltools.cmd
++++ NTOSBE-master\buildlocaltools.cmd
+128a129,134
+> call buildlocaltool.cmd qgrep sdktools\qgrep idw\qgrep.exe idw\qgrep.exe
+> if errorlevel 1 goto Error
+> 
+> call buildlocaltool.cmd upd sdktools\upd idw\upd.exe idw\upd.exe
+> if errorlevel 1 goto Error
+> 
+--- NTOSBE-master\src\sdktools\upd\upd.c
++++ NTOSBE-master\src\sdktools\upd\upd.c
+136c136
+<     else
+---
+>     //else
+177a178
+> 	return TRUE;
+--- NTOSBE-master\src\sdktools\upd\sources
++++ NTOSBE-master\src\sdktools\upd\sources
+39,40c39,42
+< UMLIBS=..\ztools\src\obj\*\ztools.lib \
+<        $(BASEDIR)\public\sdk\lib\*\user32.lib
+---
+> UMLIBS=$(PROJECT_ROOT)\ztools\src\$(O)\ztools.lib \
+>        $(SDK_LIB_PATH)\user32.lib
+> 
+> USE_MSVCRT=1
+--- NTOSBE-master\src\sdktools\qgrep\sources
++++ NTOSBE-master\src\sdktools\qgrep\sources
+39,40c39,42
+< UMLIBS=$(BASEDIR)\public\sdk\lib\*\setargv.obj \
+<        $(BASEDIR)\public\sdk\lib\*\user32.lib
+---
+> UMLIBS=$(SDK_LIB_PATH)\setargv.obj \
+>        $(SDK_LIB_PATH)\user32.lib
+> 
+> USE_MSVCRT=1
+--- NTOSBE-master\src\public\sdk\inc\crt\ctype.h
++++ NTOSBE-master\src\public\sdk\inc\crt\ctype.h
+30a31,50
+> /* Define _CRTAPI1 (for compatibility with the NT SDK) */
+> 
+> #ifndef _CRTAPI1
+> #if	_MSC_VER >= 800 && _M_IX86 >= 300
+> #define _CRTAPI1 __cdecl
+> #else
+> #define _CRTAPI1
+> #endif
+> #endif
+> 
+> 
+> /* Define _CRTAPI2 (for compatibility with the NT SDK) */
+> 
+> #ifndef _CRTAPI2
+> #if	_MSC_VER >= 800 && _M_IX86 >= 300
+> #define _CRTAPI2 __cdecl
+> #else
+> #define _CRTAPI2
+> #endif
+> #endif

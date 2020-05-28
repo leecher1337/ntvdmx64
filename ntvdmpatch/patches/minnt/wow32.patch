@@ -1,22 +1,1417 @@
+--- NT4\private\mvdm\wow32\hack.c
++++ nt\private\mvdm\wow32\hack.c
+201a202,205
+> #ifdef W10 /* On Win10, this calls RtlAllocateHeap internally. If we use ZwAllocate instead, we will crash on free */
+>         if (lpEnvNew = RtlAllocateHeap(GetProcessHeap(), 0, MemoryInformation.RegionSize))
+>             Status = STATUS_SUCCESS; else Status = STATUS_NO_MEMORY;
+> #else
+207a212
+> #endif
+--- NT4\private\mvdm\wow32\wumsg.c
++++ nt\private\mvdm\wow32\wumsg.c
+36a37,160
+> #ifdef W10
+> 
+> typedef LRESULT (WINAPI *fpSendMessage)(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
+> fpSendMessage RealSendMessageA = SendMessageA;
+> fpSendMessage RealSendMessageW = SendMessageW;
+> 
+> VOID CALLBACK SendAsyncProc(
+>   HWND hwnd,
+>   UINT uMsg,
+>   DWORD dwData,
+>   LRESULT lResult
+> )
+> {
+> 	LOGDEBUG(LOG_TRACE,("Window %x replied to msg %x with lResult %d\n",hwnd,uMsg, lResult));
+> 	*((LRESULT*)dwData) = lResult;
+> }
+> 
+> LRESULT x64SendMessageA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+> {
+> 	/* If the target window is a WOW16 window, we need to Yield so that target 
+> 	 * Window has a chance to process the msg 
+> 	 */
+> 	DWORD dwWinTid = GetWindowThreadProcessId(hWnd, NULL);
+> 	if (!dwWinTid) dwWinTid = GetWindowThreadProcessId(FULLHWND32(hWnd), NULL);
+> 	if (hWnd == (HWND)-1 || 
+> 		(dwWinTid != GetCurrentThreadId() &&
+> 		GetWindowLong(hWnd, GWL_WNDPROC) == (LONG)W32Win16WndDispProc))
+> 	{
+> 		MSG msg;
+> 		LRESULT lResult;
+> 
+> 		LOGDEBUG(LOG_TRACE,("Sending to another task: Me.TID=%d, Task.TID=%d\nBefore send msg %x to %x\n", 
+> 			GetCurrentThreadId(), dwWinTid, Msg, hWnd));
+> 		if (SendMessageCallbackA(hWnd, Msg, wParam, lParam, SendAsyncProc, &lResult))
+> 		{
+> 			WK32Yield(NULL);
+> 			PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE);
+> 		} else {
+> 			LOGDEBUG(LOG_ALWAYS,("BUGBUG: Sending msg %x to %x failed with error %d\n", Msg, hWnd, GetLastError()));
+> 			// If this really happens, we could forge a custom message that gets
+> 			// treated and converted back in WK32GetMessage
+> 		}
+> 		LOGDEBUG(LOG_TRACE,("After send msg %x to %x -> %x\n", Msg, hWnd, lResult));
+> 		return lResult;
+> 	}
+> 	else 
+> 	{
+> 		return RealSendMessageA(hWnd, Msg, wParam, lParam);
+> 	}
+> }
+> 
+> 
+> #if 0 /* Sendmessage hook USER32 -> Not needed, I think */
+> LRESULT x64SendMessageW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+> {
+> 	/* If the target window is a WOW16 window, we need to Yield so that target 
+> 	 * Window has a chance to process the msg 
+> 	 */
+> 	DWORD dwWinTid = GetWindowThreadProcessId(hWnd, NULL);
+> 	if (!dwWinTid) dwWinTid = GetWindowThreadProcessId(FULLHWND32(hWnd), NULL);
+> 	if (hWnd == (HWND)-1 || 
+> 		(dwWinTid != GetCurrentThreadId() &&
+> 		GetWindowLong(hWnd, GWL_WNDPROC) == (LONG)W32Win16WndDispProc))
+> 	{
+> 		MSG msg;
+> 		LRESULT lResult;
+> 
+> 		LOGDEBUG(LOG_TRACE,("Sending to another task: Me.TID=%d, Task.TID=%d\nBefore send msg %x to %x\n", 
+> 			GetCurrentThreadId(), dwWinTid, Msg, hWnd));
+> 		if (SendMessageCallbackW(hWnd, Msg, wParam, lParam, SendAsyncProc, &lResult))
+> 		{
+> 			WK32Yield(NULL);
+> 			PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE);
+> 		} else {
+> 			LOGDEBUG(LOG_ALWAYS,("BUGBUG: Sending msg %x to %x failed with error %d\n", Msg, hWnd, GetLastError()));
+> 			// If this really happens, we could forge a custom message that gets
+> 			// treated and converted back in WK32GetMessage
+> 		}
+> 		LOGDEBUG(LOG_TRACE,("After send msg %x to %x -> %x\n", Msg, hWnd, lResult));
+> 		return lResult;
+> 	}
+> 	else 
+> 	{
+> 		return RealSendMessageW(hWnd, Msg, wParam, lParam);
+> 	}
+> }
+> 
+> 
+> DWORD SetInlineHook(DWORD dwAddr, DWORD dwDest)
+> {
+> 	DWORD dwback;
+> 
+> 	// Do a hot-patch, as function usually supports it
+> 	dwAddr-=5;
+>     if (!VirtualProtect((LPVOID)dwAddr, 7, PAGE_READWRITE, &dwback)) return 0;
+>     *((PBYTE)(dwAddr))=0xE9;
+>     *((PDWORD)(dwAddr+1))=(dwDest)-dwAddr-5;
+> 	*((PWORD)(dwAddr+5))=0xF9EB;
+>     VirtualProtect((LPVOID)dwAddr, 7, dwback, &dwback);
+>     FlushInstructionCache(GetCurrentProcess(), NULL, 0); 
+> 	return dwAddr+7;
+> }
+> 
+> BOOL InstallSendMessageHook(void)
+> {
+> 	fpSendMessage SM;
+> 	int nHooks;
+> 
+> 	if (SM = (fpSendMessage)SetInlineHook(SendMessageA, x64SendMessageA))
+> 	{
+> 		RealSendMessageA = SM;
+> 		nHooks++;
+> 	}
+> 	if (SM = (fpSendMessage)SetInlineHook(SendMessageW, x64SendMessageW))
+> 	{
+> 		RealSendMessageW = SM;
+> 		nHooks++;
+> 	}
+> 	return nHooks == 2;
+> }
+> #endif /* Sendmessage hook */
+> 
+> #endif /* W10 */
+> 
+831c955,959
+< 
+---
+> #ifdef W10
+>     LOGDEBUG(LOG_TRACE,("WU32GetMassage waiting for message in queue\n")); 
+>     WU32WaitMessage(NULL);
+>     LOGDEBUG(LOG_TRACE,("WU32GetMassage now running real GetMessage\n")); 
+> #endif
+844a973
+> #ifndef W10 /* msctf.dll also seems to use high timer IDs. Therefore removed check */
+848a978
+> #endif
+849a980,984
+>     LOGDEBUG(LOG_TRACE,("hWnd = %x, msg %d (0x%x), wParam=%08X, lParam=%08X\n", t1.hwnd, t1.message, t1.message, t1.wParam, t1.lParam)); 
+> 
+> #ifdef W10	/* Filter WM_TIMER that are useless for 16bit world */
+>     if (t1.message != WM_TIMER || HIWORD(t1.wParam) == 0)
+> #endif
+1118a1254,1257
+> #ifdef W10
+>     (pfnOut.pfnYieldTask)();
+> #endif
+> 
+1904a2044,2046
+> #ifdef W10
+>         mpex.lReturn = x64SendMessageA(hwnd, mpex.uMsg, mpex.uParam, mpex.lParam);
+> #else
+1905a2048
+> #endif
+2181a2325,2327
+> #ifdef W10
+>     x64WaitMessage();
+> #else
+2182a2329
+> #endif
+--- NT4\private\mvdm\wow32\wkman.c
++++ nt\private\mvdm\wow32\wkman.c
+961a962,965
+> #ifdef W10
+>         // Tell WK32WowWaitForMsgAndEvent that we have a new thread
+>         SetEvent(ghevWowExecMsgWait);
+> #endif
+1320c1324
+<     CURRENTPTD() = &td;
+---
+>     SETCURRENTPTD(&td);
+1561c1565
+< #ifdef i386
+---
+> #ifdef i386xx
+1569a1574
+> #ifndef W10 /* Unfortunetely, no NtUserInitTask support... */
+1604a1610,1619
+> #else
+>         {
+>             // Tell uxtheme to leave our menus alone (DISABLETHEMEMENUS Appcompat fix)
+>             // Should be set for NTVDM at installation already, but better be sure...
+>             //
+>             // NB: We can kill uxtheme.dll alltogether by hooking _ClientLoadLibrary
+>             //     in user32.dll and filter loading of the DLL to get rid of the ugly 
+>             //     theming. This would be a job for the loader
+>             //     Controls look more "classic" when we remove uxtheme.
+>             static BOOL bFirstCall = TRUE;
+1605a1621,1640
+>             if (bFirstCall)
+>             {
+>                 HMODULE hUxTheme = GetModuleHandle("uxtheme.dll");
+>                 if (!hUxTheme) hUxTheme = LoadLibrary("uxtheme.dll");
+>                 if (hUxTheme)
+>                 {
+>                     typedef int (__stdcall *pfAddThemeAppCompatFlags)(ULONG ulAppCompatFlags, ULONG ulAppCompatFlagsEx);
+>                     pfAddThemeAppCompatFlags AddThemeAppCompatFlags = (pfAddThemeAppCompatFlags)GetProcAddress(hUxTheme, (LPCSTR)67);
+>                     if (AddThemeAppCompatFlags) AddThemeAppCompatFlags(2, 0);
+>                     bFirstCall = FALSE;
+>                 }
+>             }
+> 
+>             // Out poor man's scheduler semaphore
+>             td.hSem = CreateSemaphore(NULL, 0, 0xFFFF, NULL);
+>         }
+>         fRet = FALSE;
+> #endif
+> 
+> 
+1607a1643
+>         td.hThread = hThread;
+1628a1665,1667
+> #ifdef W10
+>             WaitForSingleObject(td.hSem, INFINITE); // We get released by parent Yield()
+> #endif
+1631d1669
+<         td.hThread = hThread;
+1832c1870
+<     CURRENTPTD() = &td;
+---
+>     SETCURRENTPTD(&td);
+1959c1997
+< #ifdef i386
+---
+> #ifdef i386xx
+2096a2135,2137
+> #ifdef W10
+>     (pfnOut.pfnYieldTask)();
+> #endif
+2170a2212,2214
+> #ifdef W10
+>     CloseHandle(CURRENTPTD()->hSem);
+> #endif
+2237a2282,2286
+> 
+> #ifdef W10
+>     (pfnOut.pfnYieldTask)();
+>     CloseHandle(CURRENTPTD()->hSem);
+> #endif
+2378a2428
+> #if 0	// leecher1337: Seems to be always be 0 on XP and above? Call Fritz!
+2382a2433
+> #endif
+--- NT4\private\mvdm\wow32\wuclass.c
++++ nt\private\mvdm\wow32\wuclass.c
+22a23,165
+> #ifdef W10
+> #define NCCR_DEFAULT		0
+> #define NCCR_GETCLASSLONG	1
+> #define NCCR_SETCLASSLONG	2
+> static BOOL mfNCCRmode = NCCR_DEFAULT;
+> struct nccr_scl {
+> 	int nIndex;
+> 	LONG dwNewLong;
+> };
+> 
+> LRESULT CALLBACK W32Win16WndDispProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+> {
+> 	VPWNDPROC vpWndProc16 = (VPWNDPROC)GetProp(hwnd, (LPCTSTR)gidWNDPROC16);
+> 	LRESULT ret;
+> 
+> 	/* Special treatment for SetClassLong and GetClassLong handling for x64GetClassLongByClassname
+> 	 * and x64SetClassLongByClassname
+> 	 */
+> 	if (mfNCCRmode)
+> 	{
+> 		if (uMsg == WM_NCCREATE)
+> 		{
+> 			LPCREATESTRUCT lpCS = (LPCREATESTRUCT)lParam;
+> 			struct nccr_scl *pSCL;
+> 
+> 			switch (mfNCCRmode)
+> 			{
+> 			case NCCR_GETCLASSLONG:
+> 				*(DWORD*)lpCS->lpCreateParams = GetClassLong(hwnd, *(int*)lpCS->lpCreateParams);
+> 				LOGDEBUG(LOG_TRACE,("W32Win16DlgDispProc GetClassLong = %d\n", *(int*)lpCS->lpCreateParams));
+> 				break;
+> 			case NCCR_SETCLASSLONG:
+> 				pSCL = (struct nccr_scl*)lpCS->lpCreateParams;
+> 				*(DWORD*)lpCS->lpCreateParams = SetClassLong(hwnd, pSCL->nIndex, pSCL->dwNewLong);
+> 				LOGDEBUG(LOG_TRACE,("W32Win16DlgDispProc SetClassLong = %d\n", *(int*)lpCS->lpCreateParams));
+> 				break;
+> 			}
+> 		} else if (uMsg == WM_NCDESTROY)
+> 			mfNCCRmode = NCCR_DEFAULT;
+> 		
+> 		return 0; /* Let CreateWindow fail */
+> 	}
+> 
+> 	if (!vpWndProc16)
+> 	{
+> 		if (!(vpWndProc16 = (VPWNDPROC)GetClassLong(hwnd, GCL_MY_WNDPROC)))
+> 			return 1;
+> 		SetProp(hwnd, (LPCTSTR)gidWNDPROC16, (HANDLE)vpWndProc16);
+> 	}
+> 	if (IsWOWProc(vpWndProc16))
+> 		ret = W32Win16WndProcEx(hwnd, uMsg, wParam, lParam, vpWndProc16, NULL);
+> 	else
+> 		ret = CallWindowProc((WNDPROC)vpWndProc16, hwnd, uMsg, wParam, lParam);
+> 	if (uMsg == WM_NCDESTROY)
+> 		RemoveProp(hwnd, (LPCTSTR)gidWNDPROC16);
+> 
+> 	return ret;
+> }
+> 
+> // GetClassLong just by Classname
+> DWORD x64GetClassLongByClassname(HINSTANCE hInstance, LPCTSTR lpClassName, int nIndex)
+> {
+> 	HWND hWnd;
+> 
+> 	// We assume that the caller already verified that it's a WOW window
+> 	// Very expensive call here:
+> 	// We need to create a window in order to access the GetClassLong pointer.. Any better ideas?
+> 	LOGDEBUG(LOG_TRACE,("x64GetClassLongByClassname(%x, %s, %d)\n", hInstance, lpClassName, nIndex));
+> 	mfNCCRmode = NCCR_GETCLASSLONG;
+> 	hWnd = (pfnOut.pfnCsCreateWindowEx)(
+> 		   0, lpClassName, "WOWDUMMY", WS_DISABLED | WS_POPUP, 0, 0, CW_USEDEFAULT, CW_USEDEFAULT, 0,
+> 		   NULL, hInstance?hInstance:GetModuleHandle(NULL), &nIndex, ZBID_DEFAULT, CW_FLAGS_ANSI);
+> 	LOGDEBUG(LOG_TRACE,("x64GetClassLongByClassname after call: hwnd=%x, mfNCCRmode=%d\n", hWnd, mfNCCRmode));
+> 	if (mfNCCRmode == NCCR_GETCLASSLONG)
+> 	{
+> 		LOGDEBUG(LOG_ALWAYS,("x64GetClassLongByClassname called on a window that belongs to class %s doesn't react with W32Win16WndDispProc\n", lpClassName));
+> 		mfNCCRmode = NCCR_DEFAULT;
+> 		if (hWnd) nIndex = (int)GetClassLong(hWnd, nIndex);
+> 		else
+> 		{
+> 			// Something went terribly wrong here
+> 			return 0;
+> 		}
+> 	}
+> 	if (hWnd)
+> 	{
+> 		// Should not happen, as we fail WM_NCCREATE
+> 		DestroyWindow(hWnd);
+> 	}
+> 	LOGDEBUG(LOG_TRACE,("x64GetClassLongByClassname returns %d\n", nIndex));
+> 	return (DWORD)nIndex;
+> }
+> 
+> DWORD x64SetClassLongByClassname(HINSTANCE hInstance, LPCTSTR lpClassName, int nIndex, LONG dwNewLong)
+> {
+> 	HWND hWnd;
+> 	struct nccr_scl scl;
+> 
+> 	// We assume that the caller already verified that it's a WOW window
+> 	// Very expensive call here:
+> 	// We need to create a window in order to access the SetClassLong pointer.. Any better ideas?
+> 	LOGDEBUG(LOG_TRACE,("x64SetClassLongByClassname(%x, %s, %d, %x)\n", hInstance, lpClassName, nIndex, dwNewLong));
+> 	mfNCCRmode = NCCR_SETCLASSLONG;
+> 	scl.nIndex = nIndex;
+> 	scl.dwNewLong = dwNewLong;
+> 	hWnd = (pfnOut.pfnCsCreateWindowEx)(
+> 		   0, lpClassName, "WOWDUMMY", WS_DISABLED | WS_POPUP, 0, 0, CW_USEDEFAULT, CW_USEDEFAULT, 0,
+> 		   NULL, hInstance?hInstance:GetModuleHandle(NULL), &scl, ZBID_DEFAULT, CW_FLAGS_ANSI);
+> 	if (mfNCCRmode == NCCR_SETCLASSLONG)
+> 	{
+> 		LOGDEBUG(LOG_ALWAYS,("x64SetClassLongByClassname called on a window that belongs to class %s doesn't react with W32Win16WndDispProc\n", lpClassName));
+> 		mfNCCRmode = NCCR_DEFAULT;
+> 		if (hWnd) scl.nIndex = (int)SetClassLong(hWnd, nIndex, dwNewLong);
+> 		else
+> 		{
+> 			// Something went terribly wrong here
+> 			return 0;
+> 		}
+> 	}
+> 	if (hWnd)
+> 	{
+> 		// Should not happen, as we fail WM_NCCREATE
+> 		DestroyWindow(hWnd);
+> 	}
+> 	LOGDEBUG(LOG_TRACE,("x64SetClassLongByClassname returns %d\n", scl.nIndex));
+> 	return (DWORD)scl.nIndex;
+> }
+> 
+> BOOL x64GetClassInfo(HINSTANCE hInstance, LPCTSTR lpClassName, LPWNDCLASS lpWndClass)
+> {
+> 	BOOL bRet = GetClassInfo(hInstance, lpClassName, lpWndClass);
+> 	if(bRet && lpWndClass->lpfnWndProc == W32Win16WndDispProc)
+> 	{
+> 		DWORD dwRet;
+> 		
+> 		dwRet = x64GetClassLongByClassname(hInstance, lpClassName, GCL_MY_WNDPROC);
+> 		if (dwRet) lpWndClass->lpfnWndProc = (WNDPROC)dwRet;
+> 		lpWndClass->cbClsExtra -= GWL_OFFSET;
+> 	}
+> 	return bRet;
+> }
+> #endif /* W10 */
+> 
+93c236
+<     ul = GETBOOL16(GetClassInfo(hInst, pszClass, &t3));
+---
+>     ul = GETBOOL16(x64GetClassInfo(hInst, pszClass, &t3));
+172a316
+> #ifndef W10 /* Not implemented on x64 */
+189a334
+> #endif
+263c408
+<                 dwProc32 = GetClassLong(hwnd, iOffset);
+---
+>                 dwProc32 = GetClassLong(hwnd, GCL_MY_WNDPROC);
+308c453
+<             ul = GetClassLong(hwnd, GCL_CBCLSEXTRA);
+---
+>             ul = GetClassLong(hwnd, GCL_CBCLSEXTRA) - GWL_OFFSET;
+312c457
+<             ul = GetClassLong(hwnd, iOffset);
+---
+>             ul = GetClassLong(hwnd, iOffset + (iOffset>=0?GWL_OFFSET:0));
+427c572
+<             ul = GetClassLong(hwnd, GCL_CBCLSEXTRA);
+---
+>             ul = GetClassLong(hwnd, GCL_CBCLSEXTRA) - GWL_OFFSET;
+433c578
+<             ul = GetClassWord(hwnd, iOffset);
+---
+>             ul = GetClassWord(hwnd, iOffset + (iOffset>=0?GWL_OFFSET:0));
+497a643,645
+> #ifdef W10
+>     VPWNDPROC lpfnWndProc;
+> #endif
+531a680,691
+> #ifdef W10
+>     // Windows 10 x64 Hack: USER32.DLL for some reason doesn't contain 
+>     // code to properly dispatch to W32Win16WndProcEx, when Window handle
+>     // is marked as seen above.
+>     // Therefore we use a hack and replace WndProc with our own wrapper 
+>     // that dispatched to W32Win16WndProcEx. Any better ideas?
+>     t1.cbClsExtra += GWL_OFFSET;
+>     lpfnWndProc    = (VPWNDPROC)t1.lpfnWndProc;
+>     t1.lpfnWndProc = W32Win16WndDispProc;
+> #endif
+> 
+> 
+555a716,721
+> #ifdef W10
+>     else
+>     {
+>         x64SetClassLongByClassname(HMODINST32(t1.hInstance), pszClass, GCL_MY_WNDPROC, lpfnWndProc);
+>     }
+> #endif
+652c818
+<                     dwWndProc32Old = SetClassLong(HWND32(parg16->f1), GCL_WNDPROC, (LONG)dwWndProc32New);
+---
+>                     dwWndProc32Old = SetClassLong(HWND32(parg16->f1), GCL_MY_WNDPROC, (LONG)dwWndProc32New);
+664c830
+<                     dwWndProc32Old = SetClassLong(HWND32(parg16->f1), GCL_WNDPROC, l);
+---
+>                     dwWndProc32Old = SetClassLong(HWND32(parg16->f1), GCL_MY_WNDPROC, l);
+717c883
+<             if(IsWOWProc (GetClassLong(HWND32(parg16->f1), GCL_WNDPROC))) {
+---
+>             if(IsWOWProc (GetClassLong(HWND32(parg16->f1), GCL_MY_WNDPROC))) {
+723c889
+<                 ul = SetClassLong(HWND32(parg16->f1), iOffset, WORD32(parg16->f3));
+---
+>                 ul = SetClassLong(HWND32(parg16->f1), iOffset, WORD32(parg16->f3) + GWL_OFFSET);
+732c898
+<             ul = SetClassLong(HWND32(parg16->f1), iOffset, LONG32(parg16->f3));
+---
+>             ul = SetClassLong(HWND32(parg16->f1), iOffset + (iOffset>=0?GWL_OFFSET:0), LONG32(parg16->f3));
+856c1022
+<             if(IsWOWProc (GetClassLong(hwnd, GCL_WNDPROC))) {
+---
+>             if(IsWOWProc (GetClassLong(hwnd, GCL_MY_WNDPROC))) {
+858c1024
+<                 ul = SetClassLong(hwnd, GCL_CBCLSEXTRA, (LONG)ul);
+---
+>                 ul = SetClassLong(hwnd, GCL_CBCLSEXTRA, (LONG)ul + GWL_OFFSET);
+869c1035
+<             ul = SetClassWord(hwnd, iOffset, (WORD)ul);
+---
+>             ul = SetClassWord(hwnd, iOffset + (iOffset>=0?GWL_OFFSET:0), (WORD)ul);
+--- NT4\private\mvdm\wow32\wow32.c
++++ nt\private\mvdm\wow32\wow32.c
+96a97,102
+> #ifdef W10
+> DWORD gdwTLSWOW32Reserved;
+> ATOM  gidWNDPROC16, gidDLGPROC16;
+> extern BOOL InstallSendMessageHook(void);
+> #endif
+> 
+133c139
+< #ifndef _X86_
+---
+> #ifndef _X86xx_
+203a210,306
+> 
+> 
+> #ifdef W10
+> extern CRITICAL_SECTION gcsWOW;
+> 
+> BOOL	x64SwitchTask(VOID)
+> {
+> 	PTD ptdMe, ptd;
+> 
+> 	EnterCriticalSection(&gcsWOW);
+> 	ptdMe = CURRENTPTD();
+> 	LOGDEBUG(LOG_TRACE,("x64YieldTask: Thread %08X  (TID %d) YIELD!\n", ptdMe?ptdMe->hThread:-1, GetCurrentThreadId()));
+> 
+> 	// Find next task to wake up
+> 	for (ptd = ptdMe->ptdNext; ptd != ptdMe; ptd = ptd->ptdNext)
+> 	{
+> 		if (!ptd)
+> 		{
+> 			ptd = gptdTaskHead;
+> 			if (ptd == ptdMe) break;
+> 		}
+> 		if (ptd->hSem) break;
+> 	}
+> 	LeaveCriticalSection(&gcsWOW);
+> 	if (ptd != ptdMe)
+> 	{
+> 		// We have a task that we can switch to
+> 		ReleaseSemaphore(ptd->hSem, 1, NULL);
+> 		LOGDEBUG(LOG_TRACE,("x64YieldTask: Resuming thread %08X\n", ptd->hThread));
+> 		return TRUE;
+> 	}
+> 	
+> 	return FALSE;
+> }
+> 
+> BOOL	x64WaitForMsgAndEvent(IN HANDLE hevent)
+> {
+> 	LOGDEBUG(LOG_TRACE,("x64WaitForMsgAndEvent\n"));
+> 	MsgWaitForMultipleObjects(1, &hevent, FALSE, INFINITE, QS_ALLEVENTS);
+> 	LOGDEBUG(LOG_TRACE,("x64WaitForMsgAndEvent: Received\n"));
+> 	return FALSE;
+> }
+> 
+> BOOL    x64YieldTask(VOID)
+> {
+> 	/* Windows 10 x64 Scheduler doesn't support 16bit tasks. :(
+> 	 *
+> 	 * NtUserYieldTask -> xxxUserYield just does xxxReceiveMessage, but doesn't
+> 	 * contain WOW16 task handling (i.e. xxxSleepTask) at all.
+> 	 * Therefore we need to "Schedule" on our own, wake up the
+> 	 * next task and enter Sleep.
+> 	 *
+> 	 * GetMessage/PeekMessage via xxxInternalGetMessage also do
+> 	 * yield on x32, but also don't have corect 16bit handling in place
+> 	 * on x64, so we put a yield into our thunks.
+> 	 *
+> 	 * SendMessage requires the target task to process the message being
+> 	 * sent but that one is frozen by our "scheduler" here. Therefore,
+> 	 * we use SendMessageCallback and schedule in SendMessage thunk
+> 	 *
+> 	 * HACKHACK: What we do here is horribly simplified and not correct, 
+> 	 * this needs to get rewritten in a correct way.
+> 	 */
+> 
+> 	if (x64SwitchTask())
+> 	{
+> 		PTD ptd = CURRENTPTD();
+> 		WaitForSingleObject(ptd->hSem, INFINITE);
+> 		LOGDEBUG(LOG_TRACE,("x64YieldTask: Thread %08X  (TID %d) CONTINUE!\n", ptd->hThread, GetCurrentThreadId()));
+> 	}
+> 	return TRUE;
+> }
+> 
+> void x64WaitMessage(VOID)
+> {
+> 	extern HANDLE ghevWowExecMsgWait;
+> 	MSG msg;
+> 
+> 	while (!PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
+> 	{
+> 		if (x64SwitchTask())
+> 		{
+> 			PTD ptd = CURRENTPTD();
+> 
+> 			if (MsgWaitForMultipleObjects(1, &ptd->hSem, FALSE, INFINITE, QS_ALLEVENTS) == WAIT_OBJECT_0 + 1)
+> 			{
+> 				LOGDEBUG(LOG_TRACE,("WU32WaitMessage: Received a message\n"));
+> 				// Tell WK32WowWaitForMsgAndEvent to get back to us 
+> 				SetEvent(ghevWowExecMsgWait);
+> 				// Wait till someone wakes us up
+> 				WaitForSingleObject(ptd->hSem, INFINITE);
+> 				break;
+> 			}
+> 		}
+> 	}
+> }
+> #endif /* W10 */
+409a513,516
+> #ifdef W10
+>         GlobalDeleteAtom(gidWNDPROC16);
+>         GlobalDeleteAtom(gidDLGPROC16);
+> #endif
+625c732
+< #ifndef _X86_
+---
+> #ifndef _X86xx_
+691a799,818
+> #ifdef W10
+>     pfnOut.pfnYieldTask = x64YieldTask;
+>     pfnOut.pfnWowWaitForMsgAndEvent = x64WaitForMsgAndEvent;
+>     ptd = malloc_w_or_die(sizeof(TD));
+>     gdwTLSWOW32Reserved = TlsAlloc();
+>     TlsSetValue(gdwTLSWOW32Reserved, ptd);
+>     gidWNDPROC16 = GlobalAddAtom("WNDPROC16");
+>     gidDLGPROC16 = GlobalAddAtom("DLGPROC16");
+>     // Not sure, if we really need it. We don't currently use it, but in case
+>     // we find out that it is needed:
+>     //InstallSendMessageHook();
+>     if (GetEnvironmentVariableOem("WOWTRACE", szLogFile, sizeof(szLogFile)))
+> 	{
+> 		char szLogLvl[32];
+> 
+> 		if (GetEnvironmentVariableOem("WOWLOGLVL", szLogLvl, sizeof(szLogLvl)))
+> 			iLogLevel = atoi(szLogLvl);
+> 		fLog = 2;
+> 	}
+> #else
+692a820
+> #endif
+1944c2072
+< #ifdef _X86_
+---
+> #ifdef _X86xx_
+2136c2264
+<                                    FILE_SHARE_WRITE,
+---
+>                                    FILE_SHARE_WRITE | FILE_SHARE_READ,
+--- NT4\private\mvdm\wow32\wudlg.c
++++ nt\private\mvdm\wow32\wudlg.c
+22a23,75
+> #ifdef W10
+> struct init_param {
+> 	LPARAM lParam;
+> 	WNDPROC  vpDlgProc;
+> };
+> volatile VPWNDPROC gvpWndProc16 = NULL;
+> 
+> 
+> BOOL CALLBACK W32Win16DlgDispProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+> {
+> 	VPWNDPROC vpWndProc16;
+> 	BOOL bRet;
+> 
+> 	if (uMsg == WM_INITDIALOG)
+> 	{
+> 		struct init_param *param = (struct init_param*)lParam;
+> 		
+> 		SetProp(hwndDlg, (LPCTSTR)gidDLGPROC16, (HANDLE)param->vpDlgProc);
+> 		vpWndProc16 = param->vpDlgProc;
+> 		lParam = param->lParam;
+> 	}
+> 	else
+> 	{
+> 		vpWndProc16 = (VPWNDPROC)GetProp(hwndDlg, (LPCTSTR)gidDLGPROC16);
+> 		if (!vpWndProc16 && gvpWndProc16)
+> 		{
+> 			/* First set it to global WndProc until we get the real one in WM_INITDIALOG 
+> 			 * Better than NULL
+> 			 */
+> 			SetProp(hwndDlg, (LPCTSTR)gidDLGPROC16, (HANDLE)gvpWndProc16);
+> 			gvpWndProc16 = NULL;
+> 		}
+> 	}
+> 	if (!vpWndProc16)
+> 	{
+> 		LOGDEBUG(LOG_ALWAYS, ("W32Win16DlgDispProc: hWnd %x: vpWndProc=NULL!\n", hwndDlg)); 
+> 	}
+> 
+> 	LOGDEBUG(LOG_TRACE,("W32Win16DlgDispProc (%x, %x, %x, %x) vpWndProc=%x, WOW=%d\n", hwndDlg, uMsg, wParam, lParam, vpWndProc16, IsWOWProc(vpWndProc16)));
+> 
+> 	if (IsWOWProc(vpWndProc16))
+> 		bRet = W32Win16DlgProcEx(hwndDlg, uMsg, wParam, lParam, vpWndProc16, NULL);
+> 	else
+> 		bRet = CallWindowProc((WNDPROC)vpWndProc16, hwndDlg, uMsg, wParam, lParam);
+> 
+> 	if (uMsg == WM_NCDESTROY)
+> 		RemoveProp(hwndDlg, (LPCTSTR)gidDLGPROC16);
+> 	return bRet;
+> }
+> #endif /* W10 */
+> 
+> 
+> 
+142a196
+>     LPARAM   lParam;
+172a227,236
+> #ifdef W10
+>         struct init_param param;
+> 
+>         param.lParam = (LPARAM) DWORD32(parg16->f5);
+>         param.vpDlgProc = gvpWndProc16 = vpDlgProc;
+>         lParam = (LPARAM)&param;
+>         vpDlgProc = (WNDPROC)W32Win16DlgDispProc;
+> #else
+>         lParam = (LPARAM) DWORD32(parg16->f5);
+> #endif
+179c243
+<                             (LPARAM) DWORD32(parg16->f5), SCDLG_ANSI));
+---
+>                             lParam, SCDLG_ANSI));
+185c249
+<                             (LPARAM) DWORD32(parg16->f5),  SCDLG_CLIENT | SCDLG_ANSI | SCDLG_NOREVALIDATE));
+---
+>                             lParam,  SCDLG_CLIENT | SCDLG_ANSI | SCDLG_NOREVALIDATE));
+--- NT4\private\mvdm\wow32\wuwind.c
++++ nt\private\mvdm\wow32\wuwind.c
+763a764,766
+> #ifdef W10
+> 			   ZBID_DEFAULT,
+> #endif
+788c791
+<         LOGDEBUG(LOG_WARNING,("  CreateWindow failed, class = %s\n", pszClass));
+---
+>         LOGDEBUG(LOG_WARNING,("  CreateWindow failed, class = %s, gle=%d\n", pszClass, GetLastError()));
+1446c1449
+<     register PWW pww;
+---
+>     register PWW pww = NULL;
+1482a1486
+> 
+1483a1488,1500
+> #ifdef W10
+>                 switch ( iOffset )
+>                 {
+>                     case DWL_DLGPROC:
+>                         if (dwWndProc32Cur == W32Win16DlgDispProc)
+>                             dwWndProc32Cur = GetProp(HWND32(parg16->f1), (LPCTSTR)gidDLGPROC16);
+>                         break;
+>                     case GWL_WNDPROC:
+>                         if (dwWndProc32Cur == W32Win16WndDispProc)
+>                             dwWndProc32Cur = GetProp(HWND32(parg16->f1), (LPCTSTR)gidWNDPROC16);
+>                         break;
+>                 }
+> #endif
+1725c1742
+<     PWW pww;
+---
+>     PWW pww = NULL;
+2175c2192
+<     register PWW pww;
+---
+>     register PWW pww = NULL;
+2198a2216
+>             LONG    l;
+2212d2229
+<                 dwWndProc32Old = SetWindowLong(HWND32(parg16->f1), iOffset, dwWndProc32New);
+2214,2217c2231
+<                 // If the 32 bit set failed, perhaps because its another process,
+<                 // then we want to fail too
+<                 if (!dwWndProc32Old)
+<                     goto SWL_Cleanup;
+---
+>                 l = dwWndProc32New;
+2223c2237
+<                 LONG    l;
+---
+>                 
+2238c2252,2276
+<                 dwWndProc32Old = SetWindowLong(HWND32(parg16->f1), iOffset, l);
+---
+>             }
+> 
+> #ifdef W10
+>             dwWndProc32Old = GetWindowLong(HWND32(parg16->f1), iOffset);
+>             switch ( iOffset )
+>             {
+>                 case DWL_DLGPROC:
+>                     if (dwWndProc32Old == W32Win16DlgDispProc)
+>                         dwWndProc32Old = GetProp(HWND32(parg16->f1), (LPCTSTR)gidDLGPROC16);
+>                     else
+>                         SetWindowLong(HWND32(parg16->f1), iOffset, W32Win16DlgDispProc);
+>                     SetProp(HWND32(parg16->f1), gidDLGPROC16, (HANDLE)l);
+>                     break;
+>                 case GWL_WNDPROC:
+>                     if (dwWndProc32Old == W32Win16WndDispProc)
+>                         dwWndProc32Old = GetProp(HWND32(parg16->f1), (LPCTSTR)gidWNDPROC16);
+>                     else
+>                         SetWindowLong(HWND32(parg16->f1), iOffset, W32Win16WndDispProc);
+>                     SetProp(HWND32(parg16->f1), gidWNDPROC16, (HANDLE)l);
+>                     break;
+>             }
+> 
+> #else
+>             dwWndProc32Old = SetWindowLong(HWND32(parg16->f1), iOffset, l);
+> #endif
+2240,2243c2278,2281
+<                 // If the 32 bit set failed, perhaps because its another process,
+<                 // then we want to fail too
+<                 if (!dwWndProc32Old)
+<                     goto SWL_Cleanup;
+---
+>             // If the 32 bit set failed, perhaps because its another process,
+>             // then we want to fail too
+>             if (!dwWndProc32Old)
+>                 goto SWL_Cleanup;
+2245d2282
+<             }
+2306c2343
+<         ul = SetWindowLong(HWND32(parg16->f1), iOffset, new);
+---
+>         ul = SetWindowLong(FULLHWND32(parg16->f1), iOffset, new);
+2615c2652
+<     PWW pww;
+---
+>     PWW pww = NULL;
+2632c2669
+<     hwnd = HWND32(parg16->f1);
+---
+>     hwnd = FULLHWND32(parg16->f1);
+2776a2814
+> 
+--- NT4\private\mvdm\wow32\wow32.h
++++ nt\private\mvdm\wow32\wow32.h
+19a20
+> #define W10	// Enable Windows 10 support for some special weird x64 treatment
+45c46
+< //#include <tsappcmp.h>
+---
+> #include <tsappcmp.h>
+142a144,164
+> #ifdef W10
+> /* In 64bit Windows, WOW32REserved is used by WOW64 to store pointer to 
+>  * syscall dispatcher, therefore we unfortunately have to reserve our
+>  * own slot for WOW32 data
+>  */
+> extern DWORD gdwTLSWOW32Reserved;
+> #define CURRENTPTD()        ((PTD)TlsGetValue(gdwTLSWOW32Reserved))
+> #define SETCURRENTPTD(x)	TlsSetValue(gdwTLSWOW32Reserved, x)
+> 
+> /* Functions that do special treatment to compensate missing scheduler
+>  * support in NtUser
+>  */
+> extern BOOL x64GetClassInfo(HINSTANCE hInstance, LPCTSTR lpClassName, LPWNDCLASS lpWndClass);
+> extern void x64WaitMessage(VOID);
+> extern ATOM  gidWNDPROC16, gidDLGPROC16;
+> 
+> // Offsets to store our Win16 WndProc in class
+> #define GWL_OFFSET			sizeof(VPWNDPROC)
+> #define GCL_MY_WNDPROC		0
+> 
+> #else // W10
+143a166
+> #define SETCURRENTPTD(x)	CURRENTPTD() = x
+144a168,171
+> #define x64GetClassInfo		GetClassInfo
+> #define GWL_OFFSET			0
+> #define GCL_MY_WNDPROC		GCL_WNDPROC
+> #endif // W10
+264a292,294
+> #ifdef W10
+>     HANDLE      hSem;                 // Semaphore for our poor man's scheduler
+> #endif
+381c411
+< #ifndef _X86_
+---
+> #ifndef _X86xx_
+551c581
+< #ifndef _X86_  // emulated CPU
+---
+> #ifndef _X86xx_  // emulated CPU
+561c591
+< #ifndef _X86_
+---
+> #ifndef _X86xx_
+808c838
+< //PTERMSRVCORINIFILE gpfnTermsrvCORIniFile;
+---
+> PTERMSRVCORINIFILE gpfnTermsrvCORIniFile;
+811a842,867
+> /* Functions missing from Win2k source */
+> #define IsWOWProc(proc) ((((DWORD)proc)&WNDPROC_WOWPROC)==WNDPROC_WOWPROC)
+> #define MarkWOWProc(p,pArg) (*(DWORD*)&pArg)=(DWORD)((DWORD)p & 0xFFF9FFFF | ((DWORD)p>>13) & 0x60000 | WNDPROC_WOWPROC);
+> #define UnMarkWOWProc(p,pArg) (*(DWORD*)&pArg)=(DWORD)(((DWORD)p<<13) ^ ((DWORD)p ^ ((DWORD)p<<13)) & 0x3FF9FFFF | 0x60000);
+>  
+> #define WM_CHANGEUISTATE 0x0127
+> #define WM_UPDATEUISTATE 0x0128
+> #define WM_QUERYUISTATE  0x0129
+> #define LVN_HOTTRACK (LVN_FIRST-21)
+> #define PSN_HASHELP (PSN_FIRST-4)
+> #define PSN_GETOBJECT (PSN_FIRST-10)
+> #define PSN_TRANSLATEACCELERATOR (PSN_FIRST-12)
+> #define PSN_QUERYINITIALFOCUS (PSN_FIRST-13)
+> #define PSN_LASTCHANCEAPPLY (PSN_FIRST-14)
+> #define TVN_GETINFOTIPA (TVN_FIRST-13)
+> #define TVN_GETINFOTIPW (TVN_FIRST-14)
+> #define TVN_SINGLEEXPAND (TVN_FIRST-15)
+> #define GCL_WOWMENUNAME (-29)
+> #define FR_PRIVATE     0x10
+> #define FR_NOT_ENUM    0x20
+> #define WOW_CHOOSECOLOR	1
+> #define WOW_CHOOSEFONT	2
+> #define WOW_OPENFILENAME	3
+> #define WOW_PRINTDLG	4
+> #define WF_DIALOG_WINDOW	0x10000
+> #define HTW_IS16BIT	0x80000000
+812a869,870
+> #include <commctrl.h>
+> #include <wtypes.h>
+813a872,912
+> typedef struct tagNMKEY
+> {
+>     NMHDR hdr;
+>     UINT  nVKey;
+>     UINT  uFlags;
+> } NMKEY, *LPNMKEY;
+> typedef struct tagNMTVGETINFOTIPA
+> {
+>     NMHDR hdr;
+>     LPSTR pszText;
+>     int cchTextMax;
+>     HTREEITEM hItem;
+>     LPARAM lParam;
+> } NMTVGETINFOTIPA, *LPNMTVGETINFOTIPA;
+> #ifdef UNICODE
+> #define TVN_GETINFOTIP          TVN_GETINFOTIPW
+> #define NMTVGETINFOTIP          NMTVGETINFOTIPW
+> #define LPNMTVGETINFOTIP        LPNMTVGETINFOTIPW
+> #else
+> #define TVN_GETINFOTIP          TVN_GETINFOTIPA
+> #define NMTVGETINFOTIP          NMTVGETINFOTIPA
+> #define LPNMTVGETINFOTIP        LPNMTVGETINFOTIPA
+> #endif
+> typedef struct tagNMOBJECTNOTIFY {
+>     NMHDR   hdr;
+>     int     iItem;
+> #ifdef __IID_DEFINED__
+>     const IID *piid;
+> #else
+>     const void *piid;
+> #endif
+>     void *pObject;
+>     HRESULT hResult;
+>     DWORD dwFlags;    // control specific flags (hints as to where in iItem it hit)
+> } NMOBJECTNOTIFY, *LPNMOBJECTNOTIFY;
+> typedef struct _DRAWPATRECT {
+>         POINT ptPosition;
+>         POINT ptSize;
+>         WORD wStyle;
+>         WORD wPattern;
+> } DRAWPATRECT, *PDRAWPATRECT;
+814a914,927
+> WINGDIAPI int  WINAPI AddFontResourceExA( LPCSTR name, DWORD fl, PVOID res);
+> WINGDIAPI int  WINAPI AddFontResourceExW( LPCWSTR name, DWORD fl, PVOID res);
+> #ifdef UNICODE
+> #define AddFontResourceEx  AddFontResourceExW
+> #else
+> #define AddFontResourceEx  AddFontResourceExA
+> #endif // !UNICODE
+> WINGDIAPI int  WINAPI GetRandomRgn (HDC hdc, HRGN hrgn, INT i);
+> 
+> /* End Functions missing from Win2k source */
+> 
+> 
+> 
+> 
+--- NT4\private\mvdm\wow32\wparam.c
++++ nt\private\mvdm\wow32\wparam.c
+359c359
+<             LOGDEBUG(12, ("\nWOW: DeleteParamMap called refCount > 0 Node@%x\n", (DWORD)lpn));
+---
+>             LOGDEBUG(12, ("\nWOW: DeleteParamMap called refCount %d > 0 Node@%x\n", lpn->dwRefCount, (DWORD)lpn));
+--- NT4\private\mvdm\wow32\wuclass.h
++++ nt\private\mvdm\wow32\wuclass.h
+26a27,29
+> #ifdef W10
+> LRESULT CALLBACK W32Win16WndDispProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+> #endif
+--- NT4\private\mvdm\wow32\wudlg.h
++++ nt\private\mvdm\wow32\wudlg.h
+40a41,43
+> #ifdef W10
+> BOOL  CALLBACK   W32Win16DlgDispProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+> #endif
+--- NT4\private\mvdm\wow32\wudlg.h
++++ nt\private\mvdm\wow32\wudlg.h
+21a22,48
+> /* WOW class/handle type identifiers (see WARNING below)
+>  */
+> #define WOWCLASS_UNKNOWN    0   // here begin our "window handle" classes
+> #define WOWCLASS_WIN16      1
+> #define WOWCLASS_BUTTON     2
+> #define WOWCLASS_COMBOBOX   3
+> #define WOWCLASS_EDIT       4
+> #define WOWCLASS_LISTBOX    5
+> #define WOWCLASS_MDICLIENT  6
+> #define WOWCLASS_SCROLLBAR  7
+> #define WOWCLASS_STATIC     8
+> #define WOWCLASS_DESKTOP    9
+> #define WOWCLASS_DIALOG     10
+> #define WOWCLASS_ICONTITLE  11
+> #define WOWCLASS_MENU       12
+> #define WOWCLASS_SWITCHWND  13
+> #define WOWCLASS_COMBOLBOX  14
+> #define WOWCLASS_MAX        14  // Always equal to the last value used.
+> 
+> #define WOWCLASS_NOTHUNK    0xFF // not an actual class index
+> //
+> // WARNING! The above sequence and values must be maintained otherwise the
+> // table in WMSG16.C for message thunking must be changed.  Same goes for
+> // table in WALIAS.C.
+> //
+> 
+> 
+--- NT4\private\mvdm\wow32\walias.c
++++ nt\private\mvdm\wow32\walias.c
+626a627
+>     LONG   Pid;
+629a631
+>     LONG   l4;
+--- NT4\private\mvdm\wow32\wuman.c
++++ nt\private\mvdm\wow32\wuman.c
+189,194c189,191
+<                         if ( i & 3 ) {
+<                             pszFormat = ", %s";
+<                         } else {
+<                             pszFormat = "\n%s";
+<                         }
+<                         LOGDEBUG(LOG_TRACE, (pszFormat, aw32Msg[wMsg].lpszW32));
+---
+>                         if (aw32Msg[wMsg].lpszW32) pszFormat=( i & 3 )?", %s":"\n%s";
+>                         else pszFormat=( i & 3 )?", UNKNOWN (%d)":"\n UNKNOWN (%d)";
+>                         LOGDEBUG(LOG_TRACE, (pszFormat, aw32Msg[wMsg].lpszW32?aw32Msg[wMsg].lpszW32:wMsg));
+--- NT4\private\mvdm\wow32\wmtbl32.c
++++ nt\private\mvdm\wow32\wmtbl32.c
+213c213
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_LPKDRAWSWITCHWND")},
+219,225c219,225
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_UAHDESTROYWINDOW")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_UAHDRAWMENU")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_UAHDRAWMENUITEM")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_UAHINITMENU")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_UAHMEASUREMENUITEM")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_UAHNCPAINTMENUPOPUP")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_UAHUPDATE")},
+252,256c252,256
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_NCXBUTTONDOWN")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_NCXBUTTONUP")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_NCXBUTTONDBLCLK")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_NCUAHDRAWCAPTION")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_NCUAHDRAWFRAME")},
+308a309,310
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "EM_SETIMESTATUS")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "EM_GETIMESTATUS")},
+310,311d311
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+355,356c355,356
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_INPUT_DEVICE_CHANGE")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_INPUT")},
+370c370
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_UNICHAR")},
+390,393c390,393
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_GESTURE")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_GESTURENOTIFY")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_GESTUREINPUT")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_GESTURENOTIFIED")},
+480a481,483
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "CB_MSGMAX_OLD")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "CB_MULTIPLEADDSTRING")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "CB_GETCOMBOBOXINFO")},
+482,484d484
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+578a579,581
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "LB_MSGMAX_OLD")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "LB_MULTIPLEADDSTRING")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "LB_GETLISTBOXINFO")},
+580,582d582
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+691,695c691,695
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_MOUSEWHEEL")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_XBUTTONDOWN")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_XBUTTONUP")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_XBUTTONDBLCLK")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_MOUSEHWHEEL")},
+749,754c749,754
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_POINTERDEVICECHANGE")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_POINTERDEVICEINRANGE")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_POINTERDEVICEOUTOFRANGE")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_STOPINERTIA")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_ENDINERTIA")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_EDGYINERTIA")},
+759,766c759,766
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_TOUCH")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_NCPOINTERUPDATE")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_NCPOINTERDOWN")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_NCPOINTERUP")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_NCPOINTERLAST")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_POINTERUPDATE")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_POINTERDOWN")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_POINTERUP")},
+770,776c770,776
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_POINTERENTER")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_POINTERLEAVE")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_POINTERACTIVATE")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_POINTERCAPTURECHANGED")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_TOUCHHITTESTING")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_POINTERWHEEL")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_POINTERHWHEEL")},
+786c786
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_POINTERLAST")},
+819,822c819,822
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_VISIBILITYCHANGED")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_VIEWSTATECHANGED")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_UNREGISTER_WINDOW_SERVICES")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_CONSOLIDATED")},
+883,886c883,886
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_NCMOUSEHOVER")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_MOUSEHOVER")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_NCMOUSELEAVE")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_MOUSELEAVE")},
+900c900
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_TRACKMOUSEEVENT_LAST")},
+904c904
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_WTSSESSION_CHANGE")},
+923c923
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_TABLET_FIRST")},
+933,934c933,934
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_POINTERDEVICEADDED")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_POINTERDEVICEDELETED")},
+936c936
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_FLICK")},
+938,939c938,939
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_FLICKINTERNAL")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_BRIGHTNESSCHANGED")},
+960c960
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_TABLET_LAST")},
+963c963
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_DPICHANGED")},
+1034,1040c1034,1040
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_APPCOMMAND")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_THEMECHANGED")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_UAHINIT")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_DESKTOPNOTIFY")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_CLIPBOARDUPDATE")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_DWMCOMPOSITIONCHANGED")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_DWMNCRENDERINGCHANGED")},
+1043,1050c1043,1050
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_DWMCOLORIZATIONCOLORCHANGED")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_DWMWINDOWMAXIMIZEDCHANGE")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_DWMEXILEFRAME")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_DWMSENDICONICTHUMBNAIL")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_MAGNIFICATION_STARTED")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_MAGNIFICATION_ENDED")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_DWMSENDICONICLIVEPREVIEWBITMAP")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_DWMTHUMBNAILSIZECHANGED")},
+1053,1055c1053,1055
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_MAGNIFICATION_OUTPUT")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_BSDRDATA")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_DWMTRANSITIONSTATECHANGED")},
+1057,1060c1057,1060
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_KEYBOARDCORRECTIONCALLOUT")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_KEYBOARDCORRECTIONACTION")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_UIACTION")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_ROUTED_UI_EVENT")},
+1063,1064c1063,1064
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_MEASURECONTROL")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_GETACTIONTEXT")},
+1066,1067c1066,1067
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_FORWARDKEYDOWN")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_FORWARDKEYUP")},
+1079,1080c1079,1080
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+<     {W32MSGFUN(WM32UNDOCUMENTED,      NULL)},
+---
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_CE_ONLY_LAST")},
+>     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_GETTITLEBARINFOEX")},
+--- NT4\private\mvdm\wow32\wow32.def
++++ nt\private\mvdm\wow32\wow32.def
+45a46,51
+> 
+>     szLogFile
+>     fLog
+>     hfLog
+>     iLogLevel
+> 
+--- NT4\private\mvdm\wow32\wcuricon.c
++++ nt\private\mvdm\wow32\wcuricon.c
+1101c1101
+<          WOW32ASSERT(h32);
+---
+>          //WOW32ASSERT(h32);
+--- NT4\private\mvdm\wow32\wdib.c
++++ nt\private\mvdm\wow32\wdib.c
+297c297
+< #ifndef i386
+---
+> #ifndef MONITOR
+422c422
+< #ifndef i386
+---
+> #ifndef MONITOR
+655c655
+< #ifndef i386
+---
+> #ifndef MONITOR
+711c711
+< #ifndef i386
+---
+> #ifndef MONITOR
+736c736
+< #ifndef i386
+---
+> #ifndef MONITOR
+837c837
+< #ifndef i386
+---
+> #ifndef MONITOR
+--- NT4\private\mvdm\wow32\wuser31.c
++++ nt\private\mvdm\wow32\wuser31.c
+192c192
+< #ifndef _X86_
+---
+> #ifndef _X86xx_
+266c266
+< #ifndef _X86_
+---
+> #ifndef _X86xx_
+294c294
+< #ifndef _X86_
+---
+> #ifndef _X86xx_
+525c525
+< #ifndef _X86_
+---
+> #ifndef _X86xx_
+545c545
+< #ifndef _X86_
+---
+> #ifndef _X86xx_
+628c628
+< #ifndef _X86_
+---
+> #ifndef _X86xx_
+--- NT4\private\mvdm\wow32\wkmem.c
++++ nt\private\mvdm\wow32\wkmem.c
+33c33
+< #ifndef i386
+---
+> #ifndef MONITOR
+40c40
+< #ifndef i386
+---
+> #ifndef MONITOR
+48c48
+< #endif // i386
+---
+> #endif // MONITOR
+56c56
+< #ifndef i386
+---
+> #ifndef MONITOR
+63c63
+< #endif // i386
+---
+> #endif // MONITOR
+65c65
+< #ifdef i386
+---
+> #ifdef MONITOR
+104c104
+< #ifndef i386
+---
+> #ifndef MONITOR
+120c120
+< #ifndef i386
+---
+> #ifndef MONITOR
+132c132
+< #ifndef i386
+---
+> #ifndef MONITOR
+134c134
+< #endif // i386
+---
+> #endif // MONITOR
+--- NT4\private\mvdm\wow32\wole2.c
++++ nt\private\mvdm\wow32\wole2.c
+159c159
+<     ullOldest = -1;
+---
+>     ullOldest = (ULONGLONG)-1;
 --- NT4\private\mvdm\wow32\wkgthunk.c
 +++ nt\private\mvdm\wow32\wkgthunk.c
 504c504
 < #ifndef i386
 ---
 > #ifndef MONITOR
---- NT4\private\mvdm\wow32\wow32.c
-+++ nt\private\mvdm\wow32\wow32.c
-1944c1944
-< #ifdef _X86_
----
-> #ifdef _X86xx_
---- NT4\private\mvdm\wow32\wkman.c
-+++ nt\private\mvdm\wow32\wkman.c
-1561c1561
-< #ifdef i386
----
-> #ifdef i386xx
-1959c1959
-< #ifdef i386
----
-> #ifdef i386xx

@@ -45,70 +45,38 @@ symsrv.yes=6
 install.bat=7
 
 [Ntvdmx64.amd64.System.Files]
-ldntvdm.dll,,,0x4022
+ldntvdm.dll,,,0x14022
 
 [Ntvdmx64.amd64.System.Files.Del]
-_default.pif,,,0x41
-ansi.sys,,,0x41
 append.exe,,,0x41
 autoexec.nt,,,0x10
 backup.exe,,,0x41
-bios1.rom,,,0x4022
-bios4.rom,,,0x4022
 command.com,,,0x4022
 config.nt,,,0x10
-country.sys,,,0x4022
 debug.exe,,,0x41
 dosx.exe,,,0x4022
 edit.com,,,0x41
-edit.hlp,,,0x41
 edlin.exe,,,0x41
 exe2bin.exe,,,0x41
 fastopen.exe,,,0x41
 forcedos.exe,,,0x41
-gorilla.bas,,,0x41
 graftabl.com,,,0x41
 graphics.com,,,0x41
-graphics.pro,,,0x41
-himem.sys,,,0x4022
 kb16.com,,,0x4022
-keyboard.sys,,,0x4022
-key01.sys,,,0x4022
 loadfix.com,,,0x41
 mem.exe,,,0x41
-money.bas,,,0x41
 mscdexnt.exe,,,0x4022
 msherc.com,,,0x41
-nibbles.bas,,,0x41
 nlsfunc.exe,,,0x41
-ntdos.sys,,,0x4022
-ntdos404.sys,,,0x4022
-ntdos411.sys,,,0x4022
-ntdos412.sys,,,0x4022
-ntdos804.sys,,,0x4022
-ntio.sys,,,0x4022
-ntio404.sys,,,0x4022
-ntio411.sys,,,0x4022
-ntio412.sys,,,0x4022
-ntio804.sys,,,0x4022
 ntvdm.exe,,,0x4022
-ntvdmd.dll,,,0x4022
 qbasic.exe,,,0x41
-qbasic.hlp,,,0x41
 redir.exe,,,0x41
-remline.bas,,,0x41
 setver.exe,,,0x41
 share.exe,,,0x41
-v7vga.rom,,,0x4022
-disp_win.sys,,,0x41
+vdmdbg.dll,,,0x4022
 edit.exe,,,0x41
-edit2.hlp,,,0x41
-font_win.sys,,,0x41
-hbios.sys,,,0x41
-hfont.sys,,,0x41
 qbasic.com,,,0x41
 qbasic2.exe,,,0x41
-qbasic2.hlp,,,0x41
 
 [Ntvdmx64.amd64.Symbol.Files]
 dbghelp.dll,,,0x4022
@@ -137,69 +105,40 @@ Ntvdmx64.amd64.Inf.Files.Del = 17
 RunDll32 advpack.dll,LaunchINFSection %01%\ntvdmx64-32.Inf
 
 [InstallCmds]
-fsutil hardlink create %11%\_default.pif  %16425%\_default.pif
-fsutil hardlink create %11%\ansi.sys %16425%\ansi.sys 
-fsutil hardlink create %11%\append.exe %16425%\append.exe
-fsutil hardlink create %11%\autoexec.nt %16425%\autoexec.nt
-fsutil hardlink create %11%\backup.exe %16425%\backup.exe
-fsutil hardlink create %11%\bios1.rom %16425%\bios1.rom
-fsutil hardlink create %11%\bios4.rom %16425%\bios4.rom
-fsutil hardlink create %11%\command.com %16425%\command.com
-fsutil hardlink create %11%\config.nt %16425%\config.nt
-fsutil hardlink create %11%\country.sys %16425%\country.sys
-fsutil hardlink create %11%\debug.exe %16425%\debug.exe
-fsutil hardlink create %11%\edit.com %16425%\edit.com
-fsutil hardlink create %11%\edit.hlp %16425%\edit.hlp
-fsutil hardlink create %11%\edlin.exe %16425%\edlin.exe
-fsutil hardlink create %11%\exe2bin.exe %16425%\exe2bin.exe
-fsutil hardlink create %11%\fastopen.exe %16425%\fastopen.exe
-fsutil hardlink create %11%\forcedos.exe %16425%\forcedos.exe
-fsutil hardlink create %11%\gorilla.bas %16425%\gorilla.bas
-fsutil hardlink create %11%\graftabl.com %16425%\graftabl.com
-fsutil hardlink create %11%\graphics.com %16425%\graphics.com
-fsutil hardlink create %11%\graphics.pro %16425%\graphics.pro
-fsutil hardlink create %11%\himem.sys %16425%\himem.sys
-fsutil hardlink create %11%\kb16.com %16425%\kb16.com
-fsutil hardlink create %11%\key01.sys %16425%\key01.sys
-fsutil hardlink create %11%\keyboard.sys %16425%\keyboard.sys
-fsutil hardlink create %11%\loadfix.com %16425%\loadfix.com
-fsutil hardlink create %11%\mem.exe %16425%\mem.exe
-fsutil hardlink create %11%\money.bas %16425%\money.bas
-fsutil hardlink create %11%\mscdexnt.exe %16425%\mscdexnt.exe
-fsutil hardlink create %11%\msherc.com %16425%\msherc.com
-fsutil hardlink create %11%\nibbles.bas %16425%\nibbles.bas
-fsutil hardlink create %11%\nlsfunc.exe %16425%\nlsfunc.exe
-fsutil hardlink create %11%\ntdos.sys %16425%\ntdos.sys
-fsutil hardlink create %11%\ntdos404.sys %16425%\ntdos404.sys
-fsutil hardlink create %11%\ntdos411.sys %16425%\ntdos411.sys
-fsutil hardlink create %11%\ntdos412.sys %16425%\ntdos412.sys
-fsutil hardlink create %11%\ntdos804.sys %16425%\ntdos804.sys
-fsutil hardlink create %11%\ntio.sys %16425%\ntio.sys
-fsutil hardlink create %11%\ntio404.sys %16425%\ntio404.sys
-fsutil hardlink create %11%\ntio411.sys %16425%\ntio411.sys
-fsutil hardlink create %11%\ntio412.sys %16425%\ntio412.sys
-fsutil hardlink create %11%\ntio804.sys %16425%\ntio804.sys
-fsutil hardlink create %11%\ntvdm.exe %16425%\ntvdm.exe
-fsutil hardlink create %11%\ntvdmd.dll %16425%\ntvdmd.dll
-fsutil hardlink create %11%\qbasic.exe %16425%\qbasic.exe
-fsutil hardlink create %11%\qbasic.hlp %16425%\qbasic.hlp
-fsutil hardlink create %11%\redir.exe %16425%\redir.exe
-fsutil hardlink create %11%\remline.bas %16425%\remline.bas
-fsutil hardlink create %11%\setver.exe %16425%\setver.exe
-fsutil hardlink create %11%\share.exe %16425%\share.exe
-fsutil hardlink create %11%\v7vga.rom %16425%\v7vga.rom
-fsutil hardlink create %11%\disp_win.sys %16425%\disp_win.sys
-fsutil hardlink create %11%\edit.exe %16425%\edit.exe
-fsutil hardlink create %11%\edit2.hlp %16425%\edit2.hlp
-fsutil hardlink create %11%\font_win.sys %16425%\font_win.sys
-fsutil hardlink create %11%\hbios.sys %16425%\hbios.sys
-fsutil hardlink create %11%\hfont.sys %16425%\hfont.sys
-fsutil hardlink create %11%\qbasic.com %16425%\qbasic.com
-fsutil hardlink create %11%\qbasic2.exe %16425%\qbasic2.exe
-fsutil hardlink create %11%\qbasic2.hlp %16425%\qbasic2.hlp
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" append.exe
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" autoexec.nt
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" backup.exe
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" command.com
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" config.nt
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" debug.exe
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" dosx.exe
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" edit.com
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" edlin.exe
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" exe2bin.exe
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" fastopen.exe
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" forcedos.exe
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" graftabl.com
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" graphics.com
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" kb16.com
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" loadfix.com
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" mem.exe
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" mscdexnt.exe
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" msherc.com
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" nlsfunc.exe
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" ntvdm.exe
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" qbasic.exe
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" redir.exe
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" setver.exe
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" share.exe
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" vdmdbg.dll
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" edit.exe
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" qbasic.com
+%10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" qbasic2.exe
 %10%\Symbols\instntvdmx64.bat install
+RunDll32 advpack.dll,LaunchINFSection %01%\wow32.Inf
 
 [UninstallCmds]
+RunDll32 advpack.dll,LaunchINFSection %01%\wow32.Inf,DefaultUninstall
 RunDll32 advpack.dll,LaunchINFSection %01%\ntvdmx64-32.Inf,DefaultUninstall
 %10%\Symbols\instntvdmx64.bat uninstall
 

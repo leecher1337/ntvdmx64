@@ -248,10 +248,26 @@ https://www.vogons.org/viewtopic.php?f=46&t=58233
 
 I want to run 16bit Windows applications
 ---------------------------------------------------------------------------
-Sorry, NTVDMx64 isn't capable of it, as crucial system scheduler parts
-are not available on 64bit Windows.
-But I recommend installing https://github.com/otya128/winevdm
-additionally to NTVDMx64 so you get the best of both worlds.
+As ob 05/2020, NTVDMx64 now generally supports WOW32, so your applications 
+should run.
+However, they currently only work with the CCPU build and we know that the
+CCPU is slow, so I still recommend wineVDM:
+	https://github.com/otya128/winevdm
+The loader tries to detect if winevdm is installed and if so, it gets
+precedence over NTVDMx64. If you restore original registry entries, WOW32
+will be handled by NTVDMx64 again.
+The crucial registry key for the check is:
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\NtVdm64\0OTVDM
+If it is present, NTVDMx64 won't load its WOW32 implementation.
+Please note, that detection of the key is done upon inital load of ldntvdm.dll
+into the process address space, so if you toggle the 0OTVDM, the process where
+you are launching your 16 bit application from needs to be restarted.
+If unsure, you can reboot your machine after installation/uninstallation of
+WineVDM handlers.
+
+To debug winevdm, before launching your application:
+set WOWTRACE=C:\log.txt
+set WOWLOGLVL=16
 
 
 I want to use my mouse in my textmode application and not select text 

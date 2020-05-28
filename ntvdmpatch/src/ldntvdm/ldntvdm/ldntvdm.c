@@ -49,6 +49,10 @@
 #define KRNL32_CALL __fastcall
 #endif
 
+#ifdef WOW16_SUPPORT
+BOOL gfHasOTVDM = FALSE;
+#endif
+
 #define ProcessConsoleHostProcess 49
 
 typedef INT_PTR(BASEP_CALL *fpBasepProcessInvalidImage)(NTSTATUS Error, HANDLE TokenHandle,
@@ -110,8 +114,6 @@ typedef BOOL (KRNL32_CALL *fpBaseGetVdmConfigInfo)(
 #endif
 	);
 	
-// We now have https://github.com/otya128/winevdm , no more need to try to support WOW16, which didn't work anyway
-//#define WOW16_SUPPORT
 #if defined(WOW16_SUPPORT) || (defined(TARGET_WIN7) && !defined(CREATEPROCESS_HOOK))
 typedef NTSTATUS (NTAPI *fpNtCreateUserProcess)(
 	PHANDLE ProcessHandle,
@@ -145,7 +147,8 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 #if defined(TARGET_WIN7) && !defined(CREATEPROCESS_HOOK)
 	UpdateSymbolCache();
 #endif
-	LastCreateUserProcessError = NtCreateUserProcessReal(ProcessHandle,
+	LastCreateUserProcessError = 
+		NtCreateUserProcessReal(ProcessHandle,
 		ThreadHandle,
 		ProcessDesiredAccess,
 		ThreadDesiredAccess,
@@ -158,7 +161,7 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 		AttributeList);
 
 #ifdef WOW16_SUPPORT
-	return LastCreateUserProcessError==STATUS_INVALID_IMAGE_WIN_16?STATUS_INVALID_IMAGE_PROTECT:LastCreateUserProcessError;
+	return (!gfHasOTVDM && LastCreateUserProcessError==STATUS_INVALID_IMAGE_WIN_16)?STATUS_INVALID_IMAGE_PROTECT:LastCreateUserProcessError;
 #else
 	return LastCreateUserProcessError;
 #endif
@@ -880,7 +883,11 @@ void NTAPI HookSetConsolePaletteAPC(ULONG_PTR Parameter)
 }
 #endif /* WIN32 */
 
+#ifdef CRYPT_LDR
+BOOL WINAPI real_DllMainCRTStartup(
+#else
 BOOL WINAPI _DllMainCRTStartup(
+#endif
 	HANDLE  hDllHandle,
 	DWORD   dwReason,
 	LPVOID  lpreserved
@@ -903,7 +910,9 @@ BOOL WINAPI _DllMainCRTStartup(
 #ifdef TRACING
 		sprintf = (fpsprintf)GetProcAddress(hNTDLL, "sprintf");
 #endif
-
+#ifdef WOW16_SUPPORT
+		gfHasOTVDM = NT_SUCCESS(REG_CheckForOTVDM());
+#endif
 #ifdef TARGET_WIN7
 		{
 /*
@@ -959,6 +968,9 @@ BOOL WINAPI _DllMainCRTStartup(
 #endif
 		}
 #if defined(WOW16_SUPPORT) || (defined(TARGET_WIN7) && !defined(CREATEPROCESS_HOOK))
+#if !(defined(TARGET_WIN7) && !defined(CREATEPROCESS_HOOK))
+		if (!gfHasOTVDM)
+#endif
 		Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "ntdll.dll", "NtCreateUserProcess", NtCreateUserProcessHook, &NtCreateUserProcessReal);
 #endif	// WOW16_SUPPORT
 
@@ -982,7 +994,8 @@ BOOL WINAPI _DllMainCRTStartup(
 			Hook_IAT_x64_IAT((LPBYTE)hKrnl32, "api-ms-win-core-processthreads-l1-1-0.dll", "CreateProcessW", CreateProcessWHook, &CreateProcessWReal);
 #endif
 #ifdef WOW16_SUPPORT
-		Hook_IAT_x64_IAT((LPBYTE)hKernelBase, "ntdll.dll", "NtCreateUserProcess", NtCreateUserProcessHook, &NtCreateUserProcessReal);
+		if (!gfHasOTVDM)
+			Hook_IAT_x64_IAT((LPBYTE)hKernelBase, "ntdll.dll", "NtCreateUserProcess", NtCreateUserProcessHook, &NtCreateUserProcessReal);
 #endif	// WOW16_SUPPORT
 #endif /* TARGET_WIN7 */
 		TRACE("LDNTVDM: BasepProcessInvalidImageReal = %08X", BasepProcessInvalidImageReal);
@@ -1027,10 +1040,10 @@ BOOL WINAPI _DllMainCRTStartup(
 			}
 		}
 #else /* WIN64 */
-#ifndef WOW16_SUPPORT
+//#ifndef WOW16_SUPPORT
 		// Only fix NTDLL in ntvdm.exe where it is needed, don't interfere with other applications like ovdm, until we natively support Win16
 		if (__wcsicmp(GetProcessName(), _T("ntvdm.exe")) == 0)
-#endif /* WOW16_SUPPORT */
+//#endif /* WOW16_SUPPORT */
 		FixNTDLL();
 		HookCsrClientCallServer();
 		/* SetConsolePalette bug */
@@ -1049,3 +1062,40 @@ BOOL WINAPI _DllMainCRTStartup(
 	}
 	return TRUE;
 }
+
+#ifdef CRYPT_LDR
+// .stub SECTION
+#pragma section(".stub", execute, read, write)
+#pragma code_seg(".stub")
+
+#define CODE_BASE_ADDRESS	0x15151515 // dumpbin file pointer to raw data (do not change, this will be patched by cryptor)
+#define CODE_SIZE			0x14141414 // dumpbin size of Virtual memory (do not change, this will be patched by cryptor)
+
+BOOL decryptCodeSection()
+{
+	__asm {
+		mov esi, CODE_BASE_ADDRESS
+		mov ecx, CODE_SIZE
+		mov edi, esi
+		mov bx, 55h
+dec_loop:
+		lodsb
+		xor al, bl
+		stosb
+		inc bl
+		loop dec_loop
+	}
+	return TRUE;
+}
+
+BOOL WINAPI _DllMainCRTStartup(
+	HANDLE  hDllHandle,
+	DWORD   dwReason,
+	LPVOID  lpreserved
+	)
+{
+	static BOOL bInit = FALSE;
+	if (!bInit) bInit = decryptCodeSection();
+	return real_DllMainCRTStartup(hDllHandle, dwReason, lpreserved);
+}
+#endif /* CRYPT_LDR */

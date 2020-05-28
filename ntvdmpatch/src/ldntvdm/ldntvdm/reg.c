@@ -8,11 +8,11 @@
  * Changes: 06.01.2019  - Created
  */
 
-#if defined(TARGET_WIN7) 
-
 #include <ntstatus.h>
 #include "ldntvdm.h"
 #include "Winternl.h"
+
+#if defined(TARGET_WIN7) || defined(WOW16_SUPPORT)
 
 typedef struct _KEY_VALUE_PARTIAL_INFORMATION {
 	ULONG TitleIndex;
@@ -33,6 +33,26 @@ NTSYSAPI NTSTATUS NTAPI NtQueryValueKey(HANDLE, const UNICODE_STRING *, KEY_VALU
 NTSYSAPI NTSTATUS NTAPI NtCreateKey(PHANDLE, ACCESS_MASK, const OBJECT_ATTRIBUTES*, ULONG, const UNICODE_STRING*, ULONG, PULONG);
 NTSYSAPI NTSTATUS NTAPI NtSetValueKey(HANDLE, const UNICODE_STRING *, ULONG, ULONG, const void *, ULONG);
 NTSYSAPI NTSTATUS NTAPI RtlOpenCurrentUser(_In_ ACCESS_MASK DesiredAccess, _Out_ PHANDLE KeyHandle);
+NTSYSAPI NTSTATUS NTAPI NtOpenKey(OUT PHANDLE pKeyHandle, IN ACCESS_MASK DesiredAccess, IN POBJECT_ATTRIBUTES ObjectAttributes);
+#endif 
+
+#if defined(WOW16_SUPPORT)
+NTSTATUS REG_CheckForOTVDM(void)
+{
+	HKEY hKey;
+	UNICODE_STRING uStr;
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	NTSTATUS Status;
+
+	RtlInitUnicodeString(&uStr, L"\\Registry\\Machine\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\NtVdm64\\0OTVDM");
+	InitializeObjectAttributes(&ObjectAttributes, &uStr, OBJ_CASE_INSENSITIVE, NULL, NULL);
+	Status = NtOpenKey(&hKey, GENERIC_READ, &ObjectAttributes);
+	if (NT_SUCCESS(Status)) NtClose(hKey);
+	return Status;
+}
+#endif
+
+#if defined(TARGET_WIN7)
 
 NTSTATUS REG_OpenLDNTVDM(DWORD dwAccess, PHKEY phKey)
 {

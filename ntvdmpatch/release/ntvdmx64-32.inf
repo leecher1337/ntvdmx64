@@ -55,12 +55,14 @@ remline.bas=3
 setver.exe=3
 share.exe=3
 v7vga.rom=3
+vdmdbg.dll=3
+vdmredir.dll=3
 dbghelp.dll=5
 symsrv.dll=5
 symsrv.yes=5
 
 [Ntvdmx64.amd64.System.Files]
-ldntvdm.dll,,,0x4022
+ldntvdm.dll,,,0x14022
 ansi.sys,,,0x41
 append.exe,,,0x41
 autoexec.nt,,,0x10
@@ -100,6 +102,8 @@ redir.exe,,,0x41
 remline.bas,,,0x41
 setver.exe,,,0x41
 share.exe,,,0x41
+vdmdbg.dll,,,0x4022
+vdmredir.dll,,,0x4022
 v7vga.rom,,,0x4022
 
 [Ntvdmx64.amd64.Symbol.Files]

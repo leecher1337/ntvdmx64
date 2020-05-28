@@ -67,6 +67,8 @@ redir.exe=3
 remline.bas=3
 setver.exe=3
 share.exe=3
+vdmdbg.dll=3
+vdmredir.dll=3
 v7vga.rom=3
 $disp.sys=3
 $ias.sys=3
@@ -97,7 +99,7 @@ symsrv.dll=5
 symsrv.yes=5
 
 [Ntvdmx64.amd64.System.Files]
-ldntvdm.dll,,,0x4022
+ldntvdm.dll,,,0x14022
 _default.pif,,,0x41
 ansi.sys,,,0x41
 append.exe,,,0x41
@@ -149,6 +151,8 @@ redir.exe,,,0x41
 remline.bas,,,0x41
 setver.exe,,,0x41
 share.exe,,,0x41
+vdmdbg.dll,,,0x4022
+vdmredir.dll,,,0x4022
 v7vga.rom,,,0x4022
 $disp.sys,,,0x41
 $ias.sys,,,0x41

@@ -128,15 +128,6 @@
 <     #ifndef i386   // !!! remeber to change DISP_WIN.SYS since it relies on this.
 ---
 >     #ifndef X86GFX   // !!! remeber to change DISP_WIN.SYS since it relies on this.
---- NT4\private\mvdm\inc\dpmtbls.h
-+++ nt\private\mvdm\inc\dpmtbls.h
-23a24
-> #ifdef MONITOR
-24a26,29
-> #else
-> extern PFAMILY_TABLE  *pgDpmVdmFamTbls;
-> #define DPMFAMTBLS()     pgDpmVdmFamTbls
-> #endif
 --- NT4\private\mvdm\softpc.new\host\src\nt_sb.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_sb.c
 300a301
@@ -188,4 +179,41 @@ diff -r F:\Windows.Source.Code.w2k.nt4.wxp\minnt\q160765803-minint4-85fac4faadc7
 > #define CheckScreenSwitchRequest(handle)
 > #define EnableScreenSwitch(OnlyFullScreenMode, handle)
 > #define DisableScreenSwitch(handle)
+> #endif
+--- NT4\private\mvdm\softpc.new\host\src\nt_thred.c
++++ nt\private\mvdm\softpc.new\host\src\nt_thred.c
+40a41,61
+> /*
+>  * leecher1337:
+>  * Hack for x64 kernel that doesn't initialize the TIB struct
+>  * in CreateProcess.
+>  * In WX86, this seems to get filled in BaseCreateWx86Tib, but
+>  * where the heck is it filled on MONITOR builds..?
+>  *
+>  */
+> void host_InitializeTib(void)
+> {
+> #if defined(W10) && !defined(WX86) && defined(CCPU)
+>     PVDM_TIB Tib = (PVDM_TIB)calloc(sizeof(VDM_TIB), 1);
+>     extern PFAMILY_TABLE  *pgDpmVdmFamTbls;
+>     NtCurrentTeb()->Vdm = Tib;
+>     Tib->Size = sizeof(VDM_TIB);
+>     Tib->pDpmFamTbls = pgDpmVdmFamTbls;
+> #endif
+> }
+> 
+> 		
+> 
+127a149,151
+> #ifdef W10
+>        host_InitializeTib();
+> #endif
+--- NT4\private\mvdm\softpc.new\obj.vdm\ntvdm.c
++++ nt\private\mvdm\softpc.new\obj.vdm\ntvdm.c
+242a243
+> #ifndef W10
+249a251,254
+> #else
+> 	void host_InitializeTib(void);
+> 	host_InitializeTib();
 > #endif

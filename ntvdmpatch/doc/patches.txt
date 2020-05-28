@@ -83,6 +83,9 @@ w10_emm.patch       - x64 systems cannot allocate with 4k page granularity as
                       allocation functions on these Windows versions.
                       (Also see makefile-patches so that correct EMS-manager
                       code is used)
-wow32.patch         - Crude hack to disable WOW32, we do not currently support
-                      it, this is just for DOS
+wow16.patch         - Updates the old WOW16 code that we have to a version that
+                      works together with our WOW32 code. Lots of changes missing,
+                      but basically works as long as we don't have newer code.
+wow32.patch         - Hack WOW32 to be runnable on x64 Windows Versions without
+                      proper scheduler support.
 yoda.patch          - Fixes a few compilation problems of Yoda on i386 with CCPU

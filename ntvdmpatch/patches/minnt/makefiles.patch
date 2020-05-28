@@ -119,6 +119,10 @@
 >     MGetVdmPointer = ExpSim32GetVDMPointer      ; for 1.0 VDD compatibility
 75a77
 >     pgDpmVdmFamTbls
+266c268
+< #ifndef _X86_
+---
+> #ifndef MONITOR
 --- NT4\private\mvdm\inc\makefile.inc
 +++ nt\private\mvdm\inc\makefile.inc
 30c30

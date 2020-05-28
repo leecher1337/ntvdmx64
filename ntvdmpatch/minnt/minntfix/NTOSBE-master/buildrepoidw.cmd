@@ -113,22 +113,10 @@ if errorlevel 1 goto Error
 call :Build zwapi sdktools\zwapi bldtools\zwapi.exe zwapi.exe
 if errorlevel 1 goto Error
 
-call :Build zwapi sdktools\zwapi bldtools\zwapi.exe zwapi.exe
-if errorlevel 1 goto Error
-
 
 REM //
 REM // leecher1337: Build mvdm tools necessary for build
-REM // Also update broken build.exe
 REM //
-cd %BEROOT%\src\sdktools\build
-build -c
-if errorlevel 1 (
-    echo Build command failed for build.
-    goto Error
-)
-copy /y "%NTTREE%\idw\build.exe" "%NATIVEBEREPOIDW%\build.exe"
-
 md %BEROOT%\tools\x86\tools16 2>nul
 for /D %%I in (%NTROOT%\base\mvdm\dos\v86\tools\src\*.*) do (
   pushd %%I

@@ -1,0 +1,1432 @@
+--- NT4\private\mvdm\inc\wow.h
++++ nt\private\mvdm\inc\wow.h
+1623a1624
+>     externFP WOW16Call
+--- NT4\private\mvdm\inc\makefile.inc
++++ nt\private\mvdm\inc\makefile.inc
+30c30
+<      doswow.inc curdir.inc
+---
+>      doswow.inc curdir.inc wowwife.inc wownls.inc vdmtib.inc
+73a74,77
+> wowwife.inc: wowwife.h wow.inc
+> 
+> wownls.inc: wownls.h wow.inc
+> 
+--- NT4\private\mvdm\wow16\kernel31\kernel.def
++++ nt\private\mvdm\wow16\kernel31\kernel.def
+236a237,242
+>  GETPRIVATEPROFILESECTIONNAMES @143    NODATA
+>  CREATEDIRECTORY        @144    NODATA
+>  REMOVEDIRECTORY        @145    NODATA
+>  DELETEFILE             @146    NODATA
+>  SETLASTERROR           @147    NODATA
+>  GETLASTERROR           @148    NODATA
+312c318,323
+<  WOWSHOULDWESAYWIN95    @215    NODATA     ;Internal
+---
+>  K208 = TERMSRVGETWINDOWSDIR   @208    NODATA     ;Internal
+>  K209 = WOWPASSENVIRONMENT     @209    NODATA     ;Internal
+>  K210 = WOWSYNCTASK            @210    NODATA     ;Internal
+>  K211 = WOWDIVIDEOVERFLOWEX    @211    NODATA     ;Internal
+> 
+> ; WOWSHOULDWESAYWIN95    @215    NODATA     ;Internal
+317,318c328,329
+< ; REGCREATEKEY = REGCREATEKEY32 @218    NODATA
+< ; REGDELETEKEY = REGDELETEKEY32 @219    NODATA
+---
+>  REGCREATEKEY = REGCREATEKEY32 @218    NODATA
+>  REGDELETEKEY = REGDELETEKEY32 @219    NODATA
+320,321c331,332
+< ; REGSETVALUE = REGSETVALUE32 @221    NODATA
+< ; REGDELETEVALUE = REGDELETEVALUE32 @222    NODATA
+---
+>  REGSETVALUE = REGSETVALUE32 @221    NODATA
+>  REGDELETEVALUE = REGDELETEVALUE32 @222    NODATA
+323,326c334,347
+< ; REGQUERYVALUE = REGQUERYVALUE32 @224    NODATA
+< ; REGQUERYVALUEEX = REGQUERYVALUEEX32 @225    NODATA
+< ; REGSETVALUEEX = REGSETVALUEEX32 @226    NODATA
+< ; REGFLUSHKEY = REGFLUSHKEY32 @227    NODATA
+---
+>  REGQUERYVALUE = REGQUERYVALUE32 @224    NODATA
+>  REGQUERYVALUEEX = REGQUERYVALUEEX32 @225    NODATA
+>  REGSETVALUEEX = REGSETVALUEEX32 @226    NODATA
+>  REGFLUSHKEY = REGFLUSHKEY32 @227    NODATA
+>  K228 = COMPUTEOBJECTOWNER      @228    NODATA          ;Internal
+>  K229 = LOCAL32GETSEL           @229    NODATA          ;Internal
+>  REGLOADKEY = REGLOADKEY32 @232    NODATA
+>  REGUNLOADKEY = REGUNLOADKEY32 @233    NODATA
+>  REGSAVEKEY = REGSAVEKEY32 @234    NODATA
+> 
+>  INVALIDATENLSCACHE             @235    NODATA
+>  GETPRODUCTNAME                 @236    NODATA
+>  K237 = ISSAFEMODE              @237    NODATA          ;Internal
+>  WOWSHUTDOWNTIMER               @252    NODATA
+400a422,426
+>  OPENFILEEX             @360    NODATA
+>  KERNEL_365 = FASTANDDIRTYGLOBALFIX   @365    NODATA      ;Internal
+> 
+> 
+> 
+402a429,472
+> 
+>  WRITEPRIVATEPROFILESTRUCT    @406    NODATA
+>  GETPRIVATEPROFILESTRUCT      @407    NODATA
+>  GETCURRENTDIRECTORY          @411    NODATA
+>  SETCURRENTDIRECTORY          @412    NODATA
+>  FINDFIRSTFILE                @413    NODATA
+>  FINDNEXTFILE                 @414    NODATA
+>  FINDCLOSE                    @415    NODATA
+>  WRITEPRIVATEPROFILESECTION   @416    NODATA
+>  WRITEPROFILESECTION          @417    NODATA
+>  GETPRIVATEPROFILESECTION     @418    NODATA
+>  GETPROFILESECTION            @419    NODATA
+>  GETFILEATTRIBUTES            @420    NODATA
+>  SETFILEATTRIBUTES            @421    NODATA
+>  GETDISKFREESPACE             @422    NODATA
+> 
+>  KERNEL_431 = ISPEFORMAT              @431    NODATA      ;Internal
+>  FILETIMETOLOCALFILETIME              @432    NODATA
+>  KERNEL_434 = UNITOANSI               @434    NODATA      ;Internal
+>  KERNEL_441 = CREATETHREAD            @441    NODATA      ;Internal
+>  KERNEL_447 = LEAVEENTERWIN16LOCK     @447    NODATA      ;Internal
+>  KERNEL_449 = GETWIN16LOCK            @449    NODATA      ;Internal
+>  KERNEL_452 = LOADLIBRARY32           @452    NODATA      ;Internal
+>  KERNEL_453 = GETPROCADDRESS32        @453    NODATA      ;Internal
+>  KERNEL_457 = CREATEWIN32EVENT        @457    NODATA      ;Internal
+>  KERNEL_458 = SETWIN32EVENT           @458    NODATA      ;Internal
+>  KERNEL_459 = RESETWIN32EVENT         @459    NODATA      ;Internal
+>  KERNEL_460 = WAITFORSINGLEOBJECT     @460    NODATA      ;Internal
+>  KERNEL_461 = WAITFORMULTIPLEOBJECTS  @461    NODATA      ;Internal
+>  KERNEL_462 = GETCURRENTTHREADID      @462    NODATA      ;Internal
+>  KERNEL_463 = SETTHREADQUEUE          @463    NODATA      ;Internal
+>  KERNEL_464 = GETTHREADQUEUE          @464    NODATA      ;Internal
+>  KERNEL_465 = NUKEPROCESS             @465    NODATA      ;Internal
+>  KERNEL_466 = EXITPROCESS             @466    NODATA      ;Internal
+>  KERNEL_471 = GETCURRENTPROCESSID     @471    NODATA      ;Internal
+>  KERNEL_472 = MAPHINSTLS              @472    NODATA      ;Internal
+>  KERNEL_473 = MAPHINSTSL              @473    NODATA      ;Internal
+>  KERNEL_474 = CLOSEWIN32HANDLE        @474    NODATA      ;Internal
+>  KERNEL_482 = LOADSYSTEMLIBRARY32     @482    NODATA      ;Internal
+>  KERNEL_486 = FREELIBRARY32           @486    NODATA      ;Internal
+>  KERNEL_487 = GETMODULEFILENAME32     @487    NODATA      ;Internal
+>  KERNEL_488 = GETMODULEHANDLE32       @488    NODATA      ;Internal
+>  REGISTERSERVICEPROCESS               @491    NODATA      ;Internal
+> 
+448a519,520
+>  __MOD_WINNLS           @533  NODATA
+>  __MOD_WIFEMAN          @534  NODATA
+456a529,569
+> 
+>  KERNEL_560 = INITCB              @560    NODATA     ;Internal
+>  KERNEL_561 = GETSTDCBLS          @561    NODATA     ;Internal
+>  KERNEL_562 = GETSTDCBSL          @562    NODATA     ;Internal
+>  KERNEL_563 = GETEXISTINGSTDCBLS  @563    NODATA     ;Internal
+>  KERNEL_564 = GETEXISTINGSTDCBSL  @564    NODATA     ;Internal
+>  KERNEL_566 = GETFLEXCBSL         @566    NODATA     ;Internal
+>  KERNEL_567 = GETSTDCBLSEX        @567    NODATA     ;Internal
+>  KERNEL_568 = GETSTDCBSLEX        @568    NODATA     ;Internal
+>  KERNEL_802 = CALLBACK2           @802    NODATA     ;Internal
+>  KERNEL_804 = CALLBACK4           @804    NODATA     ;Internal
+>  KERNEL_806 = CALLBACK6           @806    NODATA     ;Internal
+>  KERNEL_808 = CALLBACK8           @808    NODATA     ;Internal
+>  KERNEL_810 = CALLBACK10          @810    NODATA     ;Internal
+>  KERNEL_812 = CALLBACK12          @812    NODATA     ;Internal
+>  KERNEL_814 = CALLBACK14          @814    NODATA     ;Internal
+>  KERNEL_816 = CALLBACK16          @816    NODATA     ;Internal
+>  KERNEL_818 = CALLBACK18          @818    NODATA     ;Internal
+>  KERNEL_820 = CALLBACK20          @820    NODATA     ;Internal
+>  KERNEL_822 = CALLBACK22          @822    NODATA     ;Internal
+>  KERNEL_824 = CALLBACK24          @824    NODATA     ;Internal
+>  KERNEL_826 = CALLBACK26          @826    NODATA     ;Internal
+>  KERNEL_828 = CALLBACK28          @828    NODATA     ;Internal
+>  KERNEL_830 = CALLBACK30          @830    NODATA     ;Internal
+>  KERNEL_832 = CALLBACK32          @832    NODATA     ;Internal
+>  KERNEL_834 = CALLBACK34          @834    NODATA     ;Internal
+>  KERNEL_836 = CALLBACK36          @836    NODATA     ;Internal
+>  KERNEL_838 = CALLBACK38          @838    NODATA     ;Internal
+>  KERNEL_840 = CALLBACK40          @840    NODATA     ;Internal
+>  KERNEL_842 = CALLBACK42          @842    NODATA     ;Internal
+>  KERNEL_844 = CALLBACK44          @844    NODATA     ;Internal
+>  KERNEL_846 = CALLBACK46          @846    NODATA     ;Internal
+>  KERNEL_848 = CALLBACK48          @848    NODATA     ;Internal
+>  KERNEL_850 = CALLBACK50          @850    NODATA     ;Internal
+>  KERNEL_852 = CALLBACK52          @852    NODATA     ;Internal
+>  KERNEL_854 = CALLBACK54          @854    NODATA     ;Internal
+>  KERNEL_856 = CALLBACK56          @856    NODATA     ;Internal
+>  KERNEL_858 = CALLBACK58          @858    NODATA     ;Internal
+>  KERNEL_860 = CALLBACK60          @860    NODATA     ;Internal
+>  KERNEL_862 = CALLBACK62          @862    NODATA     ;Internal
+>  KERNEL_864 = CALLBACK64          @864    NODATA     ;Internal
+--- NT4\private\mvdm\wow16\kernel31\wow16cal.asm
++++ nt\private\mvdm\wow16\kernel31\wow16cal.asm
+924c924
+<     call    SetCurrentDirectory       ; on the stack is directory name;
+---
+>     call    WOW16SetCurrentDirectory       ; on the stack is directory name;
+975c975
+<     call    GetCurrentDirectory       ;
+---
+>     call    WOW16GetCurrentDirectory       ;
+1196c1196
+< ;*  GetCurrentDirectory() -
+---
+> ;*  WOW16GetCurrentDirectory() -
+1200c1200
+< cProc GetCurrentDirectory, <NEAR, PUBLIC>, <SI, DI>
+---
+> cProc WOW16GetCurrentDirectory, <NEAR, PUBLIC>, <SI, DI>
+1237c1237
+< ;*  SetCurrentDirectory() -                         *
+---
+> ;*  WOW16SetCurrentDirectory() -                         *
+1241c1241
+< cProc SetCurrentDirectory, <NEAR, PUBLIC>,<si,di>
+---
+> cProc WOW16SetCurrentDirectory, <NEAR, PUBLIC>,<si,di>
+--- NT4\private\mvdm\wow16\kernel31\kthunks.asm
++++ nt\private\mvdm\wow16\kernel31\kthunks.asm
+49a50,51
+>     KernelThunk  RegCreateKey32
+>     KernelThunk  RegDeleteKey32
+50a53,54
+>     KernelThunk  RegSetValue32
+>     KernelThunk  RegDeleteValue32
+51a56,67
+>     KernelThunk  RegQueryValue32
+>     KernelThunk  RegQueryValueEx32
+>     KernelThunk  RegSetValueEx32
+>     KernelThunk  RegLoadKey32
+>     KernelThunk  RegUnLoadKey32
+>     KernelThunk  RegSaveKey32
+>     DKernelThunk RegFlushKey32
+>     DKernelThunk ComputeObjectOwner
+>     DKernelThunk Local32GetSel
+>     DKernelThunk InvalidateNLSCache
+>     DKernelThunk GetProductName
+>     DKernelThunk IsSafeMode
+55c71,119
+< 
+---
+>     DKernelThunk GetPrivateProfileSectionNames
+>     DKernelThunk CreateDirectory
+>     DKernelThunk RemoveDirectory
+>     DKernelThunk DeleteFile
+>     DKernelThunk SetLastError
+>     DKernelThunk GetLastError
+>     DKernelThunk OpenFileEx
+>     DKernelThunk FastAndDirtyGlobalFix
+>     DKernelThunk WritePrivateProfileStruct
+>     DKernelThunk GetPrivateProfileStruct
+>     DKernelThunk GetCurrentDirectory
+>     DKernelThunk SetCurrentDirectory
+>     DKernelThunk FindFirstFile
+>     DKernelThunk FindNextFile
+>     DKernelThunk FindClose
+>     DKernelThunk WritePrivateProfileSection
+>     DKernelThunk WriteProfileSection
+>     DKernelThunk GetPrivateProfileSection
+>     DKernelThunk GetProfileSection
+>     DKernelThunk GetFileAttributes
+>     DKernelThunk SetFileAttributes
+>     DKernelThunk GetDiskFreeSpace
+>     DKernelThunk IsPEFormat
+>     DKernelThunk FileTimeToLocalFileTime
+>     DKernelThunk UniToAnsi
+>     DKernelThunk CreateThread
+>     DKernelThunk LeaveEnterWin16Lock
+>     DKernelThunk GetWin16Lock
+>     DKernelThunk LoadLibrary32
+>     DKernelThunk GetProcAddress32
+>     DKernelThunk CreateWin32Event
+>     DKernelThunk SetWin32Event
+>     DKernelThunk ResetWin32Event
+>     DKernelThunk WaitForSingleObject
+>     DKernelThunk WaitForMultipleObjects
+>     DKernelThunk GetCurrentThreadID
+>     DKernelThunk GetThreadQueue
+>     DKernelThunk SetThreadQueue
+>     DKernelThunk NukeProcess
+>     DKernelThunk ExitProcess
+>     DKernelThunk GetCurrentProcessID
+>     DKernelThunk MapHinstLS
+>     DKernelThunk MapHinstSL
+>     DKernelThunk CloseWin32Handle
+>     DKernelThunk LoadSystemLibrary32
+>     DKernelThunk FreeLibrary32
+>     DKernelThunk GetModuleFilename32
+>     DKernelThunk GetModuleHandle32
+>     DKernelThunk RegisterServiceProcess
+56a121,160
+>     DKernelThunk InitCB
+>     DKernelThunk GetStdCBLS
+>     DKernelThunk GetStdCBSL
+>     DKernelThunk GetExistingStdCBLS
+>     DKernelThunk GetExistingStdCBSL
+>     DKernelThunk GetFlexCBSL
+>     DKernelThunk GetStdCBLSEx
+>     DKernelThunk GetStdCBSLEx
+>     DKernelThunk Callback2
+>     DKernelThunk Callback4
+>     DKernelThunk Callback6
+>     DKernelThunk Callback8
+>     DKernelThunk Callback10
+>     DKernelThunk Callback12
+>     DKernelThunk Callback14
+>     DKernelThunk Callback16
+>     DKernelThunk Callback18
+>     DKernelThunk Callback20
+>     DKernelThunk Callback22
+>     DKernelThunk Callback24
+>     DKernelThunk Callback26
+>     DKernelThunk Callback28
+>     DKernelThunk Callback30
+>     DKernelThunk Callback32
+>     DKernelThunk Callback34
+>     DKernelThunk Callback36
+>     DKernelThunk Callback38
+>     DKernelThunk Callback40
+>     DKernelThunk Callback42
+>     DKernelThunk Callback44
+>     DKernelThunk Callback46
+>     DKernelThunk Callback48
+>     DKernelThunk Callback50
+>     DKernelThunk Callback52
+>     DKernelThunk Callback54
+>     DKernelThunk Callback56
+>     DKernelThunk Callback58
+>     DKernelThunk Callback60
+>     DKernelThunk Callback62
+>     DKernelThunk Callback64
+62,67c166,171
+<     DKernelThunk WOWFreeResource,     %(size FREERESOURCE16)
+<     DKernelThunk WowFileRead,%(size FILEIOREAD16)
+<     DKernelThunk WowFileWrite,%(size FILEIOWRITE16)
+<     DKernelThunk WowFileLSeek,%(size FILEIOLSEEK16)
+<     DKernelThunk WowKernelTrace,%(size KERNELTRACE16)
+<     DKernelThunk WOWOutputDebugString, %(size OUTPUTDEBUGSTRING16)
+---
+>     DKernelThunk WOWFreeResource,     %(size WOWFREERESOURCE16)
+>     DKernelThunk WowFileRead,%(size WOWFILEREAD16)
+>     DKernelThunk WowFileWrite,%(size WOWFILEWRITE16)
+>     DKernelThunk WowFileLSeek,%(size WOWFILELSEEK16)
+>     DKernelThunk WowKernelTrace,%(size WOWKERNELTRACE16)
+>     DKernelThunk WOWOutputDebugString, %(size WOWOUTPUTDEBUGSTRING16)
+71,72c175,176
+<     DKernelThunk WowFileOpen,%(size FILEIOOPEN16)
+<     DKernelThunk WowFileClose,%(size FILEIOCLOSE16)
+---
+>     DKernelThunk WowFileOpen,%(size WOWFILEOPEN16)
+>     DKernelThunk WowFileClose,%(size WOWFILECLOSE16)
+75,77c179,181
+<     DKernelThunk WowFileGetAttributes,%(size FILEIOGETATTRIBUTES16)
+<     DKernelThunk WowFileGetDateTime,%(size FILEIOGETDATETIME16)
+<     DKernelThunk WowFileLock,%(size FILEIOLOCK16)
+---
+>     DKernelThunk WowFileGetAttributes,%(size WOWFILEGETATTRIBUTES16)
+>     DKernelThunk WowFileGetDateTime,%(size WOWFILEGETDATETIME16)
+>     DKernelThunk WowFileLock,%(size WOWFILELOCK16)
+93c197
+<     DKernelThunk WowShouldWeSayWin95
+---
+> ;    DKernelThunk WowShouldWeSayWin95
+96a201,207
+>     DKernelThunk WowLFNEntry
+>     DKernelThunk WowShutdownTimer
+>     DKernelThunk WowTrimWorkingSet
+>     DKernelThunk TermsrvGetWindowsDir
+>     DKernelThunk WowPassEnvironment
+>     DKernelThunk WowSyncTask
+>     DKernelThunk WowDivideOverflowEx
+318,321c429,432
+<     DKernelThunk LoadLibraryEx32W, %(size LOADLIBRARYEX32)
+<     DKernelThunk FreeLibrary32W,   %(size FREELIBRARY32)
+<     DKernelThunk GetProcAddress32W,%(size GETPROCADDRESS32)
+<     DKernelThunk GetVDMPointer32W, %(size GETVDMPOINTER32)
+---
+>     DKernelThunk LoadLibraryEx32W, %(size LOADLIBRARYEX32W16)
+>     DKernelThunk FreeLibrary32W,   %(size FREELIBRARY3216)
+>     DKernelThunk GetProcAddress32W,%(size GETPROCADDRESS32W16)
+>     DKernelThunk GetVDMPointer32W, %(size GETVDMPOINTER32W16)
+--- NT4\private\mvdm\wow16\kernel31\kernel.api
++++ nt\private\mvdm\wow16\kernel31\kernel.api
+1142a1143,1159
+> API LONG,   RegCreateKey32, TEXT, <DATA>
+> ;(HKEY hkey, LPCSTR lpSubKey, PHKEY phkResult)
+> P_HKEY      hKey
+> P_CLPVOID0  lpSubKey
+> P_CLPVOID0  phkResult
+> APIERR
+>     mov ax,ERROR_INVALID_PARAMETER
+> APIEND
+> 
+> API LONG,   RegDeleteKey32, TEXT, <DATA>
+> ;(HKEY hkey, LPCSTR lpSubKey)
+> P_HKEY      hKey
+> P_CLPVOID0  lpSubKey
+> APIERR
+>     mov ax,ERROR_INVALID_PARAMETER
+> APIEND
+> 
+1149a1167,1185
+> API LONG,   RegSetValue32, TEXT, <DATA>
+> ;(HKEY hkey, LPCSTR lpSubKey, DWORD dwType, LPCSTR lpData, DWORD cbData)
+> P_HKEY      hKey
+> P_CLPVOID0  lpSubKey
+> P_DWORD     dwType
+> P_CLPVOID0  lpData
+> P_DWORD     cbData
+> APIERR
+>     mov ax,ERROR_INVALID_PARAMETER
+> APIEND
+> 
+> API LONG,   RegDeleteValue32, TEXT, <DATA>
+> ;(HKEY hkey, LPCSTR lpValueName)
+> P_HKEY      hKey
+> P_CLPVOID0  lpValueName
+> APIERR
+>     mov ax,ERROR_INVALID_PARAMETER
+> APIEND
+> 
+1151c1187
+< ;(HKEY hkey, DWORD dwValue, LPCSTR lpValue, LONG FAR * lpcbValue,DWORD dwReserved,LONG FAR *lpdwType, LPBYTE lpbData, LONG FAR *lpcbData)
+---
+> ;(HKEY hkey, DWORD dwIndex, LPSTR lpValueName, LPDWORD lpcbValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
+1153c1189,1203
+< P_DWORD     dwValue
+---
+> P_DWORD     dwIndex
+> P_CLPVOID0  lpValueName
+> P_CLPVOID0  lpcbValueName
+> P_CLPVOID0  lpReserved
+> P_CLPVOID0  lpType
+> P_CLPVOID0  lpData
+> P_CLPVOID0  lpcbData
+> APIERR
+>     mov ax,ERROR_INVALID_PARAMETER
+> APIEND
+> 
+> API LONG,   RegQueryValue32, TEXT, <DATA>
+> ;(HKEY hkey, LPCSTR lpSubKey, LPSTR lpValue, PLONG lpcbValue)
+> P_HKEY      hKey
+> P_CLPVOID0  lpSubKey
+1156,1158c1206,1216
+< P_DWORD     dwReserved
+< P_CLPVOID0  lpdwType
+< P_CLPVOID0  lpbData
+---
+> APIERR
+>     mov ax,ERROR_INVALID_PARAMETER
+> APIEND
+> 
+> API LONG,   RegQueryValueEx32, TEXT, <DATA>
+> ;(HKEY hkey, LPSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
+> P_HKEY      hKey
+> P_CLPVOID0  lpValueName
+> P_CLPVOID0  lpReserved
+> P_CLPVOID0  lpType
+> P_CLPVOID0  lpData
+1159a1218,1255
+> APIERR
+>     mov ax,ERROR_INVALID_PARAMETER
+> APIEND
+> 
+> API LONG,   RegSetValueEx32, TEXT, <DATA>
+> ;(HKEY hkey, LPSTR lpValueName, DWORD Reserved, DWORD dwType, CONST BYTE *lpData, DWORD cbData)
+> P_HKEY      hKey
+> P_CLPVOID0  lpValueName
+> P_DWORD     Reserved
+> P_DWORD     dwType
+> P_CLPVOID0  lpData
+> P_DWORD     cbData
+> APIERR
+>     mov ax,ERROR_INVALID_PARAMETER
+> APIEND
+> 
+> API LONG,   RegLoadKey32, TEXT, <DATA>
+> ;(HKEY hkey, LPCSTR lpSubKey, LPCSTR lpFile)
+> P_HKEY      hKey
+> P_CLPVOID0  lpSubKey
+> P_CLPVOID0  lpFile
+> APIERR
+>     mov ax,ERROR_INVALID_PARAMETER
+> APIEND
+> 
+> API LONG,   RegUnLoadKey32, TEXT, <DATA>
+> ;(HKEY hkey, LPCSTR lpSubKey)
+> P_HKEY      hKey
+> P_CLPVOID0  lpSubKey
+> APIERR
+>     mov ax,ERROR_INVALID_PARAMETER
+> APIEND
+> 
+> API LONG,   RegSaveKey32, TEXT, <DATA>
+> ;(HKEY hkey, LPCSTR lpFile, LPSECURITY_ATTRIBUTES lpSecurityAttributes)
+> P_HKEY      hKey
+> P_CLPVOID0  lpFile
+> P_CLPVOID0  lpSecurityAttributes
+--- NT4\private\mvdm\wow16\kernel31\ikernel.inc
++++ nt\private\mvdm\wow16\kernel31\ikernel.inc
+84a85,86
+> RegDeleteKey32           equ    <IRegDeleteKey32>
+> RegCreateKey32           equ    <IRegCreateKey32>
+85a88,89
+> RegSetValue32            equ    <IRegSetValue32>
+> RegDeleteValue32         equ    <IRegDeleteValue32>
+86a91,96
+> RegQueryValue32          equ    <IRegQueryValue32>
+> RegQueryValueEx32        equ    <IRegQueryValueEx32>
+> RegSetValueEx32          equ    <IRegSetValueEx32>
+> RegLoadKey32             equ    <IRegLoadKey32>
+> RegUnLoadKey32           equ    <IRegUnLoadKey32>
+> RegSaveKey32             equ    <IRegSaveKey32>
+--- NT4\private\mvdm\wow16\kernel31\i21task.asm
++++ nt\private\mvdm\wow16\kernel31\i21task.asm
+36a37
+> externFP WowShutdownTimer
+54a56
+> externB fShutdownTimerStarted
+850a853,854
+>         cCall   WowShutdownTimer,<1>
+>         mov     fShutdownTimerStarted, 1
+--- NT4\private\mvdm\wow16\kernel31\ld.asm
++++ nt\private\mvdm\wow16\kernel31\ld.asm
+39a40,41
+> externB fExitOnLastApp
+> externB fShutdownTimerStarted
+110a113,114
+> externFP WowShutdownTimer
+> externFP WowSyncTask
+316c320,330
+< 	mov	es:[TDB_nEvents],1
+---
+> 	cmp	num_tasks, 1
+> 	jnz	@F
+> 	cmp	fExitOnLastApp, 0
+> 	jnz	@F
+> 	cmp	fShutdownTimerStarted, 1
+> 	jnz	@F
+> 	push	0
+> 	cCall	WowShutdownTimer
+> 	mov	fShutdownTimerStarted, 0
+> 
+> @@:	mov	es:[TDB_nEvents],1
+341c355
+< 	cCall	Yield
+---
+> 	cCall	WowSyncTask
+--- NT4\private\mvdm\wow16\kernel31\task.asm
++++ nt\private\mvdm\wow16\kernel31\task.asm
+51a52
+> externFP ExitCall
+67a69
+> externFP WowSyncTask
+125a128,157
+> 
+> ;-----------------------------------------------------------------------;
+> ; SyncTask
+> ;
+> ;
+> ; Entry:
+> ;
+> ; Returns:
+> ;
+> ; Registers Destroyed:
+> ;
+> ; History:
+> ;  Wed 10-Jan-1990 22:52:52  -by-  David N. Weise  [davidw]
+> ; Wrote it!
+> ;-----------------------------------------------------------------------;
+> 
+> 	assumes ds,nothing
+> 	assumes es,nothing
+> 
+> cProc	SyncTask,<PUBLIC,FAR>,<ax,bx,cx,dx,di,si,es>
+> cBegin
+> sync_redo:
+> 	cCall	WowSyncTask
+> 	cmp	ax, 0
+> 	jz	sync_end
+> 	jg	sync_redo
+> 	cCall	ExitCall
+> sync_end:
+> cEnd
+> 
+--- NT4\private\mvdm\wow16\kernel31\kdata.asm
++++ nt\private\mvdm\wow16\kernel31\kdata.asm
+416a417
+> globalB fShutdownTimerStarted,0	; The WOW Shutdown timer has been started
+434a436,439
+> ifdef FE_SB
+> globalW MOD_WINNLS    ,0
+> globalW MOD_WIFEMAN   ,0
+> endif
+--- NT4\private\mvdm\wow16\kernel31\ldboot.asm
++++ nt\private\mvdm\wow16\kernel31\ldboot.asm
+70a71,74
+> ifdef FE_SB
+> public  __MOD_WINNLS
+> public  __MOD_WIFEMAN
+> endif
+98a103,106
+> ifdef FE_SB
+>     __MOD_WINNLS     = 0h
+>     __MOD_WIFEMAN    = 0h
+> endif
+--- NT4\private\mvdm\wow16\kernel31\makefile
++++ nt\private\mvdm\wow16\kernel31\makefile
+17a18,22
+> # Uncomment this for normal x86 build on x86. We do crude hack for 
+> # Platform PPC as we are building with CCPU
+> # PLATFORM = $(PROCESSOR_ARCHITECTURE)
+> PLATFORM = PPC
+> 
+30c35
+< !if "$(NTDEBUG)"!="" && "$(NTDEBUG)"!="retail" && "$(NTDEBUG)" != "ntsdnodbg" && "$(NTDEBUG)" != "test"
+---
+> !if "$(NTDEBUG)"!="" && "$(NTDEBUG)"!="retail" && "$(NTDEBUG)" != "ntsdnodbg" && "$(NTDEBUG)" != "test" && "$(NTDEBUG)"=="HACK_REMOVE_ME"
+94c99
+< A1FLAGS=-DWOW $(WOW_QUICK_INT21) -DWINDEBUG -DWOW_$(PROCESSOR_ARCHITECTURE)
+---
+> A1FLAGS=-DWOW $(WOW_QUICK_INT21) -DWINDEBUG -DWOW_$(PLATFORM)
+97c102
+< A1FLAGS=-DWOW $(WOW_QUICK_INT21) -DWOW_$(PROCESSOR_ARCHITECTURE)
+---
+> A1FLAGS=-DWOW $(WOW_QUICK_INT21) -DWOW_$(PLATFORM)
+102c107
+< A1FLAGS=-DWOW $(WOW_QUICK_INT21) -DWINDEBUG -DPM386 -DWOW_$(PROCESSOR_ARCHITECTURE)
+---
+> A1FLAGS=-DWOW $(WOW_QUICK_INT21) -DWINDEBUG -DPM386 -DWOW_$(PLATFORM)
+105c110
+< A1FLAGS=-DWOW $(WOW_QUICK_INT21) -DPM386 -DWOW_$(PROCESSOR_ARCHITECTURE)
+---
+> A1FLAGS=-DWOW $(WOW_QUICK_INT21) -DPM386 -DWOW_$(PLATFORM)
+181a187,191
+> # Even though we are not on Fareast, enable the flags to that stub DLLs get built
+> # on all Windows versions
+> AFLAGS  = $(AFLAGS) -DFE_SB
+> CFLAGS  = $(CFLAGS) -DFE_SB
+> 
+201c211
+< all:  $(DEST)\kernel.exe $(DEST)\krnl286.sym
+---
+> all:  fixexe.exe $(DEST)\kernel.exe $(DEST)\krnl286.sym
+208c218
+< all:  $(DEST)\kernel.exe $(DEST)\krnl386.sym
+---
+> all:  fixexe.exe $(DEST)\kernel.exe $(DEST)\krnl386.sym
+829c839,841
+< fixexe.obj fixexe.lst:: fixexe.c
+---
+> fixexe.exe fixexe.lst:: fixexe.c
+> 	cl fixexe.c -MD -I$(NTMAKEENV)\src\public\sdk\inc\crt /link /LIBPATH:$(NTMAKEENV)\src\public\sdk\lib\x86 /NODEFAULTLIB:oldnames.lib
+> 	copy fixexe.exe $(NTMAKEENV)\tools\x86\tools16\
+--- NT4\private\mvdm\wow16\kernel31\fixexe.c
++++ nt\private\mvdm\wow16\kernel31\fixexe.c
+29,31c29,31
+<     int iLengthMod512;
+<     int iSizeInPages;
+<     int iZero;
+---
+>     short iLengthMod512;
+>     short iSizeInPages;
+>     short iZero;
+--- NT4\private\mvdm\wow16\kernel31\context.asm
++++ nt\private\mvdm\wow16\kernel31\context.asm
+31c31
+< externFP WowShouldWeSayWin95
+---
+> ;externFP WowShouldWeSayWin95
+1011,1012c1011,1016
+<         test    dx, word ptr cs:[gv_GACFEX_GETVERSIONHACK+2]
+<         jz      gv_nohack
+---
+> ;        test    dx, word ptr cs:[gv_GACFEX_GETVERSIONHACK+2]
+> ;        jz      gv_nohack
+> 	test	dx, 020h
+> 	jnz 	gv_nohack
+> 	mov	ax, 5F03h
+>         jmp     short gv_setdosversion
+1024,1040c1028,1044
+<         pop     cx                    ; CX = caller DS
+<         push    cx
+<         sub     sp, 256               ; make room for module path
+<         mov     dx, 256
+<         mov     bx, sp
+<         push    cx                    ; save caller DS
+<         cCall   IGetModuleFileName, <cx, ss, bx, dx>
+<         pop     cx
+<         mov     bx, sp
+<         cCall   WowShouldWeSayWin95, <ss, bx, cx>
+<         add     sp, 256
+<         test    ax,ax                 ; Did WOW32 provide a version?
+<         jz      gv_nohack             ; Nope
+<         jmp     short gv_setdosversion
+< 
+< gv_GACFEX_GETVERSIONHACK:
+<         DD WOWCFEX_GETVERSIONHACK
+---
+> ;;        pop     cx                    ; CX = caller DS
+> ;;        push    cx
+> ;;        sub     sp, 256               ; make room for module path
+> ;;        mov     dx, 256
+> ;;        mov     bx, sp
+> ;;        push    cx                    ; save caller DS
+> ;;        cCall   IGetModuleFileName, <cx, ss, bx, dx>
+> ;;        pop     cx
+> ;;        mov     bx, sp
+> ;;        cCall   WowShouldWeSayWin95, <ss, bx, cx>
+> ;;        add     sp, 256
+> ;;        test    ax,ax                 ; Did WOW32 provide a version?
+> ;;        jz      gv_nohack             ; Nope
+> ;;        jmp     short gv_setdosversion
+> ;;
+> ;;gv_GACFEX_GETVERSIONHACK:
+> ;;        DD WOWCFEX_GETVERSIONHACK
+
+--- NT4\private\mvdm\wow16\gdi\gdi.def
++++ nt\private\mvdm\wow16\gdi\gdi.def
+208c208
+< ;    GETTEXTEXTENTEX			@188		;Internal
+---
+>     GETTEXTEXTENTEX			@188		;Internal
+256a257,268
+>     OPENPRINTERA                        @266
+>     STARTDOCPRINTERA                    @267
+>     STARTPAGEPRINTER                    @268
+>     WRITEPRINTER                        @269
+>     ENDPAGEPRINTER                      @270
+>     ABORTPRINTER                        @271
+>     ENDDOCPRINTER                       @272
+>     CLOSEPRINTER                        @274
+>     GETREALDRIVERINFO                   @280
+>     DRVSETPRINTERDATA                   @281
+>     DRVGETPRINTERDATA                   @282
+>     ENGINEGETCHARWIDTHEX                @299
+272a285,287
+>     ENGINEREALIZEFONTEXT                @315
+>     ENGINEGETCHARWIDTHSTR               @316
+>     ENGINEGETGLYPHBMPEXT                @317
+320a336
+>     GETTTGLYPHINDEXMAP                  @404
+382c398
+<     POLYPOLYLINEWOW                     @490             ; Internal
+---
+>     POLYPOLYLINEWOW                     @487             ; Internal
+385,386c401,409
+<     GETDIBCOLORTABLE                    @603
+<     SETDIBCOLORTABLE                    @602
+---
+>     CLOSEENHMETAFILE                    @490
+>     COPYENHMETAFILE                     @491
+>     CREATEENHMETAFILE                   @492
+>     DELETEENHMETAFILE                   @493
+>     GDICOMMENT                          @495
+>     GETENHMETAFILE                      @496
+>     GETENHMETAFILEBITS                  @497
+>     GETENHMETAFILEDESCRIPTION           @498
+>     GETENHMETAFILEHEADER                @499
+401a425,450
+>     GETENHMETAFILEPALETTEENTRIES        @501
+>     POLYBEZIER                          @502
+>     POLYBEZIERTO                        @503
+>     PLAYENHMETAFILERECORD               @504
+>     SETENHMETAFILEBITS                  @505
+>     SETMETARGN                          @506
+>     EXTSELECTCLIPRGN                    @508
+>     ABORTPATH                           @511
+>     BEGINPATH                           @512
+>     CLOSEFIGURE                         @513
+>     ENDPATH                             @514
+>     FILLPATH                            @515
+>     FLATTENPATH                         @516
+>     GETPATH                             @517
+>     PATHTOREGION                        @518
+>     SELECTCLIPPATH                      @519
+>     STROKEANDFILLPATH                   @520
+>     STROKEPATH                          @521
+>     WIDENPATH                           @522
+>     EXTCREATEPEN                        @523
+>     GETARCDIRECTION                     @524
+>     SETARCDIRECTION                     @525
+>     GETMITERLIMIT                       @526
+>     SETMITERLIMIT                       @527
+>     GDIPARAMETERSINFO                   @528
+>     CREATEHALFTONEPALETTE               @529
+402a452,475
+>     SETDIBCOLORTABLE                    @602
+>     GETDIBCOLORTABLE                    @603
+>     SETSOLIDBRUSH                       @604
+>     SYSDELETEOBJECT                     @605
+>     SETMAGICCOLORS                      @606
+>     GETREGIONDATA                       @607
+>     EXTCREATEREGION                     @608
+>     GDIFREERESOURCES                    @609
+>     GDISIGNALPROC32                     @610
+>     GETRANDOMRGN                        @611
+>     GETTEXTCHARSET                      @612
+>     ENUMFONTFAMILIESEX                  @613
+>     ADDLPKTOGDI                         @614
+>     GETCHARACTERPLACEMENT               @615
+>     GETFONTLANGUAGEINFO                 @616
+>     BUILDINVERSETABLEDIB                @650
+> 
+>     ICMCREATETRANSFORM                  @820
+>     ICMDELETETRANSFORM                  @821
+>     ICMTRANSLATERGB                     @822
+>     ICMTRANSLATERGBS                    @823
+>     ICMCHECKCOLORSINGAMUT               @824
+> 
+> 
+--- NT4\private\mvdm\wow16\gdi\gdi.asm
++++ nt\private\mvdm\wow16\gdi\gdi.asm
+331c331
+<         GDIThunk    GETREGIONDATA
+---
+>         DGDIThunk    GETREGIONDATA
+539a540,610
+>         DGDITHUNK   ABORTPATH
+>         DGDITHUNK   ABORTPRINTER
+>         DGDITHUNK   ADDLPKTOGDI
+>         DGDITHUNK   BEGINPATH
+>         DGDITHUNK   BUILDINVERSETABLEDIB
+>         DGDITHUNK   CLOSEENHMETAFILE
+>         DGDITHUNK   CLOSEFIGURE
+>         DGDITHUNK   CLOSEPRINTER
+>         DGDITHUNK   COPYENHMETAFILE
+>         DGDITHUNK   CREATEENHMETAFILE
+>         DGDITHUNK   CREATEHALFTONEPALETTE
+>         DGDITHUNK   DELETEENHMETAFILE
+>         DGDITHUNK   DRVGETPRINTERDATA
+>         DGDITHUNK   DRVSETPRINTERDATA
+>         DGDITHUNK   ENDDOCPRINTER
+>         DGDITHUNK   ENDPAGEPRINTER
+>         DGDITHUNK   ENDPATH
+>         DGDITHUNK   ENGINEGETCHARWIDTHEX
+>         DGDITHUNK   ENGINEGETCHARWIDTHSTR
+>         DGDITHUNK   ENGINEGETGLYPHBMPEXT
+>         DGDITHUNK   ENGINEREALIZEFONTEXT
+>         DGDITHUNK   ENUMFONTFAMILIESEX
+>         DGDITHUNK   EXTCREATEREGION
+>         DGDITHUNK   EXTCREATEPEN
+>         DGDITHUNK   EXTSELECTCLIPRGN
+>         DGDITHUNK   FILLPATH
+>         DGDITHUNK   FLATTENPATH
+>         DGDITHUNK   GDICOMMENT
+>         DGDITHUNK   GDIPARAMETERSINFO
+>         DGDITHUNK   GDISIGNALPROC32
+>         DGDITHUNK   GETARCDIRECTION
+>         DGDITHUNK   GETCHARACTERPLACEMENT
+>         DGDITHUNK   GETENHMETAFILE
+>         DGDITHUNK   GETENHMETAFILEBITS
+>         DGDITHUNK   GETENHMETAFILEDESCRIPTION
+>         DGDITHUNK   GETENHMETAFILEHEADER
+>         DGDITHUNK   GETENHMETAFILEPALETTEENTRIES
+>         DGDITHUNK   GETFONTLANGUAGEINFO
+>         DGDITHUNK   GETMITERLIMIT
+>         DGDITHUNK   GETPATH
+>         DGDITHUNK   GETRANDOMRGN
+>         DGDITHUNK   GETREALDRIVERINFO
+>         DGDITHUNK   GETTEXTCHARSET
+>         DGDITHUNK   GETTEXTEXTENTEX
+>         DGDITHUNK   GETTTGLYPHINDEXMAP
+>         DGDITHUNK   ICMCHECKCOLORSINGAMUT
+>         DGDITHUNK   ICMCREATETRANSFORM
+>         DGDITHUNK   ICMDELETETRANSFORM
+>         DGDITHUNK   ICMTRANSLATERGB
+>         DGDITHUNK   ICMTRANSLATERGBS
+>         DGDITHUNK   OPENPRINTERA
+>         DGDITHUNK   PATHTOREGION
+>         DGDITHUNK   PLAYENHMETAFILERECORD
+>         DGDITHUNK   POLYBEZIER
+>         DGDITHUNK   POLYBEZIERTO
+>         DGDITHUNK   SELECTCLIPPATH
+>         DGDITHUNK   SETARCDIRECTION
+>         DGDITHUNK   SETENHMETAFILEBITS
+>         DGDITHUNK   SETMAGICCOLORS
+>         DGDITHUNK   SETMETARGN
+>         DGDITHUNK   SETMITERLIMIT
+>         DGDITHUNK   SETSOLIDBRUSH
+>         DGDITHUNK   STARTDOCPRINTERA
+>         DGDITHUNK   STARTPAGEPRINTER
+>         DGDITHUNK   STROKEANDFILLPATH
+>         DGDITHUNK   STROKEPATH
+>         DGDITHUNK   SYSDELETEOBJECT
+>         DGDITHUNK   WIDENPATH
+>         DGDITHUNK   WRITEPRINTER
+> 
+> 
+547a619,627
+> cProc GDIFREERESOURCES,<PUBLIC,FAR,PASCAL,NODATA,WIN>
+>         parmw hdc
+>         parmw res
+> cBegin
+>         ; Not Supported
+>         mov   ax,5ah
+> cEnd
+> 
+> 
+--- NT4\private\mvdm\wow16\user\user.def
++++ nt\private\mvdm\wow16\user\user.def
+23a24
+>     BEAR8 = PLAYSOUNDEVENT          @8
+132c133
+< ;;    GETTASKFROMHWND           @117    ;Internal
+---
+>     WINDOWFROMDC                    @117
+295a297
+>     GETSYSCOLORBRUSH        @281
+323c325
+< ;                                   @300
+---
+>     UNLOADINSTALLABLEDRIVERS    @300
+382c384
+<     COMBOBOXCTLWNDPROC          @344    ;Internal   ;ChandanC
+---
+>     BEAR344=COMBOBOXCTLWNDPROC  @344    ;Internal   ;ChandanC
+409a412
+>     LOOKUPICONIDFROMDIRECTORYEX @364
+418a422,439
+>     DLLENTRYPOINT                   @374
+>     DRAWTEXTEX                      @375
+>     SETMESSAGEEXTRAINFO             @376
+>     SETPROPEX                       @378
+>     GETPROPEX                       @379
+>     REMOVEPROPEX                    @380
+>     SETWINDOWCONTEXTHELPID          @382
+>     GETWINDOWCONTEXTHELPID          @383
+>     SETMENUCONTEXTHELPID            @384
+>     GETMENUCONTEXTHELPID            @385
+>     LOADIMAGE                       @389
+>     COPYIMAGE                       @390
+>     SIGNALPROC32                    @391
+>     DRAWICONEX                      @394
+>     GETICONINFO                     @395
+>     REGISTERCLASSEX                 @397
+>     GETCLASSINFOEX                  @398
+>     CHILDWINDOWFROMPOINTEX          @399
+429c450
+< ;;;;MB_DLGPROC              @409    ;Internal
+---
+>     INITTHREADINPUT                 @409
+443a465,467
+>     FINDWINDOWEX            @427
+>     TILEWINDOWS             @428
+>     CASCADEWINDOWS          @429
+454a479,480
+>     INSERTMENUITEM          @441
+>     GETMENUITEMINFO         @443
+456a483
+>     SETMENUITEMINFO         @446
+457a485,486
+>     DRAWANIMATEDRECTS       @448
+>     DRAWSTATE               @449
+458a488
+>     CREATEICONFROMRESOURCEEX    @450
+479a510,514
+>     SETSCROLLINFO                   @475
+>     GETSCROLLINFO                   @476
+>     GETKEYBOARDLAYOUTNAME           @477
+>     LOADKEYBOARDLAYOUT              @478
+>     MENUITEMFROMPOINT               @479
+489a525,526
+> 
+>     BEAR498 = GETAPPVER     @498
+530,535c567,574
+<     NOTIFYWOW                   @533    ;Internal for WOW
+<     DEFDLGPROCTHUNK             @534    ;Internal for WOW
+<     WOWWORDBREAKPROC            @535    ;Internal for WOW
+<     NEWSIGNALPROC               @536    ;Internal for WOW
+<     MOUSEEVENT                  @537    ;Internal for WOW
+<     KEYBDEVENT                  @538    ;Internal for WOW
+---
+>     WNETINITIALIZE              @533    ;Internal
+>     WNETLOGON                   @534    ;Internal
+>     NOTIFYWOW                   @535    ;Internal for WOW
+>     DEFDLGPROCTHUNK             @536    ;Internal for WOW
+>     WOWWORDBREAKPROC            @537    ;Internal for WOW
+> ;;;;NEWSIGNALPROC               @536    ;Internal for WOW
+>     MOUSEEVENT                  @538    ;Internal for WOW
+>     KEYBDEVENT                  @539    ;Internal for WOW
+536a576,625
+>     GETSHELLWINDOW              @600
+>     DOHOTKEYSTUFF               @601
+>     SETCHECKCURSORTIMER         @602
+>     BROADCASTSYSTEMMESSAGE      @604
+>     HACKTASKMONITOR             @605
+>     GETFOREGROUNDWINDOW         @608
+>     SETFOREGROUNDWINDOW         @609
+>     DESTROYICON32               @610
+>     CHANGEDISPLAYSETTINGS       @620
+>     ENUMDISPLAYSETTINGS         @621
+>     MSGWAITFORMULTIPLEOBJECTS   @640
+>     ACTIVATEKEYBOARDLAYOUT      @650
+>     GETKEYBOARDLAYOUT           @651
+>     GETKEYBOARDLAYOUTLIST       @652
+>     UNLOADKEYBOARDLAYOUT        @654
+>     POSTPOSTEDMESSAGES          @655
+>     DRAWFRAMECONTROL            @656
+>     DRAWCAPTIONTEMP             @657
+>     DISPATCHINPUT               @658
+>     DRAWEDGE                    @659
+>     DRAWCAPTION                 @660
+>     SETSYSCOLORSTEMP            @661
+>     DRAWMENUBARTEMP             @662
+>     GETMENUDEFAULTITEM          @663
+>     SETMENUDEFAULTITEM          @664
+>     GETMENUITEMRECT             @665
+>     CHECKMENURADIOITEM          @666
+>     TRACKPOPUPMENUEX            @667
+>     SETWINDOWRGN                @668
+>     GETWINDOWRGN                @669
+> 
+>     CHOOSEFONT_CALLBACK16       @800
+>     FINDREPLACE_CALLBACK16      @801
+>     OPENFILENAME_CALLBACK16     @802
+>     PRINTDLG_CALLBACK16         @803
+>     CHOOSECOLOR_CALLBACK16      @804
+>     PEEKMESSAGE32               @819
+>     GETMESSAGE32                @820
+>     TRANSLATEMESSAGE32          @821
+>     DISPATCHMESSAGE32           @822
+>     CALLMSGFILTER32             @823
+>     ISDIALOGMESSAGE32           @824
+>     POSTMESSAGE32               @825
+>     POSTTHREADMESSAGE32         @826
+>     MESSAGEBOXINDIRECT          @827
+>     INSTALLIMT                  @890
+>     UNINSTALLIMT                @891
+> 
+> 
+> 
+--- NT4\private\mvdm\wow16\user\makefile
++++ nt\private\mvdm\wow16\user\makefile
+219c219
+< USERBASE=\nt\private\ntos\w32\ntuser
+---
+> USERBASE=..\..\..\ntos\w32\ntuser
+--- NT4\private\mvdm\wow16\user\user4.asm
++++ nt\private\mvdm\wow16\user\user4.asm
+134a135,136
+>     DUserThunk  WNETINITIALIZE
+>     DUserThunk  WNETLOGON
+136c138,231
+<     DUserThunk  WOWGETIDFROMDIRECTORY
+---
+> ;;; DUserThunk  WOWGETIDFROMDIRECTORY
+> 
+> 
+> ;;
+> ;; Win95 stuff
+> ;; (Cannot place it in seperate file, otherwise Linker throws L1022
+> ;;
+>     DUserThunk   ACTIVATEKEYBOARDLAYOUT
+>     DUserThunk   BROADCASTSYSTEMMESSAGE
+>     DUserThunk   CALLMSGFILTER32
+>     DUserThunk   CASCADEWINDOWS
+>     DUserThunk   CHANGEDISPLAYSETTINGS
+>     DUserThunk   CHECKMENURADIOITEM
+>     DUserThunk   CHILDWINDOWFROMPOINTEX
+>     DUserThunk   CHOOSECOLOR_CALLBACK16
+>     DUserThunk   CHOOSEFONT_CALLBACK16
+>     DUserThunk   COPYIMAGE
+>     DUserThunk   CREATEICONFROMRESOURCEEX
+>     DUserThunk   DESTROYICON32
+>     DUserThunk   DISPATCHINPUT
+>     DUserThunk   DISPATCHMESSAGE32
+>     DUserThunk   DLLENTRYPOINT
+>     DUserThunk   DOHOTKEYSTUFF
+>     DUserThunk   DRAWANIMATEDRECTS
+>     DUserThunk   DRAWCAPTION
+>     DUserThunk   DRAWCAPTIONTEMP
+>     DUserThunk   DRAWEDGE
+>     DUserThunk   DRAWFRAMECONTROL
+>     DUserThunk   DRAWICONEX
+>     DUserThunk   DRAWMENUBARTEMP
+>     DUserThunk   DRAWSTATE
+>     DUserThunk   DRAWTEXTEX
+>     DUserThunk   ENUMDISPLAYSETTINGS
+>     DUserThunk   FINDREPLACE_CALLBACK16
+>     DUserThunk   FINDWINDOWEX
+>     DUserThunk   GETAPPVER
+>     DUserThunk   GETCLASSINFOEX
+>     DUserThunk   GETFOREGROUNDWINDOW
+>     DUserThunk   GETICONINFO
+>     DUserThunk   GETKEYBOARDLAYOUT
+>     DUserThunk   GETKEYBOARDLAYOUTLIST
+>     DUserThunk   GETKEYBOARDLAYOUTNAME
+>     DUserThunk   GETMENUCONTEXTHELPID
+>     DUserThunk   GETMENUDEFAULTITEM
+>     DUserThunk   GETMENUITEMINFO
+>     DUserThunk   GETMENUITEMRECT
+>     DUserThunk   GETMESSAGE32
+>     DUserThunk   GETPROPEX
+>     DUserThunk   GETSCROLLINFO
+>     DUserThunk   GETSHELLWINDOW
+>     DUserThunk   GETSYSCOLORBRUSH
+>     DUserThunk   GETWINDOWCONTEXTHELPID
+>     DUserThunk   GETWINDOWRGN
+>     DUserThunk   HACKTASKMONITOR
+>     DUserThunk   INITTHREADINPUT
+>     DUserThunk   INSERTMENUITEM
+>     DUserThunk   INSTALLIMT
+>     DUserThunk   ISDIALOGMESSAGE32
+>     DUserThunk   LOADIMAGE
+>     DUserThunk   LOADKEYBOARDLAYOUT
+>     DUserThunk   LOOKUPICONIDFROMDIRECTORYEX
+>     DUserThunk   MENUITEMFROMPOINT
+>     DUserThunk   MESSAGEBOXINDIRECT
+>     DUserThunk   MSGWAITFORMULTIPLEOBJECTS
+>     DUserThunk   OPENFILENAME_CALLBACK16
+>     DUserThunk   PEEKMESSAGE32
+>     DUserThunk   PLAYSOUNDEVENT
+>     DUserThunk   POSTMESSAGE32
+>     DUserThunk   POSTPOSTEDMESSAGES
+>     DUserThunk   POSTTHREADMESSAGE32
+>     DUserThunk   PRINTDLG_CALLBACK16
+>     DUserThunk   REGISTERCLASSEX
+>     DUserThunk   REMOVEPROPEX
+>     DUserThunk   SETCHECKCURSORTIMER
+>     DUserThunk   SETFOREGROUNDWINDOW
+>     DUserThunk   SETMENUCONTEXTHELPID
+>     DUserThunk   SETMENUDEFAULTITEM
+>     DUserThunk   SETMENUITEMINFO
+>     DUserThunk   SETMESSAGEEXTRAINFO
+>     DUserThunk   SETPROPEX
+>     DUserThunk   SETSCROLLINFO
+>     DUserThunk   SETSYSCOLORSTEMP
+>     DUserThunk   SETWINDOWCONTEXTHELPID
+>     DUserThunk   SETWINDOWRGN
+>     DUserThunk   SIGNALPROC32
+>     DUserThunk   TILEWINDOWS
+>     DUserThunk   TRACKPOPUPMENUEX
+>     DUserThunk   TRANSLATEMESSAGE32
+>     DUserThunk   UNINSTALLIMT
+>     DUserThunk   UNLOADINSTALLABLEDRIVERS
+>     DUserThunk   UNLOADKEYBOARDLAYOUT
+>     DUserThunk   WINDOWFROMDC
+> 
+> 
+--- NT4\private\mvdm\wow16\user\user3a.asm
++++ nt\private\mvdm\wow16\user\user3a.asm
+177c177
+<     DUserThunk  SETMESSAGEQUEUE
+---
+> ;;;    DUserThunk  SETMESSAGEQUEUE ; LOCALAPI in winq.asm
+--- NT4\private\mvdm\wow16\user\winq.asm
++++ nt\private\mvdm\wow16\user\winq.asm
+1099c1099
+< ifndef WOW      ; WOW thunks SetMessageQueue
+---
+> ifndef WOW      ; WOW just returns TRUE
+1151c1151,1157
+< endif           ; WOW thunks SetMessageQueue
+---
+> else
+> cProc	SetMessageQueue, <PUBLIC, FAR, EXPORTED>
+> ParmW	cMsg
+> cBegin
+>     mov ax, 1
+> cEnd
+> endif           ; WOW just returns TRUE
+--- NT4\private\mvdm\wow16\user\usercli.asm
++++ nt\private\mvdm\wow16\user\usercli.asm
+34c34
+< ifndef PMODE32
+---
+> ifndef MONITOR; PMODE32
+441,445c441,445
+< APISPECIFICCODE_GETKEYSTATE macro
+<     mov cl, ah
+<     and cl, 080h
+<     or  al, cl
+< endm
+---
+> ;;APISPECIFICCODE_GETKEYSTATE macro
+> ;;    mov cl, ah
+> ;;    and cl, 080h
+> ;;    or  al, cl
+> ;;endm
+478c478
+<     USER16CLIENTTHUNK DUserThunk,  GETKEYSTATE,      <int>, int,, compatcode, srvcond
+---
+> ;;    USER16CLIENTTHUNK DUserThunk,  GETKEYSTATE,      <int>, int,, compatcode, srvcond
+487,488c487,488
+<     USER16CLIENTTHUNK DUserThunk,  GETDESKTOPHWND,   <>, hwnd, GETDESKTOPWINDOW
+<     USER16CLIENTTHUNK DUserThunk,  GETDESKTOPWINDOW, <>, hwnd
+---
+> ;;    USER16CLIENTTHUNK DUserThunk,  GETDESKTOPHWND,   <>, hwnd, GETDESKTOPWINDOW
+> ;;    USER16CLIENTTHUNK DUserThunk,  GETDESKTOPWINDOW, <>, hwnd
+494c494
+<     USER16CLIENTTHUNK DUserThunk,  GETNEXTWINDOW,    <hwnd, word>, hwnd, GETWINDOW
+---
+> ;;    USER16CLIENTTHUNK DUserThunk,  GETNEXTWINDOW,    <hwnd, word>, hwnd, GETWINDOW
+502c502
+<     USER16CLIENTTHUNK DUserThunk,  ISWINDOW,         <hwnd>, bool
+---
+> ;;    USER16CLIENTTHUNK DUserThunk,  ISWINDOW,         <hwnd>, bool
+505,509c505,509
+<     USER16CLIENTTHUNK UserThunk,   ISCHILD,          <hwnd, hwnd>, bool
+<     USER16CLIENTTHUNK UserThunk,   ISICONIC,         <hwnd>, bool
+<     USER16CLIENTTHUNK UserThunk,   ISWINDOWENABLED,  <hwnd>, bool
+<     USER16CLIENTTHUNK UserThunk,   ISWINDOWVISIBLE,  <hwnd>, bool
+<     USER16CLIENTTHUNK UserThunk,   ISZOOMED,         <hwnd>, bool
+---
+> ;;    USER16CLIENTTHUNK UserThunk,   ISCHILD,          <hwnd, hwnd>, bool
+> ;;    USER16CLIENTTHUNK UserThunk,   ISICONIC,         <hwnd>, bool
+> ;;    USER16CLIENTTHUNK UserThunk,   ISWINDOWENABLED,  <hwnd>, bool
+> ;;    USER16CLIENTTHUNK UserThunk,   ISWINDOWVISIBLE,  <hwnd>, bool
+> ;;    USER16CLIENTTHUNK UserThunk,   ISZOOMED,         <hwnd>, bool
+511,515c511,515
+<     USER16CLIENTTHUNK DUserThunk,  ISCHILD,          <hwnd, hwnd>, bool
+<     USER16CLIENTTHUNK DUserThunk,  ISICONIC,         <hwnd>, bool
+<     USER16CLIENTTHUNK DUserThunk,  ISWINDOWENABLED,  <hwnd>, bool
+<     USER16CLIENTTHUNK DUserThunk,  ISWINDOWVISIBLE,  <hwnd>, bool
+<     USER16CLIENTTHUNK DUserThunk,  ISZOOMED,         <hwnd>, bool
+---
+> ;;    USER16CLIENTTHUNK DUserThunk,  ISCHILD,          <hwnd, hwnd>, bool
+> ;;    USER16CLIENTTHUNK DUserThunk,  ISICONIC,         <hwnd>, bool
+> ;;    USER16CLIENTTHUNK DUserThunk,  ISWINDOWENABLED,  <hwnd>, bool
+> ;;    USER16CLIENTTHUNK DUserThunk,  ISWINDOWVISIBLE,  <hwnd>, bool
+> ;;    USER16CLIENTTHUNK DUserThunk,  ISZOOMED,         <hwnd>, bool
+523c523
+< ifndef PMODE32
+---
+> ifndef MONITOR ;PMODE32
+--- NT4\private\mvdm\wow16\user\user2.asm
++++ nt\private\mvdm\wow16\user\user2.asm
+132c132
+<     UserThunk   GETTASKFROMHWND
+---
+> ;;;    UserThunk   GETTASKFROMHWND
+134a135,154
+>     DUserThunk  GETKEYSTATE
+>     DUserThunk  GETDESKTOPHWND
+>     DUserThunk  GETDESKTOPWINDOW
+>     DUserThunk  GETNEXTWINDOW
+>     DUserThunk  ISWINDOW
+> ifdef DEBUG
+>     UserThunk   ISCHILD
+>     UserThunk   ISICONIC
+>     UserThunk   ISWINDOWENABLED
+>     UserThunk   ISWINDOWVISIBLE
+>     UserThunk   ISZOOMED
+> else
+>     DUserThunk   ISCHILD
+>     DUserThunk   ISICONIC
+>     DUserThunk   ISWINDOWENABLED
+>     DUserThunk   ISWINDOWVISIBLE
+>     DUserThunk   ISZOOMED
+> endif
+> 
+> 
+--- NT4\private\mvdm\wow16\user\winhook.asm
++++ nt\private\mvdm\wow16\user\winhook.asm
+45c45
+< cProc   GetProcModule, <PUBLIC, NEAR>
+---
+> cProc   GetProcModule, <PUBLIC, FAR>
+--- NT4\private\mvdm\wow16\user\init.c
++++ nt\private\mvdm\wow16\user\init.c
+24c24,25
+< #define FUN_FINALUSERINIT       400 // Internal
+---
+> #define NW_FINALUSERINIT     4 // Internal
+> #define NW_KRNL386SEGS       5
+86a88,90
+>             WORD       wUnusedPadding;
+>             DWORD      pfnGetProcModule;
+>             DWORD      *lpHighestAddress;
+87a92,97
+>         struct {
+>             WORD CodeSeg1;
+>             WORD CodeSeg2;
+>             WORD CodeSeg3;
+>             WORD DataSeg1;
+>         } Krnl386Segs;
+107a118,119
+>         UserInit16.pfnGetProcModule = &GetProcModule;
+>         UserInit16.lpHighestAddress = NULL;
+109c121,129
+<         fThunkStrRtns = NotifyWow(FUN_FINALUSERINIT, (LPBYTE)&UserInit16);
+---
+>         fThunkStrRtns = NotifyWow(NW_FINALUSERINIT, (LPBYTE)&UserInit16);
+> 
+>         hLib = LoadLibrary( "krnl386.exe" );
+>         FreeLibrary( hLib );
+>         Krnl386Segs.CodeSeg1 = HIWORD(GetProcAddress(hLib, "LoadResource"));
+>         Krnl386Segs.CodeSeg2 = HIWORD(GetProcAddress(hLib, "LoadModule"));
+>         Krnl386Segs.CodeSeg3 = HIWORD(GetProcAddress(hLib, "FindResource"));
+>         Krnl386Segs.DataSeg1 = hLib;
+>         NotifyWow(NW_KRNL386SEGS, (LPBYTE)&Krnl386Segs);
+--- NT4\private\mvdm\wow16\user\rmload.c
++++ nt\private\mvdm\wow16\user\rmload.c
+52c52
+< #define FUN_LOADACCELERATORS        177 //
+---
+> #define NW_LOADACCELERATORS  3
+80c80
+<             if (NotifyWow(FUN_LOADACCELERATORS, (LPBYTE)&loadaccel)) {
+---
+>             if (NotifyWow(NW_LOADACCELERATORS, (LPBYTE)&loadaccel)) {
+--- NT4\private\mvdm\wow16\user\helpcall.c
++++ nt\private\mvdm\wow16\user\helpcall.c
+34c34
+< #define FUN_WINHELP         171 //
+---
+> #define NW_WINHELP           6
+250c250
+<   if ((dwHelpPid = (DWORD)NotifyWow(FUN_WINHELP, szMS_WINHELP)) == (DWORD)NULL)
+---
+>   if ((dwHelpPid = (DWORD)NotifyWow(NW_WINHELP, szMS_WINHELP)) == (DWORD)NULL)
+259c259
+<       if (!LaunchHelp() || ((dwHelpPid = (DWORD)NotifyWow(FUN_WINHELP, szMS_WINHELP)) == (DWORD)NULL))
+---
+>       if (!LaunchHelp() || ((dwHelpPid = (DWORD)NotifyWow(NW_WINHELP, szMS_WINHELP)) == (DWORD)NULL))
+--- NT4\private\mvdm\wow16\user\fastres.c
++++ nt\private\mvdm\wow16\user\fastres.c
+38c38
+< DWORD   FAR PASCAL WOWGetIdFromDirectory (LPBYTE lpByte, WORD ResType);
+---
+> DWORD   FAR PASCAL LookupIconIdFromDirectoryEx (LPBYTE lpByte, BOOL fIcon, WORD cxDesired, WORD cyDesired, WORD Flags);
+46,47c46,47
+< #define FUN_LOADICON         174 //
+< #define FUN_LOADCURSOR       173 //
+---
+> #define NW_LOADICON          1
+> #define NW_LOADCURSOR        2
+161c161
+<         if (!(ul = (HICON) NotifyWOW (FUN_LOADICON, (LPBYTE) &IconCur))) {
+---
+>         if (!(ul = (HICON) NotifyWOW (NW_LOADICON, (LPBYTE) &IconCur))) {
+172c172
+<                 IconId = WOWGetIdFromDirectory (lpByte, (WORD) RT_ICON);
+---
+>                 IconId = LookupIconIdFromDirectoryEx (lpByte, TRUE, 0, 0, (WORD) 0x40);
+220c220
+<         if (!(ul = (HICON) NotifyWOW (FUN_LOADCURSOR, (LPBYTE) &IconCur))) {
+---
+>         if (!(ul = (HICON) NotifyWOW (NW_LOADCURSOR, (LPBYTE) &IconCur))) {
+231c231
+<                 CursorId = WOWGetIdFromDirectory ((LPBYTE)lpByte, (WORD) RT_CURSOR);
+---
+>                 CursorId = LookupIconIdFromDirectoryEx (lpByte, FALSE, 0, 0, (WORD) 0x40);
+--- NT4\private\mvdm\wow16\regedit\makefile
++++ nt\private\mvdm\wow16\regedit\makefile
+28c28,30
+< CFLAGS  = -c -W3 -AS -G2sw -Zlp -Os $(DEF) -I..\inc -I\nt\public\sdk\inc
+---
+> SDK_INC_PATH=$(NTROOT)\public\sdk\inc 
+> 
+> CFLAGS  = -c -W3 -AS -G2sw -Zlp -Os $(DEF) -I..\inc -I$(SDK_INC_PATH) 
+--- NT4\private\mvdm\wow16\ddeml\makefile
++++ nt\private\mvdm\wow16\ddeml\makefile
+10c10
+< IMPLIB=..\..\tools16\implib
+---
+> IMPLIB=implib
+12c12
+< #MAPSYM=..\..\tools16\mapsym
+---
+> #MAPSYM=mapsym
+14,18c14,18
+< MKPUBLIC=..\..\tools16\mkpublic
+< ASM=..\..\tools16\masm
+< CC=..\..\tools16\cl16
+< RC=..\..\tools16\rc16 $(INCLUDE)
+< LINK=..\..\tools16\link16
+---
+> MKPUBLIC=mkpublic
+> ASM=masm
+> CC=cl16
+> RC=rc16 $(INCLUDE)
+> LINK=link16
+--- NT4\private\mvdm\wow16\wfwnet\makefile
++++ nt\private\mvdm\wow16\wfwnet\makefile
+21a22
+> SDK_INC_PATH=$(NTROOT)\public\sdk\inc
+26c27
+< INCS    = -I. -I..\inc -I..\..\inc -I$(_NTBINDIR)\public\sdk\inc
+---
+> INCS    = -I. -I..\inc -I..\..\inc -I$(SDK_INC_PATH)
+--- NT4\private\mvdm\wow16\ole\client\makefile
++++ nt\private\mvdm\wow16\ole\client\makefile
+12a13,14
+> WINLIB=..\..\lib
+> INCLUDE=-I..\..\inc -I..\..\..\inc
+13a16
+> 
+16,17c19,20
+< LIBS= sdllcew libw shell
+< LIBENTRY_OBJ=libentry.obj
+---
+> LIBS= $(WINLIB)\sdllcew $(WINLIB)\libw $(WINLIB)\shell
+> LIBENTRY_OBJ=..\..\lib\libentry.obj
+35c38
+< CFLAGS= -c -ASw -G2sw -Od -Zipe -W3 -DFIREWALLS $(CDEBUG)
+---
+> CFLAGS= -c -ASw -G2sw -Od -Zipe -W3 -DFIREWALLS $(CDEBUG) $(INCLUDE)
+37c40
+< AFLAGS= -D?PLM=0 -D?WIN=1 -ZI -W2 $(ADEBUG)
+---
+> AFLAGS= -D?PLM=0 -D?WIN=1 -ZI -W2 $(ADEBUG) $(INCLUDE) 
+40c43
+< CFLAGS=-c -ASw -G2sw -Zpe -W3 -Ox
+---
+> CFLAGS=-c -ASw -G2sw -Zpe -W3 -Ox $(INCLUDE)
+67c70
+<     rc16 -r  ole.rc $@
+---
+>     rc16 -r $(INCLUDE) ole.rc $@
+126c129
+<     link $(LFLAGS) @<<
+---
+>     link16 $(LFLAGS) @<<
+138c141
+<     convdll olecli.dll
+---
+>     -binplace olecli.dll olecli.map olecli.sym 
+--- NT4\private\mvdm\wow16\ole\client\olecli.def
++++ nt\private\mvdm\wow16\ole\client\olecli.def
+7c7
+< STUB 'WINSTUB.EXE'
+---
+> STUB '..\..\BIN\WINSTUB.EXE'
+--- NT4\private\mvdm\wow16\inc\windows.h
++++ nt\private\mvdm\wow16\inc\windows.h
+5719c5719
+< #include "\nt\public\sdk\inc\wownt16.h"
+---
+> #include "wownt16.h"
+--- NT4\private\mvdm\wow16\inc\winnls.h
++++ nt\private\mvdm\wow16\inc\winnls.h
+53c53
+< VOID FAR PASCAL WINNLSSetKeyState( WORD );		/* ;Internal */
+---
+> BOOL FAR PASCAL WINNLSSetKeyState( WORD );		/* ;Internal */
+--- NT4\private\mvdm\wow16\makefile
++++ nt\private\mvdm\wow16\makefile
+diff -r F:\Windows.Source.Code.w2k.nt4.wxp\OpenNT\old-src\nt\private\mvdm\wow16\makefile Z:\minnt\base\mvdm\wow16\makefile
+11a12
+>     copy /y ..\..\..\public\sdk\inc\wownt16.h inc\wownt16.h
+18c19
+<     $(MAKE)
+---
+>     $(MAKE) NONX86=1
+30c31
+<     $(MAKE)
+---
+>     $(MAKE) clean
+67c68
+<     $(MAKE)
+---
+>     $(MAKE) clean
+69a71,72
+>     cd ..\lib
+>     $(MAKE) libw.lib
+70a74,77
+>     $(MAKE)
+>     cd ..\wifeman
+>     $(MAKE)
+>     cd ..\winnls

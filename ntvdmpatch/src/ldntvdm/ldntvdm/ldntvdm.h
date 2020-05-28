@@ -13,9 +13,19 @@
 // which was disabled starting with Windows 7
 #define EXTRACTICON_HOOK
 
+// If set, we also service 16bit Windows applications via WOW32
+#define WOW16_SUPPORT
+
 // Enable debug tracing via Debug console. Recommended, as it helps diagnosing loader issues, but makes DLL bigger
 // due to debug strings
 #define TRACING
+
+// This #define was an experiment to encrypt certain code sections of the loader to evade 
+// false positive detection by stupid Antivirus software on x32. 
+// However it didn't help at all, so it's deactivated. 
+#ifndef _WIN64
+//#define CRYPT_LDR
+#endif
 
 // Not really useful method, but maybe we need it some day, leave disabled
 //#define APPCERT_DLL
@@ -70,3 +80,9 @@ NtGetNextThread(
 	_In_ ULONG Flags,
 	_Out_ PHANDLE NewThreadHandle
 	);
+
+#ifdef CRYPT_LDR
+#pragma section(".code",execute, read, write)
+#pragma comment(linker,"/SECTION:.code,ERW")
+#pragma code_seg(".code")
+#endif

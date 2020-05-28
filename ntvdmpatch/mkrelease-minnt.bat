@@ -29,7 +29,7 @@ for %%L in (!LANG!) do (
   xcopy /Y minnt\release\*.* releases\%%L\
   if exist minnt\release\%%L\*.*  xcopy /Y minnt\release\%%L\*.* releases\%%L\
   md releases\%%L\dos >nul
-  for %%I in (_default.pif ANSI.SYS autoexec.nt backup.exe bios1.rom bios4.rom config.nt country.sys edit.com edit.hlp fastopen.exe forcedos.exe gorilla.bas graftabl.com HIMEM.SYS KEYBOARD.SYS key01.sys money.bas mscdexnt.exe nibbles.bas NTDOS.SYS ntdos404.sys ntdos411.sys ntdos412.sys ntdos804.sys NTIO.SYS ntio404.sys ntio411.sys ntio412.sys ntio804.sys ntvdm.exe ntvdmd.dll qbasic.exe qbasic.hlp redir.exe remline.bas share.exe v7vga.rom append.exe COMMAND.COM exe2bin.exe mem.exe debug.exe dosx.exe edlin.exe graphics.com graphics.pro kb16.com loadfix.com nlsfunc.exe setver.exe) do (
+  for %%I in (_default.pif ANSI.SYS autoexec.nt backup.exe bios1.rom bios4.rom config.nt country.sys edit.com edit.hlp fastopen.exe forcedos.exe gorilla.bas graftabl.com HIMEM.SYS KEYBOARD.SYS key01.sys money.bas mscdexnt.exe nibbles.bas NTDOS.SYS ntdos404.sys ntdos411.sys ntdos412.sys ntdos804.sys NTIO.SYS ntio404.sys ntio411.sys ntio412.sys ntio804.sys ntvdm.exe ntvdmd.dll qbasic.exe qbasic.hlp redir.exe remline.bas share.exe v7vga.rom append.exe COMMAND.COM exe2bin.exe mem.exe debug.exe dosx.exe edlin.exe graphics.com graphics.pro kb16.com loadfix.com nlsfunc.exe setver.exe vdmdbg.dll vdmredir.dll) do (
     if exist !LANGDIR!\%%I (
       xcopy /Y !LANGDIR!\%%I releases\%%L\dos\
     ) else (
@@ -42,5 +42,7 @@ for %%L in (!LANG!) do (
   ) else (
     xcopy /Y !BINDIR!\system32\msherc.com releases\%%L\dos\
   )
+  md releases\%%L\wow32 >nul
+  for %%I in (comm.drv commdlg.dll ctl3dv2.dll ddeml.dll drwatson.exe gdi.exe keyboard.drv krnl386.exe lanman.drv lzexpand.dll mciole16.dll mmsystem.dll mmtask.tsk mouse.drv netapi.dll olecli.dll olesvr.dll pmspl.dll rasapi16.dll regedt16.exe shell.dll sound.drv sysedit.exe system.drv timer.drv toolhelp.dll user.exe ver.dll wfwnet.drv vga.drv wifeman.dll win.com win87em.dll winhelp.exe winnls.dll winoldap.mod winsock.dll winspool.exe wow32.dll wowdeb.exe wowexec.exe wowfax.dll wowfaxui.dll) do if exist !BINDIR!\%%I xcopy /Y !BINDIR!\%%I releases\%%L\wow32\
 )
 :fini
