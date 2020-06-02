@@ -1,0 +1,11 @@
+--- NT4\private\mvdm\softpc.new\host\src\nt_reset.c
++++ nt\private\mvdm\softpc.new\host\src\nt_reset.c
+311a312,319
+> #ifndef MONITOR // Newer Windows versions don't have possibility to edit cmdline, so get from env
+> 	if (!BWVKey && (psz=host_getenv(achES)))
+> 	{
+> 	   BWVKey = (WORD)strtoul(psz, NULL, 16);
+> 	   if (BWVKey > 0xFE)
+> 		   BWVKey = 0;
+> 	}
+> #endif

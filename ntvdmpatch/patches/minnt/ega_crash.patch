@@ -1,30 +1,78 @@
 --- NT4\private\mvdm\softpc.new\host\src\nt_ega.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_ega.c
 590a591,592
->     int max_width = sc.PC_W_Width >> 1,
->         max_height = sc.PC_W_Height >> 1;
-608c610
+>     int max_width = 320,
+>         max_height = 200;
+608,609c610,615
 <     if( height>200 || width>40 ){
----
-> 
-609c612,616
 <    assert2( NO, "VDM: nt_ega_lo_graph_std() w=%d h=%d", width, height );
 ---
+> 
 >     if ((screen_x >= max_width) || (screen_y >= max_height))
 >     {
 >         sub_note_trace2(EGA_HOST_VERBOSE,
 >                         "VDM: nt_ega_lo_graph_std() x=%d y=%d",
 >                         screen_x, screen_y);
-611a624,627
+611a618,621
 >     if (screen_x + width > max_width)
 >         width = max_width - screen_x;
 >     if (screen_y + height > max_height)
 >         height = max_height - screen_y;
-672c688
+672c682
 <         while(--local_width);
 ---
 >         while((--local_width)>0);
-677c693
+677c687
 <     while(--local_height);
 ---
 >     while((--local_height)>0);
+714a725,726
+>     int max_width = 320,
+>         max_height = 200;
+732,733c744,748
+<     if( height>200 || width>40 ){
+<    assert2( NO, "VDM: nt_ega_lo_graph_big() w=%d h=%d", width, height );
+---
+>     if ((screen_x >= max_width) || (screen_y >= max_height))
+>     {
+>         sub_note_trace2(EGA_HOST_VERBOSE,
+>                         "VDM: nt_ega_lo_graph_big() x=%d y=%d",
+>                         screen_x, screen_y);
+735a751,754
+>     if (screen_x + width > max_width)
+>         width = max_width - screen_x;
+>     if (screen_y + height > max_height)
+>         height = max_height - screen_y;
+819c838
+<         while( --local_width );
+---
+>         while((--local_width)>0);
+824c843
+<     while(--local_height);
+---
+>     while((--local_height)>0);
+863a883,884
+>     int max_width = 320,
+>         max_height = 200;
+883,884c904,908
+<     if( height>200 || width>40 ){
+<    assert2( NO, "VDM: nt_ega_lo_graph_huge() w=%d h=%d", width, height );
+---
+>     if ((screen_x >= max_width) || (screen_y >= max_height))
+>     {
+>         sub_note_trace2(EGA_HOST_VERBOSE,
+>                         "VDM: nt_ega_lo_graph_huge() x=%d y=%d",
+>                         screen_x, screen_y);
+886a911,914
+>     if (screen_x + width > max_width)
+>         width = max_width - screen_x;
+>     if (screen_y + height > max_height)
+>         height = max_height - screen_y;
+996c1024
+<         while( --local_width );
+---
+>         while((--local_width)>0);
+1000c1028
+<     } while(--local_height);
+---
+>     } while((--local_height)>0);

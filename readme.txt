@@ -120,11 +120,9 @@ setting a registry key.
 
 Some registry keys also need to be set to show that the NTVDM is present and
 can get called. 
-So this is all rather complex, but it sort of works (except DPMI-stuff, 
-which doesn't seem to work too well or still crash for unknown resons)
-with some patches to the operating system. It's enough as a 
-proof-of-concept and to use it for most business applications and even some
-games.
+So this is all rather complex, but it sort of works with some patches to 
+the operating system. It's enough as a proof-of-concept and to use it for 
+most business applications and even some games.
 
 Cool, where can I get it?
 =========================
@@ -151,7 +149,9 @@ There are various "flavours" of NTVDM that can be built:
    The original NT4 NTVDM. Maybe the easiest version to build, but
    it doesn't have multilanguage and lacks some features like LFN
    This has been the default repository until Feb/2020 where 
-   development has been switches to MINNT tree.
+   development has been switched to MINNT tree.
+   This build method therefore is DEPRECATED in favour of the 
+   MINNT build systemand will not receive any future updates!
    Please note that you need Windows XP for building.
    Build instructions in: doc\old-src.txt
  * HAXM
@@ -225,6 +225,10 @@ I want to have a proper soundcard emulation
 MINNT build supports AdLib soundcard emulation by incorporating code parts
 of SoundFX2000 into NTVDM SB20 emulation.
 
+To make it more clear: 
+  As MUSIC device, select AdLib
+  As SOUND device, select Soundblaster 2.0
+
 But you can also try to use the real
 
 http://www.softsystem.co.uk/products/soundfx.htm
@@ -234,7 +238,8 @@ see:
 https://github.com/leecher1337/ntvdmx64/issues/40#issuecomment-510697281
 
 But it sometimes causes applications to hang and not react to keyboard
-input.
+input, so only try it if the NTVDM internal sound emulation isn't good 
+enough for your needs.
 
 
 The PC speaker output is choppy and generally inaccurate, I want my PC
@@ -265,9 +270,31 @@ you are launching your 16 bit application from needs to be restarted.
 If unsure, you can reboot your machine after installation/uninstallation of
 WineVDM handlers.
 
-To debug winevdm, before launching your application:
+To debug wow32, before launching your application:
 set WOWTRACE=C:\log.txt
 set WOWLOGLVL=16
+
+
+Is there a way to enlarge the graphics window?
+---------------------------------------------------------------------------
+You can use the EyeStrain parameter for this.
+Just execute reg\eyestrain.reg from the release-folder of NTVDMx64 and
+as soon as the parameter is set, you can switch between 3 variants of
+graphics display (Standard - Big - Huge) by pressing the "Scroll Lock" key.
+This only works in graphics mode!
+
+Here is how it works:
+The .reg file creates a REG_SZ key named "EyeStrain" under
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\WOW\CpuEnv
+which contains the string representatino of a hex value of the VK_
+virtual key code that needs to be checked for in order to switch between
+magnificaton sizes. The .reg file contains "91" as value, as 0x91 is the
+VK_SCROLL.
+You can find a list of Virtual keycodes here and change it accordingly:
+https://nehe.gamedev.net/article/msdn_virtualkey_codes/15009/
+
+Further explanation how it used to work on MIPS/Alpha builds:
+https://github.com/leecher1337/ntvdmx64/issues/95#issuecomment-637202206
 
 
 I want to use my mouse in my textmode application and not select text 
@@ -279,6 +306,11 @@ See: https://github.com/leecher1337/ntvdmx64/issues/80
 I want to print to my windows GDI printer
 ---------------------------------------------------------------------------
 Google "DOSPR.ZIP"
+
+
+Why doesn't QUAKE work?
+---------------------------------------------------------------------------
+http://www.delorie.com/djgpp/v2faq/faq18_6.html
 
 
 Are there any documents that describe the inner workings of the NTVDM 
