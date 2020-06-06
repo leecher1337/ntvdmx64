@@ -100,8 +100,10 @@ goto fini
 :instwow
 md %3
 takeown /f %2\wow32.dll
+cacls %2\wow32.dll /e /p %USERNAME%:F
 move %2\wow32.dll %3\
 takeown /f %2\user.exe
+cacls %2\user.exe /e /p %USERNAME%:F
 move %2\user.exe %3\
 goto fini
 
