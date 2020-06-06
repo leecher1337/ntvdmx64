@@ -61,8 +61,6 @@ echo Patching broken utilities
 pushd %BASEPATH%\..\
 %PATCHROOT%\util\patch -N -p0 -i %~dp0\tools.patch
 
-find "W10" public\internal\windows\inc\wowuserp.h >nul
-if errorlevel 1 %PATCHROOT%\util\patch -N -p0 -i %~dp0\w10.patch
 cd ..
 %PATCHROOT%\util\patch -N -p0 -i %~dp0\be.patch
 rem Also ensure .mc file has CRLF line endings

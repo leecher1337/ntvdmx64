@@ -324,9 +324,9 @@
 > 	// We need to create a window in order to access the GetClassLong pointer.. Any better ideas?
 > 	LOGDEBUG(LOG_TRACE,("x64GetClassLongByClassname(%x, %s, %d)\n", hInstance, lpClassName, nIndex));
 > 	mfNCCRmode = NCCR_GETCLASSLONG;
-> 	hWnd = (pfnOut.pfnCsCreateWindowEx)(
+> 	hWnd = x64CreateWindowEx(
 > 		   0, lpClassName, "WOWDUMMY", WS_DISABLED | WS_POPUP, 0, 0, CW_USEDEFAULT, CW_USEDEFAULT, 0,
-> 		   NULL, hInstance?hInstance:GetModuleHandle(NULL), &nIndex, ZBID_DEFAULT, CW_FLAGS_ANSI);
+> 		   NULL, hInstance?hInstance:GetModuleHandle(NULL), &nIndex);
 > 	LOGDEBUG(LOG_TRACE,("x64GetClassLongByClassname after call: hwnd=%x, mfNCCRmode=%d\n", hWnd, mfNCCRmode));
 > 	if (mfNCCRmode == NCCR_GETCLASSLONG)
 > 	{
@@ -360,9 +360,9 @@
 > 	mfNCCRmode = NCCR_SETCLASSLONG;
 > 	scl.nIndex = nIndex;
 > 	scl.dwNewLong = dwNewLong;
-> 	hWnd = (pfnOut.pfnCsCreateWindowEx)(
+> 	hWnd = x64CreateWindowEx(
 > 		   0, lpClassName, "WOWDUMMY", WS_DISABLED | WS_POPUP, 0, 0, CW_USEDEFAULT, CW_USEDEFAULT, 0,
-> 		   NULL, hInstance?hInstance:GetModuleHandle(NULL), &scl, ZBID_DEFAULT, CW_FLAGS_ANSI);
+> 		   NULL, hInstance?hInstance:GetModuleHandle(NULL), &scl);
 > 	if (mfNCCRmode == NCCR_SETCLASSLONG)
 > 	{
 > 		LOGDEBUG(LOG_ALWAYS,("x64SetClassLongByClassname called on a window that belongs to class %s doesn't react with W32Win16WndDispProc\n", lpClassName));
@@ -712,21 +712,27 @@
 >                             lParam,  SCDLG_CLIENT | SCDLG_ANSI | SCDLG_NOREVALIDATE));
 --- NT4\private\mvdm\wow32\wuwind.c
 +++ nt\private\mvdm\wow32\wuwind.c
-763a764,766
-> #ifdef W10
-> 			   ZBID_DEFAULT,
-> #endif
-788c791
+751c751,752
+<     hwnd32 = (pfnOut.pfnCsCreateWindowEx)(
+---
+> 
+>     hwnd32 = x64CreateWindowEx(
+763,764c764
+<                vpparam,
+<                CW_FLAGS_ANSI);
+---
+>                vpparam);
+788c788
 <         LOGDEBUG(LOG_WARNING,("  CreateWindow failed, class = %s\n", pszClass));
 ---
 >         LOGDEBUG(LOG_WARNING,("  CreateWindow failed, class = %s, gle=%d\n", pszClass, GetLastError()));
-1446c1449
+1446c1446
 <     register PWW pww;
 ---
 >     register PWW pww = NULL;
-1482a1486
+1482a1483
 > 
-1483a1488,1500
+1483a1485,1497
 > #ifdef W10
 >                 switch ( iOffset )
 >                 {
@@ -740,30 +746,30 @@
 >                         break;
 >                 }
 > #endif
-1725c1742
+1725c1739
 <     PWW pww;
 ---
 >     PWW pww = NULL;
-2175c2192
+2175c2189
 <     register PWW pww;
 ---
 >     register PWW pww = NULL;
-2198a2216
+2198a2213
 >             LONG    l;
-2212d2229
+2212d2226
 <                 dwWndProc32Old = SetWindowLong(HWND32(parg16->f1), iOffset, dwWndProc32New);
-2214,2217c2231
+2214,2217c2228
 <                 // If the 32 bit set failed, perhaps because its another process,
 <                 // then we want to fail too
 <                 if (!dwWndProc32Old)
 <                     goto SWL_Cleanup;
 ---
 >                 l = dwWndProc32New;
-2223c2237
+2223c2234
 <                 LONG    l;
 ---
 >                 
-2238c2252,2276
+2238c2249,2273
 <                 dwWndProc32Old = SetWindowLong(HWND32(parg16->f1), iOffset, l);
 ---
 >             }
@@ -791,7 +797,7 @@
 > #else
 >             dwWndProc32Old = SetWindowLong(HWND32(parg16->f1), iOffset, l);
 > #endif
-2240,2243c2278,2281
+2240,2243c2275,2278
 <                 // If the 32 bit set failed, perhaps because its another process,
 <                 // then we want to fail too
 <                 if (!dwWndProc32Old)
@@ -801,22 +807,140 @@
 >             // then we want to fail too
 >             if (!dwWndProc32Old)
 >                 goto SWL_Cleanup;
-2245d2282
+2245d2279
 <             }
-2306c2343
+2306c2340,2345
 <         ul = SetWindowLong(HWND32(parg16->f1), iOffset, new);
 ---
 >         ul = SetWindowLong(FULLHWND32(parg16->f1), iOffset, new);
-2615c2652
+> 		{
+> 			ULONG chk = GetWindowLong(FULLHWND32(parg16->f1), iOffset);
+> 			WOW32ASSERT(chk == new);
+> 		}
+> 
+2615c2654
 <     PWW pww;
 ---
 >     PWW pww = NULL;
-2632c2669
+2632c2671
 <     hwnd = HWND32(parg16->f1);
 ---
 >     hwnd = FULLHWND32(parg16->f1);
-2776a2814
+2776a2816,2922
 > 
+> enum ZBID
+> {
+> 	ZBID_DEFAULT = 0,
+> 	ZBID_DESKTOP = 1,
+> 	ZBID_UIACCESS = 2,
+> 	ZBID_IMMERSIVE_IHM = 3,
+> 	ZBID_IMMERSIVE_NOTIFICATION = 4,
+> 	ZBID_IMMERSIVE_APPCHROME = 5,
+> 	ZBID_IMMERSIVE_MOGO = 6,
+> 	ZBID_IMMERSIVE_EDGY = 7,
+> 	ZBID_IMMERSIVE_INACTIVEMOBODY = 8,
+> 	ZBID_IMMERSIVE_INACTIVEDOCK = 9,
+> 	ZBID_IMMERSIVE_ACTIVEMOBODY = 10,
+> 	ZBID_IMMERSIVE_ACTIVEDOCK = 11,
+> 	ZBID_IMMERSIVE_BACKGROUND = 12,
+> 	ZBID_IMMERSIVE_SEARCH = 13,
+> 	ZBID_GENUINE_WINDOWS = 14,
+> 	ZBID_IMMERSIVE_RESTRICTED = 15,
+> 	ZBID_SYSTEM_TOOLS = 16,
+> 
+> 	//Windows 10+
+> 	ZBID_LOCK = 17,
+> 	ZBID_ABOVELOCK_UX = 18,
+> };
+> 
+> typedef HWND    (WINAPI *PFNCSCREATEWINDOWEX10)(DWORD dwExStyle, LPCTSTR lpClassName,
+>         LPCTSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HANDLE hInstance, LPVOID lpParam, enum ZBID Band, DWORD Flags);
+> 
+> 
+> /*++
+> 	Windows version dependent PFNCSCREATEWINDOWEX to support multiple Windows 
+> 	Versions
+> --*/
+> HWND x64CreateWindowEx(DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName, DWORD dwStyle, 
+> 					   int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, 
+> 					   HANDLE hInstance, LPVOID lpParam)
+> {
+> 	static int iHasZbid = -1;
+> 
+> 	if (iHasZbid < 0)
+> 	{
+> 		OSVERSIONINFO ovi = {0};
+> 
+> 		ovi.dwOSVersionInfoSize = sizeof(ovi);
+> 		if (GetVersionEx(&ovi))
+> 		{
+> 			switch (ovi.dwMajorVersion)
+> 			{
+> 			default:
+> 			case 5: /* Windows 2000-XP */
+> 				iHasZbid = 0;
+> 				break;
+> 			case 6: /* Windows Vista, 7, 8 */
+> 				switch (ovi.dwMinorVersion)
+> 				{
+> 				case 0: /* Windows Vista */
+> 				case 1: /* Windows 7 */
+> 					iHasZbid = 0;
+> 					break;
+> 				case 2: /* Windows 8.0 */
+> 				case 3: /* Windows 8.1 */
+> 					iHasZbid = 1;
+> 					break;
+> 				}
+> 				break;
+> 			case 10: /* Windows 10 */
+> 				iHasZbid = 1;
+> 				break;
+> 			}
+> 		}
+> 	}
+> 
+> 	if (iHasZbid > 0)
+> 	{
+> 		return (((PFNCSCREATEWINDOWEX10)pfnOut.pfnCsCreateWindowEx))(
+> 			   dwExStyle,
+> 			   lpClassName,
+> 			   lpWindowName,
+> 			   dwStyle,
+> 			   X,
+> 			   Y,
+> 			   nWidth,
+> 			   nHeight,
+> 			   hWndParent,
+> 			   hMenu,
+> 			   hInstance,
+> 			   lpParam,
+> 			   ZBID_DEFAULT,
+> 			   CW_FLAGS_ANSI);
+> 	}
+> 
+> 	return (pfnOut.pfnCsCreateWindowEx)(
+> 		   dwExStyle,
+> 		   lpClassName,
+> 		   lpWindowName,
+> 		   dwStyle,
+> 		   X,
+> 		   Y,
+> 		   nWidth,
+> 		   nHeight,
+> 		   hWndParent,
+> 		   hMenu,
+> 		   hInstance,
+> 		   lpParam,
+>            CW_FLAGS_ANSI);
+> }
+--- NT4\private\mvdm\wow32\wuwind.h
++++ nt\private\mvdm\wow32\wuwind.h
+61a62,65
+> 
+> HWND x64CreateWindowEx(DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName, DWORD dwStyle, 
+> 					   int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, 
+> 					   HANDLE hInstance, LPVOID lpParam);
 --- NT4\private\mvdm\wow32\wow32.h
 +++ nt\private\mvdm\wow32\wow32.h
 19a20
