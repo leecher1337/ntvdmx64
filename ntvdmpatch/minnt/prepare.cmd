@@ -4,10 +4,10 @@ echo Preparing MINNT repository
 echo ----------------------------------------------------
 echo.
 
-if exist "%ProgramFiles%\7-Zip" set PATH=%PATH%;"%ProgramFiles%\7-Zip"
+if exist "%ProgramFiles%\7-Zip" set PATH=%PATH:)=^)%;"%ProgramFiles%\7-Zip"
 7z >nul 2>&1
 if errorlevel 255 (
-for /F "skip=2 tokens=3*" %%r in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\7-zip" /v Path') do echo set PATH=%PATH%;%%r
+for /F "skip=2 tokens=3*" %%r in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\7-zip" /v Path') do echo set PATH=%PATH:)=^)%;%%r
 7z >nul 2>&1
 if errorlevel 255 (
 echo Please install 7zip first, then run again
