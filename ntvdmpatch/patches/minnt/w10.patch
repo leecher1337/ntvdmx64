@@ -1,22 +1,3 @@
---- NT4\private\..\public\internal\windows\inc\conapi.h
-+++ NT4\private\..\public\internal\windows\inc\conapi.h
-134a135,148
-> #ifdef W10
-> BOOL
-> RegisterConsoleVDM(
->     IN BOOL bRegister,
->     IN HANDLE hStartHardwareEvent,
->     IN HANDLE hEndHardwareEvent,
->     IN LPWSTR lpStateSectionName,
->     IN DWORD dwStateSectionNameLength,
->     OUT LPDWORD lpStateLength,
->     OUT PVOID *lpState,
->     COORD VDMBufferSize OPTIONAL,
->     OUT PVOID *lpVDMBuffer
->     );
-> #else
-148a163
-> #endif
 --- NT4\private\mvdm\dos\command\sources.inc
 +++ nt\private\mvdm\dos\command\sources.inc
 43c43
@@ -28,25 +9,23 @@
 240a242,243
 > /* NtGetTickCount() works differently in newer Windows versions than in Win2k */
 > #define NtGetTickCount GetTickCount
---- NT4\private\mvdm\softpc.new\host\src\nt_det.c
-+++ nt\private\mvdm\softpc.new\host\src\nt_det.c
-201a202
-> #ifndef W10
-203a205
-> #endif
-273a276
-> #ifndef W10
-275a279
-> #endif
---- NT4\private\mvdm\softpc.new\host\src\nt_fulsc.c
-+++ nt\private\mvdm\softpc.new\host\src\nt_fulsc.c
-2049a2050
-> #ifndef W10
-2051a2053
-> #endif
 --- NT4\private\..\public\sdk\inc\ntexapi.h 
 +++ nt\private\..\public\sdk\inc\ntexapi.h 
 1316c1316
 < #define MAXIMUM_HARDERROR_PARAMETERS 4
 ---
 > #define MAXIMUM_HARDERROR_PARAMETERS 5
+--- NT4\private\mvdm\softpc.new\host\inc\nt_fulsc.h
++++ nt\private\mvdm\softpc.new\host\inc\nt_fulsc.h
+251a252,255
+> 
+> 
+> #include "nt_w10.h"
+> #define RegisterConsoleVDM (fpRegisterConsoleVDMxp)((GetVersion() & 0xF) <= 5?RegisterConsoleVDM:w7WrapRegisterConsoleVDM)
+--- NT4\private\mvdm\softpc.new\host\src\sources.inc
++++ nt\private\mvdm\softpc.new\host\src\sources.inc
+99c99,100
+<     ..\vdpm.c
+---
+>     ..\vdpm.c          \
+>     ..\nt_w10.c

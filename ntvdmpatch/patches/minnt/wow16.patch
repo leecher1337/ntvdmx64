@@ -1407,7 +1407,6 @@
 > BOOL FAR PASCAL WINNLSSetKeyState( WORD );		/* ;Internal */
 --- NT4\private\mvdm\wow16\makefile
 +++ nt\private\mvdm\wow16\makefile
-diff -r F:\Windows.Source.Code.w2k.nt4.wxp\OpenNT\old-src\nt\private\mvdm\wow16\makefile Z:\minnt\base\mvdm\wow16\makefile
 11a12
 >     copy /y ..\..\..\public\sdk\inc\wownt16.h inc\wownt16.h
 18c19
