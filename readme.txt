@@ -210,6 +210,7 @@ dpmi.exe, but most programs should work, I hope.
 
 Tested on
 =========
+Windows Server 2003 x64
 Windows 7 x64
 Windows 8 x64
 Windows Server 2008 x64

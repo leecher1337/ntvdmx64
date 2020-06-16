@@ -129,11 +129,10 @@ RunDll32 advpack.dll,LaunchINFSection %01%\ntvdmx64-32.Inf
 %10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" setver.exe
 %10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" share.exe
 %10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" vdmdbg.dll
-%10%\Symbols\instntvdmx64.bat install
 RunDll32 advpack.dll,LaunchINFSection %01%\wow32.Inf
+%10%\Symbols\instntvdmx64.bat install
 
 [UninstallCmds]
-RunDll32 advpack.dll,LaunchINFSection %01%\wow32.Inf,DefaultUninstall
 RunDll32 advpack.dll,LaunchINFSection %01%\ntvdmx64-32.Inf,DefaultUninstall
 %10%\Symbols\instntvdmx64.bat uninstall
 

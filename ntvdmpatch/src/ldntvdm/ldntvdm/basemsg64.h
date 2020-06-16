@@ -9,13 +9,7 @@
 #endif
 
 #ifndef DEFINE_BASEMSG32
-#define HANDLE ULONGLONG
-#define LPWSTR ULONGLONG
-#define PCHAR ULONGLONG
-#define LPSTARTUPINFOA ULONGLONG
-#define LPSTR ULONGLONG
-#define LPBYTE ULONGLONG
-#define ULONG_PTR ULONGLONG
+#include "x64typespush.h"
 
 #define BASESRV_API_NUMBER BASESRV_API_NUMBER64
 #define PORT_MESSAGE PORT_MESSAGE64
@@ -34,6 +28,9 @@
 #define BASE_API_MSG BASE_API_MSG64
 #define BASE_SHUTDOWNPARAM_MSG BASE_SHUTDOWNPARAM_MSG64
 #define BASE_EXITPROCESS_MSG BASE_EXITPROCESS_MSG64
+#define BASE_CREATEPROCESS_MSG BASE_CREATEPROCESS_MSG64
+#define BASE_SXS_CREATEPROCESS_MSG BASE_SXS_CREATEPROCESS_MSG64
+#define BASE_SXS_STREAM BASE_SXS_STREAM64
 #define BASE_IS_FIRST_VDM_MSG BASE_IS_FIRST_VDM_MSG64
 #define BASE_SOUNDSENTRY_NOTIFICATION_MSG BASE_SOUNDSENTRY_NOTIFICATION_MSG64
 #define CLIENT_ID CLIENT_ID64
@@ -95,6 +92,8 @@ typedef struct _STARTUPINFOA64 {
 	HANDLE  hStdError;
 } STARTUPINFOA64, *LPSTARTUPINFOA64;
 
+#define CSR_API_NUMBER ULONG
+
 #ifndef CSR_MAKE_API_NUMBER
 #define CSR_MAKE_API_NUMBER( DllIndex, ApiIndex ) \
     (CSR_API_NUMBER)(((DllIndex) << 16) | (ApiIndex))
@@ -110,8 +109,7 @@ typedef struct _STARTUPINFOA64 {
 #pragma pack(8)
 #endif
 
-#define PCSR_CAPTURE_HEADER ULONG_PTR
-#define CSR_API_NUMBER ULONG_PTR
+#define PCSR_CAPTURE_HEADER LPVOID
 
 
 #if !defined(DEFINE_BASEMSG32) || !defined(_WINTERNL_)
@@ -134,27 +132,26 @@ typedef struct {
 			CSHORT DataLength;
 			CSHORT TotalLength;
 		} s1;
-		ULONG Length;					// +04	+04
+		ULONG Length;					// +00	+00
 	} u1;
 	union {
 		struct {
 			CSHORT Type;
 			CSHORT DataInfoOffset;
 		} s2;
-		ULONG ZeroInit;					// +08	+08
+		ULONG ZeroInit;					// +04	+04
 	} u2;
 	union {
 		CLIENT_ID ClientId;
-		double DoNotUseThisField;		// +16	+16
+		double DoNotUseThisField;		// +08  +08
 	};
-	ULONG_PTR MessageId;				// +20	+24
+	ULONG MessageId;					// +10	+18
 	union {
-		ULONG_PTR ClientViewSize;		// +24	+32
-		ULONG_PTR CallbackId;
+		ULONG_PTR ClientViewSize;
+		ULONG     CallbackId;
 	};
-	//  UCHAR Data[];						// +24	+32
-} PORT_MESSAGE;
-
+	//  UCHAR Data[];					// +14  +1C
+} PORT_MESSAGE;							// +18  +24  -> +18  +28 aligned
 #define BASESRV_VERSION 0x10000
 
 typedef struct {
@@ -165,6 +162,47 @@ typedef struct {
 typedef struct {
     UINT uUnique;
 } BASE_GETTEMPFILE_MSG;
+
+typedef struct
+{
+	BYTE byte0;						// + 00  00
+	BYTE byte1;						// + 01  01
+	BYTE byte2;						// + 02  02
+	UNICODE_STRING FileName;		// + 04  08
+	HANDLE FileHandle;				// + 0C  18
+	HANDLE SectionHandle;			// + 10  20
+#if defined(DEFINE_BASEMSG32) && !defined(_WIN64)
+	ULONG unk;
+#endif
+	ULONG64 Offset;					// + 18  28
+	ULONG_PTR Size;					// + 20  30
+#if defined(DEFINE_BASEMSG32) && !defined(_WIN64)
+	ULONG pad;
+#endif
+} BASE_SXS_STREAM;					// + 28  38
+
+typedef struct
+{
+	ULONG Flags;					// + 00  00
+	ULONG ProcessParameterFlags;	// + 04  04
+	BASE_SXS_STREAM ManifestStream;	// + 08  08
+	BASE_SXS_STREAM PolicyStream;	// + 30  40
+	UNICODE_STRING AssemblyName;	// + 58  78
+} BASE_SXS_CREATEPROCESS_MSG;		// + 60  88
+
+typedef struct {
+	HANDLE ProcessHandle;			// + 00  00
+	HANDLE ThreadHandle;			// + 04  08
+	CLIENT_ID ClientId;				// + 08  10
+	ULONG CreationFlags;			// + 10  20
+	ULONG VdmBinaryType;			// + 14  24
+	ULONG VdmTask;					// + 18  28
+	HANDLE hVDM;					// + 1C  30
+	BASE_SXS_CREATEPROCESS_MSG Sxs;	// + 20  38
+	ULONG64 PebAddressNative;       // + 80  C0
+	ULONG_PTR PebAddressWow64;		// + 84  C8
+	USHORT ProcessorArchitecture;	// + 88  D0
+} BASE_CREATEPROCESS_MSG;			// + 90  D8
 
 typedef struct {
     UINT uExitCode;
@@ -199,7 +237,7 @@ typedef struct {
     USHORT CurDirectoryLen;			// + 96  EA
     USHORT CurDrive;				// + 98  EC
     USHORT VDMState;				// + 9A  EE
-	ULONG_PTR Unknown;				// + 9C  F0
+	LUID   *AuthenticationId;		// + 9C  F0
 } BASE_CHECKVDM_MSG;
 
 typedef struct {
@@ -296,17 +334,15 @@ typedef struct {
 } BASE_DEFINEDOSDEVICE_MSG;
 
 typedef struct {
-    PORT_MESSAGE h;
-    PCSR_CAPTURE_HEADER CaptureBuffer;
-    CSR_API_NUMBER ApiNumber;
-#if defined(DEFINE_BASEMSG32) && !defined(_WIN64)
-	BYTE Dummy[16];
-#endif
-    ULONG ReturnValue;
-    ULONG Reserved;
-    union {
+    PORT_MESSAGE64 h;							// 64       32
+	PCSR_CAPTURE_HEADER CaptureBuffer;			// 0x28     0x28
+    CSR_API_NUMBER ApiNumber;					// 0x30     0x2C
+    ULONG ReturnValue;							// 0x34     0x30
+    ULONG Reserved;								// 0x38     0x34
+    union {										// 0x3C     0x38
         BASE_SHUTDOWNPARAM_MSG ShutdownParam;
         BASE_GETTEMPFILE_MSG GetTempFile;
+		BASE_CREATEPROCESS_MSG CreateProcess;
         BASE_EXITPROCESS_MSG ExitProcess;
         BASE_CHECKVDM_MSG CheckVDM;
         BASE_UPDATE_VDM_ENTRY_MSG UpdateVDMEntry;
@@ -343,22 +379,18 @@ typedef struct {
 #undef BASE_SHUTDOWNPARAM_MSG
 #undef BASE_GETTEMPFILE_MSG
 #undef BASE_EXITPROCESS_MSG
+#undef BASE_CREATEPROCESS_MSG
+#undef BASE_SXS_CREATEPROCESS_MSG
+#undef BASE_SXS_STREAM
 #undef BASE_IS_FIRST_VDM_MSG
 #undef BASE_SOUNDSENTRY_NOTIFICATION_MSG
 #undef UNICODE_STRING
 
-#undef HANDLE
-#undef LPWSTR
-#undef PCHAR
-#undef LPSTARTUPINFOA
 #undef UNICODE_STRING
 #undef PCSR_CAPTURE_HEADER
 #undef PORT_MESSAGE
 #undef CLIENT_ID
-#undef CSR_API_NUMBER
-#undef ULONG_PTR
-#undef LPSTR
-#undef LPBYTE
+#include "x64typespop.h"
 #pragma pack()
 #define DEFINE_BASEMSG32
 #include "basemsg64.h"

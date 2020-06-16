@@ -17,11 +17,14 @@
 
 typedef NTSTATUS(NTAPI *pRtlInitUnicodeString)(PUNICODE_STRING, PCWSTR);
 typedef NTSTATUS(NTAPI *pLdrLoadDll)(PWCHAR, ULONG, PUNICODE_STRING, PHANDLE);
+typedef NTSTATUS(NTAPI *pNtTerminateThread)(IN HANDLE ThreadHandle, IN NTSTATUS ExitStatus);
+#define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )   // ntddk wdm ntifs
 
 typedef struct _THREAD_DATA
 {
 	pRtlInitUnicodeString fnRtlInitUnicodeString;
 	pLdrLoadDll fnLdrLoadDll;
+	pNtTerminateThread fnNtTerminateThread;
 	UNICODE_STRING UnicodeString;
 	WCHAR DllName[MAX_PATH];
 	PWCHAR DllPath;
@@ -43,14 +46,22 @@ EXTERN_C NTSTATUS NTAPI RtlCreateUserThread(
 	PHANDLE,
 	CLIENT_ID*);
 
-static HANDLE WINAPI ThreadProc(PTHREAD_DATA data)
+static VOID WINAPI ThreadProc(PTHREAD_DATA data)
 {
 	data->fnRtlInitUnicodeString(&data->UnicodeString, data->DllName);
 	data->fnLdrLoadDll(data->DllPath, data->Flags, &data->UnicodeString, &data->ModuleHandle);
-	if (data->OrigEIP) return data->OrigEIP(data->EIPParams);
+	data->fnNtTerminateThread(NtCurrentThread(), 0);
+}
+
+static HANDLE WINAPI APCProc(PTHREAD_DATA data)
+{
+	data->fnRtlInitUnicodeString(&data->UnicodeString, data->DllName);
+	data->fnLdrLoadDll(data->DllPath, data->Flags, &data->UnicodeString, &data->ModuleHandle);
+	if (data->OrigEIP) return (HANDLE)data->OrigEIP(data->EIPParams);
 	return data->ModuleHandle;
 }
 static DWORD WINAPI dummy() { return 0; }
+static BOOL isProcessInitialized(HANDLE hProcess);
 
 #ifdef METHOD_APC
 
@@ -174,30 +185,30 @@ BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, char *DllName)
 	GetThreadContext(hThread, &ThreadContext);
 	
 #ifdef _WIN64
-	TRACE("Hijacked Thread currently @%016llX, Flags: %016llX", ThreadContext.Rip, ThreadContext.ContextFlags);
+	TRACE("Hijacked Thread currently @%016llX, Flags: %016llX\n", ThreadContext.Rip, ThreadContext.ContextFlags);
 #else
-	TRACE("Hijacked Thread currently @%08X, Flags: %08X", ThreadContext.Eip, ThreadContext.ContextFlags);
+	TRACE("Hijacked Thread currently @%08X, Flags: %08X\n", ThreadContext.Eip, ThreadContext.ContextFlags);
 #endif
 
 	//allocate a remote buffer
 	PBYTE InjData =
 		(PBYTE)VirtualAllocEx(hProc, NULL, sizeof(code) + (strlen(DllName) + 1),
 			MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-	dwLoadLibrary = GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "LoadLibraryA");
+	dwLoadLibrary = (ULONG_PTR)GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "LoadLibraryA");
 	//DWORD dwTestAlert = GetProcAddress(GetModuleHandle(_T("ntdll.dll")), "NtTestAlert");
 #ifdef _WIN64
 	*(ULONG_PTR*)&code[17] = dwLoadLibrary;
-	*(ULONG_PTR*)&code[27] = InjData + sizeof(code);
+	*(ULONG_PTR*)&code[27] = (ULONG_PTR)(InjData + sizeof(code));
 	*(ULONG_PTR*)&code[58] = ThreadContext.Rip;
 #else
 	*(ULONG_PTR*)&code[3] = dwLoadLibrary;
-	*(ULONG_PTR*)&code[8] = InjData + sizeof(code);
+	*(ULONG_PTR*)&code[8] = (ULONG_PTR)(InjData + sizeof(code));
 	*(ULONG_PTR*)&code[17] = ThreadContext.Eip;
 #endif
 
 	//write the tmp buff + dll
 	//Format: [RemoteFunction][DllName][null char]
-	ULONG dwWritten;
+	SIZE_T dwWritten;
 	WriteProcessMemory(hProc, InjData, code, sizeof(code), &dwWritten);
 	WriteProcessMemory(hProc, InjData + sizeof(code), DllName, (strlen(DllName) + 1), &dwWritten);
 
@@ -206,19 +217,20 @@ BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, char *DllName)
 		/* process has not yet been initialized... As hijacking threads is a bit dangerous anyway,
 		 * we back out by queuing an APC instead. NtTestAlert() call in loader should call us just
 		 * in time in this case... */
-		if (QueueUserAPC(dwLoadLibrary, hThread, (ULONG_PTR)InjData + sizeof(code)))
+		if (QueueUserAPC((PAPCFUNC)dwLoadLibrary, hThread, (ULONG_PTR)InjData + sizeof(code)))
 		{
-			TRACE("Queued loader injection via APC @%08X", dwLoadLibrary);
+			TRACE("Queued loader injection via APC @%08X\n", dwLoadLibrary);
 			return TRUE;
 		}
 		else
 		{
-			TRACE("QueueUserAPC failed: %d", GetLastError());
+			TRACE("QueueUserAPC failed: %d\n", GetLastError());
 		}
 	}
 	else
 	{
 		// FIXME: Too dangerous?
+		TRACE("Process already initialized.\n");
 		return FALSE;
 	}
 
@@ -236,6 +248,13 @@ BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, char *DllName)
 
 static BOOL isProcessInitialized(HANDLE hProcess)
 {
+#ifdef TARGET_WINXP
+	/* On Windows XP, we get called at ConnectConsoleInternal, Hijacking would be
+	 * possible, but it's too early, not all imports may have been bound at the time
+	 * when the console client library is loaded.
+	 */
+	return FALSE;
+#endif
 #if defined(USE_LDRINITSTATE) && !defined(TARGET_WIN7) /* Win 7 doesn't have it */
 	static DWORD *pLdrInitState = NULL;
 	DWORD LdrInitState = 3, dwRead;
@@ -261,30 +280,30 @@ static BOOL isProcessInitialized(HANDLE hProcess)
 	}
 	if (!ReadProcessMemory(hProcess, pLdrInitState, &LdrInitState, sizeof(LdrInitState), &dwRead) || dwRead != sizeof(LdrInitState))
 		return TRUE; /* Better assume yes, if we cannot read it */
-	TRACE("LdrInitState = %d", LdrInitState);
+	TRACE("LdrInitState = %d\n", LdrInitState);
 	return LdrInitState >= 3;
 #else
 	PROCESS_BASIC_INFORMATION basicInfo;
 	ULONG Flags;
 	NTSTATUS Status;
-	DWORD dwRead;
+	SIZE_T dwRead;
 
 	if (!NT_SUCCESS(Status = NtQueryInformationProcess(hProcess, ProcessBasicInformation, &basicInfo, sizeof(basicInfo), NULL)))
 	{
-		TRACE("Failed to Query Process basic info: %08X", Status);
+		TRACE("Failed to Query Process basic info: %08X\n", Status);
 		return TRUE;
 	}
 	if (!ReadProcessMemory(hProcess, &(basicInfo.PebBaseAddress->Reserved6), &Flags, sizeof(Flags), &dwRead))
 	{
-		TRACE("Failed to read process memory: %08X", GetLastError());
+		TRACE("Failed to read process memory: %08X\n", GetLastError());
 		return TRUE;
 	}
 	if (dwRead == sizeof(Flags) && (Flags & 2) /* =ProcessInitializing */) 
 	{
-		TRACE("Process is in state Initializing (Flags=%08X)", Flags);
+		TRACE("Process is in state Initializing (Flags=%08X)\n", Flags);
 		return FALSE;
 	}
-	TRACE("Flags = %08X", Flags);
+	TRACE("Flags = %08X\n", Flags);
 	return TRUE;
 #endif
 }
@@ -292,7 +311,7 @@ static BOOL isProcessInitialized(HANDLE hProcess)
 BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR method)
 {
 	THREAD_DATA data;
-	PVOID pData, code;
+	PVOID pData, code, pProc;
 	BOOL bRet = TRUE;
 	ULONG ulSizeOfCode;
 	NTSTATUS Status;
@@ -306,7 +325,7 @@ BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR metho
 		{
 			if (!NT_SUCCESS(Status = NtGetNextThread(hProcess, NULL, THREAD_GET_CONTEXT | THREAD_SET_CONTEXT | THREAD_SUSPEND_RESUME, 0, 0, &hThread)))
 			{
-				TRACE("NtGetNextThread failed: %08X", Status);
+				TRACE("NtGetNextThread failed: %08X\n", Status);
 				return FALSE;
 			}
 		}
@@ -319,7 +338,6 @@ BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR metho
 #if defined(METHOD_MODIFYSTARTUP) || defined (METHOD_CREATETHREAD) || defined(METHOD_APC)
 
 	nt = GetModuleHandleW(L"ntdll.dll");
-	ulSizeOfCode = (LPBYTE)dummy - (LPBYTE)ThreadProc;
 
 	ZeroMemory(&data, sizeof(data));
 	data.fnRtlInitUnicodeString = (pRtlInitUnicodeString)GetProcAddress(nt, "RtlInitUnicodeString");
@@ -345,10 +363,23 @@ BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR metho
 	}
 #endif
 
+	if (method == METHOD_CREATETHREAD)
+	{
+		data.fnNtTerminateThread = (pNtTerminateThread)GetProcAddress(nt, "NtTerminateThread");
+		pProc = ThreadProc;
+		ulSizeOfCode = (ULONG)((LPBYTE)APCProc - (LPBYTE)ThreadProc);
+	}
+	else
+	{
+		pProc = APCProc;
+		ulSizeOfCode = (ULONG)((LPBYTE)dummy - (LPBYTE)APCProc);
+	}
+
+	
 	if (!(pData = VirtualAllocEx(hProcess, NULL, sizeof(data), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE)) ||
 		!(code = VirtualAllocEx(hProcess, NULL, ulSizeOfCode, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)) ||
 		!WriteProcessMemory(hProcess, pData, &data, sizeof(data), NULL) ||
-		!WriteProcessMemory(hProcess, code, (PVOID)ThreadProc, ulSizeOfCode, NULL))
+		!WriteProcessMemory(hProcess, code, (PVOID)pProc, ulSizeOfCode, NULL))
 	{
 		return FALSE;
 	}
@@ -362,13 +393,15 @@ BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR metho
 	case METHOD_CREATETHREAD:
 	{
 		HANDLE hNewThread;
+		CLIENT_ID cid;
 
-		if (bRet = (NT_SUCCESS(Status = RtlCreateUserThread(hProcess, NULL, FALSE, 0, 0, 0, code, pData, &hNewThread, NULL))))
+		if (bRet = (NT_SUCCESS(Status = RtlCreateUserThread(hProcess, NULL, FALSE, 0, 0, 0, code, pData, &hNewThread, &cid))))
 		{
+			TRACE("Created injection thread h=%08x, tid=%d\n", hNewThread, cid.UniqueThread);
 			WaitForSingleObject(hNewThread, INFINITE);
 			CloseHandle(hNewThread);
 		} 
-		TRACE("Status = %08X", Status);
+		TRACE("RtlCreateUserThread Status = %08X\n", Status);
 		VirtualFreeEx(hProcess, pData, 0, MEM_RELEASE);
 		VirtualFreeEx(hProcess, code, 0, MEM_RELEASE);
 		break;

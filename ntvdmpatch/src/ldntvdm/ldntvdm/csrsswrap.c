@@ -15,14 +15,10 @@
 #include "ldntvdm.h"
 #include "basemsg64.h"
 #include "iathook.h"
+#include "csrsswrap.h"
 
 #define STARTUP_INFO_RETURNED    0x200
 
-PVOID NTAPI CsrAllocateCaptureBuffer(ULONG ArgumentCount, ULONG BufferSize);
-VOID NTAPI CsrFreeCaptureBuffer(struct _CSR_CAPTURE_BUFFER *CaptureBuffer);
-ULONG NTAPI CsrAllocateMessagePointer(struct _CSR_CAPTURE_BUFFER *CaptureBuffer, ULONG MessageLength, PVOID *CaptureData);
-NTSTATUS NTAPI CsrClientCallServer(struct _CSR_API_MESSAGE *Request, struct _CSR_CAPTURE_BUFFER *CaptureBuffer OPTIONAL,
-	ULONG ApiNumber, ULONG RequestLength);
 typedef NTSTATUS (NTAPI *fpCsrClientCallServer)(struct _CSR_API_MESSAGE *Request, struct _CSR_CAPTURE_BUFFER *CaptureBuffer OPTIONAL,
 	ULONG ApiNumber, ULONG RequestLength);
 fpCsrClientCallServer CsrClientCallServerReal = CsrClientCallServer;
@@ -42,11 +38,11 @@ NTSTATUS CallBaseUpdateVDMEntry(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 	b->WaitObjectForParent = (ULONGLONG)b32->WaitObjectForParent;
 	b->EntryIndex = b32->EntryIndex;
 	b->VDMCreationState = b32->VDMCreationState;
-
+		
 	Status = CsrClientCallServer((struct _CSR_API_MESSAGE*)&m, NULL, ApiNumber, sizeof(*b));
-	TRACE("BaseUpdateVDMEntry(%d) = %08X", ApiNumber, Status);
+	TRACE("BaseUpdateVDMEntry(%d) = %08X, WaitObject = %08X\n", ApiNumber, Status, b->WaitObjectForParent);
 	m32->ReturnValue = m.ReturnValue;
-	b32->WaitObjectForParent = b->WaitObjectForParent;
+	b32->WaitObjectForParent = (HANDLE)b->WaitObjectForParent;
 
 	return Status;
 }
@@ -59,7 +55,7 @@ NTSTATUS CallBaseIsFirstVDM(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 	NTSTATUS Status;
 
 	Status = CsrClientCallServer((struct _CSR_API_MESSAGE*)&m, NULL, ApiNumber, sizeof(*b));
-	TRACE("BaseIsFirstVDM(%d) = %08X", ApiNumber, Status);
+	TRACE("BaseIsFirstVDM(%d) = %08X\n", ApiNumber, Status);
 	b32->FirstVDM = b->FirstVDM;
 	m32->ReturnValue = m.ReturnValue;
 
@@ -74,10 +70,10 @@ NTSTATUS CallBaseSetReenterCount(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 	BASE_SET_REENTER_COUNT_MSG *b32 = (BASE_SET_REENTER_COUNT_MSG*)&m32->u.SetReenterCount;
 	NTSTATUS Status;
 
-	b->ConsoleHandle = b32->ConsoleHandle;
+	b->ConsoleHandle = (ULONGLONG)b32->ConsoleHandle;
 	b->fIncDec = b32->fIncDec;
 	Status = CsrClientCallServer((struct _CSR_API_MESSAGE*)&m, NULL, ApiNumber, sizeof(*b));
-	TRACE("BaseSetReenterCount(%d) = %08X", ApiNumber, Status);
+	TRACE("BaseSetReenterCount(%d) = %08X\n", ApiNumber, Status);
 	m32->ReturnValue = m.ReturnValue;
 
 	return Status;
@@ -90,10 +86,10 @@ NTSTATUS CallBaseGetVDMExitCode(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 	BASE_GET_VDM_EXIT_CODE_MSG *b32 = (BASE_GET_VDM_EXIT_CODE_MSG*)&m32->u.GetVDMExitCode;
 	NTSTATUS Status;
 
-	b->ConsoleHandle = b32->ConsoleHandle;
-	b->hParent = b32->hParent;
+	b->ConsoleHandle = (ULONGLONG)b32->ConsoleHandle;
+	b->hParent = (ULONGLONG)b32->hParent;
 	Status = CsrClientCallServer((struct _CSR_API_MESSAGE*)&m, NULL, ApiNumber, sizeof(*b));
-	TRACE("BaseGetVDMExitCode(%d) = %08X", ApiNumber, Status);
+	TRACE("BaseGetVDMExitCode(%d) = %08X\n", ApiNumber, Status);
 	m32->ReturnValue = m.ReturnValue;
 	b32->ExitCode = b->ExitCode;
 
@@ -110,8 +106,8 @@ NTSTATUS CallBaseExitVDM(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 	b->ConsoleHandle = (ULONGLONG)b32->ConsoleHandle;
 	b->iWowTask = b32->iWowTask;
 	Status = CsrClientCallServer((struct _CSR_API_MESSAGE*)&m, NULL, ApiNumber, sizeof(*b));
-	TRACE("BaseExitVDM(%d) = %08X", ApiNumber, Status);
-	b32->WaitObjectForVDM = (ULONGLONG)b->WaitObjectForVDM;
+	TRACE("BaseExitVDM(%d) = %08X\n", ApiNumber, Status);
+	b32->WaitObjectForVDM = (HANDLE)b->WaitObjectForVDM;
 	m32->ReturnValue = m.ReturnValue;
 
 	return Status;
@@ -127,7 +123,7 @@ NTSTATUS CallBasepBatNotification(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 	b->ConsoleHandle = (ULONGLONG)b32->ConsoleHandle;
 	b->fBeginEnd = b32->fBeginEnd;
 	Status = CsrClientCallServer((struct _CSR_API_MESSAGE*)&m, NULL, ApiNumber, sizeof(*b));
-	TRACE("BasepBatNotification(%d) = %08X", ApiNumber, Status);
+	TRACE("BasepBatNotification(%d) = %08X\n", ApiNumber, Status);
 	m32->ReturnValue = m.ReturnValue;
 
 	return Status;
@@ -144,25 +140,25 @@ NTSTATUS CallBaseGetSetVDMCurDirs(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber, B
 
 	if (b32->cchCurDirs && b32->lpszzCurDirs)
 	{
-		if (!(CaptureBuffer = (ULONG_PTR)CsrAllocateCaptureBuffer(1, b32->cchCurDirs)))
+		if (!(CaptureBuffer = CsrAllocateCaptureBuffer(1, b32->cchCurDirs)))
 		{
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return STATUS_NO_MEMORY;
 		}
 		CsrAllocateMessagePointer(CaptureBuffer, ROUND_UP(b32->cchCurDirs, 8), (PVOID *)&b->lpszzCurDirs);
-		if (!bGet) RtlMoveMemory(b->lpszzCurDirs, b32->lpszzCurDirs, b32->cchCurDirs);
+		if (!bGet) RtlMoveMemory((PVOID)b->lpszzCurDirs, b32->lpszzCurDirs, b32->cchCurDirs);
 	}
-	else b->lpszzCurDirs = b32->lpszzCurDirs;
+	else b->lpszzCurDirs = (ULONGLONG) b32->lpszzCurDirs;
 	b->ConsoleHandle = (ULONGLONG)b32->ConsoleHandle;
 	b->cchCurDirs = b32->cchCurDirs;
 
 	Status = CsrClientCallServer((struct _CSR_API_MESSAGE*)&m, CaptureBuffer, ApiNumber, sizeof(*b));
-	TRACE("CallBase%sVDMCurDirs(%08X) = %08X", bGet?"Get":"Set", b32->ConsoleHandle, Status);
+	TRACE("CallBase%sVDMCurDirs(%08X) = %08X\n", bGet?"Get":"Set", b32->ConsoleHandle, Status);
 
 	m32->ReturnValue = m.ReturnValue;
 	if (bGet && b->lpszzCurDirs)
 	{
-		RtlMoveMemory(b32->lpszzCurDirs, b->lpszzCurDirs, b->cchCurDirs);
+		RtlMoveMemory(b32->lpszzCurDirs, (PVOID)b->lpszzCurDirs, b->cchCurDirs);
 		b32->cchCurDirs = b->cchCurDirs;
 	}
 	if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
@@ -179,7 +175,7 @@ NTSTATUS CallBaseRegisterWowExec(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 	b->hwndWowExec = (ULONGLONG)b32->hwndWowExec;
 	b->ConsoleHandle = (ULONGLONG)b32->ConsoleHandle;
 	Status = CsrClientCallServer((struct _CSR_API_MESSAGE*)&m, NULL, ApiNumber, sizeof(*b));
-	TRACE("BaseRegisterWowExex(%d) = %08X", ApiNumber, Status);
+	TRACE("BaseRegisterWowExex(%d) = %08X\n", ApiNumber, Status);
 	m32->ReturnValue = m.ReturnValue;
 
 	return Status;
@@ -238,33 +234,33 @@ NTSTATUS CallBaseCheckVDM(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 		Len += ROUND_UP(b32->ReservedLen, 8);
 		bufPointers++;
 	}
-	if (!(CaptureBuffer = (ULONG_PTR)CsrAllocateCaptureBuffer(bufPointers, Len)))
+	if (!(CaptureBuffer = CsrAllocateCaptureBuffer(bufPointers, Len)))
 	{
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return STATUS_NO_MEMORY;
 	}
 	CsrAllocateMessagePointer(CaptureBuffer, ROUND_UP(b32->CmdLen, 8), (PVOID *)&b->CmdLine);
 	b->CmdLen = b32->CmdLen;
-	RtlMoveMemory(b->CmdLine, b32->CmdLine, b32->CmdLen);
+	RtlMoveMemory((PVOID)b->CmdLine, b32->CmdLine, b32->CmdLen);
 	CsrAllocateMessagePointer(CaptureBuffer, ROUND_UP(b32->AppLen, 8), (PVOID *)&b->AppName);
 	b->AppLen = b32->AppLen;
-	RtlMoveMemory(b->AppName, b32->AppName, b32->AppLen);
+	RtlMoveMemory((PVOID)b->AppName, b32->AppName, b32->AppLen);
 	if (b32->PifFile)
 	{
 		CsrAllocateMessagePointer(CaptureBuffer, ROUND_UP(b32->PifLen, 8), (PVOID *)&b->PifFile);
-		RtlMoveMemory(b->PifFile, b32->PifFile, b32->PifLen - 1);
+		RtlMoveMemory((PVOID)b->PifFile, b32->PifFile, b32->PifLen - 1);
 		b->PifLen = b32->PifLen;
 	}
 	if (b32->Env)
 	{
 		CsrAllocateMessagePointer(CaptureBuffer, ROUND_UP(b32->EnvLen, 8), (PVOID *)&b->Env);
-		RtlMoveMemory(b->Env, b32->Env, b32->EnvLen);
+		RtlMoveMemory((PVOID)b->Env, b32->Env, b32->EnvLen);
 		b->EnvLen = b32->EnvLen;
 	}
 	if (b32->CurDirectory)
 	{
 		CsrAllocateMessagePointer(CaptureBuffer, ROUND_UP(b32->CurDirectoryLen, 8), (PVOID *)&b->CurDirectory);
-		RtlMoveMemory(b->CurDirectory, b32->CurDirectory, b32->CurDirectoryLen);
+		RtlMoveMemory((PVOID)b->CurDirectory, b32->CurDirectory, b32->CurDirectoryLen);
 		b->CurDirectoryLen = b32->CurDirectoryLen;
 	}
 	if (b32->StartupInfo)
@@ -272,7 +268,7 @@ NTSTATUS CallBaseCheckVDM(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 		LPSTARTUPINFOA lpStartupInfo = b32->StartupInfo;
 		LPSTARTUPINFOA64 lpStartupInfo64;
 		CsrAllocateMessagePointer(CaptureBuffer, ROUND_UP(sizeof(STARTUPINFOA64), 8), (PVOID *)&b->StartupInfo);
-		lpStartupInfo64 = b->StartupInfo;
+		lpStartupInfo64 = (LPSTARTUPINFOA64)b->StartupInfo;
 		lpStartupInfo64->dwX = lpStartupInfo->dwX;
 		lpStartupInfo64->dwY = lpStartupInfo->dwY;
 		lpStartupInfo64->dwXSize = lpStartupInfo->dwXSize;
@@ -287,36 +283,36 @@ NTSTATUS CallBaseCheckVDM(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 	if (b32->Desktop)
 	{
 		CsrAllocateMessagePointer(CaptureBuffer, ROUND_UP(b32->DesktopLen, 8), (PVOID *)&b->Desktop);
-		RtlMoveMemory(b->Desktop, b32->Desktop, b32->DesktopLen);
+		RtlMoveMemory((PVOID)b->Desktop, b32->Desktop, b32->DesktopLen);
 		b->DesktopLen = b32->DesktopLen;
 	}
 	if (b32->Title)
 	{
 		CsrAllocateMessagePointer(CaptureBuffer, ROUND_UP(b32->TitleLen, 8), (PVOID *)&b->Title);
-		RtlMoveMemory(b->Title, b32->Title, b32->TitleLen);
+		RtlMoveMemory((PVOID)b->Title, b32->Title, b32->TitleLen);
 		b->TitleLen = b32->TitleLen;
 	}
 	if (b32->Reserved)
 	{
 		CsrAllocateMessagePointer(CaptureBuffer, ROUND_UP(b32->ReservedLen, 8), (PVOID *)&b->Reserved);
-		RtlMoveMemory(b->Reserved, b32->Reserved, b32->ReservedLen);
+		RtlMoveMemory((PVOID)b->Reserved, b32->Reserved, b32->ReservedLen);
 		b->ReservedLen = b32->ReservedLen;
 	}
-	b->ConsoleHandle = b32->ConsoleHandle;
+	b->ConsoleHandle = (ULONGLONG)b32->ConsoleHandle;
 	b->VDMState = b32->VDMState;
 	b->BinaryType = b32->BinaryType;
 	b->CodePage = b32->CodePage;
 	b->dwCreationFlags = b32->dwCreationFlags;
 	b->iTask = b32->iTask;
 
-	TRACE("BaseCheckVDM: ConsoleHandle=%08X, iTask=%08X", b32->ConsoleHandle, b32->iTask);
-	Status = CsrClientCallServer(&m, CaptureBuffer, ApiNumber, sizeof(*b));
-	TRACE("BaseCheckVDM(%d) = %08X", ApiNumber, Status);
+	TRACE("BaseCheckVDM: ConsoleHandle=%08X, iTask=%08X\n", b32->ConsoleHandle, b32->iTask);
+	Status = CsrClientCallServer((struct _CSR_API_MESSAGE*)&m, CaptureBuffer, ApiNumber, sizeof(*b));
+	TRACE("BaseCheckVDM(%d) = %08X, WaitObject=%08X\n", ApiNumber, Status, b->WaitObjectForParent);
 
 	m32->ReturnValue = m.ReturnValue;
-	b32->iTask = b->iTask;
+	b32->iTask = (ULONG_PTR)b->iTask;
 	b32->VDMState = b->VDMState;
-	b32->WaitObjectForParent = b->WaitObjectForParent;
+	b32->WaitObjectForParent = (HANDLE)b->WaitObjectForParent;
 
 	CsrFreeCaptureBuffer(CaptureBuffer);
 
@@ -385,7 +381,7 @@ NTSTATUS CallBaseGetNextVDMCommand(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 		Len += ROUND_UP(b32->ReservedLen, 8);
 		bufPointers++;
 	}
-	if (!(CaptureBuffer = (ULONG_PTR)CsrAllocateCaptureBuffer(bufPointers, Len)))
+	if (!(CaptureBuffer = CsrAllocateCaptureBuffer(bufPointers, Len)))
 	{
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return STATUS_NO_MEMORY;
@@ -397,19 +393,19 @@ NTSTATUS CallBaseGetNextVDMCommand(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 	if (b32->PifFile)
 	{
 		CsrAllocateMessagePointer(CaptureBuffer, ROUND_UP(b32->PifLen, 8), (PVOID *)&b->PifFile);
-		RtlMoveMemory(b->PifFile, b32->PifFile, b32->PifLen - 1);
+		RtlMoveMemory((PVOID)b->PifFile, b32->PifFile, b32->PifLen - 1);
 		b->PifLen = b32->PifLen;
 	}
 	if (b32->Env)
 	{
 		CsrAllocateMessagePointer(CaptureBuffer, ROUND_UP(b32->EnvLen, 8), (PVOID *)&b->Env);
-		RtlMoveMemory(b->Env, b32->Env, b32->EnvLen);
+		RtlMoveMemory((PVOID)b->Env, b32->Env, b32->EnvLen);
 		b->EnvLen = b32->EnvLen;
 	}
 	if (b32->CurDirectory)
 	{
 		CsrAllocateMessagePointer(CaptureBuffer, ROUND_UP(b32->CurDirectoryLen, 8), (PVOID *)&b->CurDirectory);
-		RtlMoveMemory(b->CurDirectory, b32->CurDirectory, b32->CurDirectoryLen);
+		RtlMoveMemory((PVOID)b->CurDirectory, b32->CurDirectory, b32->CurDirectoryLen);
 		b->CurDirectoryLen = b32->CurDirectoryLen;
 	}
 	if (b32->StartupInfo)
@@ -419,25 +415,25 @@ NTSTATUS CallBaseGetNextVDMCommand(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 	if (b32->Desktop)
 	{
 		CsrAllocateMessagePointer(CaptureBuffer, ROUND_UP(b32->DesktopLen, 8), (PVOID *)&b->Desktop);
-		RtlMoveMemory(b->Desktop, b32->Desktop, b32->DesktopLen);
+		RtlMoveMemory((PVOID)b->Desktop, b32->Desktop, b32->DesktopLen);
 		b->DesktopLen = b32->DesktopLen;
 	}
 	if (b32->Title)
 	{
 		CsrAllocateMessagePointer(CaptureBuffer, ROUND_UP(b32->TitleLen, 8), (PVOID *)&b->Title);
-		RtlMoveMemory(b->Title, b32->Title, b32->TitleLen);
+		RtlMoveMemory((PVOID)b->Title, b32->Title, b32->TitleLen);
 		b->TitleLen = b32->TitleLen;
 	}
 	if (b32->Reserved)
 	{
 		CsrAllocateMessagePointer(CaptureBuffer, ROUND_UP(b32->ReservedLen, 8), (PVOID *)&b->Reserved);
-		RtlMoveMemory(b->Reserved, b32->Reserved, b32->ReservedLen);
+		RtlMoveMemory((PVOID)b->Reserved, b32->Reserved, b32->ReservedLen);
 		b->ReservedLen = b32->ReservedLen;
 	}
 
-	TRACE("BaseGetNextVDMCommand: ConsoleHandle=%08X, iTask=%08X", b32->ConsoleHandle, b32->iTask);
-	Status = CsrClientCallServer(&m, CaptureBuffer, ApiNumber, sizeof(*b));
-	TRACE("BaseGetNextVDMCommand(%d) = %08X", ApiNumber, Status);
+	TRACE("BaseGetNextVDMCommand: ConsoleHandle=%08X, iTask=%08X\n", b32->ConsoleHandle, b32->iTask);
+	Status = CsrClientCallServer((struct _CSR_API_MESSAGE*)&m, CaptureBuffer, ApiNumber, sizeof(*b));
+	TRACE("BaseGetNextVDMCommand(%d) = %08X\n", ApiNumber, Status);
 
 	m32->ReturnValue = m.ReturnValue;
 	if (b->VDMState & STARTUP_INFO_RETURNED)
@@ -445,9 +441,9 @@ NTSTATUS CallBaseGetNextVDMCommand(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 		LPSTARTUPINFOA64 lpsi = (LPSTARTUPINFOA64)b->StartupInfo;
 
 		b32->StartupInfo->cb = sizeof(STARTUPINFOA);
-		b32->StartupInfo->lpReserved = lpsi->lpReserved;
-		b32->StartupInfo->lpDesktop = lpsi->lpDesktop;
-		b32->StartupInfo->lpTitle = lpsi->lpTitle;
+		b32->StartupInfo->lpReserved = (LPSTR)lpsi->lpReserved;
+		b32->StartupInfo->lpDesktop = (LPSTR)lpsi->lpDesktop;
+		b32->StartupInfo->lpTitle = (LPSTR)lpsi->lpTitle;
 		b32->StartupInfo->dwX = lpsi->dwX;
 		b32->StartupInfo->dwY = lpsi->dwY;
 		b32->StartupInfo->dwXSize = lpsi->dwXSize;
@@ -458,39 +454,39 @@ NTSTATUS CallBaseGetNextVDMCommand(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 		b32->StartupInfo->dwFlags = lpsi->dwFlags;
 		b32->StartupInfo->wShowWindow = lpsi->wShowWindow;
 		b32->StartupInfo->cbReserved2 = lpsi->cbReserved2;
-		b32->StartupInfo->lpReserved2 = lpsi->lpReserved2;
-		b32->StartupInfo->hStdInput = lpsi->hStdInput;
-		b32->StartupInfo->hStdOutput = lpsi->hStdOutput;
-		b32->StartupInfo->hStdError = lpsi->hStdError;
+		b32->StartupInfo->lpReserved2 = (LPBYTE)lpsi->lpReserved2;
+		b32->StartupInfo->hStdInput = (HANDLE)lpsi->hStdInput;
+		b32->StartupInfo->hStdOutput = (HANDLE)lpsi->hStdOutput;
+		b32->StartupInfo->hStdError = (HANDLE)lpsi->hStdError;
 	}
 
 	if (NT_SUCCESS(Status))
 	{
-		if (b32->CmdLen) RtlMoveMemory(b32->CmdLine, b->CmdLine, b->CmdLen);
-		if (b32->AppLen) RtlMoveMemory(b32->AppName, b->AppName, b->AppLen);
-		if (b32->PifLen) RtlMoveMemory(b32->PifFile, b->PifFile, b->PifLen);
-		if (b32->EnvLen) RtlMoveMemory(b32->Env, b->Env, b->EnvLen);
-		if (b32->CurDirectoryLen) RtlMoveMemory(b32->CurDirectory, b->CurDirectory, b->CurDirectoryLen);
-		if (b32->DesktopLen) RtlMoveMemory(b32->Desktop, b->Desktop, b->DesktopLen);
-		if (b32->TitleLen) RtlMoveMemory(b32->Title, b->Title, b->TitleLen);
-		if (b32->ReservedLen) RtlMoveMemory(b32->Reserved, b->Reserved, b->ReservedLen);
+		if (b32->CmdLen) RtlMoveMemory(b32->CmdLine, (const void*)b->CmdLine, b->CmdLen);
+		if (b32->AppLen) RtlMoveMemory(b32->AppName, (const void*)b->AppName, b->AppLen);
+		if (b32->PifLen) RtlMoveMemory(b32->PifFile, (const void*)b->PifFile, b->PifLen);
+		if (b32->EnvLen) RtlMoveMemory(b32->Env, (const void*)b->Env, (SIZE_T)b->EnvLen);
+		if (b32->CurDirectoryLen) RtlMoveMemory(b32->CurDirectory, (const void*)b->CurDirectory, b->CurDirectoryLen);
+		if (b32->DesktopLen) RtlMoveMemory(b32->Desktop, (const void*)b->Desktop, (SIZE_T)b->DesktopLen);
+		if (b32->TitleLen) RtlMoveMemory(b32->Title, (const void*)b->Title, (SIZE_T)b->TitleLen);
+		if (b32->ReservedLen) RtlMoveMemory(b32->Reserved, (const void*)b->Reserved, b->ReservedLen);
 	}
 
 	b32->CmdLen = b->CmdLen;
 	b32->AppLen = b->AppLen;
 	b32->PifLen = b->PifLen;
-	b32->EnvLen = b->EnvLen;
+	b32->EnvLen = (ULONG_PTR)b->EnvLen;
 	b32->CurDirectoryLen = b->CurDirectoryLen;
-	b32->DesktopLen = b->DesktopLen;
-	b32->TitleLen = b->TitleLen;
+	b32->DesktopLen = (ULONG_PTR)b->DesktopLen;
+	b32->TitleLen = (ULONG_PTR)b->TitleLen;
 	b32->ReservedLen = b->ReservedLen;
 
-	b32->iTask = b->iTask;
-	b32->ConsoleHandle = b->ConsoleHandle;
-	b32->WaitObjectForVDM = b->WaitObjectForVDM;
-	b32->StdIn = b->StdIn;
-	b32->StdOut = b->StdOut;
-	b32->StdErr = b->StdErr;
+	b32->iTask = (ULONG_PTR)b->iTask;
+	b32->ConsoleHandle = (HANDLE)b->ConsoleHandle;
+	b32->WaitObjectForVDM = (HANDLE)b->WaitObjectForVDM;
+	b32->StdIn = (HANDLE)b->StdIn;
+	b32->StdOut = (HANDLE)b->StdOut;
+	b32->StdErr = (HANDLE)b->StdErr;
 	b32->CodePage = b->CodePage;
 	b32->dwCreationFlags = b->dwCreationFlags;
 	b32->ExitCode = b->ExitCode;
@@ -506,7 +502,6 @@ NTSTATUS CallBaseGetNextVDMCommand(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 
 NTSTATUS NTAPI myCsrClientCallServer(BASE_API_MSG *m, PCSR_CAPTURE_HEADER CaptureHeader, CSR_API_NUMBER ApiNumber, ULONG ArgLength)
 {
-	char szMsg[256];
 	NTSTATUS Status;
 
 	if (m && CSR_APINUMBER_TO_SERVERDLLINDEX(ApiNumber) == BASESRV_SERVERDLL_INDEX)
@@ -537,8 +532,8 @@ NTSTATUS NTAPI myCsrClientCallServer(BASE_API_MSG *m, PCSR_CAPTURE_HEADER Captur
 			return CallBasepBatNotification(m, ApiNumber);
 		}
 	}
-	Status = CsrClientCallServerReal(m, CaptureHeader, ApiNumber, ArgLength);
-	TRACE("Unpatched CSR call %d returns %08X", CSR_APINUMBER_TO_APITABLEINDEX(ApiNumber), Status);
+	Status = CsrClientCallServerReal((struct _CSR_API_MESSAGE*)m, CaptureHeader, ApiNumber, ArgLength);
+	TRACE("Unpatched CSR call %d returns %08X\n", CSR_APINUMBER_TO_APITABLEINDEX(ApiNumber), Status);
 	return Status;
 }
 
@@ -552,15 +547,15 @@ ULONG NTAPI myCsrAllocateMessagePointer(struct _CSR_CAPTURE_BUFFER *CaptureBuffe
 	ULONGLONG CapturePtr;
 	ULONG Status;
 
-	Status = CsrAllocateMessagePointer(CaptureBuffer, MessageLength, &CapturePtr);
+	Status = CsrAllocateMessagePointer(CaptureBuffer, MessageLength, (PVOID*)&CapturePtr);
 	*((ULONG*)CaptureData) = (ULONG)CapturePtr;
 	return Status;
 }
 
 void HookCsrClientCallServer()
 {
-	Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(_T("kernel32.dll")), "ntdll.dll", "CsrClientCallServer", myCsrClientCallServer, &CsrClientCallServerReal);
-	Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(_T("kernel32.dll")), "ntdll.dll", "CsrAllocateMessagePointer", myCsrAllocateMessagePointer, NULL);
+	Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(_T("kernel32.dll")), "ntdll.dll", "CsrClientCallServer", myCsrClientCallServer, (PULONG_PTR)&CsrClientCallServerReal);
+	Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(_T("kernel32.dll")), "ntdll.dll", "CsrAllocateMessagePointer", myCsrAllocateMessagePointer, 0);
 }
 
-#endif
+#endif /* _WIN64 */

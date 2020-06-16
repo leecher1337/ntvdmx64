@@ -44,6 +44,11 @@ for /F "skip=2 tokens=3" %%r in ('reg query HKLM\SYSTEM\CurrentControlSet\Contro
 )
 
 for /f "tokens=4-5 delims=[.XP " %%i in ('ver') do set VERSION=%%i.%%j
+if "%version%"=="5.1" goto ossupp
+if "%version%"=="5.2" (
+  set VERSION=5.1
+  goto ossupp
+)
 if "%version%"=="6.1" goto ossupp
 if "%version%"=="6.2" goto ossupp
 if "%version%"=="6.3" goto usew10
@@ -94,10 +99,13 @@ for /F "skip=2 tokens=2*" %%r in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\WOW643
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs /f /d "%AppInit%"
 set AppInit=
 
+if exist %windir%\inf\wow32.inf RunDll32 advpack.dll,LaunchINFSection %windir%\inf\wow32.inf,DefaultUninstall
 if exist %windir%\inf\ntvdmx64-haxm.inf RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultUninstall 132 %windir%\inf\ntvdmx64-haxm.inf
 goto fini
 
 :instwow
+rem Windows XP SFP 
+for %%I in (gdi.exe user.exe wow32.dll wowexec.exe comm.drv keyboard.drv lanman.drv mouse.drv sound.drv system.drv timer.drv vga.drv wfwnet.drv) do util\wfpreplace %2\%%I
 md %3
 takeown /f %2\wow32.dll
 cacls %2\wow32.dll /e /p %USERNAME%:F

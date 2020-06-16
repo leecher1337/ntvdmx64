@@ -1,17 +1,29 @@
 #pragma once
 #define WIN32_LEAN_AND_MEAN
+#define _CRT_SECURE_NO_WARNINGS
 #include <Windows.h>
 #include "Winternl.h"
 #include <tchar.h>
 
 #define LDNTVDM_NAME _T("ldntvdm.dll")
 
-// If set (i.e. via project workspace settings), this is Windows 7/Server 2008 version, if not set, it's Win10 version
-//#define TARGET_WIN7	
+/* Possible tagets:
+	TARGET_WINXP	- Windows XP / Server 2003
+	TARGET_WIN7		- Windows 7 / Server 2008
+	TARGET_WIN80	- Windows 8 / Server 2012
+
+	Default is TARGET_WIN10, which is set when none of these are set
+ */
+
+#if !defined(TARGET_WINXP) && !defined(TARGET_WIN7) && !defined(TARGET_WIN80)
+#define TARGET_WIN10	// Default
+#endif
 
 // If set, we place some hooks for PrivateExtractIconsW so that 16bit icon support gets enabled again
 // which was disabled starting with Windows 7
+#ifndef TARGET_WINXP
 #define EXTRACTICON_HOOK
+#endif
 
 // If set, we also service 16bit Windows applications via WOW32
 #define WOW16_SUPPORT
@@ -40,6 +52,22 @@
 //#define CREATEPROCESS_HOOK
 #endif
 
+/* In Windows XP And Windows 7, all the stuff is internal in kernel32.dll :(
+ * But we cannot use the symbol loader in the module loading routine, so
+ * a symbol cache in the registry needs to be built that can get accessed 
+ * during module load
+ */
+#if defined(TARGET_WIN7)
+#define USE_SYMCACHE
+#endif
+
+/* In Windows XP, all the BaseVDM functions are not linked into the kernel32.dll,
+ * therefore we need to reimplement them all :( 
+ */
+#ifdef TARGET_WINXP
+#define NEED_BASEVDM
+#endif
+
 #ifdef TRACING
 static char szDbgBuf[2048];
 typedef int (*fpsprintf)(char * str, const char * format, ...);
@@ -55,6 +83,19 @@ typedef int (__cdecl *fp_wcsicmp)(PWCHAR str, PWCHAR str2);
 extern fp_stricmp __stricmp;
 extern fp_wcsicmp __wcsicmp;
 extern fpstrcmp _strcmp;
+#ifdef NEED_BASEVDM
+typedef wchar_t * (__cdecl *fpwcsncpy)(wchar_t *strDest, const wchar_t *strSource, size_t count);
+typedef int(__cdecl *fp_wcsnicmp)(const wchar_t *string1, const wchar_t *string2, size_t count);
+typedef wchar_t * (__cdecl *fpwcsrchr)(const wchar_t *str, wchar_t c);
+typedef int (__cdecl *fpswprintf)(wchar_t *buffer, const wchar_t *format, ...);
+typedef char *(__cdecl *fpstrstr)(const char *str, const char *strSearch);
+extern fpwcsncpy _wcsncpy;
+extern fp_wcsnicmp __wcsnicmp;
+extern fpwcsrchr _wcsrchr;
+extern fpswprintf __swprintf;
+extern fpstrstr _strstr;
+#endif
+
 
 
 /* This is the simplest method of entering the NTVDM.
@@ -80,6 +121,13 @@ NtGetNextThread(
 	_In_ ULONG Flags,
 	_Out_ PHANDLE NewThreadHandle
 	);
+
+#ifdef _WIN64
+#define BASEP_CALL __fastcall
+#else
+#define BASEP_CALL WINAPI
+#endif
+
 
 #ifdef CRYPT_LDR
 #pragma section(".code",execute, read, write)

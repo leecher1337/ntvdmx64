@@ -1,6 +1,12 @@
 #ifdef _WIN64
 #include "ldntvdm.h"
 
+#ifdef TARGET_WINXP
+#include "xpwrap.h"
+#define WOW64_CS32   0x23
+#define WOW64_TLS_CPURESERVED               1   // per-thread data for the CPU simulator
+#endif
+
 typedef struct _PEB32
 {
 	UCHAR				InheritedAddressSpace;				// 0
@@ -84,6 +90,13 @@ typedef struct
 
 BOOL isProcessInitialized(HANDLE hProcess)
 {
+#ifdef TARGET_WINXP
+	/* On Windows XP, we get called at ConnectConsoleInternal, Hijacking would be
+	* possible, but it's too early, not all imports may have been bound at the time
+	* when the console client library is loaded.
+	*/
+	return FALSE;
+#else
 	PEB32 *pWow64PEB, Wow64PEB;
 	NTSTATUS Status;
 
@@ -93,8 +106,9 @@ BOOL isProcessInitialized(HANDLE hProcess)
 		/* get the address of the PE Loader data */
 		!ReadProcessMemory(hProcess, pWow64PEB, &Wow64PEB, sizeof(Wow64PEB), NULL))
 		return TRUE;	// Better lie...
-	TRACE("ProcessInitializing = %d", Wow64PEB.ProcessInitializing);
+	TRACE("ProcessInitializing = %d\n", Wow64PEB.ProcessInitializing);
 	return !Wow64PEB.ProcessInitializing;
+#endif
 }
 
 void FreeLibrary32(HANDLE hModule)
@@ -166,7 +180,7 @@ static DWORD GetProcAddress32(HANDLE hModule, char *lpProcName)
 	return 0;
 }
 
-HANDLE GetModuleHandle32(HANDLE ProcessHandle, LPWSTR lpDllName)
+HANDLE GetRemoteModuleHandle32(HANDLE ProcessHandle, LPWSTR lpDllName)
 {
 	PEB32 *pWow64PEB, Wow64PEB;
 	NTSTATUS Status;
@@ -178,8 +192,8 @@ HANDLE GetModuleHandle32(HANDLE ProcessHandle, LPWSTR lpDllName)
 	if (!NT_SUCCESS(Status = NtQueryInformationProcess(ProcessHandle, ProcessWow64Information, &pWow64PEB,
 		sizeof(pWow64PEB), NULL)) ||
 		/* get the address of the PE Loader data */
-		!ReadProcessMemory(ProcessHandle, pWow64PEB, &Wow64PEB, sizeof(Wow64PEB), NULL) ||
-		!ReadProcessMemory(ProcessHandle, Wow64PEB.Ldr, &LoaderData, sizeof(LoaderData), NULL))
+		!ReadProcessMemory(ProcessHandle, (LPCVOID)pWow64PEB, &Wow64PEB, sizeof(Wow64PEB), NULL) ||
+		!ReadProcessMemory(ProcessHandle, (LPCVOID)Wow64PEB.Ldr, &LoaderData, sizeof(LoaderData), NULL))
 		return NULL;
 
 	/* head of the module list: the last element in the list will point to this */
@@ -188,11 +202,11 @@ HANDLE GetModuleHandle32(HANDLE ProcessHandle, LPWSTR lpDllName)
 	{
 		if (!ReadProcessMemory(ProcessHandle, pMod, &ldrMod, sizeof(ldrMod), NULL)) break;
 		if (ldrMod.DllBase &&
-			ReadProcessMemory(ProcessHandle, ldrMod.BaseDllName.Buffer, dllName, min(ldrMod.BaseDllName.Length, sizeof(dllName) / sizeof(WCHAR)), NULL))
+			ReadProcessMemory(ProcessHandle, (LPCVOID)ldrMod.BaseDllName.Buffer, dllName, min(ldrMod.BaseDllName.Length, sizeof(dllName) / sizeof(WCHAR)), NULL))
 		{
 			dllName[ldrMod.BaseDllName.Length / sizeof(WCHAR)] = 0;
 			if (!__wcsicmp(dllName, lpDllName))
-				return ldrMod.DllBase;
+				return (HANDLE)ldrMod.DllBase;
 		}
 		pMod = (PEB_LDR_DATA32*)ldrMod.InLoadOrderModuleList.Flink;
 	} while (pMod != pStart);
@@ -201,11 +215,11 @@ HANDLE GetModuleHandle32(HANDLE ProcessHandle, LPWSTR lpDllName)
 
 DWORD GetRemoteProcAddressX32(HANDLE ProcessHandle, LPWSTR lpDllName, LPSTR lpProcName)
 {
-	HANDLE hRemoteMod = GetModuleHandle32(ProcessHandle, lpDllName);
+	HANDLE hRemoteMod = GetRemoteModuleHandle32(ProcessHandle, lpDllName);
 	HANDLE hLibKernel32;
 	WCHAR dllName[MAX_PATH + 1];
 
-	if (!hRemoteMod) return NULL;
+	if (!hRemoteMod) return 0;
 	GetSystemWow64Directory(dllName, sizeof(dllName) / sizeof(WCHAR));
 	wcscat(dllName, L"\\");
 	wcscat(dllName, lpDllName);
@@ -217,7 +231,7 @@ DWORD GetRemoteProcAddressX32(HANDLE ProcessHandle, LPWSTR lpDllName, LPSTR lpPr
 		FreeLibrary32(hLibKernel32);
 		return dwRet ? dwRet + (DWORD)hRemoteMod : 0;
 	}
-
+	return 0;
 }
 
 DWORD GetLoadLibraryAddressX32(HANDLE ProcessHandle)
@@ -240,8 +254,42 @@ BOOL InjectDllHijackThreadX32(HANDLE hProc, HANDLE hThread, WCHAR *DllName)
 		0xc3	// RET
 	};
 	WOW64_CONTEXT ThreadContext;
-	ThreadContext.ContextFlags = CONTEXT_FULL;
+#ifdef TARGET_WINXP
+	// No Wow64GetThreadContext on Windows XP, so read it from TLS:
+	// http://www.nynaeve.net/?p=191
+	PWOW64_CONTEXT           RemoteCtx = NULL;
+	CONTEXT                  Ctx64;
+	SIZE_T                   Transferred = 0;
+
+	TRACE("InjectDllHijackThreadX32(%08X, %08X, %S)...", hProc, hThread, DllName);
+	Ctx64.ContextFlags = CONTEXT_CONTROL;
+	GetThreadContext(hThread, &Ctx64);
+	if (Ctx64.SegCs != WOW64_CS32)
+	{
+		THREAD_BASIC_INFORMATION ThreadInfo;
+
+		if (!NT_SUCCESS(NtQueryInformationThread(hThread, ThreadBasicInformation, &ThreadInfo, sizeof(THREAD_BASIC_INFORMATION), 0)) ||
+			!ReadProcessMemory(hProc, &((PTEB)ThreadInfo.TebBaseAddress)->TlsSlots[WOW64_TLS_CPURESERVED], &RemoteCtx, sizeof(RemoteCtx), &Transferred) ||
+			Transferred != sizeof(RemoteCtx) ||
+			!ReadProcessMemory(hProc, (PUCHAR)(RemoteCtx)+sizeof(ULONG), &ThreadContext, sizeof(ThreadContext), &Transferred) ||
+			Transferred != sizeof(ThreadContext))
+		{
+			TRACE("Reading WOW64 thread context failed: %d\n", GetLastError());
+			return FALSE;
+		}
+	}
+	else
+	{
+		//ThreadContext.Eip = (ULONG)Ctx64.Rip;
+
+		// When thread is in 64bit code/syscall, that may go wrong...
+		TRACE("Reading WOW64 thread context failed: In Syscall\n");
+		return FALSE;
+	}
+#else  // TARGET_WINXP
+	ThreadContext.ContextFlags = CONTEXT_CONTROL;
 	Wow64GetThreadContext(hThread, &ThreadContext);
+#endif // TARGET_WINXP
 
 	//allocate a remote buffer
 	PBYTE InjData =
@@ -249,14 +297,18 @@ BOOL InjectDllHijackThreadX32(HANDLE hProc, HANDLE hThread, WCHAR *DllName)
 			MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 	DWORD dwLoadLibrary = GetLoadLibraryAddressX32(hProc);
 	*(PDWORD)&code[3] = dwLoadLibrary;
-	*(PDWORD)&code[8] = InjData + sizeof(code);
+	*(PDWORD)&code[8] = (DWORD)(InjData + sizeof(code));
 	*(PDWORD)&code[17] = ThreadContext.Eip;
 
 	//write the tmp buff + dll
 	//Format: [RemoteFunction][DllName][null char]
-	ULONG dwWritten;
-	WriteProcessMemory(hProc, InjData, code, sizeof(code), &dwWritten);
-	WriteProcessMemory(hProc, InjData + sizeof(code), DllName, (wcslen(DllName) + 1)*sizeof(WCHAR), &dwWritten);
+	SIZE_T dwWritten;
+	if (!WriteProcessMemory(hProc, InjData, code, sizeof(code), &dwWritten) ||
+		!WriteProcessMemory(hProc, InjData + sizeof(code), DllName, (wcslen(DllName) + 1)*sizeof(WCHAR), &dwWritten))
+	{
+		TRACE("Writing memory failed: %d\n", GetLastError());
+		return FALSE;
+	}
 
 	if (!isProcessInitialized(hProc))
 	{
@@ -268,12 +320,12 @@ BOOL InjectDllHijackThreadX32(HANDLE hProc, HANDLE hThread, WCHAR *DllName)
 		Status = RtlQueueApcWow64Thread(hThread, (PVOID)dwLoadLibrary, (ULONG_PTR)InjData + sizeof(code), NULL, NULL);
 		if (NT_SUCCESS(Status))
 		{
-			TRACE("Queued loader injection via APC @%08X", dwLoadLibrary);
+			TRACE("Queued loader injection via APC @%08X\n", dwLoadLibrary);
 			return TRUE;
 		}
 		else
 		{
-			TRACE("QueueUserAPC failed: %d", Status);
+			TRACE("QueueUserAPC failed: %d\n", Status);
 		}
 	}
 	else
@@ -284,7 +336,23 @@ BOOL InjectDllHijackThreadX32(HANDLE hProc, HANDLE hThread, WCHAR *DllName)
 
 	//set the EIP
 	ThreadContext.Eip = (ULONG)InjData;
+#ifdef TARGET_WINXP
+	if (Ctx64.SegCs != WOW64_CS32 && RemoteCtx && Transferred == sizeof(ThreadContext))
+	{
+		if (WriteProcessMemory(hProc, (PUCHAR)(RemoteCtx)+sizeof(ULONG), &ThreadContext, sizeof(ThreadContext), &Transferred) && 
+			Transferred == sizeof(ThreadContext))
+		{
+			TRACE("Success.\n");
+			return TRUE;
+		}
+		TRACE("Writing memory failed: %d\n", GetLastError());
+		return FALSE;
+	}
+	TRACE("Cannot write back x64 Context: SegCs=%08X, RemoteCtx=%08X, Transferred=%08X", Ctx64.SegCs, RemoteCtx, Transferred);
+	return FALSE;
+#else
 	Wow64SetThreadContext(hThread, &ThreadContext);
+#endif
 	return TRUE;
 }
 
@@ -292,15 +360,23 @@ HANDLE InjectLdntvdmWow64RemoteThread(HANDLE hProcess)
 {
 	LPTHREAD_START_ROUTINE pLoadLibraryW;
 
+	TRACE("InjectLdntvdmWow64RemoteThread(%08X)...", hProcess);
 	if (pLoadLibraryW = (LPTHREAD_START_ROUTINE)GetLoadLibraryAddressX32(hProcess))
 	{
 		PBYTE *pLibRemote;
+
 		if (pLibRemote = VirtualAllocEx(hProcess, NULL, sizeof(LDNTVDM_NAME), MEM_COMMIT, PAGE_READWRITE))
 		{
+			HANDLE hThread;
+
 			WriteProcessMemory(hProcess, pLibRemote, (void*)LDNTVDM_NAME, sizeof(LDNTVDM_NAME), NULL);
-			return CreateRemoteThread(hProcess, NULL, 0, pLoadLibraryW, pLibRemote, 0, NULL);
+			hThread = CreateRemoteThread(hProcess, NULL, 0, pLoadLibraryW, pLibRemote, 0, NULL);
+			if (hThread) {TRACE("hThread = %08X\n", hThread);}  else { TRACE("CreateRemoteThread failed with\n", GetLastError()); }
+			return hThread;
 		}
+		else { TRACE("VirtualAlloc failed\n"); }
 	}
+	else { TRACE("GetLoadLibraryAddressX32 failed\n"); }
 	return NULL;
 }
 
@@ -331,7 +407,7 @@ DWORD WINAPI InjectLdntvdmWow64UsingRemoteThread(HANDLE hProcess)
 		CloseHandle(hThread);
 		return TRUE;
 	}
-	else { TRACE("NtGetThread returned Status %08X", Status); }
+	else { TRACE("NtGetThread returned Status %08X\n", Status); }
 	return FALSE;
 }
 

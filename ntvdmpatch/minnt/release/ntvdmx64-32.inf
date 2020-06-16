@@ -156,5 +156,6 @@ CopyFiles   = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Symbol.Files, Ntvdmx64
 AddReg      = Ntvdmx64.amd64.AddReg
 
 [DefaultUninstall.ntamd64]
-CleanUp = 1
+CleanUp     = 1
+SmartReboot = N
 DelFiles    = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Symbol.Files, Ntvdmx64.amd64.Inf.Files.Del

@@ -32,3 +32,13 @@ extern fpCreateIconFromResourceEx pCreateIconFromResourceEx;
 // Redirect win32 functions to dynamically imported functions to avoid user32.dll dependency
 #define LookupIconIdFromDirectoryEx pLookupIconIdFromDirectoryEx
 #define CreateIconFromResourceEx pCreateIconFromResourceEx
+
+UINT ExtractIconFromEXE(
+	HANDLE hFile,
+	int    nIconIndex,
+	int    cxIconSize,
+	int    cyIconSize,
+	HICON  *phicon,
+	UINT   *piconid,
+	UINT   nIcons,
+	UINT   flags);

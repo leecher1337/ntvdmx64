@@ -16,6 +16,7 @@
 #if defined(TARGET_WIN7) && defined(_WIN64)
 
 #include "ldntvdm.h"
+#include "Winternl.h"
 #include "consbmp.h"
 #include "reg.h"
 
@@ -116,7 +117,6 @@ BOOL ConsBmp_Install(void)
 	HMODULE hConhost;
 	DWORD flOld = 0;
 	DWORD dwAddress;
-	NTSTATUS Status;
 	BYTE *pConsBmp;
 	HKEY hKey;
 	
@@ -127,13 +127,13 @@ BOOL ConsBmp_Install(void)
 		else pdwConBaseTag = &dwConBaseTag;
 		if (NT_SUCCESS(REG_QueryDWORD(hKey, L"FindProcessInList", &dwAddress))) FindProcessInList = (fpFindProcessInList)((DWORD64)hConhost + dwAddress);
 		dwAddress = 0;
-		if (NT_SUCCESS(REG_QueryDWORD(hKey, L"CreateConsoleBitmap", &dwAddress))) pConsBmp = (DWORD64)hConhost + dwAddress;
+		if (NT_SUCCESS(REG_QueryDWORD(hKey, L"CreateConsoleBitmap", &dwAddress))) pConsBmp = (PBYTE)((DWORD64)hConhost + dwAddress);
 		REG_CloseKey(hKey);
 	}
 
 	if (!FindProcessInList || !dwAddress)
 	{
-		TRACE("ConsBmp_Install resolving symbols failed.");
+		TRACE("ConsBmp_Install resolving symbols failed.\n");
 		return FALSE;
 	}
 
@@ -142,14 +142,14 @@ BOOL ConsBmp_Install(void)
 	// Build jump (jmp [rip - offset])
 	if (!VirtualProtect(pConsBmp, 6 + sizeof(ULONG_PTR), PAGE_EXECUTE_READWRITE, &flOld))
 	{
-		TRACE("ConsBmp_Install hooking failed: VirtualProtect(%08X, %d) -> err=%08X", pConsBmp, 6 + sizeof(ULONG_PTR), GetLastError());
+		TRACE("ConsBmp_Install hooking failed: VirtualProtect(%08X, %d) -> err=%08X\n", pConsBmp, 6 + sizeof(ULONG_PTR), GetLastError());
 		return FALSE;
 	}
 	RtlMoveMemory(pConsBmp, "\xFF\x25\x00\x00\x00\x00", 6);
 	*((ULONG_PTR*)(pConsBmp + 6)) = (ULONG_PTR)CreateConsoleBitmap;
 	VirtualProtect(pConsBmp, 6 + sizeof(ULONG_PTR), flOld, &flOld);
 
-	TRACE("ConsBmp_Install done");
+	TRACE("ConsBmp_Install done\n");
 
 	return TRUE;
 }
@@ -290,7 +290,7 @@ CreateConsoleBitmap(
     }
     ScreenInfo->BufferInfo.GraphicsInfo.ClientProcess = CONSOLE_CLIENTPROCESSHANDLE();
     ScreenInfo->BufferInfo.GraphicsInfo.ClientBitMap = *lpBitmap;
-	TRACE("Mapped graphics buffer to client memory @%16X", *lpBitmap);
+	TRACE("Mapped graphics buffer to client memory @%16X\n", *lpBitmap);
 
     //
     // create mutex to serialize access to bitmap, then map handle to mutex to client side

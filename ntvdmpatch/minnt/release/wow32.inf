@@ -270,48 +270,48 @@ wowfax.dll=1
 wowfaxui.dll=1
 
 [Ntvdmx64.amd64.System.Files]
-comm.drv,,,0x40
-commdlg.dll,,,0x40
-ctl3dv2.dll,,,0x40
-ddeml.dll,,,0x40
-drwatson.exe,,,0x40
-gdi.exe,,,0x4002
-keyboard.drv,,,0x40
-krnl386.exe,,,0x4002
-lanman.drv,,,0x40
-lzexpand.dll,,,0x40
-mciole16.dll,,,0x40
-mmsystem.dll,,,0x40
-mmtask.tsk,,,0x40
-mouse.drv,,,0x40
-netapi.dll,,,0x40
-olecli.dll,,,0x40
-olesvr.dll,,,0x40
-pmspl.dll,,,0x40
-regedt16.exe,,,0x40
-shell.dll,,,0x40
-sound.drv,,,0x40
-sysedit.exe,,,0x40
-system.drv,,,0x40
-timer.drv,,,0x40
-toolhelp.dll,,,0x40
-user.exe,,,0x4002
-ver.dll,,,0x40
-vga.drv,,,0x40
-wfwnet.drv,,,0x40
-wifeman.dll,,,0x40
-win.com,,,0x40
-win87em.dll,,,0x40
-winhelp.exe,,,0x40
-winnls.dll,,,0x40
-winoldap.mod,,,0x40
-winsock.dll,,,0x40
-winspool.exe,,,0x40
-wow32.dll,,,0x4002
-wowdeb.exe,,,0x40
-wowexec.exe,,,0x40
-wowfax.dll,,,0x40
-wowfaxui.dll,,,0x40
+comm.drv,,,0x4006
+commdlg.dll,,,0x20
+ctl3dv2.dll,,,0x20
+ddeml.dll,,,0x20
+drwatson.exe,,,0x20
+gdi.exe,,,0x4006
+keyboard.drv,,,0x4006
+krnl386.exe,,,0x4006
+lanman.drv,,,0x20
+lzexpand.dll,,,0x20
+mciole16.dll,,,0x20
+mmsystem.dll,,,0x20
+mmtask.tsk,,,0x20
+mouse.drv,,,0x4006
+netapi.dll,,,0x20
+olecli.dll,,,0x20
+olesvr.dll,,,0x20
+pmspl.dll,,,0x20
+regedt16.exe,,,0x20
+shell.dll,,,0x20
+sound.drv,,,0x4006
+sysedit.exe,,,0x20
+system.drv,,,0x4006
+timer.drv,,,0x4006
+toolhelp.dll,,,0x20
+user.exe,,,0x4006
+ver.dll,,,0x20
+vga.drv,,,0x4006
+wfwnet.drv,,,0x4006
+wifeman.dll,,,0x20
+win.com,,,0x20
+win87em.dll,,,0x20
+winhelp.exe,,,0x20
+winnls.dll,,,0x20
+winoldap.mod,,,0x20
+winsock.dll,,,0x20
+winspool.exe,,,0x20
+wow32.dll,,,0x4006
+wowdeb.exe,,,0x20
+wowexec.exe,,,0x4006
+wowfax.dll,,,0x20
+wowfaxui.dll,,,0x20
 
 
 [Ntvdmx64.amd64.Inf.Files.Add]
@@ -333,15 +333,25 @@ Ntvdmx64.amd64.Inf.Files.Del = 17
 [UninstallCmds]
 %10%\Symbols\instntvdmx64.bat delwow  "%16425%" "%10%\Symbols\Backup"
 
+
+[BeginInsPrompt]
+Title      = NTVDMx64 WOW32 support
+Prompt     = %InsPrompt%
+ButtonType = YESNO
+
 [DefaultInstall.ntamd64]
 ;CheckAdminRights = 1
+BeginPrompt         = BeginInsPrompt
 RunPreSetupCommands = InstallCmdsPre
 SmartReboot = N
 CopyFiles   = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Inf.Files.Add
 AddReg      = Ntvdmx64.amd64.AddReg
 
 [DefaultUninstall.ntamd64]
-RunPreSetupCommands = UninstallCmds
+RunPostSetupCommands = UninstallCmds
 CleanUp = 1
 DelFiles    = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Inf.Files.Del
 Delreg      = Ntvdmx64.amd64.AddReg
+
+[Strings]
+InsPrompt     = "Do you want to install WOW32 (Win16 application) support?"

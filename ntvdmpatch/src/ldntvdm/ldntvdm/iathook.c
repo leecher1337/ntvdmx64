@@ -107,16 +107,14 @@ int IAT_FindFunction(LPBYTE hMod, PIMAGE_IMPORT_DESCRIPTOR idata, char *FunName,
 			char *pszIATFunName = (char*)(hMod + ThunkData->u1.ForwarderString + 2);
 			if (IsBadStringPtrA(pszIATFunName, 4096))
 			{
-				TRACE("LDNTVDM: Cannot check for IAT entry %s of module @%08X. Thunk=%08X, AddressOfData=%08X, ForwarderString=%08X",
+				TRACE("LDNTVDM: Cannot check for IAT entry %s of module @%08X. Thunk=%08X, AddressOfData=%08X, ForwarderString=%08X\n",
 					FunName, hMod, ThunkData, ThunkData->u1.AddressOfData, ThunkData->u1.ForwarderString);
 			}
 			else if (!_strcmp(pszIATFunName, FunName))
 			{
-				DWORD OldProt;
-
 				if (Address[i] == ThunkData->u1.AddressOfData)
 				{
-					TRACE("IAT entry is not bound yet");
+					TRACE("IAT entry is not bound yet\n");
 					return -3;
 				}
 				*ppAddress = &Address[i];
@@ -130,10 +128,17 @@ int IAT_FindFunction(LPBYTE hMod, PIMAGE_IMPORT_DESCRIPTOR idata, char *FunName,
 int IAT_SetHook(PULONG_PTR Address, LPVOID NewFun, PULONG_PTR OldFun)
 {
 	DWORD OldProt;
+	MEMORY_BASIC_INFORMATION mbi;
 
-	VirtualProtect(Address, sizeof(ULONG_PTR), PAGE_READWRITE, &OldProt);
+	OldProt = PAGE_READWRITE;
+#ifdef TARGET_WINXP
+	// Windows XP has IAT on executable page, so better first check
+	if (VirtualQuery(Address, &mbi, sizeof(mbi)) && mbi.Protect >= PAGE_EXECUTE)
+		OldProt = PAGE_EXECUTE_READWRITE;
+#endif
+	VirtualProtect(Address, sizeof(ULONG_PTR), OldProt, &OldProt);
 	if (OldFun) *OldFun = *Address;
-	TRACE("Hooked %08X -> %08X", *Address, NewFun);
+	TRACE("Hooked %08X -> %08X\n", *Address, NewFun);
 	*Address = (ULONG_PTR)NewFun;
 	VirtualProtect(Address, sizeof(ULONG_PTR), OldProt, &OldProt);
 	return 0;
@@ -147,15 +152,15 @@ int Hook_IAT_x64_IAT(LPBYTE hMod, char LibNameBigCaseName_SmallFormat[], char Fu
 {
 	PIMAGE_IMPORT_DESCRIPTOR idata;
 	PULONG_PTR Address;
-	int i, iRet = -1;
+	int iRet = -1;
 
-	TRACE("Hook_IAT_x64_IAT(%08X, %s, %s, %08X, %08X)", hMod, LibNameBigCaseName_SmallFormat, FunName, NewFun, OldFun);
+	TRACE("Hook_IAT_x64_IAT(%X, %s, %s, %08X, %08X)\n", hMod, LibNameBigCaseName_SmallFormat, FunName, NewFun, OldFun);
 	if (idata = IAT_FindLibrary(hMod, LibNameBigCaseName_SmallFormat)) 
 	{
 		iRet = IAT_FindFunction(hMod, idata, FunName, &Address);
 		if (iRet == 0) return IAT_SetHook(Address, NewFun, OldFun);
 	}
-	TRACE("Hooking failed (%d).", iRet);
+	TRACE("Hooking failed (%d)\n", iRet);
 	return iRet;
 }
 
@@ -167,7 +172,7 @@ BOOL Hook_IAT_x64(LPBYTE hMod, char *LibDelayImpName, char *FunName, LPVOID NewF
 	DWORD delayImportStartRVA, delayImportSize, nDelaySizeLeft;
 	PCImgDelayDescr pDelayDesc;
 
-	TRACE("Hook_IAT_x64(%08X, %s, %s, %08X)", hMod, LibDelayImpName, FunName, NewFun);
+	TRACE("Hook_IAT_x64(%08X, %s, %s, %08X)\n", hMod, LibDelayImpName, FunName, NewFun);
 	// Look up where the delay imports section is (normally in the .didat
 	/// section) but not necessarily so.
 	delayImportStartRVA = GetImgDirEntryRVA(NtHeaders, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT);
@@ -233,6 +238,6 @@ BOOL Hook_IAT_x64(LPBYTE hMod, char *LibDelayImpName, char *FunName, LPVOID NewF
 		nDelaySizeLeft -= sizeof(ImgDelayDescr);
 	}
 
-	TRACE("Hook_IAT_x64 failed");
+	TRACE("Hook_IAT_x64 failed\n");
 	return FALSE;
 }

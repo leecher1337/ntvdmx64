@@ -1,4 +1,3 @@
-#ifndef _WIN64
 /**
 *
 * Using parts of the WOW64Ext Library
@@ -208,6 +207,7 @@ typedef struct tag_PEB
 	ULONGLONG TracingFlags;
 } PEB64;
 
+#ifndef _WIN64
 
 ULONGLONG __cdecl X64Call(ULONGLONG func, int argC, ...)
 {
@@ -672,3 +672,35 @@ ULONGLONG LoadLibrary64(const wchar_t* path)
 	return hModule;
 };
 #endif
+
+ULONGLONG  GetRemoteModuleHandle64(HANDLE ProcessHandle, LPWSTR lpDllName)
+{
+	PROCESS_BASIC_INFORMATION BasicInformation;
+	NTSTATUS Status;
+	PEB_LDR_DATA64 *pMod, *pStart, LoaderData;
+	LDR_DATA_TABLE_ENTRY64 ldrMod;
+	WCHAR dllName[MAX_PATH + 1];
+
+	/* query the process basic information (includes the PEB address) */
+	if (!NT_SUCCESS(Status = NtQueryInformationProcess(ProcessHandle, ProcessBasicInformation, &BasicInformation,
+		sizeof(BasicInformation), NULL)) ||
+		/* get the address of the PE Loader data */
+		!ReadProcessMemory(ProcessHandle, (LPCVOID)&(BasicInformation.PebBaseAddress->Ldr), &LoaderData, sizeof(LoaderData), NULL))
+		return NULL;
+
+	/* head of the module list: the last element in the list will point to this */
+	pStart = pMod = (PEB_LDR_DATA64*)LoaderData.InLoadOrderModuleList.Flink;
+	do
+	{
+		if (!ReadProcessMemory(ProcessHandle, pMod, &ldrMod, sizeof(ldrMod), NULL)) break;
+		if (ldrMod.DllBase &&
+			ReadProcessMemory(ProcessHandle, (LPCVOID)ldrMod.BaseDllName.Buffer, dllName, min(ldrMod.BaseDllName.Length, sizeof(dllName) / sizeof(WCHAR)), NULL))
+		{
+			dllName[ldrMod.BaseDllName.Length / sizeof(WCHAR)] = 0;
+			if (!__wcsicmp(dllName, lpDllName))
+				return (HANDLE)ldrMod.DllBase;
+		}
+		pMod = (PEB_LDR_DATA64*)ldrMod.InLoadOrderLinks.Flink;
+	} while (pMod != pStart);
+	return NULL;
+}

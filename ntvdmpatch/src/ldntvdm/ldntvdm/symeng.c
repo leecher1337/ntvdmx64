@@ -6,6 +6,7 @@
  * Changes: 01.04.2016  - Created
  */
 
+#define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
 #include "ldntvdm.h"
 
@@ -112,14 +113,20 @@ static int InitSymEng(void)
 		strcat(szPath, "SymbolCache");
 		CreateDirectoryA(szPath + 4, NULL);
 
+#ifdef TARGET_WINXP
+		// msdl Server doesn't support plain HTTP anymore, however Windows XP/2003 doesn't support
+		// newer encryption standard, therefore we use a symbol proxy with HTTP-support
+		strcat(szPath, "*http://msdl.0wnz.at/download/symbols");
+#else
 		strcat(szPath, "*http://msdl.microsoft.com/download/symbols");
+#endif
 		if (!SymInitialize(hProcess, 0, FALSE))
 		{
-			TRACE("SymInitialize failed: %08X", GetLastError());
+			TRACE("SymInitialize failed: %08X\n", GetLastError());
 			return -2;
 		}
 
-		TRACE("Symsrv options: %08X", SymGetOptions());
+		TRACE("Symsrv options: %08X\n", SymGetOptions());
 
 		SymSetOptions(SymGetOptions() | SYMOPT_ALLOW_ABSOLUTE_SYMBOLS | SYMOPT_DEBUG);
 		SymSetOptions(SymGetOptions() & (~SYMOPT_DEFERRED_LOADS));
@@ -127,7 +134,7 @@ static int InitSymEng(void)
 
 		return 0;
 	}
-	TRACE("InitSymEng failed.");
+	TRACE("InitSymEng failed.\n");
 	return -1;
 }
 
@@ -143,7 +150,7 @@ int SymEng_LoadModule(char *pszFile, DWORD64 *pdwBase)
 
 	if (!(*pdwBase = SymLoadModule64(GetCurrentProcess(), 0, pszFile, 0, 0, 0)))
 	{
-		TRACE("SymLoadModule64 %s failed: %08X", pszFile, GetLastError());
+		TRACE("SymLoadModule64 %s failed: %08X\n", pszFile, GetLastError());
 		return -3;
 	}
 
@@ -156,7 +163,7 @@ ULONG64 SymEng_GetAddr(DWORD64 dwBase, char *pszSymbol)
 	SYMBOL_INFO symInfo;
 
 	RtlZeroMemory(&symInfo, sizeof(symInfo));
-	TRACE("SymEng_GetAddr %s", pszSymbol);
+	TRACE("SymEng_GetAddr %s\n", pszSymbol);
 	symInfo.SizeOfStruct = sizeof(SYMBOL_INFO);
 	if (!SymFromName(GetCurrentProcess(), pszSymbol, &symInfo))
 	{
