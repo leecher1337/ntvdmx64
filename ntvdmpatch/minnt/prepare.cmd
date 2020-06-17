@@ -151,6 +151,10 @@ xcopy /e /y %workdir%\old-src\nt\private\mvdm\tools16\rcpp.exe %minntfix%\NTOSBE
 copy /y %workdir%\old-src\nt\private\mvdm\tools16\rc16.exe %minntfix%\NTOSBE-master\tools\x86\tools16\rc16dos.exe
 copy /Y %workdir%\old-src\tools\x86\idw\sednew.exe %minntfix%\NTOSBE-master\tools\x86\idw\sed.exe
 xcopy /e /y %workdir%\old-src\nt\private\sdktools\upd %minntfix%\NTOSBE-master\src\sdktools\upd\
+rem Windows 7 and above has UAC. Its heuristic assumes that if some executable starts with name upd or setup or patch, etc.
+rem that it needs to elevate its privileges. This is not the case for upd.exe and would interfere with build process
+rem Therefore we need to embed a manifest in upd
+echo 1 24 upd.man >>%minntfix%\NTOSBE-master\src\sdktools\upd\upd.rc
 xcopy /e /y %workdir%\old-src\nt\private\sdktools\qgrep %minntfix%\NTOSBE-master\src\sdktools\qgrep\
 xcopy /Y %minntfix%\minnt\base\mvdm\dos\v86\cmd\append\dirs %minntfix%\minnt\base\mvdm\dpmi.old\
 
