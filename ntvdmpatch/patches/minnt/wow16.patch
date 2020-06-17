@@ -867,6 +867,40 @@
 > cEnd
 > 
 > 
+--- NT4\private\mvdm\wow16\shell\shell.def
++++ nt\private\mvdm\wow16\shell\shell.def
+27a28
+> ;;    DUPLICATEICON	@35	;internal private for shell
+31a33
+>     EXTRACTICONEX         @40	;public
+36a39,51
+>     RESTARTDIALOG       @157
+>     
+>     PICKICONDLG         @166
+> 
+>     DRIVETYPE           @262
+>     SH16TO32DRIVEIOCTL  @263
+>     SH16TO32INT2526     @264
+> 
+>     SHGETFILEINFO       @300
+> 
+>     SHFORMATDRIVE       @400
+>     SHCHECKDRIVE        @401
+>     _RUNDLLCHECKDRIVE   @402
+--- NT4\private\mvdm\wow16\shell\shell.asm
++++ nt\private\mvdm\wow16\shell\shell.asm
+114a115
+> 	SHELLThunk	EXTRACTICONEX
+118a120,128
+> 	SHELLThunk	RESTARTDIALOG
+> 	SHELLThunk	PICKICONDLG
+> 	SHELLThunk	DRIVETYPE
+> 	SHELLThunk	SH16TO32DRIVEIOCTL
+> 	SHELLThunk	SH16TO32INT2526
+> 	SHELLThunk	SHGETFILEINFO
+> 	SHELLThunk	SHFORMATDRIVE
+> 	SHELLThunk	SHCHECKDRIVE
+> 	SHELLThunk	_RUNDLLCHECKDRIVE
 --- NT4\private\mvdm\wow16\user\user.def
 +++ nt\private\mvdm\wow16\user\user.def
 23a24
