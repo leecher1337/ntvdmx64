@@ -1,0 +1,12 @@
+--- piffnt.c
++++ piffnt.c
+677c677
+<     EVAL(LocalFree(lpCache) == NULL);
+---
+>     EVAL((lpCache = LocalFree(lpCache)) == NULL);
+--- pif.h
++++ pif.h
+146a147
+> #ifndef _SHLOBJ_H_
+160a162
+> #endif

@@ -1,0 +1,4 @@
+#define HFINDFILE HANDLE                        //
+#define INVALID_HFINDFILE       ((HFINDFILE)-1) //
+#define STARTF_HASSHELLDATA     0x00000400
+#define STARTF_TITLEISLINKNAME  0x00000800
