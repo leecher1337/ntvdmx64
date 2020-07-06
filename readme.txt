@@ -298,6 +298,21 @@ Further explanation how it used to work on MIPS/Alpha builds:
 https://github.com/leecher1337/ntvdmx64/issues/95#issuecomment-637202206
 
 
+I want to use more than 16MB of DPMI memory
+---------------------------------------------------------------------------
+NTVDM is patched to obey DPMI memory size from .PIF file. However, its size
+is limited to maximum of 64MB due to .PIF specification. If you want to
+use more, you must set a registry key under:
+
+  HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\WOW\CpuEnv
+
+Create a REG_SZ value named DPMIMEM with the requested size of DPMI memory
+in KB, i.e. 131070 for 128MB of DPMI memory max.
+
+You can just execute the reg\dpmimem.reg from the release-folder of NTVDMx64
+to set 128MB of DPMI mem.
+
+
 I want to use my mouse in my textmode application and not select text 
 ---------------------------------------------------------------------------
 You forgot to disable QuickEdit mode of the windows console.

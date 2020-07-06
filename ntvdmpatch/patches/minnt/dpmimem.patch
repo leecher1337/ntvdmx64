@@ -1,0 +1,37 @@
+--- NT4\private\mvdm\softpc.new\host\inc\nt_pif.h
++++ nt\private\mvdm\softpc.new\host\inc\nt_pif.h
+48a49,51
+> #ifndef MONITOR
+>    WORD dpmides;
+> #endif
+91a95
+> #define DEFAULTDPMIREQ       0        /* kilobytes */ 
+--- NT4\private\mvdm\softpc.new\host\src\nt_pif.c
++++ nt\private\mvdm\softpc.new\host\src\nt_pif.c
+378a379,381
+> #ifndef MONITOR
+> 			     pd->dpmides = wenhpif40.envProp.wMaxDPMI;
+> #endif
+499a503
+> 	 pd->dpmides= DEFAULTDPMIREQ;
+--- NT4\private\mvdm\softpc.new\host\src\config.c
++++ nt\private\mvdm\softpc.new\host\src\config.c
+121a122
+> USHORT DPMIMemSize = 0;          /* save value of DPMI mem from PIF file */
+168c169
+< #define DPMI_DEFAULT_MEMORY_SIZE_FOR_DOS 8*1024
+---
+> #define DPMI_DEFAULT_MEMORY_SIZE_FOR_DOS 16*1024
+207a209,211
+> 
+> 	// get app specific DPMI size
+> 	DPMIMemSize = pfdata.dpmides;
+548c552,557
+<             dpmiMemorySize = DPMI_DEFAULT_MEMORY_SIZE_FOR_DOS;
+---
+>             if (DPMIMemSize == 0)
+>             {
+>                 pch = host_getenv("DPMIMEM");
+>                 if (!pch || !(dpmiMemorySize = atol(pch)))
+>                     dpmiMemorySize = DPMI_DEFAULT_MEMORY_SIZE_FOR_DOS;
+>             } else  dpmiMemorySize = DPMIMemSize;

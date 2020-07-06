@@ -28,15 +28,11 @@
 > #ifdef MONITOR
 --- NT4\private\mvdm\softpc.new\host\src\config.c
 +++ nt\private\mvdm\softpc.new\host\src\config.c
-168c168
-< #define DPMI_DEFAULT_MEMORY_SIZE_FOR_DOS 8*1024
----
-> #define DPMI_DEFAULT_MEMORY_SIZE_FOR_DOS 16*1024
-566c566
+575c575
 < #ifdef i386
 ---
 > #ifdef MONITOR
-570c570
+579c579
 <          vdmMemorySize = 16L * 1024L
 ---
 >          vdmMemorySize = 16L * 1024L;
