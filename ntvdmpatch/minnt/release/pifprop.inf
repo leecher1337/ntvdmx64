@@ -9,7 +9,6 @@ HKCR, "CLSID\{86F19A00-42A0-1069-A2E9-08002B30309D}\InprocServer32","ThreadingMo
 HKCR, "batfile\shellex\PropertySheetHandlers\PifProps",,0x0,"{86F19A00-42A0-1069-A2E9-08002B30309D}"
 HKCR, "cmdfile\shellex\PropertySheetHandlers\PifProps",,0x0,"{86F19A00-42A0-1069-A2E9-08002B30309D}"
 HKCR, "comfile\shellex\PropertySheetHandlers\PifProps",,0x0,"{86F19A00-42A0-1069-A2E9-08002B30309D}"
-HKCR, "batfile\shellex\PropertySheetHandlers\PifProps",,0x0,"{86F19A00-42A0-1069-A2E9-08002B30309D}"
 HKCR, "exefile\shellex\PropertySheetHandlers\PifProps",,0x0,"{86F19A00-42A0-1069-A2E9-08002B30309D}"
 HKCR, "piffile\shellex\PropertySheetHandlers\PifProps",,0x0,"{86F19A00-42A0-1069-A2E9-08002B30309D}"
 HKLM, "SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","{86F19A00-42A0-1069-A2E9-08002B30309D}",0x0,".PIF file property pages"
