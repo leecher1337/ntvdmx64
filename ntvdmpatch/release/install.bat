@@ -71,6 +71,13 @@ echo Installing, please wait...
 echo ---------------------------------------------
 echo Please check for completion-message from installer in taskbar.
 if exist haxm\IntelHaxm.sys RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultInstall 132 %CD%\ntvdmx64-haxm.inf
+
+rem Add Loader to Windows Defender exclusion list, as there are always false positives
+set "DefExclusion="%SystemRoot%\system32\ldntvdm.dll"
+powershell -noprofile -command Add-MpPreference -Force -ExclusionPath "$env:DefExclusion"
+set "DefExclusion="%SystemRoot%\syswow64\ldntvdm.dll"
+powershell -noprofile -command Add-MpPreference -Force -ExclusionPath "$env:DefExclusion"
+
 rundll32.exe advpack.dll,LaunchINFSection %CD%\ntvdmx64.inf
 goto fini
 
