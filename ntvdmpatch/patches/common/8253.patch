@@ -1,0 +1,29 @@
+--- NT4\private\mvdm\softpc.new\base\system\timer.c
++++ nt\private\mvdm\softpc.new\base\system\timer.c
+2353c2353
+<      unsigned long clocks, wrap, usecs;
+---
+>      unsigned long clocks, wrap, usecs, modulo = pcu->initialCount;
+2411,2415c2411,2426
+<     wrap = clocks/pcu->initialCount;
+< 
+<          /* calc ticks from elapsed clocks */
+<     clocks = clocks && pcu->initialCount ? clocks % pcu->initialCount : 0;
+<     *pCounter = (word) (pcu->initialCount - clocks);
+---
+>     if ( clocks < modulo )
+>         wrap = 0;
+>     else {
+>         wrap = 1;
+>         clocks -= modulo;
+> 
+>         if ( pcu->m == INT_ON_TERMINALCOUNT )
+>             modulo = 0x10000L;
+> 
+>         if ( clocks >= modulo ) {
+>             wrap += clocks / modulo;
+>             clocks %= modulo;
+>         }
+> 	}
+>     /* calc ticks from elapsed clocks */
+>     *pCounter = (word) (modulo - clocks);
