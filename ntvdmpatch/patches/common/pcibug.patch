@@ -1,0 +1,13 @@
+--- NT4\private\mvdm\dos\v86\doskrnl\bios\spckbd.asm 
++++ nt\private\mvdm\dos\v86\doskrnl\bios\spckbd.asm 
+1932a1933,1936
+> ; Some stupid programs try to read PCI BIOS even though installation check fails
+>         cmp     ah, 0b1h
+>         jz      i1aPCI
+> 
+1934a1939,1943
+> 
+> i1aPCI:
+>         mov     ah, 81h                             ; 81h = unsupported function
+>         stc
+>         retf    2                                   ; IRET and discard flags
