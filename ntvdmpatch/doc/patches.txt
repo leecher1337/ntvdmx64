@@ -76,6 +76,8 @@ monitor.patch       - In a lot of #ifdefs, i386 is assumed to include V86
                       build then as a consequence to be able to do both builds
                       lateron, when crude makefiles.patch gets cleaned up.
 ntvdmctl.patch      - Removes NtVdmControl calls not working on x64 Windows
+ntmem.patch         - Prevent crash on access of DOS application to uncommitted 
+                      memory
 sas4gen.patch       - Fix sas4gen CCPU header file
 sas.patch           - Optimize SAS-interface for faster memory access, 
                       significantly speeding up i.e. text output on EGA emulation
