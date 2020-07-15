@@ -189,7 +189,7 @@ diff -r F:\Windows.Source.Code.w2k.nt4.wxp\minnt\q160765803-minint4-85fac4faadc7
 >  */
 > void host_InitializeTib(void)
 > {
-> #if defined(W10) && !defined(WX86) && defined(CCPU)
+> #if defined(W10) && !defined(WX86) && !defined(MONITOR)
 >     PVDM_TIB Tib = (PVDM_TIB)calloc(sizeof(VDM_TIB), 1);
 >     extern PFAMILY_TABLE  *pgDpmVdmFamTbls;
 >     NtCurrentTeb()->Vdm = Tib;

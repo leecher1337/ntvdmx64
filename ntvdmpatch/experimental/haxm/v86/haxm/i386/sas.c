@@ -856,6 +856,7 @@ Return Value:
 	DWORD bytes;
 	extern byte  *video_copy;
 
+	if (!Start_of_M_area) return;
 
 	{
 		char szdbg[256];
