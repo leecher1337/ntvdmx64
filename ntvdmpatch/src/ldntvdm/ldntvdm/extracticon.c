@@ -59,7 +59,7 @@ static BOOL InitExtractIcon(void)
  * down, as only PrivateExtractIconsWHook uses this function in user32.dll 
  * Using this method prevents us from having to recreate the code of PrivateExtractIconsW
  */
-BOOL ReadFileHook(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead,
+BOOL WINAPI ReadFileHook(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead,
 	LPOVERLAPPED lpOverlapped)
 {
 	BOOL result = ReadFileReal(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
