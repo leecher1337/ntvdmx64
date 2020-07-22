@@ -117,7 +117,7 @@ extern ULONG  getPG(VOID);
 extern ULONG  getCPL(VOID);
 extern ULONG  getVM (VOID);
 
-extern HANDLE hVM;
+extern HANDLE hVM, hVCPU;
 extern IU32 gvi_pc_low_regen;
 
 /* SYNC THESE DEFINITIONS WITH BASE\EMM.H, or sas_init will assert */
@@ -2155,7 +2155,7 @@ xtrn2phy IFN3
 	uint64_t va = lin, pa;
 	DWORD bytes;
 
-    if (!DeviceIoControl(hVM, HAX_VCPU_IOCTL_VA2GPA, &va, sizeof(va), &pa, sizeof(pa), &bytes, NULL))
+    if (!DeviceIoControl(hVCPU, HAX_VCPU_IOCTL_VA2GPA, &va, sizeof(va), &pa, sizeof(pa), &bytes, NULL))
     {
 		return FALSE;
     }
