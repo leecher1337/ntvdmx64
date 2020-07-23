@@ -70,10 +70,6 @@
 < #if defined(CPU_40_STYLE) && defined(PROD) && !defined(CCPU)
 ---
 > #if defined(CPU_40_STYLE) && defined(PROD) && !defined(CCPU) && !defined(HAXM)
-171c171
-< #if !(defined(NTVDM) && defined(MONITOR))  /* MS NT monitor has own effective_addr fn */
----
-> #if !(defined(NTVDM) && (defined(MONITOR) || defined(HAXM)))  /* MS NT monitor has own effective_addr fn */
 --- NT4\private\mvdm\softpc.new\base\inc\sas.h
 +++ nt\private\mvdm\softpc.new\base\inc\sas.h
 42d41

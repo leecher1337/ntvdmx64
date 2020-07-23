@@ -2063,35 +2063,6 @@ sas_storew_no_check(
 	addr &= SasWrapMask;
     *((word *)(getPtrToPhysAddrByte(addr))) = val;
 }
-EXPORT
-double_word
-effective_addr(
-    IN word Segment,
-    IN word Offset
-    )
-
-/*++
-
-Routine Description:
-
-    This routine maps effective_addr to Sim32GetVdmPointer
-
-Arguments:
-
-    Segment -- segment of address
-    Offset -- offset of address
-
-Return Value:
-
-    Actual Intel address corresponding to the address supplied
---*/
-{
-	if ((!getPE()) || getVM())
-		return ((LIN_ADDR)Segment << 4) + Offset;
-
-    return (ULONG)Sim32GetVDMPointer(((((ULONG)Segment) << 16) | Offset), 1,
-        (UCHAR) (getMSW() & MSW_PE ? TRUE : FALSE));
-}
 
 BOOL sas_twenty_bit_wrapping_enabled() {
     return (SasWrapMask == 0xfffff);
