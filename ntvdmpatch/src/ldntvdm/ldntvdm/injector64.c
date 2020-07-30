@@ -432,6 +432,7 @@ DWORD WINAPI InjectLdntvdmWow64Thread(LPVOID lpPID)
 		else break;
 		Sleep(250);
 	}
+	ExitThread(0);
 }
 
 #endif

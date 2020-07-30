@@ -53,8 +53,10 @@ DWORD WINAPI InjectIntoCreatedThreadThread(INJECTOR_PARAM *param)
 		if (!(injectLdrLoadDLL(param->hProcess, param->hThread, LDNTVDM_NAME, METHOD_INTERCEPTTHREAD))) OutputDebugStringA("Inject LdrLoadDLL failed.");
 		ResumeThread(param->hThread);
 	}
+	CloseHandle(param->hThread);
 	CloseHandle(param->hProcess);
 	HeapFree(GetProcessHeap(), 0, param);
+	ExitThread(0);
 	return 0;
 }
 
@@ -104,7 +106,7 @@ void WINAPI NotifyWinEventHook(DWORD event, HWND  hwnd, LONG  idObject, LONG  id
 					param->bIsWow64 = bIsWow64;
 					SuspendThread(hThread);
 					TRACE("Before CreateThread\n");
-					CreateThread(NULL, 0, InjectIntoCreatedThreadThread, param, 0, NULL);
+					CloseHandle(CreateThread(NULL, 0, InjectIntoCreatedThreadThread, param, 0, NULL));
 					TRACE("After CreateThread\n");
 				}
 			}

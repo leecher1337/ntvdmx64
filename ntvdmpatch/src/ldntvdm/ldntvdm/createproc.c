@@ -32,7 +32,7 @@ BOOL InjectIntoCreatedThread(LPPROCESS_INFORMATION lpProcessInformation)
 		/* To inject  into WOW64 process, unfortunately we have to wait until process becomes ready, otherwise
 		Ldr is NULL and we cannot find LoadLibraryW entry point in target process
 		*/
-		if (bIsWow64) CreateThread(NULL, 0, InjectLdntvdmWow64Thread, basicInfo.UniqueProcessId, 0, NULL);
+		if (bIsWow64) CloseHandle(CreateThread(NULL, 0, InjectLdntvdmWow64Thread, basicInfo.UniqueProcessId, 0, NULL));
 		/*
 		if (pLoadLibraryW = (LPTHREAD_START_ROUTINE)GetLoadLibraryAddressX32(lpProcessInformation->hProcess))
 		{
