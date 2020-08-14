@@ -1,6 +1,9 @@
 Hot to compile
 ==============
 
+Remember that is highly recommended to use the newer compilation method
+with MINNT. More information at doc\minnt.txt.
+
 Here is a short howto on how to compile this:
 Please be aware, that the build environment currently only works on
 Windows XP 32bit.
@@ -12,8 +15,8 @@ Windows XP 32bit.
       unpack the contentes of old-sdk directory from 
       old-sdk.trunk_r57.20150728.7z to it.
       You do not need to extract the .svn folder in it
-   c) Ensure that you don't have w: drive already assigned and then
-      setup w: drive to point to the working directory by typing
+   c) Ensure that you don't have W: drive already assigned and then
+      setup W: drive to point to the working directory by typing
       SUBST W: .
       inside the working directory and then switch to W:
 2) Now extract the ntvdmpatch directory from this source repository
@@ -36,7 +39,7 @@ Windows XP 32bit.
 There is a youtube video available that documents compilation steps:
 https://www.youtube.com/watch?v=Y1yF957BR4I
 
-Youtube-user enderman also made a video about it:
+Youtube-user Enderman also made a video about it:
 https://www.youtube.com/watch?v=unU7uyFJWmo
 
 Sourcecode updates
