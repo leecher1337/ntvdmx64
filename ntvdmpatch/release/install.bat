@@ -23,7 +23,7 @@ pushd "%CD%"
 CD /D "%~dp0"
 
 echo ---------------------------------------------
-echo Checking machine
+echo Checking machine, please wait...
 echo ---------------------------------------------
 reg query HKLM\Hardware\Description\System\CentralProcessor\0 | Find /i "x86" >nul
 if not errorlevel 1 (
@@ -134,3 +134,4 @@ fsutil hardlink create %2\%4 %3\%4
 goto fini
 
 :fini
+exit /b
