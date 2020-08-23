@@ -2,7 +2,7 @@
 setlocal ENABLEDELAYEDEXPANSION
 
 echo ----------------------------------------------------
-echo Patching MINNT for proper operation
+echo Patching MINNT for proper operation, please wait...
 echo ----------------------------------------------------
 echo.
 

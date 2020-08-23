@@ -326,7 +326,7 @@ Google "DOSPR.ZIP"
 
 Why doesn't QUAKE work?
 ---------------------------------------------------------------------------
-http://www.delorie.com/djgpp/v2faq/faq18_6.html
+See: http://www.delorie.com/djgpp/v2faq/faq18_6.html
 
 
 Are there any documents that describe the inner workings of the NTVDM 

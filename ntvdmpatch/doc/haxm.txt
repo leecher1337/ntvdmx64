@@ -81,6 +81,9 @@ patches to make it stable. You'll need YODA debugger in order to analyze the
 issues with Protected mode. DPMI interrupt hooking is currently not 
 implemented properly which leads to various problems i.e. with DOSX.EXE
 
+Also, HAXM currently does not currently support WOW32 applications, so if you want
+to run them, you will need to compile NTVDMx64 using CCPU.
+
 Compilation
 -----------
 The patches are applied automatically on execution of main patch.cmd

@@ -1,6 +1,6 @@
 @echo off
 echo ----------------------------------------------------
-echo Preparing MINNT repository
+echo Preparing MINNT repository, please wait...
 echo ----------------------------------------------------
 echo.
 

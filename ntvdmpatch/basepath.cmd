@@ -1,6 +1,6 @@
 @echo off
 rem
-rem Determine base path of build root for minnt or old-src
+rem Determine base path of build root for MINNT or old-src
 rem
 set PATCHROOT=%~dp0
 if "%NT_ROOT%"=="" (
