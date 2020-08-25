@@ -624,7 +624,6 @@ Return Value:
 
 {
 	IU32	required_mem;
-	struct hax_alloc_ram_info alloc_ram = { 0 };
 
 	required_mem = Size + NOWRAP_PROTECTION;
 	Start_of_M_area = (PBYTE)host_sas_init(Size);
@@ -645,9 +644,8 @@ Return Value:
 	 * will change some of this to being ROM.
 	 */
 
-	//sas_connect_memory(0, alloc_ram.size - 1, SAS_RAM);
-	haxm_alloc(Start_of_M_area, 0x110000);
-	sas_connect_memory(0, 0x110000, SAS_RAM);
+	haxm_alloc(Start_of_M_area, required_mem);
+	sas_connect_memory(0, 0x110000 - 1, SAS_RAM);
 
 #ifndef EGATEST
 	rom_init();
@@ -856,7 +854,6 @@ Return Value:
 	DWORD bytes;
 	extern byte  *video_copy;
 
-	if (!Start_of_M_area) return;
 
 	{
 		char szdbg[256];

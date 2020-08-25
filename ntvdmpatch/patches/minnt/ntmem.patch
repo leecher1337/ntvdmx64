@@ -1,26 +1,23 @@
 --- NT4\private\mvdm\softpc.new\host\src\nt_mem.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_mem.c
-237a238
-> 	sas_connect_memory(0, initialCommitSize - 1, SAS_RAM);
-445a447,451
-> 	if (commitSize && Commit)
-> 	{
-> 		sas_connect_memory(*INTELAddress, *INTELAddress + Size - 1, SAS_RAM);
-> 	}
+238a239
+>     sas_connect_memory(0, initialCommitSize - 1, SAS_RAM);
+445a447,448
+>     if (commitSize && Commit) sas_connect_memory(*INTELAddress, *INTELAddress + Size - 1, SAS_RAM);
 > 
-492a499
-> 	sas_connect_memory(INTELAddress, INTELAddress + Size - 1, SAS_RAM);
-518a526
-> 	sas_disconnect_memory(INTELAddress, INTELAddress + Size - 1);
-601a610
-> 	sas_disconnect_memory(INTELAddress, INTELAddress + size - 1);
-830a840
-> 		sas_disconnect_memory(INTELOriginalAddress, INTELOriginalAddress + oldSize - 1);
-886a897,898
+492a496
+>     sas_connect_memory(INTELAddress, INTELAddress + Size - 1, SAS_RAM);
+518a523
+>     sas_disconnect_memory(INTELAddress, INTELAddress + Size - 1);
+601a607
+>     sas_disconnect_memory(INTELAddress, INTELAddress + size - 1);
+830a837
+>         sas_disconnect_memory(INTELOriginalAddress, INTELOriginalAddress + oldSize - 1);
+886a894,895
 > 
-> 	sas_connect_memory(*INTELNewAddress, *INTELNewAddress + NewSize - 1, SAS_RAM);
-975a988,989
-> 	sas_connect_memory(*IntelAddress, *IntelAddress + Size - 1, SAS_RAM);
+>     sas_connect_memory(*INTELNewAddress, *INTELNewAddress + NewSize - 1, SAS_RAM);
+975a985,986
+>     sas_connect_memory(*IntelAddress, *IntelAddress + Size - 1, SAS_RAM);
 > 
-1023a1038
-> 	sas_disconnect_memory(IntelAddress, IntelAddress + Size - 1);
+1023a1035
+>     sas_disconnect_memory(IntelAddress, IntelAddress + Size - 1);

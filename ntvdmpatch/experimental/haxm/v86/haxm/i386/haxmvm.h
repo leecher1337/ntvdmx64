@@ -341,6 +341,16 @@ enum {
 	VECTOR_XM = 19,  // SIMD Floating-Point Numeric Error
 	VECTOR_VE = 20   // Virtualization Exception
 };
+enum {
+    INTERRUPT   = 0,
+    NMI         = 2,
+    EXCEPTION   = 3,
+    SWINT       = 4,
+    PRIV_TRAP   = 5,
+    UNPRIV_TRAP = 6,
+    OTHER       = 7
+};
+
 
 struct hax_tunnel {
     exit_reason _exit_reason;
@@ -393,6 +403,7 @@ struct hax_tunnel {
 		} debug;
 		struct {
 			interruption_info_t exit_intr_info;
+			uint32_t exit_exception_error_code;
 		} nmi;
     };
     uint64_t apic_base;
@@ -510,6 +521,7 @@ struct hax_capabilityinfo
 #define HAX_DEBUG_STEP       (1 << 1)
 #define HAX_DEBUG_USE_SW_BP  (1 << 2)
 #define HAX_DEBUG_USE_HW_BP  (1 << 3)
+#define HAX_DEBUG_MONSTEP    (1 << 4)
 
 struct hax_debug_t {
     uint32_t control;

@@ -38,6 +38,10 @@
 > #ifndef i386
 81a83
 > #endif
+112c114
+<     UCHAR Misc[28];
+---
+>     UCHAR Misc[34];
 --- NT4\private\mvdm\dpmi32\dpmiint.c
 +++ nt\private\mvdm\dpmi32\dpmiint.c
 88c88
@@ -137,6 +141,27 @@
 <     return NT_SUCCESS(Status);
 ---
 >     return Status;
+--- NT4\private\mvdm\dpmi32\stack.c
++++ nt\private\mvdm\dpmi32\stack.c
+125a126,133
+>     // leecher1337: While  RM Int executes, we have to have IDT on Realmode IVT 
+>     // and set proper segment limits
+>     setCS_BASE_LIMIT_AR(0, 0xFFFF, 0x9b);
+>     setDS_BASE_LIMIT_AR(0, 0xFFFF, 0x93);
+>     setES_BASE_LIMIT_AR(0, 0xFFFF, 0x93);
+>     setIDT_BASE_LIMIT(0, 0xFFFF);
+>     
+> 
+--- NT4\private\mvdm\dpmi32\savestat.c
++++ nt\private\mvdm\dpmi32\savestat.c
+35a36,37
+>     ULONG IDTBase;
+>     USHORT IDTLimit;
+79a82,83
+>     SavedState->IDTBase = getIDT_BASE();
+>     SavedState->IDTLimit = getIDT_LIMIT();
+131a136
+>     setIDT_BASE_LIMIT(SavedState->IDTBase, SavedState->IDTLimit);
 --- NT4\private\mvdm\dpmi\486\dxstrt.asm
 +++ nt\private\mvdm\dpmi\486\dxstrt.asm
 1260a1261,1268
@@ -147,4 +172,59 @@
 > 	mov	fs, ax
 > 	mov	gs, ax
 > .286p
+> 
+--- NT4\private\mvdm\dpmi\486\dxintr.asm
++++ nt\private\mvdm\dpmi\486\dxintr.asm
+3160a3161,3169
+> ifndef WOW_x86
+> ; leecher1337: Make sure that the nested task flag is clear
+> ; Interrupt hook code, i.e. DpmiSwIntHandler, DpmiHwintHandler ensure this,
+> ; but if we don't do the hooking for performance reasons, like in HAXM, not
+> ; doing this would lead to crash
+>         and     ebx,NOT 4000h
+>         push    ebx
+>         rpopfd
+> endif
+3178a3188,3192
+> ifndef WOW_x86	; leecher1337: Make sure that the nested task flag is clear
+>         and     ebx,NOT 4000h
+>         push    ebx
+>         rpopfd
+> endif
+--- NT4\private\mvdm\dpmi\dxmmgr.asm
++++ nt\private\mvdm\dpmi\dxmmgr.asm
+1153a1154,1158
+> 			
+>         ; leecher1337: SwitchToRealMode saves fs and gs, SwitchToProtectedMode restores them
+>         ; If the selector to free is fs or gs, CPU would fault on restore, as it is already
+>         ; zapped. Therefore, zero them out before switching to real mode 
+>         call    ClearSegRegs
+1194a1200,1227
+> 
+> ; -------------------------------------------------------
+> ;   ClearSegRegs   -- This function will check if fs or 
+> ;       gs selectors are equal to selector in ax 
+> ;       If so, it will clear the respective selector 
+> ;       This is needed for Protected mode switching 
+> ;
+> ;   Input:  AX      - selector to check 
+> ;   Output: none
+> ;   Uses:   AX, all other registers preserved
+> ClearSegRegs    proc    near
+> .386
+>         push    bx
+> 		mov     bx,fs
+>         cmp     bx,ax
+>         jne     flm61
+>         xor     bx,bx
+>         mov     fs,bx
+> flm61:  mov     bx,gs
+>         cmp     bx,ax
+>         jne     flm62
+>         xor     bx,bx
+> 		mov     gs,bx
+> flm62:  pop     bx
+> .286p
+>         ret
+> ClearSegRegs    endp
 > 

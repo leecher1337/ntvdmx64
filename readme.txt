@@ -152,15 +152,16 @@ There are various "flavours" of NTVDM that can be built:
    development has been switched to MINNT tree.
    This build method therefore is DEPRECATED in favour of the 
    MINNT build systemand will not receive any future updates!
+   This build is left unmaintained and unchecked, so don't complain
+   if it doesn't build anymore.
    Please note that you need Windows XP for building.
    Build instructions in: doc\old-src.txt
  * HAXM
    Instead of using the emulated CCPU, it uses HAXM VT-x hardware 
    accelleration (CPU needs to support it), so it is significally 
    faster in textmode.
-   But it doesn't support DPMI yet and will probably never support
-   graphics, as it is technically impossible to emulate a real VGA
-   card with sufficient performance on VT-x
+   But it will probably never support graphics, as it is technically 
+   impossible to emulate a real VGA card with sufficient performance on VT-x
    Works with minnt and old-src build.
    Build instructions in: doc\haxm.txt
  * MINNT

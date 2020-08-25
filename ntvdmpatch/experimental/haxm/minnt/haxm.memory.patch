@@ -1,10 +1,15 @@
 --- NT4\private\mvdm\softpc.new\host\src\nt_mem.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_mem.c
-448a449,451
-> #ifdef HAXM
-> 		haxm_alloc(Start_of_M_area + *INTELAddress, Size);
+238a239
+> #ifndef HAXM
+239a241,242
 > #endif
-498a502,504
-> #ifdef HAXM
-> 	haxm_alloc(Start_of_M_area + INTELAddress, Size);
+> 
+523a527
+> #ifndef HAXM	// BUGBUG: Decommitting memory leads to wrong memory references on next use, need to fix this!
+532a537
+> #endif
+610a616
+> #ifndef HAXM	// BUGBUG: Decommitting memory leads to wrong memory references on next use, need to fix this!
+621a628
 > #endif

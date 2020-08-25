@@ -11,7 +11,7 @@ You need the special Intel HAXM driver that I built for use with NTVDM. It
 needs support for BOPping and memory address translation.
 It is available at 
 
-https://github.com/leecher1337/haxm
+https://github.com/leecher1337/haxm/tree/ntvdm
 
 However currently not all functions that the modified driver includes are 
 available in this repository, so for now, you are better off with taking
@@ -26,14 +26,9 @@ drivers.
 
 Limitations
 -----------
-As the current implementation is only experimental, there is currently NO
-SUPPORT for protected mode!
-In order to be able to even get it up and running, you therefore need to
-remove the DOSX call in AUTOEXEC.NT file, otherwise, NTVDM will just crash
-(and thus, it will also crash with other applications that try to use
-protected mode).
+DPMI suport may work badly, but at least it works for simple applications.
 
-Graphic output currently also is a bit weird, depending on the application
+Graphic output currently is a bit weird, depending on the application
 (but some applications work), so it will only work properly with text mode 
 applications.
 These limitations are due to the following problems and if you have a solution
@@ -60,7 +55,7 @@ A copy buffer named haxm_videocmp_copy gets used and the video memory is
 connected as normal memory to let the application write to and on every transition
 from HAXM to NTVDM hypervisor, the difference to the last call is being synced
 into the virtual video adapter.
-For a detailed graphic ybout this, please have a look at sas.c function 
+For a detailed graphic about this, please have a look at sas.c function 
 hax_set_ram.
 This somewhat works, but for planar graphics access, it obviously doesn't, so
 you are far better off with the classic CCPU for this type of applications.
@@ -78,8 +73,7 @@ testing datasets in a database), however we still don't reach V86 mode 32bit
 NTVDM preformance. Therefore it's questionable if HAXM support should be developed
 any further. If somebody is interested in it, you are invited to improve these
 patches to make it stable. You'll need YODA debugger in order to analyze the
-issues with Protected mode. DPMI interrupt hooking is currently not 
-implemented properly which leads to various problems i.e. with DOSX.EXE
+issues.
 
 Also, HAXM currently does not currently support WOW32 applications, so if you want
 to run them, you will need to compile NTVDMx64 using CCPU.
@@ -110,10 +104,17 @@ Basically:
   * bcdedit /set testsigning on
   * certmgr /add haxm\IntelHaxm.cer /s /r localMachine root
 
+If the certmgr command just opens up a window and doesn't add the certificate, try
+  * certutil -addstore "TrustedPublisher" /add haxm\IntelHaxm.cer
+instead.
+
 
 To use the modified HAXM driver, you can just use the installer in the 
 release directory, that should install the driver with the name 
 IntelHaxmNtvdm into the system and copy it to the drivers directory.
+
+It is not recommended to install the WOW32 support, as it currently doesn't work
+with HAXM build anyway.
 
 If you do not want to install the driver to your system, you can 
 load it manually by using the HaxmLoader.exe from HAXM project 
@@ -122,3 +123,6 @@ remove haxm directory from release folder in this case prior
 to installation, so that it doesn't get installed).
   * HaxmLoader.exe -i X:\path\to\IntelHaxm.sys
 
+If you receive error 3 or error 6 in Event log when tring to start IntelHaxm, 
+double-check that your system is really capable of VT-x (or if you are testing in
+a virtual machine, that it is enabled there in the processor features)

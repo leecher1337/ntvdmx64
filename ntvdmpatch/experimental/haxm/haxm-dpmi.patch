@@ -12,13 +12,34 @@
 < #ifdef CCPU
 ---
 > #if defined(CCPU) || defined(HAXM)
+203c203
+< #if defined(CCPU) || !defined(PROD)
+---
+> #if defined(CCPU) || defined(HAXM) || !defined(PROD)
 241c241
+< #ifdef CCPU
+---
+> #if defined(CCPU) || defined(HAXM)
+--- NT4\private\mvdm\softpc.new\host\inc\nt_inthk.h
++++ nt\private\mvdm\softpc.new\host\inc\nt_inthk.h
+27c27
+< #ifdef CCPU
+---
+> #if defined(CCPU) || defined(HAXM)
+35c35
 < #ifdef CCPU
 ---
 > #if defined(CCPU) || defined(HAXM)
 --- NT4\private\mvdm\dpmi32\dpmiint.c
 +++ nt\private\mvdm\dpmi32\dpmiint.c
-105a106,108
+105a106,109
 > #endif      //i386
 > #ifdef HAXM
-> 	HaxmSetProtectedModeInterrupt(IntNumber);
+> 	HaxmSetProtectedModeInterrupt(IntNumber, Handlers[IntNumber].Flags);
+> 	if (!fDpmiIntsHaveBeenHooked) EnableIntHooks();
+--- NT4\private\mvdm\dpmi32\sources.inc
++++ nt\private\mvdm\dpmi32\sources.inc
+57a58,60
+> !if $(HAXM)
+> C_DEFINES=-DHAXM
+> !endif

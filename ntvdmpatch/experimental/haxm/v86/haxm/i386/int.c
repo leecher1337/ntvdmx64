@@ -223,10 +223,12 @@ Notes:
     }
 
     if ( getIF() && *pNtVDMState & VDM_INT_HARDWARE) {
-
+#ifdef HOOK_INTS
 		if (getMSW() & MSW_PE)
 			DispatchHwInterrupt();
-		else {
+		else 
+#endif
+		{
 			ULONG IretHookAddress = 0L;
 		    int InterruptNumber = ica_intack(&IretHookAddress);
 
@@ -239,19 +241,32 @@ Notes:
     host_ica_unlock();
 }
 
-VOID HaxmSetProtectedModeInterrupt(USHORT IntNumber)
+#define AB_DPL3         0x60    //ring 3 DPL
+#define AB_PRESENT      0x80    //segment present bit
+#define SEL_IDT			0x8F
+
+VOID HaxmSetProtectedModeInterrupt(USHORT IntNumber, USHORT Flags)
 {
-	ULONG IDTbase = getIDT_BASE();
+	ULONG IDTbase;
 	KIDTENTRY *pIDT;
 
-	// HACKHACK: Remove and use VMX_EXIT_GDT_IDT_ACCESS in HAXM to get proper address
-	if (!IDTbase) IDTbase = getES()<<16;
-	pIDT = (KIDTENTRY*)Sim32GetVDMPointer(IDTbase, 0, 
-		(UCHAR)(getMSW() & MSW_PE));
+	// HACKHACK: We are just assuming the address based on DPMI - code
+	if (getMSW() & MSW_PE)
+		pIDT = (KIDTENTRY*)Sim32GetVDMPointer(SEL_IDT<<16, 0, 1);
+	else
+		pIDT = (KIDTENTRY*)((PBYTE)Ldt - 0x800);
 
-printf ("HaxmSetProtectedModeInterrupt(%d) @%08X\n", IntNumber, &pIDT[IntNumber]);
+#ifdef HOOK_INTS
 	// Mask off present-Bit to let it fault
 	pIDT[IntNumber].Access &= ~(1<<15);
+#else
+	// Interrupt hooking is unbearably slow, thus we just set up the descriptor 
+	// access bits to let the CPU do our job. 
+	// The problem here is that NT (Nested Task) flag needs to get cleared on IRET or INT,
+	// otherwise, we will end up at the wrong place after IRET and currently only the hooks
+	// do that, not the real ISRs.. :(
+	pIDT[IntNumber].Access = (pIDT[IntNumber].Access & 0xE0FF) | ((7 + ((Flags & VDM_INT_32)<<2) - (Flags & VDM_INT_INT_GATE))<<8);
+#endif
 }
 
 
@@ -288,8 +303,7 @@ Return Value:
 	/* host_swint_hook() in CCPU -> Software INT hooks --> VdmInstallSoftwareIntHandler(DpmiSwIntHandler); in DPMI32
 	 * Dieser handler ersetzt die normale Interrupbehandlung, wenn ausgeführt!
 	 * Hierzu gibt es kein Äquivalent in MONITOR, in Monitor werden dafür IRET hooks verwendet über
-	 * den Instruction-emulator, u.A. für INT, POPF, STI, ...
-	 * und der DpmiHwIntHandler wofür es wiederum keine Ensprechung in der CCPU gibt.
+	 * den Instruction-emulator, u.A. für INT, POPF, STI, ... (-> V86DispatchTable)
 	 * Hooks werden generell via SetProtectedModeInterrupt BOP (Handler DpmiSetProtectedmodeInterrupt) gesetzt.
 	 * Dafür wird durch  host_iret_bop_table_addr() in ica_intack ein hook zurückgegeben.
 	 * Diese Funktionen simulieren einen INT, statt einen echten auf der CPU auszuführen. Eventuell sollten wir
@@ -330,7 +344,7 @@ Return Value:
 	 * that big. 
 	 * 
 	*/
-    DpmiHwIntHandler(InterruptNumber);
+    host_hwint_hook(InterruptNumber);
 
     if (IretHookAddress) {
 		BOOL Frame32 = (BOOL) DPMIFLAGS;
