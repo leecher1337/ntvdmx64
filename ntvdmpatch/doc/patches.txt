@@ -90,6 +90,8 @@ sas.patch           - Optimize SAS-interface for faster memory access,
 spurint.patch       - Fix crash on spurious Interrupts
 timers.patch        - Fix crash on startup caued by uninitialized timer 
                       defaults.
+quicked.patch       - Disable Quick edit when entering DOS app or graphics mode
+                      to prevent conhost-crashes
 w10.patch           - Patches function calls that changed in later versions
                       of Windows so that NTVDM also works on Windows 10
                       and not only NT4 where source originates from.

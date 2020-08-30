@@ -1,0 +1,28 @@
+--- NT4\private\mvdm\softpc.new\host\inc\host_def.h
++++ nt\private\mvdm\softpc.new\host\inc\host_def.h
+240a241,245
+> 
+> #ifndef ENABLE_QUICK_EDIT_MODE
+> #define ENABLE_QUICK_EDIT_MODE 0x0040
+> #define ENABLE_EXTENDED_FLAGS 0x0080
+> #endif
+--- NT4\private\mvdm\softpc.new\host\src\nt_fulsc.c
++++ nt\private\mvdm\softpc.new\host\src\nt_fulsc.c
+3332c3332,3333
+<     mode |= (ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT);
+---
+>     mode |= (ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
+>     mode &= ~ENABLE_QUICK_EDIT_MODE;
+--- NT4\private\mvdm\softpc.new\host\src\nt_hosts.c
++++ nt\private\mvdm\softpc.new\host\src\nt_hosts.c
+236a237
+>     sc.OrgInConsoleMode |= ENABLE_EXTENDED_FLAGS;
+240a242
+>     {
+241a244,245
+>         mode &= ~ENABLE_QUICK_EDIT_MODE;
+>     }
+244c248
+<            ~(ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
+---
+>            ~(ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_QUICK_EDIT_MODE);

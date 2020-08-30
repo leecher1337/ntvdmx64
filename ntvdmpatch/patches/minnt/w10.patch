@@ -6,7 +6,8 @@
 > C_DEFINES=-DWIN_32 -DW10
 --- NT4\private\mvdm\softpc.new\host\inc\host_def.h
 +++ nt\private\mvdm\softpc.new\host\inc\host_def.h
-240a242,243
+245a246,248
+> 
 > /* NtGetTickCount() works differently in newer Windows versions than in Win2k */
 > #define NtGetTickCount GetTickCount
 --- NT4\private\..\public\sdk\inc\ntexapi.h 
