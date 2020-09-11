@@ -40,6 +40,6 @@
 --- NT4\private\mvdm\dpmi32\sources.inc
 +++ nt\private\mvdm\dpmi32\sources.inc
 57a58,60
-> !if $(HAXM)
+> !if "$(HAXM)" != ""
 > C_DEFINES=-DHAXM
 > !endif
