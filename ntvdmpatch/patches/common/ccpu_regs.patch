@@ -143,3 +143,46 @@
 > IUH val;
 > { 
 >     c_setCPL(val);
+552a690,731
+> #undef setCS_BASE_LIMIT_AR
+> void setCS_BASE_LIMIT_AR(base,limit,ar)
+> IU32  base,limit;
+> IU16  ar;
+> {
+>     c_setCS_BASE_LIMIT_AR(base,limit,ar);
+> }
+> 
+> #undef setDS_BASE_LIMIT_AR
+> void setDS_BASE_LIMIT_AR(base,limit,ar)
+> IU32  base,limit;
+> IU16  ar;
+> {
+>     c_setDS_BASE_LIMIT_AR(base,limit,ar);
+> }
+> 
+> #undef setES_BASE_LIMIT_AR
+> void setES_BASE_LIMIT_AR(base,limit,ar)
+> IU32  base,limit;
+> IU16  ar;
+> {
+>     c_setES_BASE_LIMIT_AR(base,limit,ar);
+> }
+> 
+> #undef setIDT_BASE_LIMIT
+> void setIDT_BASE_LIMIT(base,limit)
+> IU32  base,limit;
+> {
+>     c_setIDT_BASE_LIMIT(base,limit);
+> }
+> 
+> #undef getIDT_LIMIT
+> IU16 getIDT_LIMIT()
+> {
+>     return c_getIDT_LIMIT();
+> }
+> 
+> #undef getIDT_BASE
+> IU32 getIDT_BASE()
+> {
+>     return c_getIDT_BASE();
+> }
