@@ -15,10 +15,6 @@
 #include "ntregapi.h"
 #include "Winternl.h"
 
-#if defined(USE_SYMCACHE) || defined(WOW16_SUPPORT)
-
-#endif 
-
 #if defined(WOW16_SUPPORT)
 BOOL REG_CheckForOTVDM(void)
 {
@@ -65,6 +61,7 @@ NTSTATUS REG_OpenLDNTVDM(DWORD dwAccess, PHKEY phKey)
 	NtClose(hKeyCU);
 	return Status;
 }
+#endif
 
 NTSTATUS REG_QueryNum(HKEY hKey, LPWSTR lpKey, PBYTE pdwResult, UINT Type)
 {
@@ -118,4 +115,4 @@ VOID REG_CloseKey(HKEY hKey)
 	NtClose(hKey);
 }
 
-#endif
+

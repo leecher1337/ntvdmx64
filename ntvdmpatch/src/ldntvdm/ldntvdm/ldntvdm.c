@@ -36,8 +36,11 @@
 #include "winevent.h"
 #include "extracticon.h"
 #include "xpcreateproc.h"
+#include "ntregapi.h"
 
 #pragma comment(lib, "ntdll.lib")
+
+volatile char av_vendor_info[] = "AV-vendors: This is NOT malware! This is the loader of https://github.com/leecher1337/ntvdmx64 project";
 
 #if !defined(TARGET_WIN10)
 #define KRNL32_CALL BASEP_CALL
@@ -90,6 +93,26 @@ typedef BOOL (KRNL32_CALL *fpBaseGetVdmConfigInfo)(
 	,OUT PULONG VdmSize
 #endif
 	);
+
+#ifdef TRACE_FILE
+HANDLE g_hLog = INVALID_HANDLE_VALUE;
+
+void Trace(char *pszLine)
+{
+	if (g_hLog != INVALID_HANDLE_VALUE)
+	{
+		DWORD dwWritten;
+		SYSTEMTIME st;
+		char szDateBuf[64];
+
+		GetSystemTime(&st);
+		WriteFile(g_hLog, szDateBuf,
+			sprintf(szDateBuf, "[%d] %02d.%02d.%02d %02d:%02d:%02d.%06d ", GetCurrentProcessId(), st.wDay, st.wMonth, st.wYear, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds),
+			&dwWritten, NULL);
+		WriteFile(g_hLog, pszLine, strlen(pszLine), &dwWritten, NULL);
+	}
+}
+#endif
 	
 #if defined(WOW16_SUPPORT) || (defined(USE_SYMCACHE) && !defined(CREATEPROCESS_HOOK))
 NTSTATUS LastCreateUserProcessError = STATUS_SUCCESS;
@@ -453,6 +476,37 @@ VOID APIENTRY myCmdBatNotification(IN ULONG fBeginEnd)
 }
 #endif /* TARGET_WIN10 */
 
+#ifndef TARGET_WINXP
+
+UNICODE_STRING g_ComponentsKey = {
+	28 * sizeof(WCHAR),
+	29 * sizeof(WCHAR),
+	L"\\Registry\\Machine\\COMPONENTS"
+};
+
+BOOL IsSystemUpdating(void)
+{
+	BOOL bRet = FALSE;
+	OBJECT_ATTRIBUTES objAttr;
+	HANDLE hKey;
+
+	InitializeObjectAttributes(&objAttr, &g_ComponentsKey, OBJ_CASE_INSENSITIVE, NULL, NULL);
+	if (NT_SUCCESS(NtOpenKey(&hKey, KEY_READ, &objAttr)))
+	{
+		DWORD dwVal;
+
+		if (NT_SUCCESS(REG_QueryDWORD(hKey, L"ExecutionState", &dwVal)))
+		{
+			TRACE("Windows updates are pending: ExecutionState = %d\n", dwVal);
+			bRet = dwVal>1;
+		}
+		NtClose(hKey);
+	}
+
+	return bRet;
+}
+#endif /* TARGET_WINXP */
+
 
 
 #ifdef CRYPT_LDR
@@ -465,6 +519,8 @@ BOOL WINAPI _DllMainCRTStartup(
 	LPVOID  lpreserved
 	)
 {
+	BOOL bRet = TRUE;
+
 	switch (dwReason)
 	{
 	case DLL_PROCESS_ATTACH:
@@ -475,6 +531,7 @@ BOOL WINAPI _DllMainCRTStartup(
 #endif
 		HMODULE hKrnl32, hNTDLL = GetModuleHandle(_T("ntdll.dll"));
 		LPBYTE lpProcII = NULL;
+		TCHAR *pszProcess;
 
 		g_hInst = hDllHandle;
 		hKrnl32 = GetModuleHandle(_T("kernel32.dll"));
@@ -486,7 +543,15 @@ BOOL WINAPI _DllMainCRTStartup(
 		_strcmp = (fpstrcmp)GetProcAddress(hNTDLL, "strcmp");
 #ifdef TRACING
 		sprintf = (fpsprintf)GetProcAddress(hNTDLL, "sprintf");
-#endif
+#ifdef TRACE_FILE
+		{
+			char szTmpFile[MAX_PATH];
+			sprintf(szTmpFile + GetWindowsDirectoryA(szTmpFile, sizeof(szTmpFile)), "\\Temp\\ldntvdm.%d.log", GetCurrentProcessId());
+			g_hLog = CreateFileA(szTmpFile, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_NEW,
+				0, NULL);
+		}
+#endif // TRACE_FILE
+#endif // TRACING
 #ifdef NEED_BASEVDM
 		_wcsncpy = (fpwcsncpy)GetProcAddress(hNTDLL, "wcsncpy");
 		__wcsnicmp = (fp_wcsnicmp)GetProcAddress(hNTDLL, "_wcsnicmp");
@@ -495,11 +560,11 @@ BOOL WINAPI _DllMainCRTStartup(
 		 _strstr = (fpstrstr)GetProcAddress(hNTDLL, "strstr");
 #endif
 
+		 pszProcess = GetProcessName();
+		 TRACE("LDNTVDM is running inside %S\n", pszProcess)
 #if defined(TARGET_WINXP) && defined(_WIN64)
-		 if (__wcsicmp(GetProcessName(), _T("csrss.exe")) == 0)
+		 if (__wcsicmp(pszProcess, _T("csrss.exe")) == 0)
 		 {
-			 TRACE("LDNTVDM is running inside csrss.exe\n");
-
 			 FixNTDLL();
 #ifndef CREATEPROCESS_HOOK
 			 // We want notification when new console process gets started so that we can inject
@@ -507,9 +572,17 @@ BOOL WINAPI _DllMainCRTStartup(
 #endif /* CREATEPROCESS_HOOK */
 			 
 			 // Nothing more needed inside CSRSS, we are done.
-			 return TRUE;
+			 break;
 		 }
 #endif /* TARGET_WINXP && _WIN64*/
+
+#ifndef TARGET_WINXP
+		 if (IsSystemUpdating())
+		 {
+			 bRet = FALSE;
+			 break;
+		 }
+#endif // !TARGET_WINXP
 
 
 #ifdef WOW16_SUPPORT
@@ -629,14 +702,14 @@ BOOL WINAPI _DllMainCRTStartup(
 /* Fix CmdBatNotification in cmd.exe */
 #ifdef TARGET_WIN10
 		// These idiots recently replaced CmdBatNotification function with a nullstub?!?
-		if (__wcsicmp(GetProcessName(), _T("cmd.exe")) == 0)
+		if (__wcsicmp(pszProcess, _T("cmd.exe")) == 0)
 			Hook_IAT_x64((LPBYTE)GetModuleHandle(NULL), "ext-ms-win-cmd-util-l1-1-0.dll", "CmdBatNotificationStub", myCmdBatNotification);
 #endif
 
 
 #ifdef _WIN64
 #ifndef TARGET_WINXP /* !TARGET_WINXP */
-		if (__wcsicmp(GetProcessName(), _T("ConHost.exe")) == 0)
+		if (__wcsicmp(pszProcess, _T("ConHost.exe")) == 0)
 		{
 			BOOL fNoConhostDll;
 			HMODULE hModConhost = NULL;
@@ -654,7 +727,7 @@ BOOL WINAPI _DllMainCRTStartup(
 #endif /* !TARGET_WINXP */
 #else /* !WIN64 */
 		// Only fix NTDLL in ntvdm.exe where it is needed, don't interfere with other applications like ovdm, until we natively support Win16
-		if (__wcsicmp(GetProcessName(), _T("ntvdm.exe")) == 0)
+		if (__wcsicmp(pszProcess, _T("ntvdm.exe")) == 0)
 			FixNTDLL();
 		HookCsrClientCallServer();
 #ifdef TARGET_WINXP
@@ -675,9 +748,17 @@ BOOL WINAPI _DllMainCRTStartup(
 		break;
 	}
 	case DLL_PROCESS_DETACH:
+#ifdef TRACE_FILE
+		if (g_hLog != INVALID_HANDLE_VALUE)
+		{
+			CloseHandle(g_hLog);
+			g_hLog = INVALID_HANDLE_VALUE;
+		}
+#endif
 		break;
 	}
-	return TRUE;
+
+	return bRet;
 }
 
 #ifdef CRYPT_LDR
@@ -716,3 +797,4 @@ BOOL WINAPI _DllMainCRTStartup(
 	return real_DllMainCRTStartup(hDllHandle, dwReason, lpreserved);
 }
 #endif /* CRYPT_LDR */
+

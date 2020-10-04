@@ -31,6 +31,7 @@
 // Enable debug tracing via Debug console. Recommended, as it helps diagnosing loader issues, but makes DLL bigger
 // due to debug strings
 #define TRACING
+//#define TRACE_FILE
 
 // This #define was an experiment to encrypt certain code sections of the loader to evade 
 // false positive detection by stupid Antivirus software on x32. 
@@ -72,7 +73,13 @@
 static char szDbgBuf[2048];
 typedef int (*fpsprintf)(char * str, const char * format, ...);
 extern fpsprintf sprintf;
-#define TRACE(...) { if (sprintf) {sprintf(szDbgBuf, __VA_ARGS__); OutputDebugStringA(szDbgBuf);} }
+#ifdef TRACE_FILE
+void Trace(char *pszLine);
+#define WRITE_TRACE Trace
+#else
+#define WRITE_TRACE OutputDebugStringA
+#endif
+#define TRACE(...) { if (sprintf) {sprintf(szDbgBuf, __VA_ARGS__); WRITE_TRACE(szDbgBuf);} }
 #else
 #define TRACE(...)
 #endif
