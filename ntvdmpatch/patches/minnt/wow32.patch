@@ -495,7 +495,7 @@
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-203a210,306
+203a210,310
 > 
 > 
 > #ifdef W10
@@ -534,7 +534,11 @@
 > BOOL	x64WaitForMsgAndEvent(IN HANDLE hevent)
 > {
 > 	LOGDEBUG(LOG_TRACE,("x64WaitForMsgAndEvent\n"));
-> 	MsgWaitForMultipleObjects(1, &hevent, FALSE, INFINITE, QS_ALLEVENTS);
+> 	while (MsgWaitForMultipleObjects(1, &hevent, FALSE, 1, QS_ALLEVENTS) == WAIT_TIMEOUT)
+> 	{
+> 		LOGDEBUG(LOG_TRACE,("x64WaitForMsgAndEvent: No event in queue\n"));
+> 		WK32Yield(NULL);
+> 	}
 > 	LOGDEBUG(LOG_TRACE,("x64WaitForMsgAndEvent: Received\n"));
 > 	return FALSE;
 > }
@@ -593,18 +597,18 @@
 > 	}
 > }
 > #endif /* W10 */
-409a513,516
+409a517,520
 > #ifdef W10
 >         GlobalDeleteAtom(gidWNDPROC16);
 >         GlobalDeleteAtom(gidDLGPROC16);
 > #endif
-625c732
+625c736
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-691a799,818
+691a803,822
 > #ifdef W10
->     pfnOut.pfnYieldTask = x64YieldTask;
+>     pfnOut.pfnYieldTask = (PFNYIELDTASK)x64YieldTask;
 >     pfnOut.pfnWowWaitForMsgAndEvent = x64WaitForMsgAndEvent;
 >     ptd = malloc_w_or_die(sizeof(TD));
 >     gdwTLSWOW32Reserved = TlsAlloc();
@@ -623,13 +627,13 @@
 > 		fLog = 2;
 > 	}
 > #else
-692a820
+692a824
 > #endif
-1944c2072
+1944c2076
 < #ifdef _X86_
 ---
 > #ifdef _X86xx_
-2136c2264
+2136c2268
 <                                    FILE_SHARE_WRITE,
 ---
 >                                    FILE_SHARE_WRITE | FILE_SHARE_READ,
