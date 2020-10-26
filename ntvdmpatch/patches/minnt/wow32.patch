@@ -947,11 +947,20 @@
 > 					   HANDLE hInstance, LPVOID lpParam);
 --- NT4\private\mvdm\wow32\wmsg16.c
 +++ nt\private\mvdm\wow32\wmsg16.c
-
 130c130
-<     lpmpex->hwnd   = FULLHWND32(lpmpex->Parm16.WndProc.hwnd);
+<     lpmpex->hwnd   = HWND32(lpmpex->Parm16.WndProc.hwnd);
 ---
->     lpmpex->hwnd   = HWND32(lpmpex->Parm16.WndProc.hwnd);
+>     lpmpex->hwnd   = FULLHWND32(lpmpex->Parm16.WndProc.hwnd);
+1398,1399d1397
+<      // FIXME: Enable the following when we are ready.
+<      /*
+1411d1408
+<     */
+1674,1675d1670
+<     // NOTE: Enable the following when we are ready.
+<     /*
+1686d1680
+<     */
 --- NT4\private\mvdm\wow32\wow32.h
 +++ nt\private\mvdm\wow32\wow32.h
 19a20
@@ -1096,6 +1105,40 @@
 > 
 > 
 > 
+--- NT4\private\mvdm\wow32\wmdisp32.c
++++ nt\private\mvdm\wow32\wmdisp32.c
+3257,3258d3256
+<             // FIXME: Enable the following when we are ready.
+<             /*
+3261d3258
+<             */
+3286,3287d3282
+<             // FIXME: Enable the following when we are ready.
+<             /*
+3290d3284
+<             */
+3310,3311d3303
+<             // FIXME: Enable the following when we are ready.
+<             /*
+3322d3313
+<             */
+3379,3380d3369
+<             // FIXME: Enable the following when we are ready.
+<             /*
+3383d3371
+<             */
+3398,3399d3385
+<             // FIXME: Enable the following when we are ready.
+<             /*
+3403d3388
+<             */
+--- NT4\private\mvdm\wow32\wgdi.c
++++ nt\private\mvdm\wow32\wgdi.c
+1686,1687d1685
+<         // FIXME: Enable the following when we are ready.
+<         /*
+1742d1739
+<         */
 --- NT4\private\mvdm\wow32\wparam.c
 +++ nt\private\mvdm\wow32\wparam.c
 359c359
