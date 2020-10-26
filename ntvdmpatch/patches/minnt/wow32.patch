@@ -945,6 +945,13 @@
 > HWND x64CreateWindowEx(DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName, DWORD dwStyle, 
 > 					   int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, 
 > 					   HANDLE hInstance, LPVOID lpParam);
+--- NT4\private\mvdm\wow32\wmsg16.c
++++ nt\private\mvdm\wow32\wmsg16.c
+
+130c130
+<     lpmpex->hwnd   = FULLHWND32(lpmpex->Parm16.WndProc.hwnd);
+---
+>     lpmpex->hwnd   = HWND32(lpmpex->Parm16.WndProc.hwnd);
 --- NT4\private\mvdm\wow32\wow32.h
 +++ nt\private\mvdm\wow32\wow32.h
 19a20
