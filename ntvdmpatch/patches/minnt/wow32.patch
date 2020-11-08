@@ -34,7 +34,7 @@
 > 	 */
 > 	DWORD dwWinTid = GetWindowThreadProcessId(hWnd, NULL);
 > 	if (!dwWinTid) dwWinTid = GetWindowThreadProcessId(FULLHWND32(hWnd), NULL);
-> 	if (hWnd == (HWND)-1 || 
+> 	if (hWnd == (HWND)-1 || hWnd == (USHORT)-1 || 
 > 		(dwWinTid != GetCurrentThreadId() &&
 > 		GetWindowLong(hWnd, GWL_WNDPROC) == (LONG)W32Win16WndDispProc))
 > 	{
