@@ -5,9 +5,9 @@
 --- NT4\private\mvdm\inc\makefile.inc
 +++ nt\private\mvdm\inc\makefile.inc
 30c30
-<      doswow.inc curdir.inc
+<      doswow.inc curdir.inc vdmtib.inc
 ---
->      doswow.inc curdir.inc wowwife.inc wownls.inc vdmtib.inc
+>      doswow.inc curdir.inc vdmtib.inc wowwife.inc wownls.inc
 73a74,77
 > wowwife.inc: wowwife.h wow.inc
 > 
@@ -781,11 +781,34 @@
 > 
 --- NT4\private\mvdm\wow16\gdi\gdi.asm
 +++ nt\private\mvdm\wow16\gdi\gdi.asm
-331c331
+45c45,48
+<  Stocks  dw  17 dup (0)  ; Stock Object Handles
+---
+> STOCK_END  EQU STOCK_MAX+1
+> 
+>  Stocks  dw  STOCK_END dup (0)  ; Stock Object Handles
+> 
+107c110
+<         cmp  si,16       ; Stock Objects have an index range of 0 through 16
+---
+>         cmp  si,STOCK_MAX ; Stock Objects have an index range of 0 -> STOCK_MAX
+112a116
+> 
+142c146
+<     cmp  bx,16
+---
+>     cmp  bx,STOCK_MAX
+264d267
+<         GDIThunk    DELETEABOVELINEFONTS
+331c334
 <         GDIThunk    GETREGIONDATA
 ---
->         DGDIThunk    GETREGIONDATA
-539a540,610
+>         DGDIThunk   GETREGIONDATA
+439c442
+<         DGDIThunk   SHRINKGDIHEAP
+---
+>         DGDIThunk   SHRINKGDIHEAP, 0
+539a543,612
 >         DGDITHUNK   ABORTPATH
 >         DGDITHUNK   ABORTPRINTER
 >         DGDITHUNK   ADDLPKTOGDI
@@ -856,14 +879,11 @@
 >         DGDITHUNK   WIDENPATH
 >         DGDITHUNK   WRITEPRINTER
 > 
-> 
-547a619,627
-> cProc GDIFREERESOURCES,<PUBLIC,FAR,PASCAL,NODATA,WIN>
->         parmw hdc
->         parmw res
+547a621,627
+> cProc GdiFreeResources,<PUBLIC,FAR,PASCAL,NODATA,WIN>
+>         ParmD cbBaseline
 > cBegin
->         ; Not Supported
->         mov   ax,5ah
+>         mov   ax,90      ; % free
 > cEnd
 > 
 > 
@@ -1376,6 +1396,277 @@
 > CC=cl16
 > RC=rc16 $(INCLUDE)
 > LINK=link16
+diff -r \\10.0.0.245\work\minnt\base\mvdm\wow16.ok\ddeml\ddeml.c F:\Windows.Source.Code.w2k.nt4.wxp\ddeml.c
+--- NT4\private\mvdm\wow16\ddeml\ddeml.c
++++ nt\private\mvdm\wow16\ddeml\ddeml.c
+34c34,35
+< FARPROC     prevHook         = NULL;    // used for hook links
+---
+> FARPROC     prevMsgHook      = NULL;    // used for hook links
+> FARPROC     prevCallHook     = NULL;    // used for hook links
+164d164
+< 
+277,278c277,278
+<             prevHook = SetWindowsHook(WH_GETMESSAGE, (FARPROC)DdePostHookProc);
+<             prevHook = SetWindowsHook(WH_CALLWNDPROC, (FARPROC)DdeSendHookProc);
+---
+>             prevMsgHook = SetWindowsHook(WH_GETMESSAGE, (FARPROC)DdePostHookProc);
+>             prevCallHook = SetWindowsHook(WH_CALLWNDPROC, (FARPROC)DdeSendHookProc);
+1785a1786,1793
+>     // we better check HIWORD(hData) before we try to stuff it into ds
+>     if(IsBadReadPtr((LPCSTR)hData, 1)) {
+> #ifdef DEBUG
+>         OutputDebugString("DDEML: Invalid HDDEDATA.\n\r");
+> #endif
+>         return(FALSE);
+>     }
+> 
+1830c1838
+<     TRACEAPIOUT((szT, "DdeFreeDataHandle:1\n"));
+---
+>     TRACEAPIOUT((szT, "DdeFreeDataHandle:2\n"));
+--- NT4\private\mvdm\wow16\ddeml\ddemlp.h
++++ nt\private\mvdm\wow16\ddeml\ddemlp.h
+514c514,515
+< extern FARPROC      prevHook;
+---
+> extern FARPROC      prevMsgHook;
+> extern FARPROC      prevCallHook;
+--- NT4\private\mvdm\wow16\ddeml\dmgmon.c
++++ nt\private\mvdm\wow16\ddeml\dmgmon.c
+35c35
+<     return DefHookProc(nCode, wParam, (DWORD)lParam, &prevHook);
+---
+>     return DefHookProc(nCode, wParam, (DWORD)lParam, &prevCallHook);
+63c63
+<     return DefHookProc(nCode, wParam, (DWORD)lParam, &prevHook);
+---
+>     return DefHookProc(nCode, wParam, (DWORD)lParam, &prevMsgHook);
+--- NT4\private\mvdm\wow16\drivers\display\display.asm
++++ nt\private\mvdm\wow16\drivers\display\display.asm
+81a82,88
+> 
+> ; required for AutoSketch
+> cProc	CheckCursor,<FAR,PUBLIC,WIN,PASCAL>
+> cBegin
+>         or     ax,ax  ;do nothing
+> cEnd
+> 
+--- NT4\private\mvdm\wow16\drivers\display\display.def
++++ nt\private\mvdm\wow16\drivers\display\display.def
+17a18
+>     CheckCursor     @104
+--- NT4\private\mvdm\wow16\gdi\gdi.api
++++ nt\private\mvdm\wow16\gdi\gdi.api
+23c23
+< STOCK_MAX	equ	16
+---
+> STOCK_MAX   equ 19 ; should match sdk\inc\wingdi.h\STOCK_LAST
+1438,1443c1438,1444
+< 				       	
+< 	xor	ax,ax		      	;need zeros.
+< 	cmp	word ptr es:[bx].biHeight+2,ax
+< 	jne	VDH_bad_header		;invalid
+< 	cmp	word ptr es:[bx].biWidth+2,ax
+< 	jne	VDH_bad_header		;invalid
+---
+> 
+>     cmp word ptr es:[bx].biWidth+2,0
+>     jne VDH_bad_header                      ;invalid
+>     mov     ax,word ptr es:[bx].biHeight+2
+>     test    ax,ax                           ;is it a negative number ?
+>     js      VDH_get_bit_count               ;yes, must be a top-down dib.
+>     jnz     VDH_bad_header                  ;it it is not signed, it should be 0.
+2367c2368
+< P_VALUE     nIndex, STOCK_MAX			; ** range 0-16
+---
+> P_VALUE     nIndex, STOCK_MAX			; ** range 0-STOCK_MAX
+2518,2519c2519
+< P_CLPSTR    lpString
+< P_int	    nCount
+---
+> P_CLPBUFFER lpString, nCount
+--- NT4\private\mvdm\wow16\mmsystem\midi.c
++++ nt\private\mvdm\wow16\mmsystem\midi.c
+251a252,258
+>     if (ValidateHandle((HMIDIOUT)wDeviceID, TYPE_MIDIOUT)) {
+>        return((UINT)midiOMessage((HMIDI)wDeviceID,
+>                                  MODM_GETDEVCAPS,
+>                                  (DWORD)lpCaps,
+>                                  (DWORD)wSize));
+>     }
+> 
+304a312,318
+>     if (ValidateHandle((HMIDIOUT)wDeviceID, TYPE_MIDIOUT)) {
+>        return((UINT)midiOMessage((HMIDI)wDeviceID,
+>                                  MODM_GETVOLUME,
+>                                  (DWORD)lpdwVolume,
+>                                  0));
+>     }
+> 
+360a375,381
+>     if (ValidateHandle((HMIDIOUT)wDeviceID, TYPE_MIDIOUT)) {
+>        return((UINT)midiOMessage((HMIDI)wDeviceID,
+>                                  MODM_SETVOLUME,
+>                                  dwVolume,
+>                                  0));
+>     }
+> 
+1146a1168,1174
+>     if (ValidateHandle((HMIDIIN)wDeviceID, TYPE_MIDIIN)) {
+>        return((UINT)midiIMessage((HMIDIIN)wDeviceID,
+>                                  MIDM_GETDEVCAPS,
+>                                  (DWORD)lpCaps,
+>                                  (DWORD)wSize));
+>     }
+> 
+--- NT4\private\mvdm\wow16\mmsystem\time.c
++++ nt\private\mvdm\wow16\mmsystem\time.c
+40a41,44
+> DWORD dwLastGetTime = 0;        // last TimeGetTime return value can be bigger than system TimeGetTime
+> DWORD dwRealLastGetTime = 0;    // last system TimeGetTime return value
+> DWORD pfnDelayTimeGetTime = 0;  // 32-bit function that sleeps for 1ms and returns if TimeGetTime flag applied 
+>                                 // look in timeTimeGetTime and WOWDelayTimeGetTime in wow32                             
+190c194
+<     timerEvent.dwUser = dwUser;	
+---
+>     timerEvent.dwUser = dwUser;  
+351d354
+< 
+371a375,378
+> * @comment: on faster machines timeGetTime can return the same value
+> * and some apps will take diff (0) to divide and fault  
+> * to prevent that call DelayTimeGetTime which will check if it is one
+> * of the known apps that do that and sleep if necessary 
+382c389,421
+<     return timeMessage( TDD_GETSYSTEMTIME, 0L, 0L );
+---
+>     DWORD  dwGetTime;
+>     DWORD  bDelay = 0;
+> 
+>     if (pfnDelayTimeGetTime == 0) {
+>         DWORD hmodWow32;
+>         hmodWow32 = LoadLibraryEx32W("wow32.dll", 0, 0);
+>         pfnDelayTimeGetTime = GetProcAddress32W(hmodWow32, "WOWDelayTimeGetTime");
+>     }
+> 
+> RepeatTGT:
+>     dwGetTime = timeMessage( TDD_GETSYSTEMTIME, 0L, 0L );
+>     
+>     // check if it wrapped around
+>     if (dwGetTime < dwRealLastGetTime) {
+>         dwLastGetTime = dwRealLastGetTime = dwGetTime;
+>         return dwGetTime;
+>     }
+>     dwRealLastGetTime = dwGetTime;
+>     
+>     if (dwGetTime == dwLastGetTime) {
+>         if (!bDelay) {
+>                       
+>             bDelay = (DWORD) CallProc32W((LPVOID)pfnDelayTimeGetTime,(DWORD)0,(DWORD)0);        
+>             if(bDelay) {
+>                goto RepeatTGT;
+>             }
+>         }
+>         else {
+>             dwGetTime = ++dwLastGetTime;
+>         }
+>     } 
+>     dwLastGetTime = dwGetTime;
+>     return dwGetTime;
+--- NT4\private\mvdm\wow16\mmsystem\wave.c
++++ nt\private\mvdm\wow16\mmsystem\wave.c
+194a195,201
+>     if (ValidateHandle((HWAVEOUT)wDeviceID, TYPE_WAVEOUT)) {
+>        return((UINT)waveOMessage((HWAVE)wDeviceID,
+>                                  WODM_GETDEVCAPS,
+>                                  (DWORD)lpCaps,
+>                                  (DWORD)wSize));
+>     }
+> 
+246a254,263
+> 
+>     if (ValidateHandle((HWAVEOUT)wDeviceID, TYPE_WAVEOUT)) {
+> 
+>        return ( (UINT)waveOMessage( (HWAVE)wDeviceID,
+>                                     WODM_GETVOLUME,
+>                                     (DWORD)lpdwVolume,
+>                                     0
+>                                   ));
+> 
+>     }
+306c323,328
+<     return waveOIDMessage( wDeviceID, WODM_SETVOLUME, 0L, dwVolume, 0);
+---
+> 
+>    if (ValidateHandle((HWAVEOUT)wDeviceID, TYPE_WAVEOUT)) {
+>       return((UINT)waveOMessage((HWAVE)wDeviceID, WODM_SETVOLUME, dwVolume, 0));
+>    }
+> 
+>    return waveOIDMessage( wDeviceID, WODM_SETVOLUME, 0L, dwVolume, 0);
+1250a1273,1279
+>     if (ValidateHandle((HWAVEIN)wDeviceID, TYPE_WAVEIN)) {
+>        return((UINT)waveIMessage((HWAVE)wDeviceID,
+>                                  WIDM_GETDEVCAPS,
+>                                  (DWORD)lpCaps,
+>                                  (DWORD)wSize));
+>     }
+> 
+--- NT4\private\mvdm\wow16\toolhelp\krnlpeek.asm
++++ nt\private\mvdm\wow16\toolhelp\krnlpeek.asm
+37,40d36
+<         ;** Make sure we're in PMODE.  TOOLHELP does not run in non-PMODE
+<         ;**     Windows.
+<         mov     ax,__WinFlags           ;Get WinFlags
+<         test    ax,1                    ;In PMODE?
+42,44c38
+<         jnz     @F                      ;Yes, go on
+<         jmp     KT_End                  ;No, not in PMODE, return error
+< @@:
+---
+> 
+53,59d46
+<         mov     es,ax                   ;Use ES to point to the block
+<         mov     ax,es:[hi_first]        ;Get low word of first heap entry
+<         test    ax,01fh                 ;Mask out lowest 5 bits
+<         jz      KT_Krnl386              ;Must be Krnl386 so leave the flags
+<         mov     wTHFlags,TH_KERNEL_286
+<         jmp     SHORT KT_BothPModes     ;Skip TH_KERNEL_386 stuff
+< KT_Krnl386:
+60a48
+> 
+64c52
+<         cCall   GetVersion              ;Which Windows version are we on
+---
+> ;        cCall   GetVersion              ;Which Windows version are we on
+66,73c54,57
+<         cmp     ax,0003h                ;Win 3.0 or Win 3.0a?
+<         je      KT_Win30                ;Yes
+<         cmp     ax,0103h                ;Beta releas of Win 3.0a?
+<         je      KT_Win30                ;Yes
+<         cmp     ax,0a03h                ;Win 3.1?
+<         je      KT_Win31                ;Yes
+<         mov     wTHFlags,0              ;Zero wTHFlags indicates error
+<         jmp     SHORT KT_End            ;Unknown Windows version
+---
+> ;	 cmp     ax,0004h                ;Win 4.0?
+> ;        je      KT_Win31
+> ;        mov     wTHFlags,0              ;Zero wTHFlags indicates error
+> ;        jmp     SHORT KT_End            ;Unknown Windows version
+91,103d74
+<         jmp     SHORT KT_End            ;Skip the 3.0 std mode check
+< KT_Win30:
+<         or      wTHFlags,TH_WIN30       ;Flag we're in Win30
+<         mov     npwSelTableLen,0324h    ;Correct values for 3.0
+<         mov     npdwSelTableStart,0326h
+<         mov     ax,__WinFlags           ;Get the WinFlags variable
+<         mov     segKernel,bx            ;Save for later
+<         mov     npwExeHead,0014h        ;Save the offsets of these vars
+<         mov     npwTDBHead,001eh
+<         mov     npwTDBCur,0020h
+<         test    ax,WF_STANDARD          ;3.0 Standard mode?
+<         jz      KT_End                  ;No.
+<         or      wTHFlags,TH_WIN30STDMODE ;Yes
 --- NT4\private\mvdm\wow16\wfwnet\makefile
 +++ nt\private\mvdm\wow16\wfwnet\makefile
 21a22
@@ -1433,6 +1724,12 @@
 < #include "\nt\public\sdk\inc\wownt16.h"
 ---
 > #include "wownt16.h"
+--- NT4\private\mvdm\wow16\inc\windows.inc
++++ nt\private\mvdm\wow16\inc\windows.inc
+2142c2142
+< SM_CMETRICSMAX        =  43
+---
+> SM_CMETRICSMAX        =  76
 --- NT4\private\mvdm\wow16\inc\winnls.h
 +++ nt\private\mvdm\wow16\inc\winnls.h
 53c53

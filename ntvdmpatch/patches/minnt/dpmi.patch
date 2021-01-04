@@ -209,5 +209,5 @@
 >                                  "DpmiUnhandledException"
 --- NT4\private\mvdm\dpmi32\dpmi32.c
 +++ nt\private\mvdm\dpmi32\dpmi32.c
-297a299
+298a299
 > VOID DpmiEnableIntHooks(VOID) { }

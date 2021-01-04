@@ -4,12 +4,31 @@
 < #ifndef i386
 ---
 > #if !defined(i386) || !defined(MONITOR)
+140a141
+> ULONG DosxHungAppExit;
 --- NT4\private\mvdm\dpmi32\dpmi32.c
 +++ nt\private\mvdm\dpmi32\dpmi32.c
-247c247
+69c69,70
+<     DpmiUnhandledExceptionHandler               // 18
+---
+>     DpmiUnhandledExceptionHandler,              // 18
+>     DpmiHungAppIretAndExit                      // 19
+205c206
+< 
+---
+>     DosxHungAppExit      = *(PDWORD16)(SharedData + 58);
+247c248
 < #if defined(i386)
 ---
 > #if defined(i386) && defined(MONITOR)
+--- NT4\private\mvdm\inc\dpmi.h
++++ nt\private\mvdm\inc\dpmi.h
+56a57
+> #define HungAppIretAndExit          25
+58c59
+< #define MAX_DPMI_BOP_FUNC DpmiUnhandledException + 1
+---
+> #define MAX_DPMI_BOP_FUNC HungAppIretAndExit + 1
 --- NT4\private\mvdm\dpmi32\dpmi32p.h
 +++ nt\private\mvdm\dpmi32\dpmi32p.h
 29c29
@@ -24,10 +43,17 @@
 < #ifndef i386
 ---
 > #if !defined(i386) || !defined(MONITOR)
-205c205
+122a123
+> extern ULONG DosxHungAppExit;
+205c206
 < BOOL
 ---
 > NTSTATUS
+250a252,255
+> VOID DpmiHungAppIretAndExit(
+>     VOID
+>     );
+> 
 --- NT4\private\mvdm\dpmi32\dpmidata.h
 +++ nt\private\mvdm\dpmi32\dpmidata.h
 31c31
@@ -60,19 +86,41 @@
 < #ifdef i386
 ---
 > #if defined(i386) && defined(MONITOR)
-859c859
+859c859,881
+< #ifndef i386
+---
+> VOID
+> DpmiHungAppIretAndExit(
+>     VOID
+>     )
+> /*++
+> 
+> Routine Description:
+> 
+>     This routine is called via BOP during hung app processing. The
+>     Keyboard driver calls this in the context of a hw interrupt in
+>     order to terminate the app. We need to "unwind" the current
+>     interrupt, and transfer control to code which will execute
+>     a DOS exit.
+> 
+> --*/
+> 
+> {
+>     EndUseLockedPMStack();
+>     setCS(HIWORD(DosxHungAppExit));
+>     setIP(LOWORD(DosxHungAppExit));
+> }
+> 
+> #if !defined(i386) || !defined(MONITOR)
+1167c1189
 < #ifndef i386
 ---
 > #if !defined(i386) || !defined(MONITOR)
-1167c1167
+1201c1223
 < #ifndef i386
 ---
 > #if !defined(i386) || !defined(MONITOR)
-1201c1201
-< #ifndef i386
----
-> #if !defined(i386) || !defined(MONITOR)
-1237c1237
+1237c1259
 < #ifndef i386
 ---
 > #if !defined(i386) || !defined(MONITOR)
@@ -164,7 +212,13 @@
 >     setIDT_BASE_LIMIT(SavedState->IDTBase, SavedState->IDTLimit);
 --- NT4\private\mvdm\dpmi\486\dxstrt.asm
 +++ nt\private\mvdm\dpmi\486\dxstrt.asm
-1260a1261,1268
+118a119
+>         extrn   HungAppExit:FAR
+804a806,808
+>         push    offset DXPMCODE:HungAppExit
+> 
+>         push    SEL_DXPMCODE OR STD_RING
+1260a1265,1272
 > 	; HACKHACK - Seems to fix DPMI applications running after termination,
 > 	; but is this the correct way to do..??
 > .386
@@ -175,7 +229,13 @@
 > 
 --- NT4\private\mvdm\dpmi\486\dxintr.asm
 +++ nt\private\mvdm\dpmi\486\dxintr.asm
-3160a3161,3169
+491a492,496
+>         public  HungAppExit
+> HungAppExit:
+>         mov     ax,4CFFh
+>         int     21h
+> 
+3160a3166,3174
 > ifndef WOW_x86
 > ; leecher1337: Make sure that the nested task flag is clear
 > ; Interrupt hook code, i.e. DpmiSwIntHandler, DpmiHwintHandler ensure this,
@@ -185,7 +245,7 @@
 >         push    ebx
 >         rpopfd
 > endif
-3178a3188,3192
+3178a3193,3197
 > ifndef WOW_x86	; leecher1337: Make sure that the nested task flag is clear
 >         and     ebx,NOT 4000h
 >         push    ebx

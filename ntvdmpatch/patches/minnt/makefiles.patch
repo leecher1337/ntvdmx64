@@ -123,12 +123,6 @@
 < #ifndef _X86_
 ---
 > #ifndef MONITOR
---- NT4\private\mvdm\inc\makefile.inc
-+++ nt\private\mvdm\inc\makefile.inc
-30c30
-<      doswow.inc curdir.inc vdmtib.inc
----
->      doswow.inc curdir.inc
 --- NT4\private\mvdm\dbg\dirs
 +++ nt\private\mvdm\dbg\dirs
 13c13
