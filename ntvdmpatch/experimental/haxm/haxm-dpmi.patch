@@ -32,11 +32,11 @@
 > #if defined(CCPU) || defined(HAXM)
 --- NT4\private\mvdm\dpmi32\dpmiint.c
 +++ nt\private\mvdm\dpmi32\dpmiint.c
-105a106,109
-> #endif      //i386
+106a107,110
 > #ifdef HAXM
 > 	HaxmSetProtectedModeInterrupt(IntNumber, Handlers[IntNumber].Flags);
 > 	if (!fDpmiIntsHaveBeenHooked) EnableIntHooks();
+> #endif      //i386
 --- NT4\private\mvdm\dpmi32\sources.inc
 +++ nt\private\mvdm\dpmi32\sources.inc
 57a58,60

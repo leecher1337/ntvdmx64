@@ -7,197 +7,210 @@
 > #else
 207a212
 > #endif
+--- NT4\private\mvdm\wow32\intthunk.c
++++ nt\private\mvdm\wow32\intthunk.c
+51a52,54
+>     #ifdef W10
+>     DECLARE_THUNKLOCK
+>     #endif
+165a169,171
+>     #ifdef W10	// Win32 functions can Send messages to 16bit window, so these windows must be able to reply
+> 	if (((*pbInstr & IT_HUSER)  || (*pbInstr & IT_HGDI))) { RELEASE_THUNKLOCK; }
+>     #endif
+174a182,184
+>     #ifdef W10
+>     if (((*pbInstr & IT_HUSER)  || (*pbInstr & IT_HGDI))) { RESTORE_THUNKLOCK; }
+>     #endif
+--- NT4\private\mvdm\wow32\wcall16.c
++++ nt\private\mvdm\wow32\wcall16.c
+844a845,847
+> #ifdef W10
+>     _EnterWin16Lock();
+> #endif
+858a864,866
+> #ifdef W10
+>      _LeaveWin16Lock();
+> #endif
+--- NT4\private\mvdm\wow32\wcommdlg.c
++++ nt\private\mvdm\wow32\wcommdlg.c
+2088a2089
+>     DECLARE_THUNKLOCK
+2207a2209
+>     RELEASE_THUNKLOCK
+2208a2211
+>     RESTORE_THUNKLOCK
+--- NT4\private\mvdm\wow32\wddeml32.c
++++ nt\private\mvdm\wow32\wddeml32.c
+211a212
+>     DECLARE_THUNKLOCK
+217a219
+>     RELEASE_THUNKLOCK
+219a222
+>     RESTORE_THUNKLOCK
+367a371
+>     DECLARE_THUNKLOCK
+380a385
+>         RELEASE_THUNKLOCK
+388a394
+>         RESTORE_THUNKLOCK
 --- NT4\private\mvdm\wow32\wumsg.c
 +++ nt\private\mvdm\wow32\wumsg.c
-36a37,160
+174a175
+>     DECLARE_THUNKLOCK
+224a226
+>             RELEASE_THUNKLOCK
+227a230
+>             RESTORE_THUNKLOCK
+431a435
+>     DECLARE_THUNKLOCK
+477a482
+>             RELEASE_THUNKLOCK
+480a486
+>             RESTORE_THUNKLOCK
+662a669,671
 > #ifdef W10
-> 
-> typedef LRESULT (WINAPI *fpSendMessage)(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
-> fpSendMessage RealSendMessageA = SendMessageA;
-> fpSendMessage RealSendMessageW = SendMessageW;
-> 
-> VOID CALLBACK SendAsyncProc(
->   HWND hwnd,
->   UINT uMsg,
->   DWORD dwData,
->   LRESULT lResult
-> )
-> {
-> 	LOGDEBUG(LOG_TRACE,("Window %x replied to msg %x with lResult %d\n",hwnd,uMsg, lResult));
-> 	*((LRESULT*)dwData) = lResult;
-> }
-> 
-> LRESULT x64SendMessageA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
-> {
-> 	/* If the target window is a WOW16 window, we need to Yield so that target 
-> 	 * Window has a chance to process the msg 
-> 	 */
-> 	DWORD dwWinTid = GetWindowThreadProcessId(hWnd, NULL);
-> 	if (!dwWinTid) dwWinTid = GetWindowThreadProcessId(FULLHWND32(hWnd), NULL);
-> 	if (hWnd == (HWND)-1 || hWnd == (USHORT)-1 || 
-> 		(dwWinTid != GetCurrentThreadId() &&
-> 		GetWindowLong(hWnd, GWL_WNDPROC) == (LONG)W32Win16WndDispProc))
-> 	{
-> 		MSG msg;
-> 		LRESULT lResult;
-> 
-> 		LOGDEBUG(LOG_TRACE,("Sending to another task: Me.TID=%d, Task.TID=%d\nBefore send msg %x to %x\n", 
-> 			GetCurrentThreadId(), dwWinTid, Msg, hWnd));
-> 		if (SendMessageCallbackA(hWnd, Msg, wParam, lParam, SendAsyncProc, &lResult))
-> 		{
-> 			WK32Yield(NULL);
-> 			PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE);
-> 		} else {
-> 			LOGDEBUG(LOG_ALWAYS,("BUGBUG: Sending msg %x to %x failed with error %d\n", Msg, hWnd, GetLastError()));
-> 			// If this really happens, we could forge a custom message that gets
-> 			// treated and converted back in WK32GetMessage
-> 		}
-> 		LOGDEBUG(LOG_TRACE,("After send msg %x to %x -> %x\n", Msg, hWnd, lResult));
-> 		return lResult;
-> 	}
-> 	else 
-> 	{
-> 		return RealSendMessageA(hWnd, Msg, wParam, lParam);
-> 	}
-> }
-> 
-> 
-> #if 0 /* Sendmessage hook USER32 -> Not needed, I think */
-> LRESULT x64SendMessageW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
-> {
-> 	/* If the target window is a WOW16 window, we need to Yield so that target 
-> 	 * Window has a chance to process the msg 
-> 	 */
-> 	DWORD dwWinTid = GetWindowThreadProcessId(hWnd, NULL);
-> 	if (!dwWinTid) dwWinTid = GetWindowThreadProcessId(FULLHWND32(hWnd), NULL);
-> 	if (hWnd == (HWND)-1 || 
-> 		(dwWinTid != GetCurrentThreadId() &&
-> 		GetWindowLong(hWnd, GWL_WNDPROC) == (LONG)W32Win16WndDispProc))
-> 	{
-> 		MSG msg;
-> 		LRESULT lResult;
-> 
-> 		LOGDEBUG(LOG_TRACE,("Sending to another task: Me.TID=%d, Task.TID=%d\nBefore send msg %x to %x\n", 
-> 			GetCurrentThreadId(), dwWinTid, Msg, hWnd));
-> 		if (SendMessageCallbackW(hWnd, Msg, wParam, lParam, SendAsyncProc, &lResult))
-> 		{
-> 			WK32Yield(NULL);
-> 			PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE);
-> 		} else {
-> 			LOGDEBUG(LOG_ALWAYS,("BUGBUG: Sending msg %x to %x failed with error %d\n", Msg, hWnd, GetLastError()));
-> 			// If this really happens, we could forge a custom message that gets
-> 			// treated and converted back in WK32GetMessage
-> 		}
-> 		LOGDEBUG(LOG_TRACE,("After send msg %x to %x -> %x\n", Msg, hWnd, lResult));
-> 		return lResult;
-> 	}
-> 	else 
-> 	{
-> 		return RealSendMessageW(hWnd, Msg, wParam, lParam);
-> 	}
-> }
-> 
-> 
-> DWORD SetInlineHook(DWORD dwAddr, DWORD dwDest)
-> {
-> 	DWORD dwback;
-> 
-> 	// Do a hot-patch, as function usually supports it
-> 	dwAddr-=5;
->     if (!VirtualProtect((LPVOID)dwAddr, 7, PAGE_READWRITE, &dwback)) return 0;
->     *((PBYTE)(dwAddr))=0xE9;
->     *((PDWORD)(dwAddr+1))=(dwDest)-dwAddr-5;
-> 	*((PWORD)(dwAddr+5))=0xF9EB;
->     VirtualProtect((LPVOID)dwAddr, 7, dwback, &dwback);
->     FlushInstructionCache(GetCurrentProcess(), NULL, 0); 
-> 	return dwAddr+7;
-> }
-> 
-> BOOL InstallSendMessageHook(void)
-> {
-> 	fpSendMessage SM;
-> 	int nHooks;
-> 
-> 	if (SM = (fpSendMessage)SetInlineHook(SendMessageA, x64SendMessageA))
-> 	{
-> 		RealSendMessageA = SM;
-> 		nHooks++;
-> 	}
-> 	if (SM = (fpSendMessage)SetInlineHook(SendMessageW, x64SendMessageW))
-> 	{
-> 		RealSendMessageW = SM;
-> 		nHooks++;
-> 	}
-> 	return nHooks == 2;
-> }
-> #endif /* Sendmessage hook */
-> 
-> #endif /* W10 */
-> 
-831c955,959
+>         _LeaveWin16Lock();
+> #endif
+663a673,675
+> #ifdef W10
+>         _EnterWin16Lock();
+> #endif
+820a833
+>     DECLARE_THUNKLOCK
+831c844,850
 < 
 ---
 > #ifdef W10
->     LOGDEBUG(LOG_TRACE,("WU32GetMassage waiting for message in queue\n")); 
->     WU32WaitMessage(NULL);
->     LOGDEBUG(LOG_TRACE,("WU32GetMassage now running real GetMessage\n")); 
+>     if (!PeekMessage(&t1, HWND32(parg16->hwnd), WORD32(parg16->wMin), WORD32(parg16->wMax), PM_REMOVE))
+>     {
+>          DWORD count;
+>          
+>          ReleaseThunkLock(&count);
 > #endif
-844a973
+835a855,859
+> #ifdef W10
+>         RestoreThunkLock(count);
+>     }
+>     else ul = t1.message != WM_QUIT;
+> #endif
+844a869
 > #ifndef W10 /* msctf.dll also seems to use high timer IDs. Therefore removed check */
-848a978
+848a874
 > #endif
-849a980,984
+849a876,880
 >     LOGDEBUG(LOG_TRACE,("hWnd = %x, msg %d (0x%x), wParam=%08X, lParam=%08X\n", t1.hwnd, t1.message, t1.message, t1.wParam, t1.lParam)); 
 > 
 > #ifdef W10	/* Filter WM_TIMER that are useless for 16bit world */
 >     if (t1.message != WM_TIMER || HIWORD(t1.wParam) == 0)
 > #endif
-1118a1254,1257
-> #ifdef W10
->     (pfnOut.pfnYieldTask)();
-> #endif
+1115a1147
+>     DECLARE_THUNKLOCK
+1130a1163,1172
 > 
-1904a2044,2046
 > #ifdef W10
->         mpex.lReturn = x64SendMessageA(hwnd, mpex.uMsg, mpex.uParam, mpex.lParam);
-> #else
-1905a2048
+>     if (!fNoYield)
+>     {
+>         RELEASE_THUNKLOCK
+>         //MsgWaitForMultipleObjects(0, NULL, FALSE, 0, QS_ALLINPUT);
+>         Sleep(0);
+>         RESTORE_THUNKLOCK  // PeekMessage can call WndProc which can be 16bit code, therefore lock again 
+>     }
 > #endif
-2181a2325,2327
+1700a1743,1746
 > #ifdef W10
->     x64WaitMessage();
-> #else
-2182a2329
+>     DECLARE_THUNKLOCK
+>     LRESULT lResult;
 > #endif
+1760a1807,1816
+> #ifdef W10
+>             RELEASE_THUNKLOCK
+>             lResult = SendMessageTimeout(hwndItem, mpex.uMsg, mpex.uParam,
+>                                          mpex.lParam, SMTO_NORMAL, 1000, &mpex.lReturn);
+>             RESTORE_THUNKLOCK
+>             if (!lResult && GetLastError() == ERROR_TIMEOUT)
+>             {
+>                 LOGDEBUG(LOG_ALWAYS,("BUGBUG: SendDlgItemMessage(%p,%d,%04x,%08x,uTimeout=1000ms) timed out.\n", hwnd, mpex.uMsg, mpex.uParam, mpex.lParam));
+>             }
+> #else
+1762a1819
+> #endif
+1825a1883,1886
+> #ifdef W10
+>     DECLARE_THUNKLOCK
+>     LRESULT lResult;
+> #endif
+1904a1966,1977
+> #ifdef W10
+>         {
+>             DWORD count;
+>             ReleaseThunkLock(&count);
+>             lResult = SendMessageTimeout(hwnd, mpex.uMsg, mpex.uParam, mpex.lParam, SMTO_NORMAL, 1000, &mpex.lReturn);
+>             RestoreThunkLock(count);
+>             if (!lResult && GetLastError() == ERROR_TIMEOUT)
+>             {
+>                 LOGDEBUG(LOG_ALWAYS,("BUGBUG: SendMessage(%p,%d,%04x,%08x,uTimeout=1000ms) timed out.\n", hwnd, mpex.uMsg, mpex.uParam, mpex.lParam));
+>             }
+>         }
+> #else
+1905a1979
+> #endif
+2177a2252
+>     DECLARE_THUNKLOCK
+2180a2256
+>     RELEASE_THUNKLOCK
+2184a2261
+>     RESTORE_THUNKLOCK
 --- NT4\private\mvdm\wow32\wkman.c
 +++ nt\private\mvdm\wow32\wkman.c
-961a962,965
+1022a1023,1030
 > #ifdef W10
->         // Tell WK32WowWaitForMsgAndEvent that we have a new thread
->         SetEvent(ghevWowExecMsgWait);
+> void InputIdleCB(HWND Arg1, UINT Arg2, UINT_PTR Arg3, DWORD Arg4)
+> {
+>     LOGDEBUG(LOG_TRACE,("InputIdleCB\n"));
+>     KillTimer(Arg1, Arg3);
+>     WOW32VERIFY(SetEvent(ghevWaitCreatorThread));
+> }
 > #endif
-1320c1324
+1055a1064,1066
+> #ifdef W10
+>         DWORD mutex_count;
+> #endif
+1061a1073,1078
+> #ifdef W10
+>         ReleaseThunkLock(&mutex_count);
+>         while ((dw = MsgWaitForMultipleObjects(2, ThreadEvents, FALSE, INFINITE, QS_SENDMESSAGE)) == WAIT_OBJECT_0+2)
+>         {
+>             MSG msg;
+>             DECLARE_THUNKLOCK
+1061a1080,1089
+>             RESTORE_THUNKLOCK
+>             if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+>             {
+>                 TranslateMessage(&msg);
+>                 DispatchMessage(&msg);
+>             }
+>             RELEASE_THUNKLOCK
+>         }
+>         RestoreThunkLock(mutex_count);
+> #else
+1062a1091
+> #endif
+1320c1350
 <     CURRENTPTD() = &td;
 ---
 >     SETCURRENTPTD(&td);
-1561c1565
+1561c1591
 < #ifdef i386
 ---
 > #ifdef i386xx
-1569a1574
+1569a1600
 > #ifndef W10 /* Unfortunetely, no NtUserInitTask support... */
-1604a1610,1619
+1604a1636,1637
 > #else
 >         {
->             // Tell uxtheme to leave our menus alone (DISABLETHEMEMENUS Appcompat fix)
->             // Should be set for NTVDM at installation already, but better be sure...
->             //
->             // NB: We can kill uxtheme.dll alltogether by hooking _ClientLoadLibrary
->             //     in user32.dll and filter loading of the DLL to get rid of the ugly 
->             //     theming. This would be a job for the loader
->             //     Controls look more "classic" when we remove uxtheme.
+1604a1645
 >             static BOOL bFirstCall = TRUE;
-1605a1621,1640
+1605a1647,1661
 >             if (bFirstCall)
 >             {
 >                 HMODULE hUxTheme = GetModuleHandle("uxtheme.dll");
@@ -210,63 +223,53 @@
 >                     bFirstCall = FALSE;
 >                 }
 >             }
-> 
->             // Out poor man's scheduler semaphore
->             td.hSem = CreateSemaphore(NULL, 0, 0xFFFF, NULL);
 >         }
 >         fRet = FALSE;
 > #endif
-> 
-> 
-1607a1643
+1607a1666
 >         td.hThread = hThread;
-1628a1665,1667
+1626a1686,1687
 > #ifdef W10
->             WaitForSingleObject(td.hSem, INFINITE); // We get released by parent Yield()
+>             SetTimer(NULL, 0, 10, InputIdleCB);
+1627a1691,1692
+>             _EnterWin16Lock();
+> #else
+1628a1694
 > #endif
-1631d1669
+1631d1696
 <         td.hThread = hThread;
-1832c1870
+1832c1899
 <     CURRENTPTD() = &td;
 ---
 >     SETCURRENTPTD(&td);
-1959c1997
+1959c2026
 < #ifdef i386
 ---
 > #ifdef i386xx
-2096a2135,2137
+2170a2238,2240
 > #ifdef W10
->     (pfnOut.pfnYieldTask)();
+> 	if (CURRENTPTD()->yield_event) CloseHandle(CURRENTPTD()->yield_event);
 > #endif
-2170a2212,2214
+2237a2309
 > #ifdef W10
->     CloseHandle(CURRENTPTD()->hSem);
+2237a2311,2317
+>     _LeaveWin16Lock();
+>     if (ptd->yield_event)
+> 	{
+> 		CloseHandle(ptd->yield_event);
+> 		ptd->yield_event = NULL;
+> 	}
 > #endif
-2237a2282,2286
-> 
-> #ifdef W10
->     (pfnOut.pfnYieldTask)();
->     CloseHandle(CURRENTPTD()->hSem);
-> #endif
-2378a2428
+2378a2459
 > #if 0	// leecher1337: Seems to be always be 0 on XP and above? Call Fritz!
-2382a2433
+2382a2464
 > #endif
-3088a3140,3151
-> #ifdef W10
->             DWORD dwWaitRet;
-> 
->             do
->             {
->                 while ((dwWaitRet = MsgWaitForMultipleObjects(1, &hProcess, FALSE, 1, QS_ALLINPUT)) == WAIT_TIMEOUT)
->                 {
->                     WK32Yield(NULL);
->                 }
->                 if (dwWaitRet == WAIT_OBJECT_0 + 1) PeekMessage(&msg, NULL, 0,0, PM_NOREMOVE);
->             } while (dwWaitRet == WAIT_OBJECT_0 + 1);
-> #else
-3093a3157
-> #endif
+3028a3111
+>     DECLARE_THUNKLOCK
+3088a3172
+>             RELEASE_THUNKLOCK
+3100a3185
+>             RESTORE_THUNKLOCK
 --- NT4\private\mvdm\wow32\wuclass.c
 +++ nt\private\mvdm\wow32\wuclass.c
 22a23,165
@@ -319,7 +322,7 @@
 > 			return 1;
 > 		SetProp(hwnd, (LPCTSTR)gidWNDPROC16, (HANDLE)vpWndProc16);
 > 	}
-> 	if (IsWOWProc(vpWndProc16))
+> 	if (IsWOWProc(vpWndProc16) && HIWORD(vpWndProc16) != WNDPROC_HANDLE)
 > 		ret = W32Win16WndProcEx(hwnd, uMsg, wParam, lParam, vpWndProc16, NULL);
 > 	else
 > 		ret = CallWindowProc((WNDPROC)vpWndProc16, hwnd, uMsg, wParam, lParam);
@@ -499,156 +502,54 @@
 >             ul = SetClassWord(hwnd, iOffset + (iOffset>=0?GWL_OFFSET:0), (WORD)ul);
 --- NT4\private\mvdm\wow32\wow32.c
 +++ nt\private\mvdm\wow32\wow32.c
-96a97,102
+96a97,98
 > #ifdef W10
+> #include "wtask.h"
+96a100,101
 > DWORD gdwTLSWOW32Reserved;
 > ATOM  gidWNDPROC16, gidDLGPROC16;
-> extern BOOL InstallSendMessageHook(void);
+96a103
 > #endif
-> 
-133c139
+133c141
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-203a210,310
-> 
-> 
-> #ifdef W10
-> extern CRITICAL_SECTION gcsWOW;
-> 
-> BOOL	x64SwitchTask(VOID)
-> {
-> 	PTD ptdMe, ptd;
-> 
-> 	EnterCriticalSection(&gcsWOW);
-> 	ptdMe = CURRENTPTD();
-> 	LOGDEBUG(LOG_TRACE,("x64YieldTask: Thread %08X  (TID %d) YIELD!\n", ptdMe?ptdMe->hThread:-1, GetCurrentThreadId()));
-> 
-> 	// Find next task to wake up
-> 	for (ptd = ptdMe->ptdNext; ptd != ptdMe; ptd = ptd->ptdNext)
-> 	{
-> 		if (!ptd)
-> 		{
-> 			ptd = gptdTaskHead;
-> 			if (ptd == ptdMe) break;
-> 		}
-> 		if (ptd->hSem) break;
-> 	}
-> 	LeaveCriticalSection(&gcsWOW);
-> 	if (ptd != ptdMe)
-> 	{
-> 		// We have a task that we can switch to
-> 		ReleaseSemaphore(ptd->hSem, 1, NULL);
-> 		LOGDEBUG(LOG_TRACE,("x64YieldTask: Resuming thread %08X\n", ptd->hThread));
-> 		return TRUE;
-> 	}
-> 	
-> 	return FALSE;
-> }
-> 
-> BOOL	x64WaitForMsgAndEvent(IN HANDLE hevent)
-> {
-> 	LOGDEBUG(LOG_TRACE,("x64WaitForMsgAndEvent\n"));
-> 	while (MsgWaitForMultipleObjects(1, &hevent, FALSE, 1, QS_ALLEVENTS) == WAIT_TIMEOUT)
-> 	{
-> 		LOGDEBUG(LOG_TRACE,("x64WaitForMsgAndEvent: No event in queue\n"));
-> 		WK32Yield(NULL);
-> 	}
-> 	LOGDEBUG(LOG_TRACE,("x64WaitForMsgAndEvent: Received\n"));
-> 	return FALSE;
-> }
-> 
-> BOOL    x64YieldTask(VOID)
-> {
-> 	/* Windows 10 x64 Scheduler doesn't support 16bit tasks. :(
-> 	 *
-> 	 * NtUserYieldTask -> xxxUserYield just does xxxReceiveMessage, but doesn't
-> 	 * contain WOW16 task handling (i.e. xxxSleepTask) at all.
-> 	 * Therefore we need to "Schedule" on our own, wake up the
-> 	 * next task and enter Sleep.
-> 	 *
-> 	 * GetMessage/PeekMessage via xxxInternalGetMessage also do
-> 	 * yield on x32, but also don't have corect 16bit handling in place
-> 	 * on x64, so we put a yield into our thunks.
-> 	 *
-> 	 * SendMessage requires the target task to process the message being
-> 	 * sent but that one is frozen by our "scheduler" here. Therefore,
-> 	 * we use SendMessageCallback and schedule in SendMessage thunk
-> 	 *
-> 	 * HACKHACK: What we do here is horribly simplified and not correct, 
-> 	 * this needs to get rewritten in a correct way.
-> 	 */
-> 
-> 	if (x64SwitchTask())
-> 	{
-> 		PTD ptd = CURRENTPTD();
-> 		WaitForSingleObject(ptd->hSem, INFINITE);
-> 		LOGDEBUG(LOG_TRACE,("x64YieldTask: Thread %08X  (TID %d) CONTINUE!\n", ptd->hThread, GetCurrentThreadId()));
-> 	}
-> 	return TRUE;
-> }
-> 
-> void x64WaitMessage(VOID)
-> {
-> 	extern HANDLE ghevWowExecMsgWait;
-> 	MSG msg;
-> 
-> 	while (!PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
-> 	{
-> 		if (x64SwitchTask())
-> 		{
-> 			PTD ptd = CURRENTPTD();
-> 
-> 			if (MsgWaitForMultipleObjects(1, &ptd->hSem, FALSE, INFINITE, QS_ALLEVENTS) == WAIT_OBJECT_0 + 1)
-> 			{
-> 				LOGDEBUG(LOG_TRACE,("WU32WaitMessage: Received a message\n"));
-> 				// Tell WK32WowWaitForMsgAndEvent to get back to us 
-> 				SetEvent(ghevWowExecMsgWait);
-> 				// Wait till someone wakes us up
-> 				WaitForSingleObject(ptd->hSem, INFINITE);
-> 				break;
-> 			}
-> 		}
-> 	}
-> }
-> #endif /* W10 */
-409a517,520
+409a418,421
 > #ifdef W10
 >         GlobalDeleteAtom(gidWNDPROC16);
 >         GlobalDeleteAtom(gidDLGPROC16);
 > #endif
-625c736
+625c637
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-691a803,822
+691a704,712
 > #ifdef W10
->     pfnOut.pfnYieldTask = (PFNYIELDTASK)x64YieldTask;
->     pfnOut.pfnWowWaitForMsgAndEvent = x64WaitForMsgAndEvent;
+>     pfnOut.pfnYieldTask = (PFNYIELDTASK)xxxUserYield;
+> 	pfnOut.pfnDirectedYield = (PFNDIRECTEDYIELD)xxxDirectedYield;
+>     pfnOut.pfnWowWaitForMsgAndEvent = xxxWaitForMsgAndEvent;
 >     ptd = malloc_w_or_die(sizeof(TD));
 >     gdwTLSWOW32Reserved = TlsAlloc();
 >     TlsSetValue(gdwTLSWOW32Reserved, ptd);
 >     gidWNDPROC16 = GlobalAddAtom("WNDPROC16");
 >     gidDLGPROC16 = GlobalAddAtom("DLGPROC16");
->     // Not sure, if we really need it. We don't currently use it, but in case
->     // we find out that it is needed:
->     //InstallSendMessageHook();
+691a714,716
 >     if (GetEnvironmentVariableOem("WOWTRACE", szLogFile, sizeof(szLogFile)))
 > 	{
 > 		char szLogLvl[32];
-> 
+691a718,722
 > 		if (GetEnvironmentVariableOem("WOWLOGLVL", szLogLvl, sizeof(szLogLvl)))
 > 			iLogLevel = atoi(szLogLvl);
 > 		fLog = 2;
 > 	}
 > #else
-692a824
+692a724
 > #endif
-1944c2076
+1944c1976
 < #ifdef _X86_
 ---
 > #ifdef _X86xx_
-2136c2268
+2136c2168
 <                                    FILE_SHARE_WRITE,
 ---
 >                                    FILE_SHARE_WRITE | FILE_SHARE_READ,
@@ -708,9 +609,10 @@
 > 
 > 
 > 
-142a196
+142a196,197
 >     LPARAM   lParam;
-172a227,236
+>     DECLARE_THUNKLOCK
+172a228,238
 > #ifdef W10
 >         struct init_param param;
 > 
@@ -718,17 +620,32 @@
 >         param.vpDlgProc = gvpWndProc16 = vpDlgProc;
 >         lParam = (LPARAM)&param;
 >         vpDlgProc = (WNDPROC)W32Win16DlgDispProc;
+>         RELEASE_THUNKLOCK
 > #else
 >         lParam = (LPARAM) DWORD32(parg16->f5);
 > #endif
-179c243
+179c245
 <                             (LPARAM) DWORD32(parg16->f5), SCDLG_ANSI));
 ---
 >                             lParam, SCDLG_ANSI));
-185c249
+185c251
 <                             (LPARAM) DWORD32(parg16->f5),  SCDLG_CLIENT | SCDLG_ANSI | SCDLG_NOREVALIDATE));
 ---
 >                             lParam,  SCDLG_CLIENT | SCDLG_ANSI | SCDLG_NOREVALIDATE));
+190a257
+>         RESTORE_THUNKLOCK
+598a666
+>     DECLARE_THUNKLOCK
+603a672
+>     RELEASE_THUNKLOCK
+617a687
+>     RESTORE_THUNKLOCK
+1229a1300
+>     DECLARE_THUNKLOCK
+1247a1319
+>     RELEASE_THUNKLOCK
+1253a1326
+>     RESTORE_THUNKLOCK
 --- NT4\private\mvdm\wow32\wuwind.c
 +++ nt\private\mvdm\wow32\wuwind.c
 751c751,752
@@ -745,13 +662,19 @@
 <         LOGDEBUG(LOG_WARNING,("  CreateWindow failed, class = %s\n", pszClass));
 ---
 >         LOGDEBUG(LOG_WARNING,("  CreateWindow failed, class = %s, gle=%d\n", pszClass, GetLastError()));
-1446c1446
+898a899
+>     DECLARE_THUNKLOCK
+901a903
+>     RELEASE_THUNKLOCK
+902a905
+>     RESTORE_THUNKLOCK
+1446c1449
 <     register PWW pww;
 ---
 >     register PWW pww = NULL;
-1482a1483
+1482a1486
 > 
-1483a1485,1497
+1483a1488,1500
 > #ifdef W10
 >                 switch ( iOffset )
 >                 {
@@ -765,30 +688,36 @@
 >                         break;
 >                 }
 > #endif
-1725c1739
+1665a1683
+>     DECLARE_THUNKLOCK
+1670a1689
+>     RELEASE_THUNKLOCK
+1671a1691
+>     RESTORE_THUNKLOCK
+1725c1745
 <     PWW pww;
 ---
 >     PWW pww = NULL;
-2175c2189
+2175c2195
 <     register PWW pww;
 ---
 >     register PWW pww = NULL;
-2198a2213
+2198a2219
 >             LONG    l;
-2212d2226
+2212d2232
 <                 dwWndProc32Old = SetWindowLong(HWND32(parg16->f1), iOffset, dwWndProc32New);
-2214,2217c2228
+2214,2217c2234
 <                 // If the 32 bit set failed, perhaps because its another process,
 <                 // then we want to fail too
 <                 if (!dwWndProc32Old)
 <                     goto SWL_Cleanup;
 ---
 >                 l = dwWndProc32New;
-2223c2234
+2223c2240
 <                 LONG    l;
 ---
 >                 
-2238c2249,2273
+2238c2255,2278
 <                 dwWndProc32Old = SetWindowLong(HWND32(parg16->f1), iOffset, l);
 ---
 >             }
@@ -812,11 +741,10 @@
 >                     SetProp(HWND32(parg16->f1), gidWNDPROC16, (HANDLE)l);
 >                     break;
 >             }
-> 
 > #else
 >             dwWndProc32Old = SetWindowLong(HWND32(parg16->f1), iOffset, l);
 > #endif
-2240,2243c2275,2278
+2240,2243c2280,2283
 <                 // If the 32 bit set failed, perhaps because its another process,
 <                 // then we want to fail too
 <                 if (!dwWndProc32Old)
@@ -826,9 +754,9 @@
 >             // then we want to fail too
 >             if (!dwWndProc32Old)
 >                 goto SWL_Cleanup;
-2245d2279
+2245d2284
 <             }
-2306c2340,2345
+2306c2345,2350
 <         ul = SetWindowLong(HWND32(parg16->f1), iOffset, new);
 ---
 >         ul = SetWindowLong(FULLHWND32(parg16->f1), iOffset, new);
@@ -837,15 +765,21 @@
 > 			WOW32ASSERT(chk == new);
 > 		}
 > 
-2615c2654
+2499a2544
+>     DECLARE_THUNKLOCK
+2503a2549
+>     RELEASE_THUNKLOCK
+2521a2568
+>     RESTORE_THUNKLOCK
+2615c2662
 <     PWW pww;
 ---
 >     PWW pww = NULL;
-2632c2671
+2632c2679
 <     hwnd = HWND32(parg16->f1);
 ---
 >     hwnd = FULLHWND32(parg16->f1);
-2776a2816,2922
+2776a2824,2947
 > 
 > enum ZBID
 > {
@@ -885,6 +819,9 @@
 > 					   HANDLE hInstance, LPVOID lpParam)
 > {
 > 	static int iHasZbid = -1;
+>     BOOL fRelease = FALSE;
+>     HWND hWndRet;
+>     DECLARE_THUNKLOCK
 > 
 > 	if (iHasZbid < 0)
 > 	{
@@ -919,9 +856,18 @@
 > 		}
 > 	}
 > 
+>     if (hWndParent && IsWindow(hWndParent))
+>     {
+>         DWORD dwWinTid = GetWindowThreadProcessId(hWndParent, NULL);
+> 
+>         if (!dwWinTid) dwWinTid = GetWindowThreadProcessId(FULLHWND32(hWndParent), NULL);
+>         fRelease = dwWinTid != GetCurrentThreadId();
+>     }
+>     if (fRelease) RELEASE_THUNKLOCK
+> 
 > 	if (iHasZbid > 0)
 > 	{
-> 		return (((PFNCSCREATEWINDOWEX10)pfnOut.pfnCsCreateWindowEx))(
+> 		hWndRet = (((PFNCSCREATEWINDOWEX10)pfnOut.pfnCsCreateWindowEx))(
 > 			   dwExStyle,
 > 			   lpClassName,
 > 			   lpWindowName,
@@ -937,21 +883,26 @@
 > 			   ZBID_DEFAULT,
 > 			   CW_FLAGS_ANSI);
 > 	}
-> 
-> 	return (pfnOut.pfnCsCreateWindowEx)(
-> 		   dwExStyle,
-> 		   lpClassName,
-> 		   lpWindowName,
-> 		   dwStyle,
-> 		   X,
-> 		   Y,
-> 		   nWidth,
-> 		   nHeight,
-> 		   hWndParent,
-> 		   hMenu,
-> 		   hInstance,
-> 		   lpParam,
->            CW_FLAGS_ANSI);
+>     else
+>     {
+>         hWndRet = (pfnOut.pfnCsCreateWindowEx)(
+>                dwExStyle,
+>                lpClassName,
+>                lpWindowName,
+>                dwStyle,
+>                X,
+>                Y,
+>                nWidth,
+>                nHeight,
+>                hWndParent,
+>                hMenu,
+>                hInstance,
+>                lpParam,
+>                CW_FLAGS_ANSI);
+>     }
+>     if (fRelease) RESTORE_THUNKLOCK
+>     
+>     return hWndRet;
 > }
 --- NT4\private\mvdm\wow32\wuwind.h
 +++ nt\private\mvdm\wow32\wuwind.h
@@ -984,9 +935,9 @@
 < //#include <tsappcmp.h>
 ---
 > #include <tsappcmp.h>
-142a144,164
+142a144,174
 > #ifdef W10
-> /* In 64bit Windows, WOW32REserved is used by WOW64 to store pointer to 
+> /* In 64bit Windows, WOW32Reserved is used by WOW64 to store pointer to 
 >  * syscall dispatcher, therefore we unfortunately have to reserve our
 >  * own slot for WOW32 data
 >  */
@@ -998,42 +949,59 @@
 >  * support in NtUser
 >  */
 > extern BOOL x64GetClassInfo(HINSTANCE hInstance, LPCTSTR lpClassName, LPWNDCLASS lpWndClass);
-> extern void x64WaitMessage(VOID);
 > extern ATOM  gidWNDPROC16, gidDLGPROC16;
 > 
 > // Offsets to store our Win16 WndProc in class
 > #define GWL_OFFSET			sizeof(VPWNDPROC)
 > #define GCL_MY_WNDPROC		0
 > 
+> // Locking functions for Win16Mutex for our "special" scheduler (wsyslevel.c)
+> typedef struct tagSYSLEVEL
+> {
+>     CRITICAL_SECTION crst;
+>     INT              level;
+> } SYSLEVEL;
+> 
+> #define DECLARE_THUNKLOCK	
+> #define RELEASE_THUNKLOCK	{_LeaveWin16Lock();}
+> #define RESTORE_THUNKLOCK	{_EnterWin16Lock();}
+> 
 > #else // W10
-143a166
+143a176
 > #define SETCURRENTPTD(x)	CURRENTPTD() = x
-144a168,171
+144a178,185
 > #define x64GetClassInfo		GetClassInfo
 > #define GWL_OFFSET			0
 > #define GCL_MY_WNDPROC		GCL_WNDPROC
+> 
+> #define DECLARE_THUNKLOCK	
+> #define RELEASE_THUNKLOCK	
+> #define RESTORE_THUNKLOCK	
 > #endif // W10
-264a292,294
+264a306,311
 > #ifdef W10
->     HANDLE      hSem;                 // Semaphore for our poor man's scheduler
+>     DWORD               sys_count[4];   /* syslevel mutex entry counters */
+>     struct tagSYSLEVEL *sys_mutex[4];   /* syslevel mutex pointers */
+>     HANDLE              yield_event;    /* yield event */
+>     HANDLE              yield_wait_event;/* yield event */
 > #endif
-381c411
+381c428
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-551c581
+551c598
 < #ifndef _X86_  // emulated CPU
 ---
 > #ifndef _X86xx_  // emulated CPU
-561c591
+561c608
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-808c838
+808c855
 < //PTERMSRVCORINIFILE gpfnTermsrvCORIniFile;
 ---
 > PTERMSRVCORINIFILE gpfnTermsrvCORIniFile;
-811a842,867
+811a859,884
 > /* Functions missing from Win2k source */
 > #define IsWOWProc(proc) ((((DWORD)proc)&WNDPROC_WOWPROC)==WNDPROC_WOWPROC)
 > #define MarkWOWProc(p,pArg) (*(DWORD*)&pArg)=(DWORD)((DWORD)p & 0xFFF9FFFF | ((DWORD)p>>13) & 0x60000 | WNDPROC_WOWPROC);
@@ -1060,10 +1028,10 @@
 > #define WOW_PRINTDLG	4
 > #define WF_DIALOG_WINDOW	0x10000
 > #define HTW_IS16BIT	0x80000000
-812a869,870
+812a886,887
 > #include <commctrl.h>
 > #include <wtypes.h>
-813a872,912
+813a889,929
 > typedef struct tagNMKEY
 > {
 >     NMHDR hdr;
@@ -1105,7 +1073,7 @@
 >         WORD wStyle;
 >         WORD wPattern;
 > } DRAWPATRECT, *PDRAWPATRECT;
-814a914,927
+814a931,944
 > WINGDIAPI int  WINAPI AddFontResourceExA( LPCSTR name, DWORD fl, PVOID res);
 > WINGDIAPI int  WINAPI AddFontResourceExW( LPCWSTR name, DWORD fl, PVOID res);
 > #ifdef UNICODE
@@ -1530,27 +1498,33 @@
 > #ifndef MONITOR
 --- NT4\private\mvdm\wow32\wuser31.c
 +++ nt\private\mvdm\wow32\wuser31.c
-192c192
+133a134
+>     DECLARE_THUNKLOCK
+138a140
+>     RELEASE_THUNKLOCK
+142a145
+>     RESTORE_THUNKLOCK
+192c195
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-266c266
+266c269
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-294c294
+294c297
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-525c525
+525c528
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-545c545
+545c548
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-628c628
+628c631
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
@@ -1604,7 +1578,41 @@
 >     ullOldest = (ULONGLONG)-1;
 --- NT4\private\mvdm\wow32\wkgthunk.c
 +++ nt\private\mvdm\wow32\wkgthunk.c
-504c504
+301a302
+>     DECLARE_THUNKLOCK
+321a323
+>     RELEASE_THUNKLOCK
+322a325
+>     RESTORE_THUNKLOCK
+405a409
+>     DECLARE_THUNKLOCK
+417a422
+>     RELEASE_THUNKLOCK
+418a424
+>     RESTORE_THUNKLOCK
+504c510
 < #ifndef i386
 ---
 > #ifndef MONITOR
+559a566
+>     DECLARE_THUNKLOCK
+663a671
+>     RELEASE_THUNKLOCK
+668a677
+>     RESTORE_THUNKLOCK
+--- NT4\private\mvdm\wow32\wuser.c
++++ nt\private\mvdm\wow32\wuser.c
+2281a2282
+> 	DECLARE_THUNKLOCK
+2361a2363
+> 	RELEASE_THUNKLOCK
+2362a2365
+> 	RESTORE_THUNKLOCK
+--- NT4\private\mvdm\wow32\sources.inc
++++ nt\private\mvdm\wow32\sources.inc
+133c133,135
+<     ..\hack.c
+---
+>     ..\hack.c      \
+>     ..\wsyslevel.c \
+>     ..\wtask.c
