@@ -37,6 +37,7 @@
 #include "extracticon.h"
 #include "xpcreateproc.h"
 #include "ntregapi.h"
+#include "apppatch.h"
 
 #pragma comment(lib, "ntdll.lib")
 
@@ -583,6 +584,7 @@ BOOL WINAPI _DllMainCRTStartup(
 			 break;
 		 }
 #endif // !TARGET_WINXP
+		 AppPatch_Check(pszProcess);
 
 
 #ifdef WOW16_SUPPORT

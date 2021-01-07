@@ -425,6 +425,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="appcert.c" />
+    <ClCompile Include="apppatch.c" />
     <ClCompile Include="basevdm.c" />
     <ClCompile Include="conhostproc.c" />
     <ClCompile Include="consbmp.c" />
@@ -450,6 +451,7 @@
     <ClCompile Include="xpwrap.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="apppatch.h" />
     <ClInclude Include="basemsg64.h" />
     <ClInclude Include="basevdm.h" />
     <ClInclude Include="conmsg64.h" />
