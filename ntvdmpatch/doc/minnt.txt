@@ -40,6 +40,7 @@ Setup MINNT build environment
 Please ensure that your build root is in a directory with a very short path 
 length, otherwise the build process will fail.
 So i.e. C:\WORK
+Also make sure, that the path name you choose does not contain any spaces.
 Alternatively, map the build root to a seperate drive letter, i.e. W: with
 subst W: .
 

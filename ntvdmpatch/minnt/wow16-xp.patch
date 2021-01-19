@@ -1,0 +1,83 @@
+--- base\mvdm\wow16\drivers\comm\comm.def
++++ base\mvdm\wow16\drivers\comm\comm.def
+6c6
+< STUB '..\..\bin\WINSTUB.EXE'
+---
+> STUB '..\..\..\..\..\bin\WINSTUB.EXE'
+--- base\mvdm\wow16\mmsystem\mmtask\makefile
++++ base\mvdm\wow16\mmsystem\mmtask\makefile
+29c29
+< RC      =$(RC) -i ..\..\inc;..\rinc
+---
+> RC      =$(RC) -i ..\..\inc -i ..\rinc
+--- base\mvdm\wow16\ole\server\olesvr.def
++++ base\mvdm\wow16\ole\server\olesvr.def
+7c7
+< STUB 'WINSTUB.EXE'
+---
+> STUB '..\..\BIN\WINSTUB.EXE'
+--- base\mvdm\wow16\regedit\regedit.def
++++ base\mvdm\wow16\regedit\regedit.def
+5c5
+< STUB	'WINSTUB.EXE'
+---
+> STUB	'..\BIN\WINSTUB.EXE'
+--- base\mvdm\wow16\user\user.def
++++ base\mvdm\wow16\user\user.def
+7c7
+< STUB '..\BIN\WINSTUB.EXE'
+---
+> STUB '..\..\..\..\BIN\WINSTUB.EXE'
+--- base\mvdm\wow16\wowexec\makefile.sub
++++ base\mvdm\wow16\wowexec\makefile.sub
+98c98
+<     echo stub '..\..\bin\winstub.exe'      >>$(DEST)\wowexec.def
+---
+>     echo stub '..\bin\winstub.exe'         >>$(DEST)\wowexec.def
+--- base\mvdm\wow16\kernel31\makefile.sub
++++ base\mvdm\wow16\kernel31\makefile.sub
+20a21,25
+> # Uncomment this for normal x86 build on x86. We do crude hack for 
+> # Platform PPC as we are building with CCPU
+> # PLATFORM = $(PROCESSOR_ARCHITECTURE)
+> PLATFORM = PPC
+> 
+34c39
+< A1FLAGS=-DWOW $(WOW_QUICK_INT21) -DWINDEBUG -DPM386 -DWOW_$(PROCESSOR_ARCHITECTURE) $(DBCS_FLAGS)
+---
+> A1FLAGS=-DWOW $(WOW_QUICK_INT21) -DWINDEBUG -DPM386 -DWOW_$(PLATFORM) $(DBCS_FLAGS)
+37c42
+< A1FLAGS=-DWOW $(WOW_QUICK_INT21) -DPM386 -DWOW_$(PROCESSOR_ARCHITECTURE) $(DBCS_FLAGS)
+---
+> A1FLAGS=-DWOW $(WOW_QUICK_INT21) -DPM386 -DWOW_$(PLATFORM) $(DBCS_FLAGS)
+93c98
+< all: makedir setenv oldobjs $(DEST)\kernel.exe $(DEST)\krnl386.sym
+---
+> all: fixexe.exe makedir setenv oldobjs $(DEST)\kernel.exe $(DEST)\krnl386.sym
+652c657,659
+< fixexe.obj fixexe.lst:: fixexe.c
+---
+> fixexe.exe fixexe.lst:: fixexe.c
+>  	cl fixexe.c -MD -I$(NTMAKEENV)\src\public\sdk\inc\crt /link /LIBPATH:$(NTMAKEENV)\src\public\sdk\lib\x86 /NODEFAULTLIB:oldnames.lib
+>  	copy fixexe.exe $(NTMAKEENV)\tools\x86\tools16\
+--- base\mvdm\wow16\kernel31\fixexe.c
++++ base\mvdm\wow16\kernel31\fixexe.c
+29,31c29,31
+<     int iLengthMod512;
+<     int iSizeInPages;
+<     int iZero;
+---
+>     short iLengthMod512;
+>     short iSizeInPages;
+>     short iZero;
+--- base\mvdm\inc\makefile.inc
++++ base\mvdm\inc\makefile.inc
+30c30
+<      doswow.inc curdir.inc vdmtib.inc
+---
+>      doswow.inc curdir.inc vdmtib.inc wowwife.inc wownls.inc
+73a74,77
+> wowwife.inc: wowwife.h wow.inc
+> 
+> wownls.inc: wownls.h wow.inc
+> 

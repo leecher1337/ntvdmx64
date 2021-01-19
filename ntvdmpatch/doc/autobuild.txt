@@ -1,0 +1,81 @@
+About Autobuild
+===============
+Even though, the build process using MINNT build system is fairly easy,
+as outlined in minnt.txt, there are still a few manual steps to carry out to
+build NTVDMx64 which may get annoying over time.
+In order to automate test building during development and also make compiling
+easier for the end user (as binaries cannot be supplied), I created an 
+automated build system that should carry out all necessary steps to build
+NTVDMx64. The script can also be used to cleanly update to a new version.
+Even though, the building is broken down into steps on purpose, so that
+carrying out all the steps should not be needed on every build, there are often
+updates that can make a complete rebuild necessary anyway, so it's better to 
+start off clean.
+The extra amount of time needed (i.e. for rebuilding the NTOSBE build system 
+every time) should be neglegible on modern machines.
+
+The script will automatically download the newest NTVDMx64 build every time 
+it is run so that you don't have to manually update.
+
+Requirements
+============
+ * MinNT repository with NTVDM with latest commits as of Apr 16, 2017 
+   (q160765803-minint4-85fac4faadc7 or more specifically 
+    MinNT-20170416-85fac4faadc77203db8ddc66af280a75c1b717b0.zip)
+   opennt.net site contains some hints on where to find it.
+ * Windows NT4 repository old-src.trunk.r687.20150728.7z
+   (a.k.a. old-src-sr687.7z)
+ * An installed version of 7-zip file manager
+   https://www.7-zip.de
+
+ If you are on Windows XP, for downloading via HTTPS:
+ * wget.exe
+   http://eternallybored.org/misc/wget/1.19.4/32/wget.exe
+
+ The other requirements (as outlined in minnt.txt) are also still required,
+ but can be downlaoded by the autobuild script automatically.
+
+ You need approx. 5GB of free disk space.
+
+Setup MINNT build environment
+=============================
+The script should theoretically run from any directory, if directory path
+length exceeds 30 characters, a virtual SUBST drive letter is created.
+To avoid this step, use a build directory with a very short path name,
+i.e. C:\NTVDMBLD
+
+1) Place the files from the requirements section in directory:
+
+   MinNT-20170416-85fac4faadc77203db8ddc66af280a75c1b717b0.zip
+   old-src.trunk.r687.20150728.7z
+
+2) Now place the scripts from the autobuild directory there:
+   autobuild.cmd
+   autobuild-haxm.cmd
+
+3) Depending on your OS version and TLS-capabilities, either put supplied
+
+   dldr.exe
+
+   also there, or, if your system is old (like old Win7 version or
+   Win XP, download
+
+   wget.exe
+
+   from link above and place it there.
+
+Run build
+=========
+Now simply run autobuild.cmd if you want NTVDMx64 CCPU build. 
+OR run autobuild-haxm.cmd if you want NTVDMx64 HAXM build. 
+
+It will fetch the required .ISOs from Microsoft download server (please keep 
+them so that you don't have to downnload these big files everytime!), fetch 
+NTOSBE and the current ntvdmx64 release from github and build  in w\ subdirectory.
+After build is done, you should find all NTVDMx64 releases in the
+releases-subfolder.
+
+Now everytime you want to update ntvdmx64, just re-execute the 
+autobuild-script and after some compilation time, you should have the most
+recent release available for installation.
+

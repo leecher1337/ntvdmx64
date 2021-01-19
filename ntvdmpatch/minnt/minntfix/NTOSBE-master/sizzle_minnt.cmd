@@ -57,4 +57,4 @@ REM //
 REM // Call sizzle
 REM //
 
-call sizzle.cmd
+call sizzle.cmd %1

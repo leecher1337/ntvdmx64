@@ -1,3 +1,6 @@
+For the impatient ones, who don't want to read:
+ntvdmpatch\doc\autobuild.txt should be the fastest way to get NTVDMx64 compiled.
+
 What is it?
 ===========
 NTVDMx64 is a port of the well-known Windows NTVDM, which is used by windows 
@@ -133,9 +136,10 @@ However I published the code and compiled versions of the loader that
 enables you to run the patched NTVDM, as this is my own code.
 As the OpenNT project released the sourcecode, copyright issues are up to
 them, I can just say that you need the old-src.trunk.r687.20150728.7z
-source package released by them and the old-sdk.trunk_r57.20150728.7z
-SDK package (Google and web.archive.org are your friends) if you want
-to try it out. 
+source package released by them (Google and web.archive.org are your 
+friends) if you want to try it out. 
+Depending on the build flavour you choose, you also need the appropriate
+SDK package.
 I'm providing patchfiles that patch the sourcecode to compile your own
 version of NTVDM which works on x64, publishing patches shouldn't be a 
 copyright issue, I hope. And therefore you can try to patch the source 
@@ -145,7 +149,7 @@ x64 Windows users a NTVDM again, but I'm not very positive that this
 will happen, they seem to forget about us DOS-users. :-(
 
 There are various "flavours" of NTVDM that can be built:
- * old-src
+ * old-src  [!DO NOT USE!]
    The original NT4 NTVDM. Maybe the easiest version to build, but
    it doesn't have multilanguage and lacks some features like LFN
    This has been the default repository until Feb/2020 where 
@@ -170,6 +174,9 @@ There are various "flavours" of NTVDM that can be built:
    It is planned to continue development on this source tree as of
    Feb/2020
    Build instructions in: doc\minnt.txt
+
+To make building easier, there is an automated build system available.
+Please refer to doc\autobuild.txt for details.
 
 In case you want a fully compiled build, I recommend Googling for ntvdmx64
 

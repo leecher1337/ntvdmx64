@@ -1,4 +1,4 @@
-@echo on
+@echo off
 setlocal ENABLEDELAYEDEXPANSION
 
 echo ----------------------------------------------------
@@ -57,22 +57,32 @@ for /R %%f in (*.msg) do (
 )
 popd
 
-echo Patching broken utilities
 pushd %BASEPATH%\..\
+if exist %PATCHROOT%\patches\minnt\wow16.patch.oldsrc ren %PATCHROOT%\patches\minnt\wow16.patch.oldsrc wow16.patch 
+if not exist %BASEPATH%\mvdm\wow16\makefile.inc goto noxpsrc
+echo Patching WinXP/2k3 WOW16
+%PATCHROOT%\util\patch -N -p0 -i %~dp0\wow16-xp.patch 
+ren %PATCHROOT%\patches\minnt\wow16.patch wow16.patch.oldsrc
+
+:noxpsrc
+echo Patching broken utilities
 %PATCHROOT%\util\patch -N -p0 -i %~dp0\tools.patch
 
 cd ..
+find "qgrep" NTOSBE-master\src\sdktools\dirs >nul
+if not errorlevel 1 goto bepatched
 %PATCHROOT%\util\patch -N -p0 -i %~dp0\be.patch
 rem Also ensure .mc file has CRLF line endings
 %PATCHROOT%\util\sed -i "s/\r$/\n$/" NTOSBE-master\src\sdktools\rcdll\rcmsgs.mc
 rem Work around broken rc16
 del NTOSBE-master\tools\x86\tools16\rc16.exe
+:bepatched
 popd
 
 
 echo Done, now your MINNT build environment should be in a working condition.
 echo Run sizzle_minnt.cmd in Build environment directory next and do 
 echo buildrepoidw.cmd 
-pause
+if not "%1"=="batch" pause
 
 :fini
