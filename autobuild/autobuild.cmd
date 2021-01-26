@@ -54,7 +54,16 @@ call :fetchprq
 
 rem -- Path contains spaces, bad, do subst
 set NEEDSUBST=
-if not "%WKDIR%"=="%WKDIR: =%" SET NEEDSUBST=1
+if not "%WKDIR%"=="%WKDIR: =%" (
+  echo [!] Consider using a pathname without space in it
+  SET NEEDSUBST=1
+)
+
+rem -- Path contains a hyphen, bad, do subst
+if not "%WKDIR%"=="%WKDIR:-=%" (
+  echo [!] Consider using a pathname without - in it
+  SET NEEDSUBST=1
+)
 
 rem -- Path is too long, bad, do subst
 setlocal enableDelayedExpansion
