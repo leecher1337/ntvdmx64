@@ -7,3 +7,5 @@
 #endif
 
 BOOL UpdateSymbolCache();
+HANDLE SymCache_GetDLLKey(HKEY hKey, LPWSTR lpDLLKey);
+DWORD SymCache_GetProcAddress(HKEY hKey, LPWSTR lpKeyName);

@@ -53,12 +53,24 @@
 //#define CREATEPROCESS_HOOK
 #endif
 
+/* On Windows >=7, appinfo.dll needs to get patched inside svchost.exe netsvcs */
+#if !defined(TARGET_WINXP) && defined(_WIN64) 
+#define NEED_APPINFO
+#endif
+
 /* In Windows XP And Windows 7, all the stuff is internal in kernel32.dll :(
- * But we cannot use the symbol loader in the module loading routine, so
+ * Windows XP has its own xpcreateproc.c module, therefore doesn't have to lookup
+ * all these symbols.
+ * All Windows versions >= Windows 7 however have the appinfo.dll for "Run as...",
+ * implementation, therefore all of these need to have a symbol cache.
+ * Windows 7: We cannot use the symbol loader in the module loading routine, so
  * a symbol cache in the registry needs to be built that can get accessed 
  * during module load
+ * Windows >=7: The appinfo.dll is used in the service where the symbol loader also
+ * doesn't seem to work, so a logged on user first needs to lookup the symbols and
+ * add them to the cache, so the service can read the cache and hook the function
  */
-#if defined(TARGET_WIN7)
+#if defined(TARGET_WIN7) || defined(TARGET_WINXP) || defined(NEED_APPINFO)
 #define USE_SYMCACHE
 #endif
 

@@ -38,6 +38,7 @@
 #include "xpcreateproc.h"
 #include "ntregapi.h"
 #include "apppatch.h"
+#include "appinfo.h"
 
 #pragma comment(lib, "ntdll.lib")
 
@@ -161,6 +162,10 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 		ProcessParameters,
 		CreateInfo,
 		AttributeList);
+	if (!NT_SUCCESS(LastCreateUserProcessError) && ProcessParameters)
+	{
+		TRACE("NtCreateUserProcess(ThreadHandle=%X, CommandLine=%wZ) failed with %08X\n", ThreadHandle?*ThreadHandle:-1, &ProcessParameters->CommandLine, LastCreateUserProcessError);
+	}
 #ifdef WOW16_SUPPORT
 	return (!gfHasOTVDM && LastCreateUserProcessError==STATUS_INVALID_IMAGE_WIN_16)?STATUS_INVALID_IMAGE_PROTECT:LastCreateUserProcessError;
 #else
@@ -252,6 +257,12 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 		Error = LastCreateUserProcessError;
 	}
 #endif
+#ifdef NEED_APPINFO
+	// It's in here, because the cache may resolve the symbol after already launching the
+	// service DLL and user shouldn't need to restart the service once Symbol got resolved.
+	AppInfo_InstallHook();
+#endif
+
 	if (Error == STATUS_INVALID_IMAGE_PROTECT ||
 		(Error == STATUS_INVALID_IMAGE_NOT_MZ && BaseIsDosApplication &&
 			(BinarySubType = BaseIsDosApplication(PathName, Error))))
@@ -407,6 +418,22 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 	ret = BasepProcessInvalidImageReal(Error, TokenHandle, dosname, lppApplicationName, lppCommandLine, lpCurrentDirectory,
 		pdwCreationFlags, pbInheritHandles, PathName, a10, lppEnvironment, lpStartupInfo, m, piTask, pVdmNameString,
 		pAnsiStringEnv, pUnicodeStringEnv, pVDMCreationState, pVdmBinaryType, pbVDMCreated, pVdmWaitHandle);
+#if defined(TARGET_WIN7) && !defined(_WIN64)
+	/* On Windows 7 32bit, this parameter seems to be used to set PROC_THREAD_ATTRIBUTE_MITIGATION_POLICY 
+	 * to 1 and this in turn causes a weird Virtual memory allocation call in PspSetupUserProcessAddressSpace 
+	 * to fail. So I suppose that this parameter means "VdmReserve" there, nevertheless the logic is weird,
+	 * as CreateProcessInternalW sets low DWORD to 1 (which would make sense in terms of Mitigation policy),
+	 * and hiword to the value specified here. 
+	 * In kernel, it takes the low word (thus, 1 !) as base address and the high word as size.
+	 * It seems we get 0xFFFFFF here in pbVDMCreated, which would make sense (even though we don't need it),
+	 * in terms of VdmReserve, but the LOWORD is still 1 and therefore the address is unaligned making 
+	 * NtCreateUserProcess fail with STATUS_INVALID_PARAMETER_2 (which gets originally issued by 
+	 * ZwAllocateVirtualMemory call in PspSetupUserProcessAddressSpace). 
+	 * So my guess is, that it simply is a kernel bug, given the fact that the problematic code got removed 
+	 * in later Windows versions. 
+	 */
+	*pbVDMCreated = 0;
+#endif
 #ifdef WOW_HACK
 	*pdwCreationFlags &= ~CREATE_NO_WINDOW;
 #endif
@@ -508,7 +535,38 @@ BOOL IsSystemUpdating(void)
 }
 #endif /* TARGET_WINXP */
 
+#if defined(USE_SYMCACHE) && defined(TARGET_WIN7)
+void EnsureWin7Symbols(HMODULE hKrnl32)
+{
+	if (!BasepProcessInvalidImageReal || !BaseIsDosApplication)
+	{
+		// Windows 7, all the stuff is internal in kernel32.dll :(
+		// But we cannot use the symbol loader in the module loading routine
+		NTSTATUS Status;
+		DWORD dwAddress;
+		HKEY hKey;
+		LPBYTE lpProcII;
 
+		if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ, &hKey)))
+		{
+#ifndef NEED_BASEVDM
+			if (dwAddress = SymCache_GetProcAddress(hKey, REGKEY_BasepProcessInvalidImage))
+			{
+				lpProcII = (LPBYTE)((DWORD64)hKrnl32 + dwAddress);
+				BasepProcessInvalidImageReal = (fpBasepProcessInvalidImage)Hook_Inline(lpProcII, BasepProcessInvalidImage);
+			}
+#endif /* !NEED_BASEVDM */
+			if (dwAddress = SymCache_GetProcAddress(hKey, REGKEY_BaseIsDosApplication))
+				BaseIsDosApplication = (fpBaseIsDosApplication)((DWORD64)hKrnl32 + dwAddress);
+			REG_CloseKey(hKey);
+		}
+		else
+		{
+			TRACE("RegOpenKey failed: %08X\n", Status);
+		}
+	}
+}
+#endif
 
 #ifdef CRYPT_LDR
 BOOL WINAPI real_DllMainCRTStartup(
@@ -590,59 +648,9 @@ BOOL WINAPI _DllMainCRTStartup(
 #ifdef WOW16_SUPPORT
 		gfHasOTVDM = REG_CheckForOTVDM();
 #endif
-#ifdef USE_SYMCACHE
-		{
-/*
-			// Windows 7, all the stuff is internal in kernel32.dll :(
-			// But we cannot use the symbol loader in the module loading routine
-			DWORD64 dwBase=0, dwAddress;
-			char szKernel32[MAX_PATH];
-			GetSystemDirectoryA(szKernel32, sizeof(szKernel32) / sizeof(szKernel32[0]));
-			strcat(szKernel32, "\\kernel32.dll");
-			if (SymEng_LoadModule(szKernel32, &dwBase) == 0)
-			{
-				if (dwAddress = SymEng_GetAddr(dwBase, "BasepProcessInvalidImage"))
-				{
-					lpProcII = (DWORD64)hKrnl32 + dwAddress;
-					BasepProcessInvalidImageReal = (fpBasepProcessInvalidImage)Hook_Inline(lpProcII, BasepProcessInvalidImage, 10);
-				}
-				if (dwAddress = SymEng_GetAddr(dwBase, "BaseIsDosApplication"))
-					BaseIsDosApplication = (DWORD64)hKrnl32 + dwAddress;
-			}
-*/
-			NTSTATUS Status;
-			DWORD dwAddress;
-			HKEY hKey;
-
-			if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ, &hKey)))
-			{
-#ifndef NEED_BASEVDM
-				if (NT_SUCCESS(Status = REG_QueryDWORD(hKey, REGKEY_BasepProcessInvalidImage, &dwAddress)))
-				{
-					lpProcII = (LPBYTE)((DWORD64)hKrnl32 + dwAddress);
-					BasepProcessInvalidImageReal = (fpBasepProcessInvalidImage)Hook_Inline(lpProcII, BasepProcessInvalidImage);
-				}
-				else
-				{
-					TRACE("RegQueryValueEx 1 failed: %08X\n", Status);
-				}
-#endif /* !NEED_BASEVDM */
-				if (NT_SUCCESS(Status = REG_QueryDWORD(hKey, REGKEY_BaseIsDosApplication, &dwAddress)))
-					BaseIsDosApplication = (fpBaseIsDosApplication)((DWORD64)hKrnl32 + dwAddress);
-				else
-				{
-					TRACE("RegQueryValueEx 2 failed: %08X\n", Status);
-				}
-				REG_CloseKey(hKey);
-			}
-			else
-			{
-				TRACE("RegOpenKey failed: %08X\n", Status);
-			}
-
-
-		}
-#else	// USE_SYMCACHE
+#if defined(USE_SYMCACHE) && defined(TARGET_WIN7)
+		EnsureWin7Symbols(hKrnl32);
+#else	// USE_SYMCACHE && TARGET_WIN7
 #ifndef TARGET_WINXP /* XP has its own xpcreateproc.c module */
 		// Windows 10
 #ifndef NEED_BASEVDM
@@ -655,7 +663,7 @@ BOOL WINAPI _DllMainCRTStartup(
 #else // !TARGET_WINXP
 		XpCreateProcHandler_Install(hKrnl32);
 #endif // TARGET_WINXP
-#endif // !USE_SYMCACHE
+#endif // !(USE_SYMCACHE && TARGET_WIN7)
 #ifndef NEED_BASEVDM
 		TRACE("LDNTVDM: BasepProcessInvalidImageReal = %08X\n", BasepProcessInvalidImageReal);
 #endif // !NEED_BASEVDM

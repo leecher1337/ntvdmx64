@@ -24,7 +24,7 @@
 #include "detour.h"
 #include "basevdm.h"
 #include "symcache.h"
-#include "symeng.h"
+#include "reg.h"
 #include "csrsswrap.h"
 
 #ifndef _WIN64
@@ -576,56 +576,59 @@ static BOOL ResolveLocalSymbols(void)
 	{
 		// Load the private loader functions by using DbgHelp and Symbol server
 		DWORD64 dwBase = 0, dwAddress;
-		char szKernel32[MAX_PATH];
 		int i;
 		HMODULE hKrnl32 = GetModuleHandle(_T("kernel32.dll"));
 		struct symmap {
-			LPCSTR lpName;
+			LPWSTR lpName;
 			PULONG_PTR lpDest;
 		} syms[] = {
-			{ "NtVdm64CreateProcess", (PULONG_PTR)&NtVdm64CreateProcess },
-			{ "BaseIsDosApplication", (PULONG_PTR)&BaseIsDosApplication },
-			{ "BaseCreateStack", (PULONG_PTR)&BaseCreateStack },
-			{ "BaseFormatObjectAttributes", (PULONG_PTR)&BaseFormatObjectAttributes },
-			{ "BasepIsProcessAllowed", (PULONG_PTR)&BasepIsProcessAllowed },
-			{ "BasePushProcessParameters", (PULONG_PTR)&BasePushProcessParameters },
-			{ "BasepIsRealtimeAllowed", (PULONG_PTR)&BasepIsRealtimeAllowed },
-			{ "BaseInitializeContext", (PULONG_PTR)&BaseInitializeContext },
-			{ "BaseStaticServerData", (PULONG_PTR)&BaseStaticServerData },
-			{ "StuffStdHandle", (PULONG_PTR)&StuffStdHandle },
-			{ "BasepFreeAppCompatData", (PULONG_PTR)&BasepFreeAppCompatData },
+			{ L"NtVdm64CreateProcess", (PULONG_PTR)&NtVdm64CreateProcess },
+			{ L"BaseIsDosApplication", (PULONG_PTR)&BaseIsDosApplication },
+			{ L"BaseCreateStack", (PULONG_PTR)&BaseCreateStack },
+			{ L"BaseFormatObjectAttributes", (PULONG_PTR)&BaseFormatObjectAttributes },
+			{ L"BasepIsProcessAllowed", (PULONG_PTR)&BasepIsProcessAllowed },
+			{ L"BasePushProcessParameters", (PULONG_PTR)&BasePushProcessParameters },
+			{ L"BasepIsRealtimeAllowed", (PULONG_PTR)&BasepIsRealtimeAllowed },
+			{ L"BaseInitializeContext", (PULONG_PTR)&BaseInitializeContext },
+			{ L"BaseStaticServerData", (PULONG_PTR)&BaseStaticServerData },
+			{ L"StuffStdHandle", (PULONG_PTR)&StuffStdHandle },
+			{ L"BasepFreeAppCompatData", (PULONG_PTR)&BasepFreeAppCompatData },
 			//{ "BaseComputeProcessExePath", (PULONG_PTR)&BaseComputeProcessExePath },
-			{ "BasepReplaceProcessThreadTokens", (PULONG_PTR)&BasepReplaceProcessThreadTokens},
-			{ "BasepCheckBadapp", (PULONG_PTR)&BasepCheckBadapp },
+			{ L"BasepReplaceProcessThreadTokens", (PULONG_PTR)&BasepReplaceProcessThreadTokens},
+			{ L"BasepCheckBadapp", (PULONG_PTR)&BasepCheckBadapp },
 			//{ "BasepIsImageVersionOk", (PULONG_PTR)&BasepIsImageVersionOk },
-			{ "BasepCheckWinSaferRestrictions", (PULONG_PTR)&BasepCheckWinSaferRestrictions },
+			{ L"BasepCheckWinSaferRestrictions", (PULONG_PTR)&BasepCheckWinSaferRestrictions },
 #if defined(BUILD_WOW6432)
-			{ "CsrBasepCreateProcess", (PULONG_PTR)&CsrBasepCreateProcess },
+			{ L"CsrBasepCreateProcess", (PULONG_PTR)&CsrBasepCreateProcess },
 #endif
-			{ "BuildSubSysCommandLine", (PULONG_PTR)&BuildSubSysCommandLine }
+			{ L"BuildSubSysCommandLine", (PULONG_PTR)&BuildSubSysCommandLine }
+			// NB: ! When updating this list, also expand list in symcache.c !
 		};
 
-		GetSystemDirectoryA(szKernel32, sizeof(szKernel32) / sizeof(szKernel32[0]));
-		strcat(szKernel32, "\\kernel32.dll");
-		if (SymEng_LoadModule(szKernel32, &dwBase) == 0)
+		if (UpdateSymbolCache())
 		{
-			for (i = 0; i < sizeof(syms) / sizeof(syms[0]); i++)
+			NTSTATUS Status;
+			HKEY hKey;
+
+			if (bRet = NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ | KEY_WRITE, &hKey)))
 			{
-				if ((dwAddress = SymEng_GetAddr(dwBase, syms[i].lpName)))
-					*syms[i].lpDest = (DWORD64)hKrnl32 + dwAddress;
-				else 
+				if (bRet = (SymCache_GetDLLKey(hKey, L"kernel32.dll")?TRUE:FALSE))
 				{
-					bRet = FALSE;
-					break;
+					for (i = 0; i < sizeof(syms) / sizeof(syms[0]); i++)
+					{
+						if ((dwAddress = (DWORD64)SymCache_GetProcAddress(hKey, syms[i].lpName)))
+							*syms[i].lpDest = (DWORD64)hKrnl32 + dwAddress;
+						else
+						{
+							bRet = FALSE;
+							break;
+						}
+					}
 				}
+				REG_CloseKey(hKey);
 			}
-			SymEng_UnloadModule(dwBase);
 		}
-		else
-		{
-			OutputDebugStringA("NTVDM: Symbol engine loading failed");
-			return FALSE;
-		}
+		if (!bRet) OutputDebugStringA("NTVDM: Symbol engine loading failed");
 	}
 	return bRet;
 }
@@ -662,6 +665,12 @@ NtVdm64CreateProcessHook(
 			wcscat(pszCommandLine, lpCommandLine);
 		}
 		else pszCommandLine = lpCommandLine;
+
+		// When called by real CreateProcessInternalW (i.e. Execute as..), the CREATE_UNICODE_ENVIRONMENT flag gets
+		// stripped leading to bad environment conversion
+		if (!(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT) && lpEnvironment && ((PBYTE)lpEnvironment)[0] &&
+			((PBYTE)lpEnvironment)[1] == 0)
+			dwCreationFlags |= CREATE_UNICODE_ENVIRONMENT;
 
 		return xpCreateProcessW(
 			(LPCWSTR)lpApplicationName,
@@ -993,7 +1002,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
 	PolicyPathPair.Nt = &SxsNtPolicyPath.String;
 #endif
 
-	DPRINT("CreateProcessInternalW: '%S' '%S' %lx\n", lpApplicationName, lpCommandLine, dwCreationFlags);
+	DPRINT("CreateProcessInternalW: '%S' '%S' %lx %lx\n", lpApplicationName, lpCommandLine, lpEnvironment, dwCreationFlags);
 
 	/* Finally, set our TEB and PEB */
 	Teb = NtCurrentTeb();
@@ -1115,7 +1124,9 @@ CreateProcessInternalW(IN HANDLE hUserToken,
 		}
 
 		/* Now set the Unicode environment as the environment string pointer */
+		TRACE("lpEnvironment before: %S\n", lpEnvironment);
 		lpEnvironment = UnicodeEnv.Buffer;
+		TRACE("lpEnvironment after: %S\n", lpEnvironment);
 	}
 
 	/* Make a copy of the caller's startup info since we'll modify it */
@@ -1830,6 +1841,7 @@ AppNameRetry:
 			{
 				RtlDestroyEnvironment(lpEnvironment);
 			}
+			lpEnvironment = VdmUnicodeEnv.Buffer;
 
 			/* We've already done all these checks, don't do them again */
 			SkipSaferAndAppCompat = TRUE;
@@ -2535,6 +2547,7 @@ AppNameRetry:
 	}
 
 	/* Check if VDM needed reserved low-memory */
+#ifdef RESERVE_MEM	// Not needed for our emulated NTVDM
 	if (VdmReserve)
 	{
 		/* Reserve the requested allocation */
@@ -2553,6 +2566,7 @@ AppNameRetry:
 			goto Quickie;
 		}
 	}
+#endif
 
 	/* Check if we've already queried information on the section */
 	if (!QuerySection)
@@ -2691,7 +2705,21 @@ AppNameRetry:
 	if (!Result)
 	{
 		/* The remote process would have an undefined state, so fail the call */
-		DPRINT1("BasePushProcessParameters failed\n");
+		DPRINT1("BasePushProcessParameters(%lx, %lx, %lx, '%S', '%S', '%S', %lx, %lx, %lx, %d, %d, %lx, %d) failed: %d\n", 
+			ParameterFlags,
+			ProcessHandle,
+			RemotePeb,
+			lpApplicationName,
+			CurrentDirectory,
+			lpCommandLine,
+			lpEnvironment,
+			&StartupInfo,
+			dwCreationFlags | NoWindow,
+			bInheritHandles,
+			IsWowApp ? IMAGE_SUBSYSTEM_WINDOWS_GUI : 0,
+			AppCompatData,
+			AppCompatDataSize,
+			GetLastError());
 		goto Quickie;
 	}
 

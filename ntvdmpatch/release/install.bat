@@ -7,6 +7,13 @@ if "%1"=="instwow" goto instwow
 if "%1"=="delwow" goto delwow
 if "%1"=="link" goto hardlink
 
+rem Ensure that we are run from 64bit prompt
+if "%ProgramFiles(x86)%" == "" goto StartExec
+if not exist %SystemRoot%\Sysnative\cmd.exe goto StartExec
+%SystemRoot%\Sysnative\cmd.exe /C "%~f0" %*
+goto :fini
+
+:StartExec
 >nul 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system"
 if '%errorlevel%' NEQ '0' (
   echo Requesting administrative privileges...
@@ -72,12 +79,21 @@ echo ---------------------------------------------
 echo Please check for completion-message from installer in taskbar.
 if exist haxm\IntelHaxm.sys RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultInstall 132 %CD%\ntvdmx64-haxm.inf
 
-rem Add Loader to Windows Defender exclusion list, as there are always false positives
+echo [*] Trying to download necessary debug symbols
+util\symfetch %SYSTEMROOT%\system32\kernel32.dll
+util\symfetch %SYSTEMROOT%\syswow64\kernel32.dll
+if not "%version%"=="5.1" util\symfetch %SYSTEMROOT%\system32\appinfo.dll
+if "%version%"=="6.1" util\symfetch %SYSTEMROOT%\system32\conhost.exe
+
+if "%version%"=="5.1" goto nodefender
+echo [*] Adding Loader to Windows Defender exclusion list, as there are always false positives...
 set "DefExclusion=%SystemRoot%\system32\ldntvdm.dll"
 powershell -noprofile -command Add-MpPreference -Force -ExclusionPath "$env:DefExclusion" >nul
 set "DefExclusion=%SystemRoot%\syswow64\ldntvdm.dll"
 powershell -noprofile -command Add-MpPreference -Force -ExclusionPath "$env:DefExclusion" >nul
 
+:nodefender
+echo [*] Installing components
 rundll32.exe advpack.dll,LaunchINFSection %CD%\ntvdmx64.inf
 goto fini
 

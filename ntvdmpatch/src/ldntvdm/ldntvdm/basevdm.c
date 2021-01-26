@@ -601,7 +601,7 @@ BaseCheckVDMp(
 			goto BCVTryExit;
 		}
 
-		CsrAllocateMessagePointer(CaptureBuffer,
+		myCsrAllocateMessagePointer(CaptureBuffer,
 			ROUND_UP((OemStringCmd.Length + 3), 4),
 			(PVOID *)&b->CmdLine
 			);
@@ -612,7 +612,7 @@ BaseCheckVDMp(
 		b->CmdLine[OemStringCmd.Length + 2] = 0;
 		b->CmdLen = (USHORT)(OemStringCmd.Length + 3);
 
-		CsrAllocateMessagePointer(CaptureBuffer,
+		myCsrAllocateMessagePointer(CaptureBuffer,
 			ROUND_UP((OemStringAppName.Length + 1), 4),
 			(PVOID *)&b->AppName
 			);
@@ -625,7 +625,7 @@ BaseCheckVDMp(
 		b->AppLen = OemStringAppName.Length + 1;
 
 		if (AnsiStringPif.Buffer) {
-			CsrAllocateMessagePointer(CaptureBuffer,
+			myCsrAllocateMessagePointer(CaptureBuffer,
 				ROUND_UP((AnsiStringPif.Length + 1), 4),
 				(PVOID *)&b->PifFile
 				);
@@ -644,7 +644,7 @@ BaseCheckVDMp(
 		}
 
 		if (pAnsiStringEnv->Length) {
-			CsrAllocateMessagePointer(CaptureBuffer,
+			myCsrAllocateMessagePointer(CaptureBuffer,
 				ROUND_UP((pAnsiStringEnv->Length), 4),
 				(PVOID *)&b->Env
 				);
@@ -654,7 +654,6 @@ BaseCheckVDMp(
 				pAnsiStringEnv->Length);
 
 			b->EnvLen = pAnsiStringEnv->Length;
-
 		}
 		else {
 			b->EnvLen = 0;
@@ -663,7 +662,7 @@ BaseCheckVDMp(
 
 
 		if (AnsiStringCurrentDir.Length) {
-			CsrAllocateMessagePointer(CaptureBuffer,
+			myCsrAllocateMessagePointer(CaptureBuffer,
 				ROUND_UP((AnsiStringCurrentDir.Length + 1), 4),
 				(PVOID *)&b->CurDirectory
 				);
@@ -679,7 +678,7 @@ BaseCheckVDMp(
 		}
 
 		if (lpStartupInfo) {
-			CsrAllocateMessagePointer(CaptureBuffer,
+			myCsrAllocateMessagePointer(CaptureBuffer,
 				ROUND_UP(sizeof(STARTUPINFOA), 4),
 				(PVOID *)&b->StartupInfo
 				);
@@ -700,7 +699,7 @@ BaseCheckVDMp(
 		}
 
 		if (AnsiStringDesktop.Buffer) {
-			CsrAllocateMessagePointer(CaptureBuffer,
+			myCsrAllocateMessagePointer(CaptureBuffer,
 				ROUND_UP((AnsiStringDesktop.Length + 1), 4),
 				(PVOID *)&b->Desktop
 				);
@@ -715,7 +714,7 @@ BaseCheckVDMp(
 		}
 
 		if (OemStringTitle.Buffer) {
-			CsrAllocateMessagePointer(CaptureBuffer,
+			myCsrAllocateMessagePointer(CaptureBuffer,
 				ROUND_UP((OemStringTitle.Length + 1), 4),
 				(PVOID *)&b->Title
 				);
@@ -730,7 +729,7 @@ BaseCheckVDMp(
 		}
 
 		if (AnsiStringReserved.Buffer) {
-			CsrAllocateMessagePointer(CaptureBuffer,
+			myCsrAllocateMessagePointer(CaptureBuffer,
 				ROUND_UP((AnsiStringReserved.Length + 1), 4),
 				(PVOID *)&b->Reserved
 				);
@@ -745,7 +744,7 @@ BaseCheckVDMp(
 		}
 
 		if (hUserToken) {
-			CsrAllocateMessagePointer(CaptureBuffer,
+			myCsrAllocateMessagePointer(CaptureBuffer,
 				sizeof(AuthenticationId),
 				(PVOID *)&b->AuthenticationId
 				);

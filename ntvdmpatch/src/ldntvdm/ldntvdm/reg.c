@@ -48,6 +48,21 @@ BOOL REG_CheckForOTVDM(void)
 
 NTSTATUS REG_OpenLDNTVDM(DWORD dwAccess, PHKEY phKey)
 {
+	NTSTATUS Status;
+	UNICODE_STRING uStr;
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	DWORD Disposition;
+
+	RtlInitUnicodeString(&uStr, L"\\Registry\\Machine\\Software\\ldntvdm");
+	InitializeObjectAttributes(&ObjectAttributes, &uStr, OBJ_CASE_INSENSITIVE, NULL, NULL);
+	Status = NtCreateKey(phKey, dwAccess, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, &Disposition);
+	if (!NT_SUCCESS(Status)) return REG_OpenLDNTVDMUser(dwAccess, phKey);
+	return Status;
+}
+#endif
+
+NTSTATUS REG_OpenLDNTVDMUser(DWORD dwAccess, PHKEY phKey)
+{
 	HKEY hKeyCU;
 	NTSTATUS Status;
 	UNICODE_STRING uStr;
@@ -61,7 +76,6 @@ NTSTATUS REG_OpenLDNTVDM(DWORD dwAccess, PHKEY phKey)
 	NtClose(hKeyCU);
 	return Status;
 }
-#endif
 
 NTSTATUS REG_QueryNum(HKEY hKey, LPWSTR lpKey, PBYTE pdwResult, UINT Type)
 {

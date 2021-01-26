@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="symfetch.c">
+    <ClCompile Include="csrstub.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>

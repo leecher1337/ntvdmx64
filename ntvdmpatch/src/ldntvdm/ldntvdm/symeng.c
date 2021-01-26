@@ -85,7 +85,7 @@ fpSymUnloadModule64 SymUnloadModule64;
 static int InitSymEng(void)
 {
 	HANDLE hProcess = GetCurrentProcess();
-	char szPath[MAX_PATH + 128];
+	char szPath[(MAX_PATH + 128)*2];
 	HMODULE hDbgHelp;
 
 	GetWindowsDirectoryA(szPath, sizeof(szPath));
@@ -108,18 +108,26 @@ static int InitSymEng(void)
 		(SymUnloadModule64 = (fpSymUnloadModule64)GetProcAddress(hDbgHelp, "SymUnloadModule64"))
 		)
 	{
-		strcpy(szPath, "SRV*");
-		GetTempPathA(sizeof(szPath) - 4, szPath + 4);
-		strcat(szPath, "SymbolCache");
-		CreateDirectoryA(szPath + 4, NULL);
-
 #ifdef TARGET_WINXP
 		// msdl Server doesn't support plain HTTP anymore, however Windows XP/2003 doesn't support
 		// newer encryption standard, therefore we use a symbol proxy with HTTP-support
-		strcat(szPath, "*http://msdl.0wnz.at/download/symbols");
+		const char *pszSymSrv = "http://msdl.0wnz.at/download/symbols";
 #else
-		strcat(szPath, "*http://msdl.microsoft.com/download/symbols");
+		const char *pszSymSrv = "http://msdl.microsoft.com/download/symbols";
 #endif
+		char *p = szPath, *p2;
+
+		// Prefer global Windows Symbols path over local temp path
+		strcpy(szPath, "SRV*"); p += 4;
+		p2 = p;
+		p += GetTempPathA(MAX_PATH, p);
+		strcpy(p, "SymbolCache"); p += 11;
+		CreateDirectoryA(p2, NULL);
+		*p = '*'; p++;
+		p += GetWindowsDirectoryA(p, MAX_PATH);
+		strcpy(p, "\\Symbols*"); p += 9;
+		strcpy(p, pszSymSrv);
+
 		if (!SymInitialize(hProcess, 0, FALSE))
 		{
 			TRACE("SymInitialize failed: %08X\n", GetLastError());

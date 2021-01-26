@@ -32,8 +32,16 @@ HKLM,SYSTEM\CurrentControlSet\Control\WOW,SharedWowTimeout,0x00010001,0x00000e10
 HKLM,SYSTEM\CurrentControlSet\Control\WOW,DisallowedPolicyDefault,0x00010001,0
 HKLM,SYSTEM\CurrentControlSet\Control\WOW,NTVDMInstalled,0x00010001,1
 
+[Ntvdmx64.amd64.AddRegConfig]
+HKLM,SOFTWARE\ldntvdm
+HKLM,SOFTWARE\ldntvdm,,0x00004000
+
+[Ntvdmx64.amd64.AddRegConfig.Security]
+"D:(A;CI;KA;;;WD)"
+
 [SourceDisksNames.amd64]
 2="NTVDM Loader x64",,,"\ldntvdm\system32"
+3="DOS",,,"\dos"
 6="Symbols",,,"\symbols\dbghelp\x64"
 7="Installer"
 
@@ -43,9 +51,11 @@ dbghelp.dll=6
 symsrv.dll=6
 symsrv.yes=6
 install.bat=7
+csrstub.exe=3
 
 [Ntvdmx64.amd64.System.Files]
 ldntvdm.dll,,,0x14022
+csrstub.exe,,,0x41
 
 [Ntvdmx64.amd64.System.Files.Del]
 append.exe,,,0x41
@@ -146,12 +156,13 @@ RunDll32 advpack.dll,LaunchINFSection %01%\ntvdmx64-32.Inf
 %10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" msimergn.exe
 %10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" msimeset.exe
 %10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" us.bat
-%10%\Symbols\instntvdmx64.bat install
 RunDll32 advpack.dll,LaunchINFSection %01%\wow32.Inf
+RunDll32 advpack.dll,LaunchINFSection %01%\pifprop.Inf
+%10%\Symbols\instntvdmx64.bat install
 
 [UninstallCmds]
-RunDll32 advpack.dll,LaunchINFSection %01%\wow32.Inf,DefaultUninstall
 RunDll32 advpack.dll,LaunchINFSection %01%\ntvdmx64-32.Inf,DefaultUninstall
+RunDll32 advpack.dll,LaunchINFSection %01%\pifprop.Inf,DefaultUninstall
 %10%\Symbols\instntvdmx64.bat uninstall
 
 [BeginUnInsPrompt]
@@ -169,7 +180,7 @@ Prompt 	   = %EndInsPrompt%
 ;CheckAdminRights = 1
 RunPreSetupCommands = InstallCmdsPre
 CopyFiles   =  Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Symbol.Files, Ntvdmx64.amd64.Setup.Files, Ntvdmx64.amd64.Inf.Files.Add
-AddReg      = Ntvdmx64.amd64.AddReg, Ntvdmx64.amd64.AddRegVdm, Uninstall.AddReg
+AddReg      = Ntvdmx64.amd64.AddReg, Ntvdmx64.amd64.AddRegVdm, Ntvdmx64.amd64.AddRegConfig, Uninstall.AddReg
 RunPostSetupCommands = InstallCmds:1
 EndPrompt            = EndInsPrompt
 
@@ -178,7 +189,7 @@ BeginPrompt          = BeginUnInsPrompt
 Cleanup = 1
 RunPreSetupCommands = UninstallCmds
 DelFiles    = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.System.Files.Del, Ntvdmx64.amd64.Symbol.Files, Ntvdmx64.amd64.Setup.Files, Ntvdmx64.amd64.Inf.Files.Del
-Delreg      = Ntvdmx64.amd64.AddRegVdm, Uninstall.AddReg
+Delreg      = Ntvdmx64.amd64.AddRegConfig, Ntvdmx64.amd64.AddRegVdm, Uninstall.AddReg
 EndPrompt            = EndUnInsPrompt
 
 
