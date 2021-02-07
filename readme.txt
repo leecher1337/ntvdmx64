@@ -327,6 +327,17 @@ You forgot to disable QuickEdit mode of the windows console.
 See: https://github.com/leecher1337/ntvdmx64/issues/80
 
 
+When launching a DOS program from a user's console, it doesn't start on
+first launch and on second launch, I get System Error 4001h
+---------------------------------------------------------------------------
+This is due to the fact that the ForceV2 key of the Windows console is on
+a per-user basis, not systemwide, so it resides in HKEY_CURRENT_USER\Console
+Do you need to set the DWORD ForceV2 key in mentioned path to 0.
+
+You can just execute reg\conhost.reg from the release-folder of NTVDMx64
+as the correct user to fix that key.
+
+
 I want to print to my windows GDI printer
 ---------------------------------------------------------------------------
 Google "DOSPR.ZIP"

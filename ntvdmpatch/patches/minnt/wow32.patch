@@ -175,14 +175,14 @@
 > #ifdef W10
 >         DWORD mutex_count;
 > #endif
-1061a1073,1078
+1061a1073,1089
 > #ifdef W10
 >         ReleaseThunkLock(&mutex_count);
 >         while ((dw = MsgWaitForMultipleObjects(2, ThreadEvents, FALSE, INFINITE, QS_SENDMESSAGE)) == WAIT_OBJECT_0+2)
 >         {
 >             MSG msg;
 >             DECLARE_THUNKLOCK
-1061a1080,1089
+>             
 >             RESTORE_THUNKLOCK
 >             if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 >             {
@@ -195,22 +195,25 @@
 > #else
 1062a1091
 > #endif
-1320c1350
+1063a1093
+> #ifndef W10 // Do not assert, as this constellation can occur due to InputIdle logic for ghevWaitCreatorThread
+1066a1097
+> #endif
+1320c1351
 <     CURRENTPTD() = &td;
 ---
 >     SETCURRENTPTD(&td);
-1561c1591
+1561c1592
 < #ifdef i386
 ---
 > #ifdef i386xx
-1569a1600
+1569a1601
 > #ifndef W10 /* Unfortunetely, no NtUserInitTask support... */
-1604a1636,1637
+1604a1637,1639
 > #else
 >         {
-1604a1645
 >             static BOOL bFirstCall = TRUE;
-1605a1647,1661
+1605a1641,1655
 >             if (bFirstCall)
 >             {
 >                 HMODULE hUxTheme = GetModuleHandle("uxtheme.dll");
@@ -226,33 +229,32 @@
 >         }
 >         fRet = FALSE;
 > #endif
-1607a1666
+1607a1658
 >         td.hThread = hThread;
-1626a1686,1687
+1626a1678,1679
 > #ifdef W10
 >             SetTimer(NULL, 0, 10, InputIdleCB);
-1627a1691,1692
+1627a1681,1682
 >             _EnterWin16Lock();
 > #else
-1628a1694
+1628a1684
 > #endif
-1631d1696
+1631d1686
 <         td.hThread = hThread;
-1832c1899
+1832c1887
 <     CURRENTPTD() = &td;
 ---
 >     SETCURRENTPTD(&td);
-1959c2026
+1959c2014
 < #ifdef i386
 ---
 > #ifdef i386xx
-2170a2238,2240
+2170a2226,2228
 > #ifdef W10
 > 	if (CURRENTPTD()->yield_event) CloseHandle(CURRENTPTD()->yield_event);
 > #endif
-2237a2309
+2237a2296,2303
 > #ifdef W10
-2237a2311,2317
 >     _LeaveWin16Lock();
 >     if (ptd->yield_event)
 > 	{
@@ -260,15 +262,15 @@
 > 		ptd->yield_event = NULL;
 > 	}
 > #endif
-2378a2459
+2378a2445
 > #if 0	// leecher1337: Seems to be always be 0 on XP and above? Call Fritz!
-2382a2464
+2382a2450
 > #endif
-3028a3111
+3028a3097
 >     DECLARE_THUNKLOCK
-3088a3172
+3088a3158
 >             RELEASE_THUNKLOCK
-3100a3185
+3100a3171
 >             RESTORE_THUNKLOCK
 --- NT4\private\mvdm\wow32\wuclass.c
 +++ nt\private\mvdm\wow32\wuclass.c

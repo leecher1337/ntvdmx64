@@ -75,9 +75,6 @@ any further. If somebody is interested in it, you are invited to improve these
 patches to make it stable. You'll need YODA debugger in order to analyze the
 issues.
 
-Also, HAXM currently does not currently support WOW32 applications, so if you want
-to run them, you will need to compile NTVDMx64 using CCPU.
-
 Compilation
 -----------
 The patches are applied automatically on execution of main patch.cmd

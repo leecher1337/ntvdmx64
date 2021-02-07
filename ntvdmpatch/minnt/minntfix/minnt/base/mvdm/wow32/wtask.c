@@ -129,6 +129,7 @@ BOOL    xxxUserYield(VOID)
      * Therefore we need to "Schedule" on our own, wake up the
      * next task and enter Sleep.
      */
+    DWORD ret;
 #ifdef DEBUG
     PTD ptd;
     register PVDMFRAME pFrame;
@@ -137,13 +138,18 @@ BOOL    xxxUserYield(VOID)
     GETFRAMEPTR(ptd->vpStack, pFrame);
     LOGDEBUG(LOG_TRACE,("%04X          xxxUserYield\n", pFrame->wTDB));
 #endif
-     if (GetQueueStatus(QS_SENDMESSAGE))
+     if (ret = GetQueueStatus(QS_SENDMESSAGE | QS_TIMER))
      {
          DWORD count;
          MSG msg;
          
          ReleaseThunkLock(&count);
-         PeekMessage( &msg, 0, 0, 0, PM_REMOVE | PM_QS_SENDMESSAGE );
+         PeekMessage( &msg, 0, 0, 0, PM_REMOVE | (ret & 0xFFFF0000) );
+         if (msg.message == WM_TIMER)
+         {
+             TranslateMessage(&msg);
+             DispatchMessage(&msg);
+         }
          RestoreThunkLock(count);
          return TRUE;
      }
