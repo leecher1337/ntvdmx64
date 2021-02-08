@@ -504,28 +504,26 @@
 >             ul = SetClassWord(hwnd, iOffset + (iOffset>=0?GWL_OFFSET:0), (WORD)ul);
 --- NT4\private\mvdm\wow32\wow32.c
 +++ nt\private\mvdm\wow32\wow32.c
-96a97,98
+96a97,101
 > #ifdef W10
 > #include "wtask.h"
-96a100,101
 > DWORD gdwTLSWOW32Reserved;
 > ATOM  gidWNDPROC16, gidDLGPROC16;
-96a103
 > #endif
-133c141
+133c138
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-409a418,421
+409a415,418
 > #ifdef W10
 >         GlobalDeleteAtom(gidWNDPROC16);
 >         GlobalDeleteAtom(gidDLGPROC16);
 > #endif
-625c637
+625c634
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-691a704,712
+691a701,720
 > #ifdef W10
 >     pfnOut.pfnYieldTask = (PFNYIELDTASK)xxxUserYield;
 > 	pfnOut.pfnDirectedYield = (PFNDIRECTEDYIELD)xxxDirectedYield;
@@ -535,23 +533,24 @@
 >     TlsSetValue(gdwTLSWOW32Reserved, ptd);
 >     gidWNDPROC16 = GlobalAddAtom("WNDPROC16");
 >     gidDLGPROC16 = GlobalAddAtom("DLGPROC16");
-691a714,716
 >     if (GetEnvironmentVariableOem("WOWTRACE", szLogFile, sizeof(szLogFile)))
 > 	{
 > 		char szLogLvl[32];
-691a718,722
 > 		if (GetEnvironmentVariableOem("WOWLOGLVL", szLogLvl, sizeof(szLogLvl)))
 > 			iLogLevel = atoi(szLogLvl);
 > 		fLog = 2;
 > 	}
+>     // create dummy menu window, something like this exists on windows xp created by csrss
+>     // but is missing on windows starting with Win 7/conhost
+>     CreateWindowExA(0x181, "#32768", "", 0x84800000, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
 > #else
-692a724
+692a722
 > #endif
-1944c1976
+1944c1974
 < #ifdef _X86_
 ---
 > #ifdef _X86xx_
-2136c2168
+2136c2166
 <                                    FILE_SHARE_WRITE,
 ---
 >                                    FILE_SHARE_WRITE | FILE_SHARE_READ,
@@ -690,6 +689,10 @@
 >                         break;
 >                 }
 > #endif
+1610c1627
+<     dwThreadID = GetWindowThreadProcessId(HWND32(parg16->f1), &dwProcessID);
+---
+>     dwThreadID = GetWindowThreadProcessId(FULLHWND32(parg16->f1), &dwProcessID);
 1665a1683
 >     DECLARE_THUNKLOCK
 1670a1689
