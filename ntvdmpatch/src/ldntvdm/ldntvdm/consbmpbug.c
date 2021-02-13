@@ -106,6 +106,7 @@ BOOL ConsBmpBug_Install(HMODULE *phmodConhost)
 	ConsBmp_Install();
 #endif
 	Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "ntdll.dll", "RtlAllocateHeap", RtlAllocateHeapHook, (PULONG_PTR)&RtlAllocateHeapReal);
+	return TRUE;
 #else
 	if (*phmodConhost = GetModuleHandle(_T("ConHostV1.dll")))
 		Hook_IAT_x64_IAT((LPBYTE)*phmodConhost, "ntdll.dll", "RtlAllocateHeap", RtlAllocateHeapHook, (PULONG_PTR)&RtlAllocateHeapReal);
@@ -120,7 +121,7 @@ BOOL ConsBmpBug_Install(HMODULE *phmodConhost)
 		else
 			Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "api-ms-win-core-libraryloader-l1-2-0.dll", "LoadLibraryExW", LoadLibraryExWHook, (PULONG_PTR)&LoadLibraryExWReal);
 	}
-#endif /* TARGET_WIN7 */
 	return fNoConhostDll;
+#endif /* TARGET_WIN7 */
 }
 #endif /* TARGET_WINXP */
