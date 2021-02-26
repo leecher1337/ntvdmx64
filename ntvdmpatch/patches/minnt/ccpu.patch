@@ -9,20 +9,58 @@
 > #endif
 175a180
 > #ifdef A3CPU
-280a286,288
+266a272,308
+> #ifdef CCPU /* Crude hack to get at least some valid cpu registers in WinDbg */
+> #include "../../base/ccpu386/c_reg.h"
+> #undef  GLOBAL_HSP
+> #define GLOBAL_HSP GET_ESP()
+> #undef  GLOBAL_CsSel
+> #define GLOBAL_CsSel GET_CS_SELECTOR()
+> #undef  GLOBAL_DsSel
+> #define GLOBAL_DsSel GET_DS_SELECTOR()
+> #undef  GLOBAL_EsSel
+> #define GLOBAL_EsSel GET_ES_SELECTOR()
+> #undef  GLOBAL_FsSel
+> #define GLOBAL_FsSel GET_FS_SELECTOR()
+> #undef  GLOBAL_GsSel
+> #define GLOBAL_GsSel GET_GS_SELECTOR()
+> #undef  GLOBAL_SsSel
+> #define GLOBAL_SsSel GET_SS_SELECTOR()
+> #undef  GLOBAL_CleanedRec
+> #define GLOBAL_CleanedRec GET_EIP()
+> #undef  GLOBAL_EFLAGS
+> #define GLOBAL_EFLAGS CCPU_FLAGS
+> #undef  GLOBAL_R_CR0
+> #define GLOBAL_R_CR0 GET_CR(0)
+> #undef  GLOBAL_R_EAX
+> #define GLOBAL_R_EAX GET_EAX()
+> #undef  GLOBAL_R_EBX
+> #define GLOBAL_R_EBX GET_EBX()
+> #undef  GLOBAL_R_ECX
+> #define GLOBAL_R_ECX GET_ECX()
+> #undef  GLOBAL_R_EDX
+> #define GLOBAL_R_EDX GET_EDX()
+> #undef  GLOBAL_R_ESI
+> #define GLOBAL_R_ESI GET_ESI()
+> #undef  GLOBAL_R_EDI
+> #define GLOBAL_R_EDI GET_EDI()
+> #undef  GLOBAL_R_EBP
+> #define GLOBAL_R_EBP GET_EBP()
+> #endif /* CCPU */
+280a323,325
 > #ifdef i386
 >     nt_cpu_info.in_nano_cpu = (BOOL *) ((IUH)Gdp + 560 + 3);
 > #else
-283c291,292
+283c328,329
 < #ifndef PROD
 ---
 > #endif /* ALPHA */
 > #if !defined(PROD) && !defined(i386)
-298a308,310
+298a345,347
 > #ifdef i386
 >     nt_cpu_info.stack_is_big = (BOOL *) ((IUH)Gdp + 3096 + 3);
 > #else
-301c313,314
+301c350,351
 < #ifndef PROD
 ---
 > #endif /* ALPHA */

@@ -114,6 +114,32 @@
 <     DisableEmulatorIretHooks();
 ---
 >     //DisableEmulatorIretHooks();
+--- NT4\private\mvdm\dpmi32\dpmiint.c
++++ nt\private\mvdm\dpmi32\dpmiint.c
+524a525,533
+>     
+>     //
+>     // If we're here via breakpoint, see if it belongs to NTVDM debug code.
+>     //
+>     if ((IntNumber == 3) &&
+>         (*(ULONG *)(IntelBase+FIXED_NTVDMSTATE_LINEAR) & VDM_BREAK_DEBUGGER) &&
+>         DbgBPInt()) {
+>         return TRUE;
+>     } 
+913a923,935
+>     
+>     if ((IntNumber == 1)  &&
+>         (*(ULONG *)(IntelBase+FIXED_NTVDMSTATE_LINEAR) & VDM_BREAK_DEBUGGER) &&
+>         DbgTraceInt()) {
+>         return TRUE;
+>     }
+> 
+>     if (DbgFault(IntNumber)) {      // try the debugger
+>         //
+>         // exception handled via user input
+>         //
+>         return TRUE;
+>     }
 --- NT4\private\mvdm\softpc.new\obj.vdm\ntvdm.src
 +++ nt\private\mvdm\softpc.new\obj.vdm\ntvdm.src
 260c260

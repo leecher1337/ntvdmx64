@@ -41,9 +41,9 @@ DWORD IntelMemoryBase, VdmDbgTraceFlags, VdmDbgEFLAGS, EventFlags;
 LPVOID lpNtCpuInfo, lpVdmState;
 VDM_BREAKPOINT VdmBreakPoints[16]={0};
 DWORD   EventParams[4];
-BOOL    InVdmDebugger, bWantsNtsdPrompt, DbgTimerInitialized = FALSE, bWantsTraceInteractive = FALSE;
-ULONG   DbgWowhExeHead, DbgWowhGlobalHeap;
-BYTE    DbgTimerMode;
+BOOL    InVdmDebugger = FALSE, bWantsNtsdPrompt = FALSE, DbgTimerInitialized = FALSE, bWantsTraceInteractive = FALSE;
+WORD   DbgWowhExeHead = 0, DbgWowhGlobalHeap = 0;
+BYTE    DbgTimerMode = VDMTI_TIMER_TICK;
 
 // From ntvdm.exe
 extern DECLSPEC_IMPORT LDT_ENTRY *ExpLdt;
@@ -1483,7 +1483,7 @@ BOOL xxxDbgBPInt()
     pOpcode = (BYTE *)VdmMapFlat(
                     VdmBreakPoints[i].Seg,
                     VdmBreakPoints[i].Offset,
-                    !(VdmBreakPoints[0].Flags & VDMBP_V86));
+                    !(VdmBreakPoints[i].Flags & VDMBP_V86));
     if ( pOpcode && *pOpcode == 0xCCu )
     {
         *pOpcode = VdmBreakPoints[i].Opcode;
@@ -1520,7 +1520,7 @@ BOOL xxxDbgTraceInt()
       {
         pOpcode = (BYTE *)VdmMapFlat(VdmBreakPoints[i].Seg, 
                     VdmBreakPoints[i].Offset, 
-                    !(VdmBreakPoints[0].Flags & VDMBP_V86));
+                    !(VdmBreakPoints[i].Flags & VDMBP_V86));
         if ( pOpcode ) *pOpcode = 0xCCu;
         VdmBreakPoints[i].Flags &= ~(VDMBP_FLUSH | VDMBP_PENDING);
 		bReturn = TRUE;

@@ -162,20 +162,26 @@
 >     RESTORE_THUNKLOCK
 --- NT4\private\mvdm\wow32\wkman.c
 +++ nt\private\mvdm\wow32\wkman.c
-1022a1023,1030
+1022a1023,1036
 > #ifdef W10
 > void InputIdleCB(HWND Arg1, UINT Arg2, UINT_PTR Arg3, DWORD Arg4)
 > {
->     LOGDEBUG(LOG_TRACE,("InputIdleCB\n"));
+> #ifdef DEBUG
+> 	register PVDMFRAME pFrame;
+> 
+>     PTD ptd = CURRENTPTD();
+> 	GETFRAMEPTR(ptd->vpStack, pFrame);
+> #endif
+>     LOGDEBUG(LOG_TRACE,("%04X          InputIdleCB\n", pFrame->wTDB));
 >     KillTimer(Arg1, Arg3);
 >     WOW32VERIFY(SetEvent(ghevWaitCreatorThread));
 > }
 > #endif
-1055a1064,1066
+1055a1070,1072
 > #ifdef W10
 >         DWORD mutex_count;
 > #endif
-1061a1073,1089
+1061a1079,1095
 > #ifdef W10
 >         ReleaseThunkLock(&mutex_count);
 >         while ((dw = MsgWaitForMultipleObjects(2, ThreadEvents, FALSE, INFINITE, QS_SENDMESSAGE)) == WAIT_OBJECT_0+2)
@@ -193,27 +199,28 @@
 >         }
 >         RestoreThunkLock(mutex_count);
 > #else
-1062a1091
+1062a1097,1098
 > #endif
-1063a1093
+>         LOGDEBUG(LOG_TRACE,("%04X          Wait returned %d\n", pFrame->wTDB, dw));
+1063a1100
 > #ifndef W10 // Do not assert, as this constellation can occur due to InputIdle logic for ghevWaitCreatorThread
-1066a1097
+1066a1104
 > #endif
-1320c1351
+1320c1358
 <     CURRENTPTD() = &td;
 ---
 >     SETCURRENTPTD(&td);
-1561c1592
+1561c1599
 < #ifdef i386
 ---
 > #ifdef i386xx
-1569a1601
+1569a1608
 > #ifndef W10 /* Unfortunetely, no NtUserInitTask support... */
-1604a1637,1639
+1604a1644,1646
 > #else
 >         {
 >             static BOOL bFirstCall = TRUE;
-1605a1641,1655
+1605a1648,1662
 >             if (bFirstCall)
 >             {
 >                 HMODULE hUxTheme = GetModuleHandle("uxtheme.dll");
@@ -229,31 +236,32 @@
 >         }
 >         fRet = FALSE;
 > #endif
-1607a1658
+1607a1665
 >         td.hThread = hThread;
-1626a1678,1679
+1626a1685,1686
 > #ifdef W10
 >             SetTimer(NULL, 0, 10, InputIdleCB);
-1627a1681,1682
+1627a1688,1689
 >             _EnterWin16Lock();
 > #else
-1628a1684
+1628a1691
 > #endif
-1631d1686
+1631d1693
 <         td.hThread = hThread;
-1832c1887
+1832c1894
 <     CURRENTPTD() = &td;
 ---
 >     SETCURRENTPTD(&td);
-1959c2014
+1959c2021
 < #ifdef i386
 ---
 > #ifdef i386xx
-2170a2226,2228
+2170a2233,2236
 > #ifdef W10
+>     _LeaveWin16Lock();
 > 	if (CURRENTPTD()->yield_event) CloseHandle(CURRENTPTD()->yield_event);
 > #endif
-2237a2296,2303
+2237a2304,2311
 > #ifdef W10
 >     _LeaveWin16Lock();
 >     if (ptd->yield_event)
@@ -262,15 +270,15 @@
 > 		ptd->yield_event = NULL;
 > 	}
 > #endif
-2378a2445
+2378a2453
 > #if 0	// leecher1337: Seems to be always be 0 on XP and above? Call Fritz!
-2382a2450
+2382a2458
 > #endif
-3028a3097
+3028a3105
 >     DECLARE_THUNKLOCK
-3088a3158
+3088a3166
 >             RELEASE_THUNKLOCK
-3100a3171
+3100a3179
 >             RESTORE_THUNKLOCK
 --- NT4\private\mvdm\wow32\wuclass.c
 +++ nt\private\mvdm\wow32\wuclass.c

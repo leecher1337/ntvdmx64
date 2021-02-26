@@ -95,8 +95,12 @@ if not "%WORKDRV%"=="" subst %WORKDRV%: /d
 set WORKDRV=
 set ABPATH=
 echo Cleaning up...
-rmdir /s /q %WKDIR%
-echo Autobuild completed, check releases-directory
+if not exist releases\nul (
+  echo Was unable to move releases directory, please go to %WKDIR%\ntvdmpatch\releases manually and get it from there.
+) else (
+  rmdir /s /q %WKDIR%
+  echo Autobuild completed, check releases-directory
+)
 pause
 exit /b
 

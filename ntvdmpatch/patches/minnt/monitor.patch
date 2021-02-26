@@ -10,6 +10,66 @@
 < #ifdef i386
 ---
 > #ifdef MONITOR
+--- NT4\private\mvdm\vdmdbg\common.h
++++ nt\private\mvdm\vdmdbg\common.h
+201c201
+< #ifndef i386
+---
+> #ifndef MONITOR
+370c370
+< #ifndef _X86_
+---
+> #ifndef MONITOR
+--- NT4\private\mvdm\vdmdbg\util.c
++++ nt\private\mvdm\vdmdbg\util.c
+132c132
+< #ifndef i386
+---
+> #ifndef MONITOR
+481c481
+< #ifndef i386
+---
+> #ifndef MONITOR
+--- NT4\private\mvdm\vdmdbg\vdmdbg.c
++++ nt\private\mvdm\vdmdbg\vdmdbg.c
+141c141
+< #ifdef _X86_
+---
+> #ifdef MONITOR
+165c165
+< #ifdef _X86_
+---
+> #ifdef MONITOR
+342c342
+< #ifdef _X86_
+---
+> #ifdef MONITOR
+434c434
+< #ifdef i386
+---
+> #ifdef MONITOR
+514c514
+< #ifdef _X86_
+---
+> #ifdef MONITOR
+592a593,609
+> #ifndef MONITOR
+>         case DBG_SINGLESTEP:
+>         case DBG_GPFAULT:
+>         case DBG_STACKFAULT:
+>         /* Unfortunately, newer dbgeng.dll versions have a bad habit of showing the
+>          * interactive debugger prompt only on non-X86 Windows Versions. On X86
+>          * versions, exceptions are passed on to the system debugger. Now this 
+>          * is correct, if we assume that NTVDM runs in Monitor and memory is mapped
+>          * 1:1 to process address space, but it doesn't work so well on our emulated
+>          * non-Monitor builds. Therefore we are using a trick:
+>          * We are overwriting the mode with a bogus value which makes VDMEvent switch()
+>          * table to not execute the code.
+>          * Additionally, we set EventFlags to VDMEVENT_NEEDS_INTERACTIVE in order to
+>          * let the debugger execute the interactive prompt like it should
+>          */
+>          lpdw[0] = MAKELONG(-1, HIWORD(lpdw[0]) | VDMEVENT_NEEDS_INTERACTIVE);
+> #endif
 --- NT4\private\mvdm\inc\softpc.h
 +++ nt\private\mvdm\inc\softpc.h
 229c229
@@ -52,6 +112,50 @@
 < #ifndef i386
 ---
 > #ifndef MONITOR
+--- NT4\private\mvdm\vdmexts\misc.c
++++ nt\private\mvdm\vdmexts\misc.c
+573c573
+< #ifndef i386
+---
+> #ifndef MONITOR
+710c710
+< #ifndef i386
+---
+> #ifndef MONITOR
+--- NT4\private\mvdm\vdmexts\util.c
++++ nt\private\mvdm\vdmexts\util.c
+53c53
+< #ifndef i386
+---
+> #ifndef MONITOR
+137c137
+< #ifndef i386    //
+---
+> #ifndef MONITOR    //
+285c285
+< #ifndef i386
+---
+> #ifndef MONITOR
+--- NT4\private\mvdm\vdmexts\vdmexts.h
++++ nt\private\mvdm\vdmexts\vdmexts.h
+313c313
+< #ifndef i386
+---
+> #ifndef MONITOR
+--- NT4\private\mvdm\vdmexts\debug.c
++++ nt\private\mvdm\vdmexts\debug.c
+151c151
+< #ifndef i386
+---
+> #ifndef MONITOR
+197c197
+< #ifndef i386
+---
+> #ifndef MONITOR
+375c375
+< #ifdef _X86_
+---
+> #ifdef MONITOR
 --- NT4\private\mvdm\xms.486\xms.h
 +++ nt\private\mvdm\xms.486\xms.h
 60c60

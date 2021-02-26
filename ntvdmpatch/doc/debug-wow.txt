@@ -1,0 +1,43 @@
+Debugging WOW applications
+==========================
+
+ntsd contains a useful extension for debugging WOW problems.
+Although you can of course debug the ntvdm using yoda, some specific WOW
+commands may become handy for i.e. finding exceptions.
+This requires some preparation first:
+
+1) Install debug symbols for NTVDM and NTVDMD so that WinDBG can find the
+   required symbols:
+
+   copy Binaries\x86chk\Symbols\retail\exe\ntvdm.pdb %systemroot%\SysWOW64\
+   copy Binaries\x86chk\Symbols\retail\dll\ntvdmd.pdb %systemroot%\SysWOW64\
+
+2) Install x86 Debugging Tools for Windows (Windbg), if you haven't yet.
+   Can be found in GRMWDK_EN_7600_1.ISO that you downloaded to build NTVDMx64
+   in directory Debuggers\dbg_x86.msi
+
+   Ensure that you install Debugging tools for Windows into a short path,
+   as it updates PATH environment variable upon execution to its long path
+   name and this can confuse/crash DOS/WOW16 applications
+
+   So i.e. I installed it to c:\WINDBG
+
+
+3) Windbg contains vmdexts.dll extension, however, it's compiled for i386 and
+   not for CCPU-Build, therefore you need to use ntvdmx64 version of the 
+   extension:
+
+   mkdir c:\WINDBG\vdm
+   copy Binaries\x86chk\dbg\files\bin\winxp\vdmexts.dll c:\WINDBG\vdm\
+
+4) Upon debugging, you need to load the correct extension, so you need to
+   specify with pathname:
+
+   !vdm\vdmexts.load
+
+5) Now you can use the extension, i.e. enable break on first chance exception:
+   !vdm\vdmexts.sxe ex
+
+   Enable break on each module load:
+   !vdm\vdmexts.sxe cw
+
