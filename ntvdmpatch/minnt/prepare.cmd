@@ -41,6 +41,7 @@ md %workdir%
 
 if not exist %minntfix%\minnt\public\ddk\lib\x86\umpdddi.lib goto doddk
 if not exist %minntfix%\minnt\public\sdk\lib\x86\winspool.lib goto doddk
+if not exist %minntfix%\minnt\public\sdk\lib\x86\userenv.lib goto doddk
 for %%a in (compstdui.h winddi.h winddiui.h) do if not exist "%minntfix%\minnt\public\oak\inc\%%~a" goto doddk
 goto ddkok
 :doddk
@@ -49,6 +50,7 @@ echo Need to extract DDK files.
 if exist %workdir%\WDK\wxplibs_x86fre_cab001.cab (
 call :expandf %workdir%\WDK\wxplibs_x86fre_cab001.cab _umpdddi.lib_00315 %minntfix%\minnt\public\ddk\lib\x86\umpdddi.lib
 call :expandf %workdir%\WDK\wxplibs_x86fre_cab001.cab _winspool.lib_00345 %minntfix%\minnt\public\sdk\lib\x86\winspool.lib
+call :expandf %workdir%\WDK\wxplibs_x86fre_cab001.cab _userenv.lib_00322 %minntfix%\minnt\public\sdk\lib\x86\userenv.lib
 ) else goto ddkisoex
 if exist %workdir%\WDK\libs_x86fre_cab001.cab (
 rem For RegisterConsoleVDM with fewer parameters starting with Win7

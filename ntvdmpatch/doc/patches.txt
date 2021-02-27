@@ -5,6 +5,7 @@ Description of the necessary patches included in this package
                       Terminal Count mode (0): On overflow, it doesn't count
                       down from 0xFFFF but from reload reg, leading to hangs 
                       on apps that check for it. So handle mode 0 correctly.
+appcompat.patch     - Enable AppCompat support (Compatibility shims)
 callconv.patch      - Patches wrong calling conventions in host-code
 ccpu.patch          - Patches the CCPU to compile on i386 and support Yoda
 ccpu_regs.patch     - Adds functions to access registers from the CCPU 

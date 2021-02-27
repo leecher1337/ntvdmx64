@@ -65,13 +65,15 @@
 < !if !$(X86)
 ---
 > !if !$(X86)  && "$(CCPU)" == "" && "$(HAXM)" == ""
-49,50c49,51
+49,51c49,52
 <         $(SDK_LIB_PATH)\advapi32.lib
 < #       $(SDK_LIB_PATH)\kernl32p.lib    \
+< #       $(WINDOWS_LIB_PATH)\apphelp.lib \
 ---
 >         $(SDK_LIB_PATH)\advapi32.lib    \
 >         $(SDK_LIB_PATH)\kernl32p.lib    \
->         $(SDK_LIB_PATH)\gdi32.lib
+>         $(SDK_LIB_PATH)\gdi32.lib \
+>         $(WINDOWS_LIB_PATH)\apphelp.lib
 80c81
 < !if $(X86)
 ---
