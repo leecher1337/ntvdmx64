@@ -1,0 +1,38 @@
+--- NT4\private\mvdm\softpc.new\host\src\vdpm.c
++++ nt\private\mvdm\softpc.new\host\src\vdpm.c
+30c30
+< //#include "shimdb.h"
+---
+> #include "shimdb.h"
+366,372d365
+< PCMDLNPARMS GetSdbCommandLineParams(LPWSTR  pwszAppFilePath,
+<                                     DWORD  *dwFlags, 
+<                                     int    *pNumCLP)
+< {
+<     //
+<     // NOTE: This function has been disabled because it is not relevant in NT 4.0.
+<     //
+374,375d365
+<     return NULL;
+< }
+377d365
+< /*
+386c374
+<     //NTVDM_FLAGS     NtVdmFlags = { 0 };
+---
+>     NTVDM_FLAGS     NtVdmFlags = { 0 };
+528d515
+< */
+530,534d516
+< PFLAGINFOBITS GetFlagCommandLine(PVOID pFlagInfo, DWORD dwFlag, DWORD dwFlags) 
+< {
+<     //
+<     // NOTE: This function has been disabled because it is not relevant in NT 4.0.
+<     //
+536,537d516
+<     return NULL;
+< }
+539d516
+< /*
+637d613
+< */
