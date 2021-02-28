@@ -574,6 +574,30 @@
 >     __MOD_WINNLS     = 0h
 >     __MOD_WIFEMAN    = 0h
 > endif
+--- NT4\private\mvdm\wow16\kernel31\ldint.asm
++++ nt\private\mvdm\wow16\kernel31\ldint.asm
+540c540
+<         push    DBG_GPFAULT
+---
+>         push    DBG_GPFAULT2
+--- NT4\private\mvdm\wow16\kernel31\lddebug.asm
++++ nt\private\mvdm\wow16\kernel31\lddebug.asm
+43a44
+> externW  hExeHead
+162c163,171
+< endif
+---
+> 
+> ; Tell the debugger where it can poke around for kernel data structure info
+> 
+>         mov     cx, hGlobalHeap
+>         mov     dx, hExeHead
+>         push    DBG_WOWINIT
+>         FBOP    BOP_DEBUGGER,,FastBop
+>         add     sp,+2
+> else
+182a192
+> endif
 --- NT4\private\mvdm\wow16\kernel31\makefile
 +++ nt\private\mvdm\wow16\kernel31\makefile
 17a18,22
