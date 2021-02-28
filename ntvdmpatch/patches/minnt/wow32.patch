@@ -84,9 +84,15 @@
 > #ifdef W10
 >         _EnterWin16Lock();
 > #endif
-820a833
+712a725
 >     DECLARE_THUNKLOCK
-831c844,850
+730a744
+>     RELEASE_THUNKLOCK
+731a746
+>     RESTORE_THUNKLOCK
+820a836
+>     DECLARE_THUNKLOCK
+831c847,853
 < 
 ---
 > #ifdef W10
@@ -96,41 +102,44 @@
 >          
 >          ReleaseThunkLock(&count);
 > #endif
-835a855,859
+835a858,862
 > #ifdef W10
 >         RestoreThunkLock(count);
 >     }
 >     else ul = t1.message != WM_QUIT;
 > #endif
-844a869
+844a872
 > #ifndef W10 /* msctf.dll also seems to use high timer IDs. Therefore removed check */
-848a874
+848a877
 > #endif
-849a876,880
+849a879,883
 >     LOGDEBUG(LOG_TRACE,("hWnd = %x, msg %d (0x%x), wParam=%08X, lParam=%08X\n", t1.hwnd, t1.message, t1.message, t1.wParam, t1.lParam)); 
 > 
 > #ifdef W10	/* Filter WM_TIMER that are useless for 16bit world */
 >     if (t1.message != WM_TIMER || HIWORD(t1.wParam) == 0)
 > #endif
-1115a1147
+1115a1150
 >     DECLARE_THUNKLOCK
-1130a1163,1172
-> 
+1131a1167,1175
 > #ifdef W10
 >     if (!fNoYield)
 >     {
 >         RELEASE_THUNKLOCK
 >         //MsgWaitForMultipleObjects(0, NULL, FALSE, 0, QS_ALLINPUT);
 >         Sleep(0);
->         RESTORE_THUNKLOCK  // PeekMessage can call WndProc which can be 16bit code, therefore lock again 
 >     }
 > #endif
-1700a1743,1746
+> 
+1132a1177,1179
+> #ifdef W10
+>     if (!fNoYield) RESTORE_THUNKLOCK  // PeekMessage can call WndProc which can be 16bit code, therefore lock again 
+> #endif
+1700a1748,1751
 > #ifdef W10
 >     DECLARE_THUNKLOCK
 >     LRESULT lResult;
 > #endif
-1760a1807,1816
+1760a1812,1821
 > #ifdef W10
 >             RELEASE_THUNKLOCK
 >             lResult = SendMessageTimeout(hwndItem, mpex.uMsg, mpex.uParam,
@@ -141,14 +150,14 @@
 >                 LOGDEBUG(LOG_ALWAYS,("BUGBUG: SendDlgItemMessage(%p,%d,%04x,%08x,uTimeout=1000ms) timed out.\n", hwnd, mpex.uMsg, mpex.uParam, mpex.lParam));
 >             }
 > #else
-1762a1819
+1762a1824
 > #endif
-1825a1883,1886
+1825a1888,1891
 > #ifdef W10
 >     DECLARE_THUNKLOCK
 >     LRESULT lResult;
 > #endif
-1904a1966,1977
+1904a1971,1982
 > #ifdef W10
 >         {
 >             DWORD count;
@@ -161,13 +170,13 @@
 >             }
 >         }
 > #else
-1905a1979
+1905a1984
 > #endif
-2177a2252
+2177a2257
 >     DECLARE_THUNKLOCK
-2180a2256
+2180a2261
 >     RELEASE_THUNKLOCK
-2184a2261
+2184a2266
 >     RESTORE_THUNKLOCK
 --- NT4\private\mvdm\wow32\wkman.c
 +++ nt\private\mvdm\wow32\wkman.c
@@ -707,11 +716,47 @@
 >     RELEASE_THUNKLOCK
 617a687
 >     RESTORE_THUNKLOCK
-1229a1300
+751a822
 >     DECLARE_THUNKLOCK
-1247a1319
+754a826
 >     RELEASE_THUNKLOCK
-1253a1326
+760a833
+>     RESTORE_THUNKLOCK
+806a880
+>     DECLARE_THUNKLOCK
+811a886
+>     RELEASE_THUNKLOCK
+817a893
+>     RESTORE_THUNKLOCK
+964a1041
+>     DECLARE_THUNKLOCK
+987a1065
+>     RELEASE_THUNKLOCK
+991a1070
+>     RESTORE_THUNKLOCK
+1030a1110
+>     DECLARE_THUNKLOCK
+1033a1114
+>     RELEASE_THUNKLOCK
+1037a1119
+>     RESTORE_THUNKLOCK
+1229a1312
+>     DECLARE_THUNKLOCK
+1247a1331
+>     RELEASE_THUNKLOCK
+1253a1338
+>     RESTORE_THUNKLOCK
+1298a1384
+>     DECLARE_THUNKLOCK
+1303a1390
+>     RELEASE_THUNKLOCK
+1309a1397
+>     RESTORE_THUNKLOCK
+1343a1432
+>     DECLARE_THUNKLOCK
+1353a1443
+>     RELEASE_THUNKLOCK
+1358a1449
 >     RESTORE_THUNKLOCK
 --- NT4\private\mvdm\wow32\wuwind.c
 +++ nt\private\mvdm\wow32\wuwind.c
@@ -769,26 +814,42 @@
 <     PWW pww;
 ---
 >     PWW pww = NULL;
-2175c2195
+1999a2020
+>     DECLARE_THUNKLOCK
+2020a2042
+>             RELEASE_THUNKLOCK
+2022a2045
+>             RESTORE_THUNKLOCK
+2027a2051
+>     RELEASE_THUNKLOCK
+2033a2058
+>     RESTORE_THUNKLOCK
+2105a2131
+>     DECLARE_THUNKLOCK
+2110a2137
+>     RELEASE_THUNKLOCK
+2117a2145
+>     RESTORE_THUNKLOCK
+2175c2203
 <     register PWW pww;
 ---
 >     register PWW pww = NULL;
-2198a2219
+2198a2227
 >             LONG    l;
-2212d2232
+2212d2240
 <                 dwWndProc32Old = SetWindowLong(HWND32(parg16->f1), iOffset, dwWndProc32New);
-2214,2217c2234
+2214,2217c2242
 <                 // If the 32 bit set failed, perhaps because its another process,
 <                 // then we want to fail too
 <                 if (!dwWndProc32Old)
 <                     goto SWL_Cleanup;
 ---
 >                 l = dwWndProc32New;
-2223c2240
+2223c2248
 <                 LONG    l;
 ---
 >                 
-2238c2255,2278
+2238c2263,2286
 <                 dwWndProc32Old = SetWindowLong(HWND32(parg16->f1), iOffset, l);
 ---
 >             }
@@ -815,7 +876,7 @@
 > #else
 >             dwWndProc32Old = SetWindowLong(HWND32(parg16->f1), iOffset, l);
 > #endif
-2240,2243c2280,2283
+2240,2243c2288,2291
 <                 // If the 32 bit set failed, perhaps because its another process,
 <                 // then we want to fail too
 <                 if (!dwWndProc32Old)
@@ -825,9 +886,9 @@
 >             // then we want to fail too
 >             if (!dwWndProc32Old)
 >                 goto SWL_Cleanup;
-2245d2284
+2245d2292
 <             }
-2306c2345,2350
+2306c2353,2358
 <         ul = SetWindowLong(HWND32(parg16->f1), iOffset, new);
 ---
 >         ul = SetWindowLong(FULLHWND32(parg16->f1), iOffset, new);
@@ -836,21 +897,39 @@
 > 			WOW32ASSERT(chk == new);
 > 		}
 > 
-2499a2544
+2387a2440
 >     DECLARE_THUNKLOCK
-2503a2549
+2390a2444
 >     RELEASE_THUNKLOCK
-2521a2568
+2407a2462
 >     RESTORE_THUNKLOCK
-2615c2662
+2499a2555
+>     DECLARE_THUNKLOCK
+2503a2560
+>     RELEASE_THUNKLOCK
+2521a2579
+>     RESTORE_THUNKLOCK
+2548a2607
+>     DECLARE_THUNKLOCK
+2564a2624
+>     RELEASE_THUNKLOCK
+2565a2626
+>     RESTORE_THUNKLOCK
+2615c2676
 <     PWW pww;
 ---
 >     PWW pww = NULL;
-2632c2679
+2632c2693
 <     hwnd = HWND32(parg16->f1);
 ---
 >     hwnd = FULLHWND32(parg16->f1);
-2776a2824,2947
+2737a2799
+>     DECLARE_THUNKLOCK
+2740a2803
+>     RELEASE_THUNKLOCK
+2743a2807
+>     RESTORE_THUNKLOCK
+2776a2841,2964
 > 
 > enum ZBID
 > {
