@@ -137,7 +137,7 @@ VOID WINAPI _LeaveSysLevel(SYSLEVEL *lock)
     }
 
     RtlLeaveCriticalSection( &lock->crst );   
-    Sleep(0);
+    SwitchToThread();
 
     LOGDEBUG(LOG_TRACE,("%04X          _LeaveSysLevel(%p, level %d): thread %x count after  %d\n",
           pFrame->wTDB, lock, lock->level, GetCurrentThreadId(), ptd->sys_count[lock->level] ));

@@ -126,7 +126,7 @@
 >     {
 >         RELEASE_THUNKLOCK
 >         //MsgWaitForMultipleObjects(0, NULL, FALSE, 0, QS_ALLINPUT);
->         Sleep(0);
+>         SwitchToThread();
 >     }
 > #endif
 > 
