@@ -352,7 +352,7 @@ Are there any documents that describe the inner workings of the NTVDM
 subsystem?
 ---------------------------------------------------------------------------
 Not much documentation available, but this slide may be interesting to you:
-https://de.slideshare.net/daniel_bilar/2013-syscan360-wang-yuntvdm
+https://documents.pub/document/2013-syscan360-wang-yuntvdm.html
 
 
 For other questions, I recommend looking at the Issue tracker:
