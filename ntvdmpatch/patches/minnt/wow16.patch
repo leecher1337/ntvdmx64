@@ -574,12 +574,181 @@
 >     __MOD_WINNLS     = 0h
 >     __MOD_WIFEMAN    = 0h
 > endif
+--- NT4\private\mvdm\wow16\kernel31\ldaux.asm
++++ nt\private\mvdm\wow16\kernel31\ldaux.asm
+18a19,25
+> 
+> ifdef WOW
+> szWinGDllModule       DB 'WING', 0
+> szWinGDllFile         DB '\SYSTEM\WING.DLL',0
+> externD lpWindowsDir
+> externW cBytesWinDir
+> endif ; WOW
+33a41
+> externFP lstrcpyn
+449a458,547
+> cProc   IGetModuleName,<PUBLIC,FAR>,<si,di>
+> 	parmW	hinstance
+> 	parmD	lpname
+> 	parmW	nbytes
+> cBegin
+> 	mov	ax, nbytes
+> 	or	ax, ax
+>         jnz     @f
+>         jmp     gfx
+> @@:     cCall   GetExePtr,<hinstance>
+> 	or	ax,ax
+> 	jz	gmn
+> 	mov	ds,ax
+> 	mov	si,ds:[ne_restab]	; Module name is first entry in Res Name Table
+>         xor     cx,cx
+>         mov     cl,ds:[si]		; Get Len of module name
+>         inc     cl                      ; Space for NULL
+>         inc     si			; Goto start of module name
+>         cmp     cx,nbytes
+>         jl      gmn1
+>         mov     cx,nbytes
+> 
+> gmn1:
+>         push    lpname
+>         push    ds
+>         push    si
+>         push    cx
+>         call    lstrcpyn
+> 
+>         mov     ax,0DDh			; Return a true value
+> gmn:
+> cEnd
+> 
+> ;-----------------------------------------------------------------------
+> ; IsWingModule                                                          
+> ;    Checks if GetModuleFileHandle is called by Wing.dll                
+> ;    on itself.
+> ;    and fills lpname if it is so
+> ;
+> ; Arguments:
+> ;     hinstance - GetModuleFileName's hinstance arg        
+> ;     lpname    - GetModuleFileName's lpname arg
+> ;     nbytes    - GetModuleFileName's lpname arg
+> ;     exehdr    - ExeHdr of hinstance
+> ;     rcsel     - Return Code Selector that called GMFH
+> ; Returns:
+> ;     AX = number of bytes copied if wing is calling GetModuleFileName on itself      
+> ;     AX = 0 otherwise
+> ;     
+> ;------------------------------------------------------------------------
+> 
+> cProc   IsWingModule,<PUBLIC,FAR>,<si,di,ds,es>
+>         parmW hinstance
+>         parmD lpname
+>         parmW nbytes
+>         parmW exehdr
+>         parmW rcsel
+> cBegin  
+>         mov     es,exehdr
+>         mov     di,es:[ne_restab]
+>         inc     di                     ;got modulename 
+> cCall   MapDStoDATA
+> assumes DS, DATA
+>         lea     si, szWinGDllModule
+>         mov     cx,5
+>         repe    cmpsb
+>         jnz     short IWM_NoMatch
+>         cCall getexeptr,<rcsel>
+>         cmp     ax,exehdr
+>         jnz     short IWM_NoMatch
+>         mov     cx, cBytesWinDir
+>         add     cx, 17                 ;17=strlen("\system\wing.dll")+1;
+>         cmp     cx,nbytes
+>         ja      short IWM_NoMatch      ;return righ away if doesn't fit
+>         mov     ax,cx                  
+>         sub     cx,17
+>         les     di,lpname
+>         lds     si,lpWindowsDir
+>         cld
+>         rep     movsb
+>         mov     cx,17
+>         lea     si,szWinGDllFile
+>         rep     movsb
+>         jmp     short IWM_End
+> IWM_NoMatch:      
+>         mov     ax,0
+> IWM_End:  
+> cEnd
+> 
+> 
+488a587,589
+>         cCall   IsWinGModule,<hinstance,lpname,nbytes,ax,[bp+4]>
+>         or     ax, ax
+>         jnz     gfx
 --- NT4\private\mvdm\wow16\kernel31\ldint.asm
 +++ nt\private\mvdm\wow16\kernel31\ldint.asm
-540c540
+58a59,60
+> externFP WowDivideOverflowEx
+> 
+540c542
 <         push    DBG_GPFAULT
 ---
 >         push    DBG_GPFAULT2
+702a705,759
+> 
+>         ; check to see if we want to hack this exception for them
+>         push    es
+>         mov     es, curTDB
+>         mov     ax, es:[TDB_WOWCompatFlagsEx2]
+>         pop     es
+>         test    ax, 2   ; HIWORD(WOWCFEX_DIVIDEOVERFLOWPATCH)
+>         jz      di_no_patch1
+> 
+> .386p
+>         pop     ax  ; get the original ax
+>         ; push    ax  ; restore the stack (don't need to do this since we exit
+>                       ; via do_ret2  -- we want to preserve our *change* to AX
+> 
+>         push    ebx   ; preserve ebx
+>         mov     bx, sp
+> 
+>         push    eax ; make room for two dword local vars local[1]
+>         push    eax ; local[0]
+> 
+> 
+>         push    eax ; push original dividend registers
+>         push    edx
+>         push    word ptr ss:[bx+14]  ;get segment of faulting instruction
+>         push    word ptr ss:[bx+12]  ;get offset of faulting instruction
+>         
+>         mov     bx,sp ; push pointer to local[0]
+>         add     bx,12 ; point to local[0]
+>         push    ss   
+>         push    bx    
+> 
+>         ;call into wow32 returns with new divisor in al, ax, or dx:ax -- 
+>         ;depending on the instruction
+>         cCall   WowDivideOverflowEx  
+> 
+>         or      ax,ax     ; if both ax & dx are 0, it was an edx:eax form
+>         jnz     di_got_it ; so we have to get eax & edx from local[]
+>         or      dx,dx 
+>         jnz     di_got_it
+>         
+>         pop     eax  ; get eax & edx from local[]
+>         pop     edx
+> 
+>         pop     ebx  ; restore original ebx
+>         jmp     do_ret2
+> 
+> di_got_it:
+>         pop     ebx  ; get rid of local[] dwords
+>         pop     ebx
+> 
+>         pop     ebx  ; restore original ebx
+>         jmp     do_ret2;
+> .286p
+> 
+> di_no_patch1:
+708a766,767
+> 
+> do_ret2:  ; AX already popped -- we want to preserve our change to AX
 --- NT4\private\mvdm\wow16\kernel31\lddebug.asm
 +++ nt\private\mvdm\wow16\kernel31\lddebug.asm
 43a44
