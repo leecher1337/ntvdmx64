@@ -39,7 +39,7 @@
 > #endif      //i386
 --- NT4\private\mvdm\dpmi32\sources.inc
 +++ nt\private\mvdm\dpmi32\sources.inc
-57a58,60
+56a57,59
 > !if "$(HAXM)" != ""
 > C_DEFINES=-DHAXM
 > !endif

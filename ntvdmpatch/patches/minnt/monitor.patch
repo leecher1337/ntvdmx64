@@ -10,6 +10,12 @@
 < #ifdef i386
 ---
 > #ifdef MONITOR
+264a265
+> #ifdef MONITOR
+267a269,271
+> #else
+>         (*pfnDbgTraceEvent)(pVdmTraceInfo, Type, wData, lData);
+> #endif
 --- NT4\private\mvdm\vdmdbg\common.h
 +++ nt\private\mvdm\vdmdbg\common.h
 201c201

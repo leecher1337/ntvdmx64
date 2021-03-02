@@ -116,7 +116,26 @@
 >     //DisableEmulatorIretHooks();
 --- NT4\private\mvdm\dpmi32\dpmiint.c
 +++ nt\private\mvdm\dpmi32\dpmiint.c
-524a525,533
+84c84
+<     DBGTRACE(DPMI_SET_PMODE_INT_HANDLER, IntNumber,
+---
+>     DBGTRACE((USHORT)(VDMTR_TYPE_DPMI_SI | IntNumber),
+147c147
+<     DBGTRACE(DPMI_SET_FAULT_HANDLER, IntNumber,
+---
+>     DBGTRACE((USHORT)(VDMTR_TYPE_DPMI_SF | IntNumber), 
+417a418
+>         DBGTRACE(VDMTR_TYPE_DPMI | DPMI_SWITCH_STACKS, (USHORT)LockedPMStackSel, LockedPMStackOffset); 
+446a448
+>         DBGTRACE(VDMTR_TYPE_DPMI | DPMI_SWITCH_STACKS, (USHORT)PMLockOrigSS, PMLockOrigESP); 
+520c522
+<     DBGTRACE(DPMI_SW_INT, IntNumber, 0, 0);
+---
+>     DBGTRACE(VDMTR_TYPE_DPMI | DPMI_SW_INT, (USHORT)IntNumber, 0);
+524c526,535
+<     }
+---
+>     }
 >     
 >     //
 >     // If we're here via breakpoint, see if it belongs to NTVDM debug code.
@@ -126,7 +145,30 @@
 >         DbgBPInt()) {
 >         return TRUE;
 >     } 
-913a923,935
+575c586
+<     DBGTRACE(DPMI_DISPATCH_INT, IntNumber, 0, 0);
+---
+>     DBGTRACE(VDMTR_TYPE_DPMI | DPMI_DISPATCH_INT, (USHORT)IntNumber, 0); 
+606c617
+<     DBGTRACE(DPMI_HW_INT, IntNumber, 0, 0);
+---
+>     DBGTRACE(VDMTR_TYPE_DPMI | DPMI_HW_INT, (USHORT)IntNumber, 0); 
+649c660
+<     DBGTRACE(DPMI_DISPATCH_INT, IntNumber, 0, 0);
+---
+>     DBGTRACE(VDMTR_TYPE_DPMI | DPMI_DISPATCH_INT, (USHORT)IntNumber, 0); 
+763c774
+<     DBGTRACE(DPMI_INT_IRET16, 0, 0, 0);
+---
+>     DBGTRACE(VDMTR_TYPE_DPMI | DPMI_INT_IRET16, 0, 0); 
+856c867
+<     DBGTRACE(DPMI_INT_IRET32, 0, 0, 0);
+---
+>     DBGTRACE(VDMTR_TYPE_DPMI | DPMI_INT_IRET32, 0, 0); 
+913c924,937
+<     DBGTRACE(DPMI_FAULT, IntNumber, ErrorCode, 0);
+---
+>     DBGTRACE(VDMTR_TYPE_DPMI | DPMI_FAULT, (USHORT)IntNumber, ErrorCode); 
 >     
 >     if ((IntNumber == 1)  &&
 >         (*(ULONG *)(IntelBase+FIXED_NTVDMSTATE_LINEAR) & VDM_BREAK_DEBUGGER) &&
@@ -140,6 +182,22 @@
 >         //
 >         return TRUE;
 >     }
+995c1019
+<     DBGTRACE(DPMI_DISPATCH_FAULT, IntNumber, 0, 0);
+---
+>     DBGTRACE(VDMTR_TYPE_DPMI | DPMI_DISPATCH_FAULT, (USHORT)IntNumber, 0); 
+1036c1060
+<     DBGTRACE(DPMI_FAULT_IRET, 0, 0, 0);
+---
+>     DBGTRACE(VDMTR_TYPE_DPMI | DPMI_FAULT_IRET, 0, 0); 
+1075c1099
+<     DBGTRACE(DPMI_FAULT_IRET, 0, 0, 0);
+---
+>     DBGTRACE(VDMTR_TYPE_DPMI | DPMI_FAULT_IRET, 0, 0); 
+1330c1354
+<     DBGTRACE(DPMI_OP_EMULATION, Opcode, (ULONG) bReturn, 0);
+---
+>     DBGTRACE(VDMTR_TYPE_DPMI | DPMI_OP_EMULATION, Opcode, (ULONG) bReturn); 
 --- NT4\private\mvdm\softpc.new\obj.vdm\ntvdm.src
 +++ nt\private\mvdm\softpc.new\obj.vdm\ntvdm.src
 260c260
@@ -148,19 +206,17 @@
 > #ifdef  _X86dpmi_
 --- NT4\private\mvdm\dpmi32\sources.inc
 +++ nt\private\mvdm\dpmi32\sources.inc
-36c36
+36d35
 <         ..\dosmem.c    \
----
->         ..\debug.c    \
-44,45d43
+44,45d42
 <         ..\int2f.c     \
 <         ..\int31.c     \
-53c51,52
+53c50,51
 < X86_SOURCES=..\i386\dpmi386.c ..\i386\dpmimem.c
 ---
 > #X86_SOURCES=..\i386\dpmi386.c ..\i386\dpmimem.c
 > X86_SOURCES=dpmimemr.c
-59c58
+59c57
 < C_DEFINES=-DLINKED_INTO_MONITOR
 ---
 > #C_DEFINES=-DLINKED_INTO_MONITOR
@@ -235,5 +291,91 @@
 >                                  "DpmiUnhandledException"
 --- NT4\private\mvdm\dpmi32\dpmi32.c
 +++ nt\private\mvdm\dpmi32\dpmi32.c
-298a299
+92a93
+>     static USHORT NestLevel = 0; 
+101c102
+<     DBGTRACE(DPMI_DISPATCH_ENTRY, Index, 0, 0);
+---
+>     DBGTRACE(VDMTR_TYPE_DPMI | DPMI_DISPATCH_ENTRY, NestLevel++, Index);
+110a112,113
+>     
+>     DBGTRACE(VDMTR_TYPE_DPMI | DPMI_DISPATCH_EXIT, --NestLevel, Index); 
+298a302
 > VOID DpmiEnableIntHooks(VOID) { }
+--- NT4\private\mvdm\dpmi32\precomp.h
++++ nt\private\mvdm\dpmi32\precomp.h
+25a26
+> #include <dbgsvc.h>
+--- NT4\private\mvdm\dpmi32\fe\precomp.h
++++ nt\private\mvdm\dpmi32\fe\precomp.h
+25a26
+> #include <dbgsvc.h>
+--- NT4\private\mvdm\dpmi32\daytona\precomp.h
++++ nt\private\mvdm\dpmi32\daytona\precomp.h
+25a26
+> #include <dbgsvc.h>
+--- NT4\private\mvdm\dpmi32\x86\precomp.h
++++ nt\private\mvdm\dpmi32\x86\precomp.h
+25a26
+> #include <dbgsvc.h>
+--- NT4\private\mvdm\inc\dpmi.h
++++ nt\private\mvdm\inc\dpmi.h
+68,125d67
+< /* XLATOFF */
+< #if DBG
+< 
+< #define DBGTRACE(Type, v1, v2, v3) DpmiDbgTrace(Type, v1, v2, v3)
+< 
+< #else
+< 
+< #define DBGTRACE(Type, v1, v2, v3) {}
+< 
+< #endif
+< 
+< /* XLATON */
+< 
+< 
+< VOID DpmiDbgTrace(
+<     int Type,
+<     ULONG v1,
+<     ULONG v2,
+<     ULONG v3
+<     );
+< 
+< 
+< #define DPMI_SET_PMODE_INT_HANDLER  1
+< #define DPMI_SET_FAULT_HANDLER      2
+< #define DPMI_DISPATCH_INT           3
+< #define DPMI_HW_INT                 4
+< #define DPMI_SW_INT                 5
+< #define DPMI_INT_IRET16             6
+< #define DPMI_INT_IRET32             7
+< #define DPMI_FAULT                  8
+< #define DPMI_DISPATCH_FAULT         9
+< #define DPMI_FAULT_IRET             10
+< #define DPMI_OP_EMULATION           11
+< #define DPMI_DISPATCH_ENTRY         12
+< 
+< 
+< typedef struct _DPMI_TRACE_ENTRY { /* DPMITRACE */
+<     int Type;
+<     ULONG v1;
+<     ULONG v2;
+<     ULONG v3;
+<     ULONG eax;
+<     ULONG ebx;
+<     ULONG ecx;
+<     ULONG edx;
+<     ULONG esi;
+<     ULONG edi;
+<     ULONG ebp;
+<     ULONG esp;
+<     ULONG eip;
+<     ULONG eflags;
+<     USHORT cs;
+<     USHORT ds;
+<     USHORT es;
+<     USHORT fs;
+<     USHORT gs;
+<     USHORT ss;
+< } DPMI_TRACE_ENTRY;

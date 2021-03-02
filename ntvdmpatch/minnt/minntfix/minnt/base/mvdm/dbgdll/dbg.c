@@ -1393,7 +1393,7 @@ void xxxDbgTraceEvent(
 ) {
   PVDM_TRACEENTRY pTraceEntry;
 
-  if (*pNtVDMState & VDM_PE_MASK)
+  if (*pNtVDMState & VDM_TRACE_HISTORY)
   {
     if ( !pTraceInfo->pTraceTable )
     {
