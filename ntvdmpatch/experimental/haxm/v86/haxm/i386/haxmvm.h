@@ -1,7 +1,6 @@
 #pragma once
 #include <stdio.h>
 #include <windows.h>
-#include <winioctl.h>
 // Signed Types
 typedef signed char         int8;
 typedef signed short        int16;

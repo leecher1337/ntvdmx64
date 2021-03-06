@@ -31,6 +31,8 @@ Revision History:
 
 extern FILE *in_stream;
 
+extern yoda_suspend_filter_process(void);
+
 static char *outerPrompts[32]={0};
 
 void FatalError(char *msg)

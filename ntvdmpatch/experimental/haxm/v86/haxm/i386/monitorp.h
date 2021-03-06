@@ -105,6 +105,8 @@ extern void phy_w8 (DWORD addr, BYTE value);
 extern void phy_w16 (DWORD addr, WORD value);
 extern void phy_w32 (DWORD addr, DWORD value);
 
+extern BOOL host_hwint_hook(int int_no);
+
 
 #define MAX_BOP 256
 VOID reset(VOID);

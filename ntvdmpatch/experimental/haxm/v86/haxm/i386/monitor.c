@@ -28,12 +28,14 @@ Revision History:
 #include "gvi.h"
 #include "xt.h"
 #include "../../../softpc.new/base/cvidc/gdpvar.h"
+#include "sas4gen.h"
 #include "yoda.h"
 #undef DBG
 
 extern host_addr Start_of_M_area;
 extern host_addr Length_of_M_area;
 extern const char *name_vmx_exit(int value);
+#undef pNtVDMState
 #define pNtVDMState   ((ULONG *)(Start_of_M_area + FIXED_NTVDMSTATE_LINEAR))
 
 #define SERVICE_NAME L"IntelHaxmNtvdm"
@@ -49,7 +51,13 @@ BOOL trap_exceptions = FALSE;
 
 extern int ErrorDialogBox(char *message, char *Edit, DWORD dwOptions);
 extern GLOBAL VOID haxm_sync_vram(VOID);
+extern BOOL host_hwint_hook IPT1(IS32, int_no);
+extern BOOL host_swint_hook IPT1(IS32, int_no);
+extern BOOL host_exint_hook IPT2(IS32, exp_no, IS32, error_code);
 
+
+ULONG  getVM (VOID);
+ULONG  getPE (VOID);
 
 //
 // Internal functions
@@ -881,9 +889,6 @@ Return Value:
         );
 }
 
-extern void sas_PRWS(ULONG Source, ULONG Destination, ULONG Length);
-
-
 void hax_handle_fastmmio(struct hax_fastmmio *hft)
 {
     UCHAR *pCmd = ((UCHAR *)Sim32GetVDMPointer(
@@ -921,7 +926,7 @@ void hax_handle_fastmmio(struct hax_fastmmio *hft)
             {
             case 0xA4:  /* Move (E)CX bytes from DS:[(E)SI] to ES:[(E)DI].*/
                 if (getDF()) break; // Not implemented yet
-                sas_PRWS((DWORD)hft->gpa, RMSEGOFFTOLIN(getES(), getEDI()), getECX());
+                sas_PRWS((DWORD)hft->gpa, (PHY_ADDR)RMSEGOFFTOLIN(getES(), getEDI()), getECX());
                 setEDI(getEDI() + getECX());
                 setESI(getESI() + getECX());
                 setECX(0);
@@ -930,7 +935,7 @@ void hax_handle_fastmmio(struct hax_fastmmio *hft)
 
             case 0xA5:  /* Move (E)CX words from DS:[(E)SI] to ES:[(E)DI].*/
                 if (getDF()) break; // Not implemented yet
-                sas_PRWS((DWORD)hft->gpa, RMSEGOFFTOLIN(getES(), getEDI()), getECX() * hft->size);
+                sas_PRWS((DWORD)hft->gpa, (PHY_ADDR)RMSEGOFFTOLIN(getES(), getEDI()), getECX() * hft->size);
                 setEDI(getEDI() + getECX() * hft->size);
                 setESI(getESI() + getECX() * hft->size);
                 setECX(0);
@@ -1149,38 +1154,38 @@ USHORT getFLAGS(VOID)       { return (USHORT)state._eflags; }
 
 /* Not sure, only relevant in PM? */
 ULONG  getCPL(VOID)         { return ((state._cr0 & MSW_PE) ? state._cs.dpl : 0); }
-ULONG  getGDT_BASE(VOID)    { return (state._gdt.base); }
+ULONG  getGDT_BASE(VOID)    { return ((ULONG)state._gdt.base); }
 ULONG  getGDT_LIMIT(VOID)   { return (state._gdt.limit); }
-ULONG  getIDT_BASE(VOID)    { return (state._idt.base); }
+ULONG  getIDT_BASE(VOID)    { return ((ULONG)state._idt.base); }
 ULONG  getIDT_LIMIT(VOID)   { return (state._idt.limit); }
-ULONG  getLDT_BASE(VOID)    { return (state._ldt.base); }
+ULONG  getLDT_BASE(VOID)    { return ((ULONG)state._ldt.base); }
 ULONG  getLDT_LIMIT(VOID)   { return (state._ldt.limit); }
 ULONG  getLDT_SELECTOR(VOID){ return (state._ldt.selector); }
-ULONG  getTR_BASE(VOID)     { return (state._tr.base); }
+ULONG  getTR_BASE(VOID)     { return ((ULONG)state._tr.base); }
 ULONG  getTR_LIMIT(VOID)    { return (state._tr.limit); }
 ULONG  getTR_SELECTOR(VOID) { return (state._tr.selector); }
 
-ULONG  getCS_BASE(VOID)     { return (state._cs.base); }
+ULONG  getCS_BASE(VOID)     { return ((ULONG)state._cs.base); }
 ULONG  getCS_LIMIT(VOID)    { return (state._cs.limit); }
 ULONG  getCS_AR(VOID)       { return (state._cs.ar); }
-ULONG  getDS_BASE(VOID)     { return (state._ds.base); }
+ULONG  getDS_BASE(VOID)     { return ((ULONG)state._ds.base); }
 ULONG  getDS_LIMIT(VOID)    { return (state._ds.limit); }
 ULONG  getDS_AR(VOID)       { return (state._ds.ar); }
-ULONG  getES_BASE(VOID)     { return (state._es.base); }
+ULONG  getES_BASE(VOID)     { return ((ULONG)state._es.base); }
 ULONG  getES_LIMIT(VOID)    { return (state._es.limit); }
 ULONG  getES_AR(VOID)       { return (state._es.ar); }
-ULONG  getFS_BASE(VOID)     { return (state._fs.base); }
+ULONG  getFS_BASE(VOID)     { return ((ULONG)state._fs.base); }
 ULONG  getFS_LIMIT(VOID)    { return (state._fs.limit); }
 ULONG  getFS_AR(VOID)       { return (state._fs.ar); }
-ULONG  getGS_BASE(VOID)     { return (state._gs.base); }
+ULONG  getGS_BASE(VOID)     { return ((ULONG)state._gs.base); }
 ULONG  getGS_LIMIT(VOID)    { return (state._gs.limit); }
 ULONG  getGS_AR(VOID)       { return (state._gs.ar); }
-ULONG  getSS_BASE(VOID)     { return (state._ss.base); }
+ULONG  getSS_BASE(VOID)     { return ((ULONG)state._ss.base); }
 ULONG  getSS_LIMIT(VOID)    { return (state._ss.limit); }
 ULONG  getSS_AR(VOID)       { return (state._ss.ar); }
 
 USHORT getMSW (VOID)        { return ((USHORT)state._cr0); }
-ULONG  getCR0 (VOID)        { return (state._cr0); }
+ULONG  getCR0 (VOID)        { return ((LONG)state._cr0); }
 ULONG  getPE(VOID)          { return ((state._cr0 & MSW_PE) ? 1 : 0); }
 ULONG  getMP(VOID)          { return ((state._cr0 & 2) ? 1 : 0); }
 ULONG  getEM(VOID)          { return ((state._cr0 & 4) ? 1 : 0); }
@@ -1193,9 +1198,9 @@ ULONG  getNW(VOID)          { return ((state._cr0 & 0x20000000) ? 1 : 0); }
 ULONG  getCD(VOID)          { return ((state._cr0 & 0x40000000) ? 1 : 0); }
 ULONG  getPG(VOID)          { return ((state._cr0 & 0x80000000) ? 1 : 0); }
 
-ULONG  getCR2 (VOID)        { return (state._cr2); }
-ULONG  getCR3 (VOID)        { return (state._cr3); }
-ULONG  getCR4 (VOID)        { return (state._cr4); }
+ULONG  getCR2 (VOID)        { return ((ULONG)state._cr2); }
+ULONG  getCR3 (VOID)        { return ((ULONG)state._cr3); }
+ULONG  getCR4 (VOID)        { return ((ULONG)state._cr4); }
 
 ULONG  getDREG0(VOID)       { return ((ULONG)state._dr0); }
 ULONG  getDREG1(VOID)       { return ((ULONG)state._dr1); }

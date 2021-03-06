@@ -68,6 +68,7 @@ Revision History:
 #include "gmi.h"
 #include "yoda.h"
 #include "gfx_upd.h"
+#include "sas4gen.h"
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -116,6 +117,11 @@ extern UTINY *host_sas_init(sys_addr);
 extern ULONG  getPG(VOID);
 extern ULONG  getCPL(VOID);
 extern ULONG  getVM (VOID);
+extern ULONG  getPE (VOID);
+extern ULONG  getLDT_BASE (VOID);
+
+extern int    getModeType(VOID);
+extern void haxmvm_init();
 
 extern HANDLE hVM, hVCPU;
 extern IU32 gvi_pc_low_regen;
@@ -197,12 +203,6 @@ LOCAL	BOOL	selectors_set = FALSE;
 LOCAL	IU16	code_sel, data_sel;
 LOCAL	char*	haxm_videocmp_copy = NULL;
 
-GLOBAL IU8 sas_PR8 (PHY_ADDR addr);
-GLOBAL IU16 sas_PR16 (PHY_ADDR addr);
-GLOBAL void sas_PW8 (PHY_ADDR addr, IU8 val);
-GLOBAL void sas_PWS (PHY_ADDR Destination, IU8 * Source, PHY_ADDR Length);
-GLOBAL void sas_PRS (PHY_ADDR Source, IU8 * Destination, PHY_ADDR Length);
-
 /* local functions */
 LOCAL enum SAS_MEM_TYPE readSelfMod (PHY_ADDR addr, DWORD typeSize);
 LOCAL IU8  bios_read_byte   IPT1(LIN_ADDR, linAddr);
@@ -213,6 +213,7 @@ LOCAL void bios_write_word   IPT2(LIN_ADDR, linAddr, IU16, value);
 LOCAL void bios_write_double IPT2(LIN_ADDR, linAddr, IU32, value);
 LOCAL IUM8 bios_read_accreq(void);
 
+GLOBAL IBOOL xtrn2phy IPT3(LIN_ADDR, lin, IUM8, access_request, PHY_ADDR *, phy);
 
 
 GLOBAL IU8 * 
@@ -321,8 +322,8 @@ hax_MapViewOfSection(IN HANDLE SectionHandle,
 	if (!DeviceIoControl(hVM, HAX_VCPU_IOCTL_MAP_SECTION, &p, sizeof(p), &Status, sizeof(Status), &bytes, NULL))
 		return STATUS_UNSUCCESSFUL;
 
-	*(ULONG*)BaseAddress = _BaseAddress;
-	*ViewSize = _ViewSize;
+	*(ULONG*)BaseAddress = (ULONG)_BaseAddress;
+	*ViewSize = (ULONG)_ViewSize;
 	return Status;
 }
 
@@ -644,7 +645,7 @@ Return Value:
 	 * will change some of this to being ROM.
 	 */
 
-	haxm_alloc(Start_of_M_area, required_mem);
+	haxm_alloc((sys_addr)Start_of_M_area, required_mem);
 	sas_connect_memory(0, 0x110000 - 1, SAS_RAM);
 
 #ifndef EGATEST
@@ -2127,7 +2128,7 @@ xtrn2phy IFN3
     {
 		return FALSE;
     }
-	*phy = pa;
+	*phy = (PHY_ADDR)pa;
 	return TRUE;
 }
 
@@ -2898,7 +2899,7 @@ bios_read_byte IFN1(LIN_ADDR, linAddr)
 		always_trace1("Virtualising PM byte read, lin address 0x%x", linAddr);
 
 		if (!selectors_set)
-			return;
+			return 0;
 
 		return ((IU8)biosDoInst(code_sel, BIOS_RDB_OFFSET, 0, data_sel, linAddr));
 	}
@@ -2939,7 +2940,7 @@ bios_read_word IFN1(LIN_ADDR, linAddr)
 		always_trace1("Virtualising PM word read, lin address 0x%x", linAddr);
 
 		if (!selectors_set)
-			return;
+			return 0;
 
 		return ((IU8)biosDoInst(code_sel, BIOS_RDW_OFFSET, 0, data_sel, linAddr));
 	}
@@ -2979,7 +2980,7 @@ bios_read_double IFN1(LIN_ADDR, linAddr)
 		always_trace1("Virtualising PM double read, lin address 0x%x", linAddr);
 
 		if (!selectors_set)
-			return;
+			return 0;
 
 		return ((IU8)biosDoInst(code_sel, BIOS_RDD_OFFSET, 0, data_sel, linAddr));
 	}
@@ -3116,7 +3117,7 @@ bios_write_double IFN2(LIN_ADDR, linAddr, IU32, value)
 }
 
 /* Stubs */
-GLOBAL void sas_overwrite_memory IFN2(sys_addr, addr, int, type)
+GLOBAL void sas_overwrite_memory IFN2(PBYTE, addr, ULONG, type)
 {
 	UNUSED(addr);
 	UNUSED(type);
@@ -3163,6 +3164,7 @@ GLOBAL IBOOL sas_init_pm_selectors IFN2(IU16, sel1, IU16, sel2)
 
 	always_trace2 ("Set code_sel = %x, data_sel = %x\n",
 		code_sel, data_sel);
+    return TRUE;
 }
 
 /*(
