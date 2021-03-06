@@ -191,25 +191,50 @@
 >     return Status;
 --- NT4\private\mvdm\dpmi32\stack.c
 +++ nt\private\mvdm\dpmi32\stack.c
-125a126,133
+23a24,30
+> #ifndef MONITOR
+> extern BOOL setCS_BASE_LIMIT_AR	(ULONG base, ULONG limit, USHORT ar);
+> extern BOOL setDS_BASE_LIMIT_AR	(ULONG base, ULONG limit, USHORT ar);
+> extern BOOL setES_BASE_LIMIT_AR	(ULONG base, ULONG limit, USHORT ar);
+> extern BOOL setIDT_BASE_LIMIT (ULONG base, USHORT limit);
+> #endif
+> 
+125a133,142
+> #ifndef MONITOR
 >     // leecher1337: While  RM Int executes, we have to have IDT on Realmode IVT 
 >     // and set proper segment limits
 >     setCS_BASE_LIMIT_AR(0, 0xFFFF, 0x9b);
 >     setDS_BASE_LIMIT_AR(0, 0xFFFF, 0x93);
 >     setES_BASE_LIMIT_AR(0, 0xFFFF, 0x93);
 >     setIDT_BASE_LIMIT(0, 0xFFFF);
+> #endif
 >     
 > 
 --- NT4\private\mvdm\dpmi32\savestat.c
 +++ nt\private\mvdm\dpmi32\savestat.c
-35a36,37
+24a25,30
+> #ifndef MONITOR
+> extern DWORD  getIDT_BASE(VOID);
+> extern USHORT getIDT_LIMIT(VOID);
+> extern BOOL	  setIDT_BASE_LIMIT (ULONG base, USHORT limit);
+> #endif
+> 
+35a42,45
+> #ifndef MONITOR
 >     ULONG IDTBase;
 >     USHORT IDTLimit;
-79a82,83
+> #endif
+80c90,93
+< 
+---
+> #ifndef MONITOR // Not available on MONITOR :(
 >     SavedState->IDTBase = getIDT_BASE();
 >     SavedState->IDTLimit = getIDT_LIMIT();
-131a136
+> #endif
+131a145,147
+> #ifndef MONITOR // Not available on MONITOR :(
 >     setIDT_BASE_LIMIT(SavedState->IDTBase, SavedState->IDTLimit);
+> #endif
 --- NT4\private\mvdm\dpmi\486\dxstrt.asm
 +++ nt\private\mvdm\dpmi\486\dxstrt.asm
 118a119
