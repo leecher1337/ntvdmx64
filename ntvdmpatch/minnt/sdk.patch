@@ -1,0 +1,275 @@
+--- base\mvdm\inc\wowgdi.h
++++ base\mvdm\inc\wowgdi.h
+1072c1072
+< #define STOCK_MAX 17 // 19
+---
+> #define STOCK_MAX 19
+--- public\internal\windows\inc\winuserp.h
++++ public\internal\windows\inc\winuserp.h
+46,51d45
+< // This needs to be internal until the shell catches up
+< typedef struct
+< {
+<     HWND    hwnd;
+<     RECT    rc;
+< } SHELLHOOKINFO, *LPSHELLHOOKINFO;
+70,71d63
+< 
+< BOOL IsHungAppWindow(HWND hwnd);
+132d123
+< #define MN_GETHMENU                     (MN_FIRST + 1)
+467d457
+< #define MNS_NOCHECK     0x00000001
+480,504d469
+< typedef struct tagMENUINFO
+< {
+<     DWORD   cbSize;
+<     DWORD   fMask;
+<     DWORD   dwStyle;
+<     UINT    cyMax;
+<     HBRUSH  hbrBack;
+<     DWORD   dwContextHelpID;
+<     DWORD   dwMenuData;
+< }   MENUINFO, FAR *LPMENUINFO;
+< typedef const MENUINFO FAR *LPCMENUINFO;
+< 
+< WINUSERAPI
+< BOOL
+< WINAPI
+< GetMenuInfo(
+<              HMENU,
+<              LPMENUINFO);
+< 
+< WINUSERAPI
+< BOOL
+< WINAPI
+< SetMenuInfo(
+<              HMENU,
+<              LPCMENUINFO);
+514,516d478
+< #if(WINVER >= 0x040a)
+< #define TPM_RECURSE         0X0001L
+< #endif /* WINVER >= 0x040a */
+939,942d900
+< #define SPI_GETSNAPTODEFBUTTON     95
+< #define SPI_SETSNAPTODEFBUTTON     96
+< #define SPI_GETMENUSHOWDELAY      106
+< #define SPI_SETMENUSHOWDELAY      107
+1258,1269d1215
+< typedef struct _DISPLAY_DEVICEA {
+<     DWORD  cb;
+<     BYTE   DeviceName[32];
+<     BYTE   DeviceString[128];
+<     DWORD  StateFlags;
+< } DISPLAY_DEVICEA, *PDISPLAY_DEVICEA, *LPDISPLAY_DEVICEA;
+< typedef struct _DISPLAY_DEVICEW {
+<     DWORD  cb;
+<     WCHAR  DeviceName[32];
+<     WCHAR  DeviceString[128];
+<     DWORD  StateFlags;
+< } DISPLAY_DEVICEW, *PDISPLAY_DEVICEW, *LPDISPLAY_DEVICEW;
+1284,1305d1229
+< 
+< 
+< WINUSERAPI
+< BOOL
+< WINAPI
+< EnumDisplayDevicesA(
+<     PVOID Unused,
+<     DWORD iDevNum,
+<     PDISPLAY_DEVICEA lpDisplayDevice);
+< WINUSERAPI
+< BOOL
+< WINAPI
+< EnumDisplayDevicesW(
+<     PVOID Unused,
+<     DWORD iDevNum,
+<     PDISPLAY_DEVICEW lpDisplayDevice);
+< #ifdef UNICODE
+< #define EnumDisplayDevices  EnumDisplayDevicesW
+< #else
+< #define EnumDisplayDevices  EnumDisplayDevicesA
+< #endif // !UNICODE
+< 
+1405,1415d1328
+< /*
+<  * Custom Cursor action.
+<  */
+< HCURSOR
+< GetCursorInfo(
+<     HCURSOR hcur,
+<     LPWSTR id,
+<     int iFrame,
+<     LPDWORD pjifRate,
+<     LPINT pccur);
+< 
+--- public\internal\windows\inc\conapi.h
++++ public\internal\windows\inc\conapi.h
+44,48d43
+< typedef struct _CONSOLE_FONT_INFO {
+<     DWORD  nFont;
+<     COORD  dwFontSize;
+< } CONSOLE_FONT_INFO, *PCONSOLE_FONT_INFO;
+< 
+--- public\internal\base\inc\zwapi.h
++++ public\internal\base\inc\zwapi.h
+884,907d883
+< ZwListenChannel (
+<     IN HANDLE ChannelHandle,
+<     OUT PCHANNEL_MESSAGE *Message
+<     );
+< NTSYSAPI
+< NTSTATUS
+< NTAPI
+< ZwSendWaitReplyChannel (
+<     IN HANDLE ChannelHandle,
+<     IN PVOID Text,
+<     IN ULONG Length,
+<     OUT PCHANNEL_MESSAGE *Message
+<     );
+< NTSYSAPI
+< NTSTATUS
+< NTAPI
+< ZwReplyWaitSendChannel (
+<     IN PVOID Text,
+<     IN ULONG Length,
+<     OUT PCHANNEL_MESSAGE *Message
+<     );
+< NTSYSAPI
+< NTSTATUS
+< NTAPI
+--- public\internal\shell\inc\prshtp.h
++++ public\internal\shell\inc\prshtp.h
+30a31
+> #define PSN_LASTCHANCEAPPLY     (PSN_FIRST-11)
+--- public\internal\shell\inc\comctrlp.h
++++ public\internal\shell\inc\comctrlp.h
+189a190,218
+> #if (_WIN32_IE >= 0x0300)
+> #define TBN_CLOSEUP             (TBN_FIRST - 11)  //
+> #endif
+> #define TBN_WRAPHOTITEM         (TBN_FIRST - 24)
+> #define TBN_DUPACCELERATOR      (TBN_FIRST - 25)
+> #define TBN_WRAPACCELERATOR     (TBN_FIRST - 26)
+> #define TBN_DRAGOVER            (TBN_FIRST - 27)
+> #define TBN_MAPACCELERATOR      (TBN_FIRST - 28)
+> typedef struct tagNMTBDUPACCELERATOR
+> {
+>     NMHDR hdr;
+>     UINT ch;
+>     BOOL fDup;
+> } NMTBDUPACCELERATOR, *LPNMTBDUPACCELERATOR;
+> 
+> typedef struct tagNMTBWRAPACCELERATOR
+> {
+>     NMHDR hdr;
+>     UINT ch;
+>     int iButton;
+> } NMTBWRAPACCELERATOR, *LPNMTBWRAPACCELERATOR;
+> 
+> typedef struct tagNMTBWRAPHOTITEM
+> {
+>     NMHDR hdr;
+>     int iStart;
+>     int iDir;
+>     UINT nReason;       // HICF_* flags
+> } NMTBWRAPHOTITEM, *LPNMTBWRAPHOTITEM;
+207a237,243
+> #if (_WIN32_IE >= 0x0500)
+> typedef struct tagNMTBCUSTOMIZEDLG {
+>     NMHDR   hdr;
+>     HWND    hDlg;
+> } NMTBCUSTOMIZEDLG, *LPNMTBCUSTOMIZEDLG;
+> #endif
+> 
+212a249,254
+> #if (_WIN32_IE >= 0x0500)
+> typedef struct tagNMTTSHOWINFO {
+>     NMHDR hdr;
+>     DWORD dwStyle;
+> } NMTTSHOWINFO, *LPNMTTSHOWINFO;
+> #endif
+320a363,368
+> #define LVN_GETEMPTYTEXTA          (LVN_FIRST-60)
+> #define LVN_GETEMPTYTEXTW          (LVN_FIRST-61)
+> #if (_WIN32_IE >= 0x0500)
+> #define LVN_INCREMENTALSEARCHA   (LVN_FIRST-62)
+> #define LVN_INCREMENTALSEARCHW   (LVN_FIRST-63)
+> #endif      // _WIN32_IE >= 0x0500
+363,438d410
+< 
+< #ifndef NO_COMMCTRL_DA
+< //====== Dynamic Array routines ==========================================
+< // Dynamic structure array
+< typedef struct _DSA FAR* HDSA;
+< 
+< WINCOMMCTRLAPI HDSA   WINAPI DSA_Create(int cbItem, int cItemGrow);
+< WINCOMMCTRLAPI BOOL   WINAPI DSA_Destroy(HDSA hdsa);
+< WINCOMMCTRLAPI BOOL   WINAPI DSA_GetItem(HDSA hdsa, int i, void FAR* pitem);
+< WINCOMMCTRLAPI LPVOID WINAPI DSA_GetItemPtr(HDSA hdsa, int i);
+< WINCOMMCTRLAPI BOOL   WINAPI DSA_SetItem(HDSA hdsa, int i, void FAR* pitem);
+< WINCOMMCTRLAPI int    WINAPI DSA_InsertItem(HDSA hdsa, int i, void FAR* pitem);
+< WINCOMMCTRLAPI BOOL   WINAPI DSA_DeleteItem(HDSA hdsa, int i);
+< WINCOMMCTRLAPI BOOL   WINAPI DSA_DeleteAllItems(HDSA hdsa);
+< #define       DSA_GetItemCount(hdsa) (*(int FAR*)(hdsa))
+< 
+< // Dynamic pointer array
+< typedef struct _DPA FAR* HDPA;
+< 
+< WINCOMMCTRLAPI HDPA   WINAPI DPA_Create(int cItemGrow);
+< WINCOMMCTRLAPI HDPA   WINAPI DPA_CreateEx(int cpGrow, HANDLE hheap);
+< WINCOMMCTRLAPI BOOL   WINAPI DPA_Destroy(HDPA hdpa);
+< WINCOMMCTRLAPI HDPA   WINAPI DPA_Clone(HDPA hdpa, HDPA hdpaNew);
+< WINCOMMCTRLAPI LPVOID WINAPI DPA_GetPtr(HDPA hdpa, int i);
+< WINCOMMCTRLAPI int    WINAPI DPA_GetPtrIndex(HDPA hdpa, LPVOID p);
+< WINCOMMCTRLAPI BOOL   WINAPI DPA_Grow(HDPA pdpa, int cp);
+< WINCOMMCTRLAPI BOOL   WINAPI DPA_SetPtr(HDPA hdpa, int i, LPVOID p);
+< WINCOMMCTRLAPI int    WINAPI DPA_InsertPtr(HDPA hdpa, int i, LPVOID p);
+< WINCOMMCTRLAPI LPVOID WINAPI DPA_DeletePtr(HDPA hdpa, int i);
+< WINCOMMCTRLAPI BOOL   WINAPI DPA_DeleteAllPtrs(HDPA hdpa);
+< #define       DPA_GetPtrCount(hdpa)   (*(int FAR*)(hdpa))
+< #define       DPA_GetPtrPtr(hdpa)     (*((LPVOID FAR* FAR*)((BYTE FAR*)(hdpa) + sizeof(int))))
+< #define       DPA_FastGetPtr(hdpa, i) (DPA_GetPtrPtr(hdpa)[i])
+< 
+< typedef int (CALLBACK *PFNDPACOMPARE)(LPVOID p1, LPVOID p2, LPARAM lParam);
+< 
+< WINCOMMCTRLAPI BOOL   WINAPI DPA_Sort(HDPA hdpa, PFNDPACOMPARE pfnCompare, LPARAM lParam);
+< 
+< // Search array.  If DPAS_SORTED, then array is assumed to be sorted
+< // according to pfnCompare, and binary search algorithm is used.
+< // Otherwise, linear search is used.
+< //
+< // Searching starts at iStart (-1 to start search at beginning).
+< //
+< // DPAS_INSERTBEFORE/AFTER govern what happens if an exact match is not
+< // found.  If neither are specified, this function returns -1 if no exact
+< // match is found.  Otherwise, the index of the item before or after the
+< // closest (including exact) match is returned.
+< //
+< // Search option flags
+< //
+< #define DPAS_SORTED             0x0001
+< #define DPAS_INSERTBEFORE       0x0002
+< #define DPAS_INSERTAFTER        0x0004
+< 
+< WINCOMMCTRLAPI int WINAPI DPA_Search(HDPA hdpa, LPVOID pFind, int iStart,
+<                       PFNDPACOMPARE pfnCompare,
+<                       LPARAM lParam, UINT options);
+< 
+< //======================================================================
+< // String management helper routines
+< 
+< WINCOMMCTRLAPI int  WINAPI Str_GetPtrA(LPCSTR psz, LPSTR pszBuf, int cchBuf);
+< WINCOMMCTRLAPI int  WINAPI Str_GetPtrW(LPCWSTR psz, LPWSTR pszBuf, int cchBuf);
+< WINCOMMCTRLAPI BOOL WINAPI Str_SetPtrA(CHAR FAR* UNALIGNED * ppsz, LPCSTR psz);
+< WINCOMMCTRLAPI BOOL WINAPI Str_SetPtrW(WCHAR FAR* UNALIGNED * ppsz, LPCWSTR psz);
+< 
+< #ifdef UNICODE
+< #define Str_GetPtr              Str_GetPtrW
+< #define Str_SetPtr              Str_SetPtrW
+< #else
+< #define Str_GetPtr              Str_GetPtrA
+< #define Str_SetPtr              Str_SetPtrA
+< #endif
+< 
+< #endif // NO_COMMCTRL_DA

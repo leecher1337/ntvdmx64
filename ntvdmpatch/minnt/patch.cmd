@@ -26,6 +26,13 @@ if not exist %minntfix%\minnt\public\internal\base\inc\splapip.h (
 echo Copying fixed files to minnt repository
 xcopy /E /R /Y %minntfix% %BASEPATH%\..\..\
 echo #include "winddi_xp.h" >>%BASEPATH%\..\..\minnt\public\oak\inc\winddi.h
+move %BASEPATH%\..\..\minnt\public\sdk\inc\commctrl.h %BASEPATH%\..\..\minnt\public\sdk\inc\commctrl.h_
+rem Prepend include of sal.h to new header file from SDK
+echo #include ^<sal.h^> >%BASEPATH%\..\..\minnt\public\sdk\inc\commctrl.h
+type %BASEPATH%\..\..\minnt\public\sdk\inc\commctrl.h_ >>%BASEPATH%\..\..\minnt\public\sdk\inc\commctrl.h
+del /y %BASEPATH%\..\..\minnt\public\sdk\inc\commctrl.h_
+
+move 
 rem ... But in makefile, it's with _ ..?
 rem ren %BASEPATH%\mvdm\bin86\jpn\_disp.sys $disp.sys
 rem ren %BASEPATH%\mvdm\bin86\jpn\_ias.sys $ias.sys
@@ -65,6 +72,9 @@ echo Patching WinXP/2k3 WOW16
 ren %PATCHROOT%\patches\minnt\wow16.patch wow16.patch.oldsrc
 
 :noxpsrc
+echo Updating SDK Headers
+%PATCHROOT%\util\patch -N -p0 -i %~dp0\sdk.patch
+
 echo Patching broken utilities
 %PATCHROOT%\util\patch -N -p0 -i %~dp0\tools.patch
 

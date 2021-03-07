@@ -1,6 +1,15 @@
 --- NT4\private\mvdm\wow32\precomp.h
 +++ nt\private\mvdm\wow32\precomp.h
-115a116
+19a20,27
+> // WOW32 should compile as NT 6 for best compatibility with newer systems 
+> #undef WINVER
+> #define WINVER 0x600
+> #undef _WIN32_IE 
+> #define _WIN32_IE 0x0601
+> #undef _WIN32_WINNT
+> #define _WIN32_WINNT 0x600
+> #define WSABASEERR 10000    // New SDK has WSA error codes defined in winerror.h, prevent inclusion as we include winsock.h 
+115a124
 > #include "wsyslevel.h"
 --- NT4\private\mvdm\wow32\hack.c
 +++ nt\private\mvdm\wow32\hack.c
@@ -1147,131 +1156,50 @@
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-551c598
+382a430
+> #undef pNtVDMState // Wrongly set in vdm.h on x86 
+551c599
 < #ifndef _X86_  // emulated CPU
 ---
 > #ifndef _X86xx_  // emulated CPU
-561c608
+561c609
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-808c855
+808c856
 < //PTERMSRVCORINIFILE gpfnTermsrvCORIniFile;
 ---
 > PTERMSRVCORINIFILE gpfnTermsrvCORIniFile;
-811a859,884
-> /* Functions missing from Win2k source */
-> #define IsWOWProc(proc) ((((DWORD)proc)&WNDPROC_WOWPROC)==WNDPROC_WOWPROC)
-> #define MarkWOWProc(p,pArg) (*(DWORD*)&pArg)=(DWORD)((DWORD)p & 0xFFF9FFFF | ((DWORD)p>>13) & 0x60000 | WNDPROC_WOWPROC);
-> #define UnMarkWOWProc(p,pArg) (*(DWORD*)&pArg)=(DWORD)(((DWORD)p<<13) ^ ((DWORD)p ^ ((DWORD)p<<13)) & 0x3FF9FFFF | 0x60000);
->  
-> #define WM_CHANGEUISTATE 0x0127
-> #define WM_UPDATEUISTATE 0x0128
-> #define WM_QUERYUISTATE  0x0129
-> #define LVN_HOTTRACK (LVN_FIRST-21)
-> #define PSN_HASHELP (PSN_FIRST-4)
-> #define PSN_GETOBJECT (PSN_FIRST-10)
-> #define PSN_TRANSLATEACCELERATOR (PSN_FIRST-12)
-> #define PSN_QUERYINITIALFOCUS (PSN_FIRST-13)
-> #define PSN_LASTCHANCEAPPLY (PSN_FIRST-14)
-> #define TVN_GETINFOTIPA (TVN_FIRST-13)
-> #define TVN_GETINFOTIPW (TVN_FIRST-14)
-> #define TVN_SINGLEEXPAND (TVN_FIRST-15)
-> #define GCL_WOWMENUNAME (-29)
-> #define FR_PRIVATE     0x10
-> #define FR_NOT_ENUM    0x20
-> #define WOW_CHOOSECOLOR	1
-> #define WOW_CHOOSEFONT	2
-> #define WOW_OPENFILENAME	3
-> #define WOW_PRINTDLG	4
-> #define WF_DIALOG_WINDOW	0x10000
-> #define HTW_IS16BIT	0x80000000
-812a886,887
-> #include <commctrl.h>
-> #include <wtypes.h>
-813a889,929
-> typedef struct tagNMKEY
-> {
->     NMHDR hdr;
->     UINT  nVKey;
->     UINT  uFlags;
-> } NMKEY, *LPNMKEY;
-> typedef struct tagNMTVGETINFOTIPA
-> {
->     NMHDR hdr;
->     LPSTR pszText;
->     int cchTextMax;
->     HTREEITEM hItem;
->     LPARAM lParam;
-> } NMTVGETINFOTIPA, *LPNMTVGETINFOTIPA;
-> #ifdef UNICODE
-> #define TVN_GETINFOTIP          TVN_GETINFOTIPW
-> #define NMTVGETINFOTIP          NMTVGETINFOTIPW
-> #define LPNMTVGETINFOTIP        LPNMTVGETINFOTIPW
-> #else
-> #define TVN_GETINFOTIP          TVN_GETINFOTIPA
-> #define NMTVGETINFOTIP          NMTVGETINFOTIPA
-> #define LPNMTVGETINFOTIP        LPNMTVGETINFOTIPA
-> #endif
-> typedef struct tagNMOBJECTNOTIFY {
->     NMHDR   hdr;
->     int     iItem;
-> #ifdef __IID_DEFINED__
->     const IID *piid;
-> #else
->     const void *piid;
-> #endif
->     void *pObject;
->     HRESULT hResult;
->     DWORD dwFlags;    // control specific flags (hints as to where in iItem it hit)
-> } NMOBJECTNOTIFY, *LPNMOBJECTNOTIFY;
-> typedef struct _DRAWPATRECT {
->         POINT ptPosition;
->         POINT ptSize;
->         WORD wStyle;
->         WORD wPattern;
-> } DRAWPATRECT, *PDRAWPATRECT;
-814a931,944
-> WINGDIAPI int  WINAPI AddFontResourceExA( LPCSTR name, DWORD fl, PVOID res);
-> WINGDIAPI int  WINAPI AddFontResourceExW( LPCWSTR name, DWORD fl, PVOID res);
-> #ifdef UNICODE
-> #define AddFontResourceEx  AddFontResourceExW
-> #else
-> #define AddFontResourceEx  AddFontResourceExA
-> #endif // !UNICODE
-> WINGDIAPI int  WINAPI GetRandomRgn (HDC hdc, HRGN hrgn, INT i);
-> 
-> /* End Functions missing from Win2k source */
-> 
-> 
-> 
-> 
 --- NT4\private\mvdm\wow32\wmdisp32.c
 +++ nt\private\mvdm\wow32\wmdisp32.c
-3257,3258d3256
+24a25,27
+> #include "comctrlp.h"
+> #include "commdlgp.h"
+> #include "shlapip.h"
+3257,3258d3259
 <             // FIXME: Enable the following when we are ready.
 <             /*
-3261d3258
+3261d3261
 <             */
-3286,3287d3282
+3286,3287d3285
 <             // FIXME: Enable the following when we are ready.
 <             /*
-3290d3284
+3290d3287
 <             */
-3310,3311d3303
+3310,3311d3306
 <             // FIXME: Enable the following when we are ready.
 <             /*
-3322d3313
+3322d3316
 <             */
-3379,3380d3369
+3379,3380d3372
 <             // FIXME: Enable the following when we are ready.
 <             /*
-3383d3371
+3383d3374
 <             */
-3398,3399d3385
+3398,3399d3388
 <             // FIXME: Enable the following when we are ready.
 <             /*
-3403d3388
+3403d3391
 <             */
 --- NT4\private\mvdm\wow32\wgdi.c
 +++ nt\private\mvdm\wow32\wgdi.c

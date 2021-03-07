@@ -12,8 +12,8 @@
 #include <nt.h>
 #include <ntrtl.h>
 #include <nturtl.h>
-#include <ntdbg.h>
 #include <windows.h>
+#include <wdbgexts.h>
 #include <stdio.h>
 #include <string.h>
 #include <mvdm.h>
@@ -49,7 +49,12 @@ BYTE    DbgTimerMode = VDMTI_TIMER_TICK;
 extern DECLSPEC_IMPORT LDT_ENTRY *ExpLdt;
 
 /* include inc/vint.h from Win2k for FIXED_NTVDMSTATE_LINEAR */
+#undef pNtVDMState
 #define pNtVDMState   ((ULONG *)(IntelMemoryBase+FIXED_NTVDMSTATE_LINEAR))
+
+extern VOID VdmDbgAttach(VOID);
+extern PVOID VdmMapFlat(USHORT selector, ULONG offset, ULONG mode);
+BOOL SendVDMEvent(DWORD Param0);
 
 typedef struct _trapframe {
     WORD    wCode;          /* Noise from DbgDispatchBop */
@@ -213,7 +218,7 @@ BOOL SendVDMEvent(DWORD Param0)
     BOOL    fResult;
 
     EventParams[0] = Param0 | (EventFlags << 16);
-    EventParams[3] = &viInfo;
+    EventParams[3] = (DWORD)&viInfo;
 
     InVdmDebugger = TRUE;
     do
@@ -224,7 +229,7 @@ BOOL SendVDMEvent(DWORD Param0)
             RaiseException( STATUS_VDM_EVENT,
                             0,
                             4,
-                            &EventParams);
+                            (ULONG_PTR*)&EventParams);
 			fResult = TRUE;
         } except(EXCEPTION_EXECUTE_HANDLER) {
             fResult = FALSE;
@@ -263,7 +268,7 @@ void DbgGetContext()
     //
     // Fill in the internal info structure
     //
-    viInfo.dwLdtBase       = ExpLdt;    // Import from NTVDM
+    viInfo.dwLdtBase       = (DWORD)ExpLdt;    // Import from NTVDM
     viInfo.dwIntelBase     = IntelMemoryBase;
     viInfo.wKernelSeg      = HIWORD(ulTHHOOK);
     viInfo.dwOffsetTHHOOK  = (DWORD)(LOWORD(ulTHHOOK));
@@ -374,7 +379,7 @@ void SegmentLoad(
 
         se.Selector1 = Selector;
         se.Segment   = Segment;
-        se.Type      = fData;
+        se.Type      = (WORD)fData;
 
         length = strlen(lpPathName);
         if ( length >= MAX_PATH16 ) {
@@ -1406,7 +1411,7 @@ void xxxDbgTraceEvent(
     }
     pTraceEntry = &pTraceInfo->pTraceTable[pTraceInfo->CurrentEntry];
     pTraceEntry->Type = Type;
-    pTraceEntry->wData = wData;
+    pTraceEntry->wData = (USHORT)wData;
     pTraceEntry->lData = lData;
     pTraceEntry->Time = DbgEventTime(pTraceInfo);
     pTraceEntry->eax = getEAX();
@@ -1437,7 +1442,7 @@ BOOL xxxDbgInit(
 ) {
   VdmDbgTraceFlags = TraceFlags;
   lpVdmState = VdmState;
-  IntelMemoryBase = VdmMapFlat(0, 0, 0);
+  IntelMemoryBase = (DWORD)VdmMapFlat(0, 0, 0);
   lpNtCpuInfo = NtCpuInfo;
   *(DWORD *)lpVdmState |= VDM_BREAK_DEBUGGER;
   if ( fDebugged )
