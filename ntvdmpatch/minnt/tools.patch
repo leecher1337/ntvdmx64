@@ -1,13 +1,41 @@
 --- base\mvdm\dos\v86\tools\src\buildidx\buildidx.c
 +++ base\mvdm\dos\v86\tools\src\buildidx\buildidx.c
-99c99
+32a33,35
+> updatemsg();
+> bldindex();
+> 
+99c102
 <    while ( !feof(msgfile) && !feof(idxfile) && comparable )
 ---
 >    while ( comparable && !feof(msgfile) && !feof(idxfile) )
-151c151
+151c154
 <      fclose(idxfile) ;
 ---
 >      if (idxfile) fclose(idxfile) ;
+198c201
+<        File_in[index] = c ;
+---
+>        File_in[index] = (char)c ;
+204c207
+<          File_in[index] = c ;
+---
+>          File_in[index] = (char)c ;
+229c232
+<          File_in[index] = c ;                 /* Put together the header. */
+---
+>          File_in[index] = (char)c ;                 /* Put together the header. */
+234c237
+<            File_in[index] = c ;               /* Save only the first str. */
+---
+>            File_in[index] = (char)c ;               /* Save only the first str. */
+251c254
+<            File_in[index] = c ;         /* into the string. */
+---
+>            File_in[index] = (char)c ;         /* into the string. */
+256c259
+<              File_in[index] = c ;
+---
+>              File_in[index] = (char)c ;
 --- base\mvdm\dos\v86\cmd\command\buildmsg.c
 +++ base\mvdm\dos\v86\cmd\command\buildmsg.c
 493c493
@@ -24,18 +52,25 @@
 > 		    pchtmp = mktemp(tmpf);
 --- base\mvdm\dos\v86\tools\src\stripdd\stripdd.c
 +++ base\mvdm\dos\v86\tools\src\stripdd\stripdd.c
-74c75
+74c74
 < unsigned int	HeadLen, *HeadPtr ;
 ---
 > unsigned short	HeadLen, *HeadPtr ;
-82c83
+78a79,80
+> copy (long);
+> 
+82c84
 < 	int	*tptr ;
 ---
 > 	short	*tptr ;
-95c96
+95c97
 < 	tptr = (int *)tempbuf ;
 ---
 > 	tptr = (short *)tempbuf ;
+--- base\mvdm\dos\v86\tools\src\stripz\stripz.c
++++ base\mvdm\dos\v86\tools\src\stripz\stripz.c
+18a19
+> #include <stdlib.h>
 --- base\mvdm\dos\v86\cmd\command\buildmsg.c
 +++ base\mvdm\dos\v86\cmd\command\buildmsg.c
 8a9
