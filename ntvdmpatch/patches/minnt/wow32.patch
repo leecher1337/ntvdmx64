@@ -1176,31 +1176,546 @@
 > #include "comctrlp.h"
 > #include "commdlgp.h"
 > #include "shlapip.h"
-3257,3258d3259
+3242,3246c3245,3247
+< 
+<     // Caller already checked against NM_LAST.
+<     if (pnmhdr32->code >= LVN_LAST) {
+<         LOGDEBUG(2,("%sLVN_ %x\n", szLabel, pnmhdr32->code));
+<         switch (pnmhdr32->code) {
+---
+>     // WOWGetNotifySize in notify.c of comctl32 implements this, but
+>     // it never got used, even on x86 builds. Why...?
+>     switch (pnmhdr32->code) {
+3248,3261c3249,3268
+<             case LVN_ITEMCHANGING:
+<             case LVN_ITEMCHANGED:
+<             case LVN_INSERTITEM:
+<             case LVN_DELETEITEM:
+<             case LVN_DELETEALLITEMS:
+<             case LVN_COLUMNCLICK:
+<             case LVN_BEGINDRAG:
+<             case LVN_BEGINRDRAG:
+<             
 <             // FIXME: Enable the following when we are ready.
 <             /*
-3261d3261
+<             case LVN_HOTTRACK:
+<                 return sizeof(NM_LISTVIEW);
 <             */
-3286,3287d3285
+---
+>     // Generic comctl32 notifications
+>     case NM_OUTOFMEMORY:        return sizeof(NMHDR);   // not used
+> 
+>     case NM_CLICK:              return max(max(
+>                         sizeof(NMHDR),       // tab, treeview
+>                         sizeof(NMCLICK)),    // toolbar, statusbar
+>                         sizeof(NMITEMACTIVATE)); // listview
+> 
+>     case NM_DBLCLK:             return max(max(
+>                         sizeof(NMHDR),       // tab, treeview
+>                         sizeof(NMCLICK)),    // toolbar, statusbar
+>                         sizeof(NMITEMACTIVATE)); // listview
+> 
+> 
+>     case NM_RETURN:             return sizeof(NMHDR);
+> 
+>     case NM_RCLICK:             return max(max(
+>                         sizeof(NMHDR),       // header, listview report mode, treeview
+>                         sizeof(NMCLICK)),    // toolbar, statusbar
+>                         sizeof(NMITEMACTIVATE)); // listview icon mode
+3263,3295c3270,3336
+<             case LVN_BEGINLABELEDITA:
+<             case LVN_ENDLABELEDITA:
+<             case LVN_GETDISPINFOA:
+<             case LVN_SETDISPINFOA:
+<             case LVN_BEGINLABELEDITW:
+<             case LVN_ENDLABELEDITW:
+<             case LVN_GETDISPINFOW:
+<             case LVN_SETDISPINFOW:
+<                 return sizeof(LV_DISPINFO);
+< 
+<             case LVN_KEYDOWN:
+<                 return sizeof(LV_KEYDOWN);
+< 
+<             case LVN_ODCACHEHINT:
+<                 return sizeof(NM_CACHEHINT);
+< 
+<             case LVN_ODFINDITEMA:
+<             case LVN_ODFINDITEMW:
+<                 return sizeof(NM_FINDITEM);
+< 
+<             case LVN_ODSTATECHANGED:
+<                 return sizeof(NM_ODSTATECHANGE);
+< 
 <             // FIXME: Enable the following when we are ready.
 <             /*
-3290d3287
+<             case LVN_ITEMACTIVATE:
+<                 return sizeof(NMKEY);
 <             */
-3310,3311d3306
+< 
+<             default:
+<                 goto unknown_nmhdr_code;
+<         }
+<     }
+---
+>     case NM_RDBLCLK:            return max(max(
+>                         sizeof(NMHDR),       // treeview
+>                         sizeof(NMCLICK)),    // toolbar, statusbar
+>                         sizeof(NMITEMACTIVATE)); // listview
+> 
+>     case NM_SETFOCUS:           return sizeof(NMHDR);
+>     case NM_KILLFOCUS:          return sizeof(NMHDR);
+>     case NM_STARTWAIT:          return sizeof(NMHDR);      // not used
+>     case NM_ENDWAIT:            return sizeof(NMHDR);      // not used
+>     case NM_BTNCLK:             return sizeof(NMHDR);      // not used
+>     case NM_CUSTOMDRAW:         return sizeof(NMCUSTOMDRAW);
+>     case NM_HOVER:              return sizeof(NMHDR);
+>     case NM_NCHITTEST:          return sizeof(NMMOUSE);
+>     case NM_KEYDOWN:            return sizeof(NMKEY);
+>     case NM_RELEASEDCAPTURE:    return sizeof(NMHDR);
+>     case NM_SETCURSOR:          return sizeof(NMMOUSE);
+>     case NM_CHAR:               return sizeof(NMCHAR);
+>     case NM_TOOLTIPSCREATED:    return sizeof(NMTOOLTIPSCREATED);
+>     case NM_LDOWN:              return sizeof(NMCLICK);
+>     case NM_RDOWN:              return sizeof(NMCLICK);     // not used
+>     case NM_THEMECHANGED:       return sizeof(NMHDR);
+>     case NM_FONTCHANGED:        return sizeof(NM_FONTCHANGED);
+>     case NM_CUSTOMTEXT:         return max(sizeof(NMCUSTOMTEXT),
+>                                            sizeof(NMTVSTATEIMAGECHANGING));
+>     
+> 
+>     // Listview notifications
+>     case LVN_ITEMCHANGING:      return sizeof(NMLISTVIEW);
+>     case LVN_ITEMCHANGED:       return sizeof(NMLISTVIEW);
+>     case LVN_INSERTITEM:        return sizeof(NMLISTVIEW);
+>     case LVN_DELETEITEM:        return sizeof(NMLISTVIEW);
+>     case LVN_DELETEALLITEMS:    return sizeof(NMLISTVIEW);
+>     case LVN_BEGINLABELEDITA:   return sizeof(NMLVDISPINFOA);
+>     case LVN_BEGINLABELEDITW:   return sizeof(NMLVDISPINFOW);
+>     case LVN_ENDLABELEDITA:     return sizeof(NMLVDISPINFOA);
+>     case LVN_ENDLABELEDITW:     return sizeof(NMLVDISPINFOW);
+>     case LVN_COLUMNCLICK:       return sizeof(NMLISTVIEW);
+>     case LVN_BEGINDRAG:         return sizeof(NMITEMACTIVATE);
+>     case LVN_BEGINRDRAG:        return sizeof(NMITEMACTIVATE); // not used
+>     case LVN_ENDDRAG:           return sizeof(NMITEMACTIVATE); // not used
+>     case LVN_ENDRDRAG:          return sizeof(NMITEMACTIVATE); // not used
+>     case LVN_ODCACHEHINT:       return sizeof(NMLVCACHEHINT);
+>     case LVN_ODFINDITEMA:       return sizeof(NMLVFINDITEMA);
+>     case LVN_ODFINDITEMW:       return sizeof(NMLVFINDITEMW);
+>     case LVN_ITEMACTIVATE:      return sizeof(NMITEMACTIVATE);
+>     case LVN_ODSTATECHANGED:    return sizeof(NMLVODSTATECHANGE);
+> //  case LVN_PEN:               // Pen Windows slackers
+>     case LVN_HOTTRACK:          return sizeof(NMLISTVIEW);
+>     case LVN_GETDISPINFOA:      return sizeof(NMLVDISPINFOA);
+>     case LVN_GETDISPINFOW:      return sizeof(NMLVDISPINFOW);
+>     case LVN_SETDISPINFOA:      return sizeof(NMLVDISPINFOA);
+>     case LVN_SETDISPINFOW:      return sizeof(NMLVDISPINFOW);
+>     case LVN_KEYDOWN:           return sizeof(NMLVKEYDOWN);
+>     case LVN_MARQUEEBEGIN:      return sizeof(NMITEMACTIVATE);
+>     case LVN_GETINFOTIPA:       return sizeof(NMLVGETINFOTIPA);
+>     case LVN_GETINFOTIPW:       return sizeof(NMLVGETINFOTIPW);
+>     case LVN_GETEMPTYTEXTA:     return sizeof(NMLVDISPINFOA);
+>     case LVN_GETEMPTYTEXTW:     return sizeof(NMLVDISPINFOW);
+>     case LVN_INCREMENTALSEARCHA:return sizeof(NMLVFINDITEMA);
+>     case LVN_INCREMENTALSEARCHW:return sizeof(NMLVFINDITEMW);
+>     case LVN_COLUMNDROPDOWN:    return sizeof(NMLISTVIEW);
+>     case LVN_COLUMNOVERFLOWCLICK:return sizeof(NMLISTVIEW);
+>     case LVN_BEGINSCROLL:       return sizeof(NMLVSCROLL);
+>     case LVN_ENDSCROLL:         return sizeof(NMLVSCROLL);
+>     case LVN_LINKCLICK:         return sizeof(NMLVLINK);
+>     case LVN_GETEMPTYMARKUP:    return sizeof(NMLVEMPTYMARKUP);
+>     
+3297,3318c3338,3353
+<     if (pnmhdr32->code >= PSN_LAST) {
+<         LOGDEBUG(2,("%sPSN_ %x\n", szLabel, pnmhdr32->code));
+<         switch (pnmhdr32->code) {
+<             case PSN_SETACTIVE:
+<             case PSN_KILLACTIVE:
+<             case PSN_APPLY:
+<             case PSN_RESET:
+<             case PSN_HELP:
+<             case PSN_WIZBACK:
+<             case PSN_WIZNEXT:
+<             case PSN_WIZFINISH:
+<             case PSN_QUERYCANCEL:
+<             
 <             // FIXME: Enable the following when we are ready.
 <             /*
-3322d3316
+<             case PSN_TRANSLATEACCELERATOR:
+<             case PSN_QUERYINITIALFOCUS:
+<             case PSN_HASHELP:          // this one "is dead" - RaymondC
+<                 return sizeof(PSHNOTIFY);
+< 
+<             case PSN_GETOBJECT:
+<                 return sizeof(NMOBJECTNOTIFY);
+---
+>     // Property sheet notifications
+>     case PSN_SETACTIVE:         return sizeof(PSHNOTIFY);
+>     case PSN_KILLACTIVE:        return sizeof(PSHNOTIFY);
+>     case PSN_APPLY:             return sizeof(PSHNOTIFY);
+>     case PSN_RESET:             return sizeof(PSHNOTIFY);
+>     case PSN_HASHELP:           return sizeof(PSHNOTIFY);   // not used
+>     case PSN_HELP:              return sizeof(PSHNOTIFY);
+>     case PSN_WIZBACK:           return sizeof(PSHNOTIFY);
+>     case PSN_WIZNEXT:           return sizeof(PSHNOTIFY);
+>     case PSN_WIZFINISH:         return sizeof(PSHNOTIFY);
+>     case PSN_QUERYCANCEL:       return sizeof(PSHNOTIFY);
+>     case PSN_GETOBJECT:         return sizeof(NMOBJECTNOTIFY);
+>     case PSN_LASTCHANCEAPPLY:   return sizeof(PSHNOTIFY);
+>     case PSN_TRANSLATEACCELERATOR:
+>                                 return sizeof(PSHNOTIFY);
+>     case PSN_QUERYINITIALFOCUS: return sizeof(PSHNOTIFY);
+3320,3359c3355,3383
+<             case PSN_LASTCHANCEAPPLY:  // this is undocumented
+<                 return sizeof(NMHDR);  // (in widows\inc\prshtp.h)
 <             */
-3379,3380d3372
+< 
+<             default:
+<                 goto unknown_nmhdr_code;
+<         }
+<     }
+< 
+<     if (pnmhdr32->code >= HDN_LAST) {
+<         LOGDEBUG(2,("%sHDN_ %x\n", szLabel, pnmhdr32->code));
+<         switch (pnmhdr32->code) {
+<             case HDN_ITEMCHANGINGA:
+<             case HDN_ITEMCHANGEDA:
+<             case HDN_ITEMCLICKA:
+<             case HDN_DIVIDERDBLCLICKA:
+<             case HDN_BEGINTRACKA:
+<             case HDN_ENDTRACKA:
+<             case HDN_TRACKA:
+<             case HDN_ITEMCHANGINGW:
+<             case HDN_ITEMCHANGEDW:
+<             case HDN_ITEMCLICKW:
+<             case HDN_DIVIDERDBLCLICKW:
+<             case HDN_BEGINTRACKW:
+<             case HDN_ENDTRACKW:
+<             case HDN_TRACKW:
+<             case HDN_BEGINDRAG:
+<             case HDN_ENDDRAG:
+<             case HDN_ITEMDBLCLICKA:
+<             case HDN_ITEMDBLCLICKW:
+<                 return sizeof(HD_NOTIFY);
+< 
+<             case HDN_GETDISPINFOA:
+<             case HDN_GETDISPINFOW:
+<                 return sizeof(NMHDDISPINFO);
+< 
+<             default:
+<                 goto unknown_nmhdr_code;
+<         }
+<     }
+---
+>     // Header notifications
+>     case HDN_ITEMCHANGINGA:     return sizeof(NMHEADERA);
+>     case HDN_ITEMCHANGINGW:     return sizeof(NMHEADERW);
+>     case HDN_ITEMCHANGEDA:      return sizeof(NMHEADERA);
+>     case HDN_ITEMCHANGEDW:      return sizeof(NMHEADERW);
+>     case HDN_ITEMCLICKA:        return sizeof(NMHEADERA);
+>     case HDN_ITEMCLICKW:        return sizeof(NMHEADERW);
+>     case HDN_ITEMDBLCLICKA:     return sizeof(NMHEADERA);
+>     case HDN_ITEMDBLCLICKW:     return sizeof(NMHEADERW);
+>     case HDN_DIVIDERDBLCLICKA:  return sizeof(NMHEADERA);
+>     case HDN_DIVIDERDBLCLICKW:  return sizeof(NMHEADERW);
+>     case HDN_BEGINTRACKA:       return sizeof(NMHEADERA);
+>     case HDN_BEGINTRACKW:       return sizeof(NMHEADERW);
+>     case HDN_ENDTRACKA:         return sizeof(NMHEADERA);
+>     case HDN_ENDTRACKW:         return sizeof(NMHEADERW);
+>     case HDN_TRACKA:            return sizeof(NMHEADERA);
+>     case HDN_TRACKW:            return sizeof(NMHEADERW);
+>     case HDN_GETDISPINFOA:      return sizeof(NMHDDISPINFOA);
+>     case HDN_GETDISPINFOW:      return sizeof(NMHDDISPINFOW);
+>     case HDN_BEGINDRAG:         return sizeof(NMHEADER); // No strings
+>     case HDN_ENDDRAG:           return sizeof(NMHEADER); // No strings
+>     case HDN_FILTERCHANGE:      return sizeof(NMHEADER); // No strings
+>     case HDN_FILTERBTNCLICK:    return sizeof(NMHDFILTERBTNCLICK);
+>     case HDN_BEGINFILTEREDIT:   return sizeof(NMHEADER);
+>     case HDN_ENDFILTEREDIT:     return sizeof(NMHEADER);
+>     case HDN_ITEMSTATEICONCLICK:return sizeof(NMHEADER);
+>     case HDN_ITEMKEYDOWN:       return sizeof(NMHEADER);
+>     case HDN_DROPDOWN:          return sizeof(NMHEADER);
+>     case HDN_OVERFLOWCLICK:     return sizeof(NMHEADER);
+3361,3393c3385,3419
+<     if (pnmhdr32->code >= TVN_LAST) {
+<         LOGDEBUG(2,("%sTVN_ %x\n", szLabel, pnmhdr32->code));
+<         switch (pnmhdr32->code) {
+<             case TVN_SELCHANGINGA:
+<             case TVN_SELCHANGEDA:
+<             case TVN_ITEMEXPANDINGA:
+<             case TVN_ITEMEXPANDEDA:
+<             case TVN_BEGINDRAGA:
+<             case TVN_BEGINRDRAGA:
+<             case TVN_DELETEITEMA:
+<             case TVN_SELCHANGINGW:
+<             case TVN_SELCHANGEDW:
+<             case TVN_ITEMEXPANDINGW:
+<             case TVN_ITEMEXPANDEDW:
+<             case TVN_BEGINDRAGW:
+<             case TVN_BEGINRDRAGW:
+<             case TVN_DELETEITEMW:
+<             
 <             // FIXME: Enable the following when we are ready.
 <             /*
-3383d3374
+<             case TVN_SINGLEEXPAND:
+<                 return sizeof(NM_TREEVIEW);
 <             */
-3398,3399d3388
+< 
+<             case TVN_GETDISPINFOA:
+<             case TVN_SETDISPINFOA:
+<             case TVN_BEGINLABELEDITA:
+<             case TVN_ENDLABELEDITA:
+<             case TVN_GETDISPINFOW:
+<             case TVN_SETDISPINFOW:
+<             case TVN_BEGINLABELEDITW:
+<             case TVN_ENDLABELEDITW:
+<                 return sizeof(TV_DISPINFO);
+---
+>     // Treeview notifications
+>     case TVN_SELCHANGINGA:      return sizeof(NMTREEVIEWA);
+>     case TVN_SELCHANGINGW:      return sizeof(NMTREEVIEWW);
+>     case TVN_SELCHANGEDA:       return sizeof(NMTREEVIEWA);
+>     case TVN_SELCHANGEDW:       return sizeof(NMTREEVIEWW);
+>     case TVN_GETDISPINFOA:      return sizeof(NMTVDISPINFOA);
+>     case TVN_GETDISPINFOW:      return sizeof(NMTVDISPINFOW);
+>     case TVN_SETDISPINFOA:      return sizeof(NMTVDISPINFOA);
+>     case TVN_SETDISPINFOW:      return sizeof(NMTVDISPINFOW);
+>     case TVN_ITEMEXPANDINGA:    return sizeof(NMTREEVIEWA);
+>     case TVN_ITEMEXPANDINGW:    return sizeof(NMTREEVIEWW);
+>     case TVN_ITEMEXPANDEDA:     return sizeof(NMTREEVIEWA);
+>     case TVN_ITEMEXPANDEDW:     return sizeof(NMTREEVIEWW);
+>     case TVN_BEGINDRAGA:        return sizeof(NMTREEVIEWA);
+>     case TVN_BEGINDRAGW:        return sizeof(NMTREEVIEWW);
+>     case TVN_BEGINRDRAGA:       return sizeof(NMTREEVIEWA);
+>     case TVN_BEGINRDRAGW:       return sizeof(NMTREEVIEWW);
+>     case TVN_DELETEITEMA:       return sizeof(NMTREEVIEWA);
+>     case TVN_DELETEITEMW:       return sizeof(NMTREEVIEWW);
+>     case TVN_BEGINLABELEDITA:   return sizeof(NMTVDISPINFOA);
+>     case TVN_BEGINLABELEDITW:   return sizeof(NMTVDISPINFOW);
+>     case TVN_ENDLABELEDITA:     return sizeof(NMTVDISPINFOA);
+>     case TVN_ENDLABELEDITW:     return sizeof(NMTVDISPINFOW);
+>     case TVN_KEYDOWN:           return sizeof(NMTVKEYDOWN);
+>     case TVN_GETINFOTIPA:       return sizeof(NMTVGETINFOTIPA);
+>     case TVN_GETINFOTIPW:       return sizeof(NMTVGETINFOTIPW);
+>     case TVN_SINGLEEXPAND:      return sizeof(NMTREEVIEW); // No strings
+>     case TVN_ITEMCHANGINGA:     return sizeof(NMTVITEMCHANGE);
+>     case TVN_ITEMCHANGINGW:     return sizeof(NMTVITEMCHANGE);
+>     case TVN_ITEMCHANGEDA:      return sizeof(NMTVITEMCHANGE);
+>     case TVN_ITEMCHANGEDW:      return sizeof(NMTVITEMCHANGE);
+>     case TVN_ASYNCDRAW:         return sizeof(NMTVASYNCDRAW);
+> 
+>     // Rundll32 notifications
+>     case RDN_TASKINFO:          return sizeof(RUNDLL_NOTIFY);
+3395,3396c3421,3426
+<             case TVN_KEYDOWN:
+<                 return sizeof(TV_KEYDOWN);
+---
+>     // Tooltip notifications
+>     case TTN_GETDISPINFOA:      return sizeof(NMTTDISPINFOA);
+>     case TTN_GETDISPINFOW:      return sizeof(NMTTDISPINFOW);
+>     case TTN_SHOW:              return sizeof(NMTTSHOWINFO);
+>     case TTN_POP:               return sizeof(NMHDR);
+>     case TTN_LINKCLICK:         return 0;
+3398,3403c3428,3460
 <             // FIXME: Enable the following when we are ready.
 <             /*
-3403d3391
+<             case TVN_GETINFOTIPA:
+<             case TVN_GETINFOTIPW:
+<                 return sizeof(NMTVGETINFOTIP);
 <             */
+---
+>     // Tab control notifications
+> 
+>     // WE ARE SUCH HORRIBLE SLACKERS!
+>     //
+>     //  Even though commctrl.h says that the shell reserved range is from
+>     //  -580 to -589, shsemip.h defines SEN_FIRST as -550, which conflicts
+>     //  with TCN_KEYDOWN, so now TCN_KEYDOWN and SEN_DDEEXECUTE have the
+>     //  same value.
+> 
+>     case TCN_KEYDOWN:           return max(sizeof(NMTCKEYDOWN),
+>                                            sizeof(NMVIEWFOLDERW));
+>     case TCN_SELCHANGE:         return sizeof(NMHDR);
+>     case TCN_SELCHANGING:       return sizeof(NMHDR);
+>     case TCN_GETOBJECT:         return sizeof(NMOBJECTNOTIFY);
+>     case TCN_FOCUSCHANGE:       return sizeof(NMHDR);
+> 
+>     // Comdlg32 notifications
+>     case CDN_INITDONE:          return max(sizeof(OFNOTIFYA),
+>                                            sizeof(OFNOTIFYW));
+>     case CDN_SELCHANGE:         return max(sizeof(OFNOTIFYA),
+>                                            sizeof(OFNOTIFYW));
+>     case CDN_FOLDERCHANGE:      return max(sizeof(OFNOTIFYA),
+>                                            sizeof(OFNOTIFYW));
+>     case CDN_SHAREVIOLATION:    return max(sizeof(OFNOTIFYA),
+>                                            sizeof(OFNOTIFYW));
+>     case CDN_HELP:              return max(sizeof(OFNOTIFYA),
+>                                            sizeof(OFNOTIFYW));
+>     case CDN_FILEOK:            return max(sizeof(OFNOTIFYA),
+>                                            sizeof(OFNOTIFYW));
+>     case CDN_TYPECHANGE:        return max(sizeof(OFNOTIFYA),
+>                                            sizeof(OFNOTIFYW));
+>     case CDN_INCLUDEITEM:       return max(sizeof(OFNOTIFYEXA),
+>                                            sizeof(OFNOTIFYEXW));
+3405,3408c3462,3493
+<             default:
+<                 goto unknown_nmhdr_code;
+<         }
+<     }
+---
+>     // Toolbar notifications
+>     case TBN_GETBUTTONINFOA:    return sizeof(NMTOOLBARA);
+>     case TBN_GETBUTTONINFOW:    return sizeof(NMTOOLBARW);
+>     case TBN_BEGINDRAG:         return sizeof(NMTOOLBAR); // No strings
+>     case TBN_ENDDRAG:           return sizeof(NMTOOLBAR); // No strings
+>     case TBN_BEGINADJUST:       return sizeof(NMHDR);
+>     case TBN_ENDADJUST:         return sizeof(NMHDR);
+>     case TBN_RESET:             return sizeof(NMTBCUSTOMIZEDLG);
+>     case TBN_QUERYINSERT:       return sizeof(NMTOOLBAR); // No strings
+>     case TBN_QUERYDELETE:       return sizeof(NMTOOLBAR); // No strings
+>     case TBN_TOOLBARCHANGE:     return sizeof(NMHDR);
+>     case TBN_CUSTHELP:          return sizeof(NMHDR);
+>     case TBN_DROPDOWN:          return sizeof(NMTOOLBAR); // No strings
+>     case TBN_CLOSEUP:           return sizeof(NMHDR);     // not used
+>     case TBN_GETOBJECT:         return sizeof(NMOBJECTNOTIFY);
+>     case TBN_HOTITEMCHANGE:     return sizeof(NMTBHOTITEM);
+>     case TBN_DRAGOUT:           return sizeof(NMTOOLBAR); // No strings
+>     case TBN_DELETINGBUTTON:    return sizeof(NMTOOLBAR); // No strings
+>     case TBN_GETDISPINFOA:      return sizeof(NMTBDISPINFOA);
+>     case TBN_GETDISPINFOW:      return sizeof(NMTBDISPINFOW);
+>     case TBN_GETINFOTIPA:       return sizeof(NMTBGETINFOTIPA);
+>     case TBN_GETINFOTIPW:       return sizeof(NMTBGETINFOTIPW);
+>     case TBN_RESTORE:           return sizeof(NMTBRESTORE);
+> 
+>     // WE ARE SUCH HORRIBLE SLACKERS!
+>     //
+>     //  The TBN_FIRST/TBN_LAST range reserves 20 notifications for toolbar,
+>     //  and we overflowed that limit, so now UDN_DELTAPOS and
+>     //  TBN_SAVE have the same value.
+> 
+>     case TBN_SAVE:              return max(sizeof(NMTBSAVE),
+>                                            sizeof(NMUPDOWN));
+3410,3414c3495,3500
+<     if (pnmhdr32->code >= TTN_LAST) {
+<         LOGDEBUG(2,("%sTTN_ %x\n", szLabel, pnmhdr32->code));
+<         switch (pnmhdr32->code) {
+<             case TTN_NEEDTEXTA:        // (aka TTN_GETDISPINFO)
+<                 return sizeof(TOOLTIPTEXTA);
+---
+>     case TBN_INITCUSTOMIZE:     return sizeof(NMTBCUSTOMIZEDLG);
+>     case TBN_WRAPHOTITEM:       return sizeof(NMTBWRAPHOTITEM);
+>     case TBN_DUPACCELERATOR:    return sizeof(NMTBDUPACCELERATOR);
+>     case TBN_WRAPACCELERATOR:   return sizeof(NMTBWRAPACCELERATOR);
+>     case TBN_DRAGOVER:          return sizeof(NMTBHOTITEM);
+>     case TBN_MAPACCELERATOR:    return sizeof(NMCHAR);
+3416,3417c3502,3519
+<             case TTN_NEEDTEXTW:
+<                 return sizeof(TOOLTIPTEXTW);
+---
+>     // Monthcal control
+>     case MCN_SELCHANGE:         return sizeof(NMSELCHANGE);
+>     case MCN_GETDAYSTATE:       return sizeof(NMDAYSTATE);
+>     case MCN_SELECT:            return sizeof(NMSELECT);
+>     case MCN_VIEWCHANGE:        return sizeof(NMVIEWCHANGE);
+> 
+>     // Date/time picker control
+>     case DTN_DATETIMECHANGE:    return sizeof(NMDATETIMECHANGE);
+>     case DTN_USERSTRINGA:       return sizeof(NMDATETIMESTRINGA);
+>     case DTN_USERSTRINGW:       return sizeof(NMDATETIMESTRINGW);
+>     case DTN_WMKEYDOWNA:        return sizeof(NMDATETIMEWMKEYDOWNA);
+>     case DTN_WMKEYDOWNW:        return sizeof(NMDATETIMEWMKEYDOWNW);
+>     case DTN_FORMATA:           return sizeof(NMDATETIMEFORMATA);
+>     case DTN_FORMATW:           return sizeof(NMDATETIMEFORMATW);
+>     case DTN_FORMATQUERYA:      return sizeof(NMDATETIMEFORMATQUERYA);
+>     case DTN_FORMATQUERYW:      return sizeof(NMDATETIMEFORMATQUERYW);
+>     case DTN_DROPDOWN:          return sizeof(NMHDR);
+>     case DTN_CLOSEUP:           return sizeof(NMHDR);
+3419,3421c3521,3531
+<             case TTN_SHOW:
+<             case TTN_POP:
+<                 return sizeof(NMHDR);
+---
+>     // Comboex notifications
+>     case CBEN_GETDISPINFOA:     return sizeof(NMCOMBOBOXEXA);
+>     case CBEN_GETDISPINFOW:     return sizeof(NMCOMBOBOXEXW);
+>     case CBEN_INSERTITEM:       return sizeof(NMCOMBOBOXEX); // Random character set
+>     case CBEN_DELETEITEM:       return sizeof(NMCOMBOBOXEX); // No strings
+>     case CBEN_ITEMCHANGED:      return sizeof(NMCOMBOBOXEX); // Not used
+>     case CBEN_BEGINEDIT:        return sizeof(NMHDR);
+>     case CBEN_ENDEDITA:         return sizeof(NMCBEENDEDITA);
+>     case CBEN_ENDEDITW:         return sizeof(NMCBEENDEDITW);
+>     case CBEN_DRAGBEGINA:       return sizeof(NMCBEDRAGBEGINA);
+>     case CBEN_DRAGBEGINW:       return sizeof(NMCBEDRAGBEGINW);
+3423,3432c3533,3567
+<             default:
+<                 goto unknown_nmhdr_code;
+<         }
+<     }
+< 
+<     if (pnmhdr32->code >= TCN_LAST) {
+<         LOGDEBUG(2,("%sTCN_ %x\n", szLabel, pnmhdr32->code));
+<         switch (pnmhdr32->code) {
+<             case TCN_KEYDOWN:
+<                 return sizeof(TC_KEYDOWN);
+---
+>     // Rebar notifications
+>     case RBN_HEIGHTCHANGE:      return sizeof(NMHDR);
+>     case RBN_GETOBJECT:         return sizeof(NMOBJECTNOTIFY);
+>     case RBN_LAYOUTCHANGED:     return sizeof(NMHDR);
+>     case RBN_AUTOSIZE:          return sizeof(NMRBAUTOSIZE);
+>     case RBN_BEGINDRAG:         return sizeof(NMREBAR);
+>     case RBN_DELETINGBAND:      return sizeof(NMREBAR);
+>     case RBN_DELETEDBAND:       return sizeof(NMREBAR);
+>     case RBN_CHILDSIZE:         return sizeof(NMREBARCHILDSIZE);
+>     case RBN_CHEVRONPUSHED:     return sizeof(NMREBARCHEVRON);
+>     case RBN_SPLITTERDRAG:      return sizeof(NMREBARSPLITTER);
+>     case RBN_MINMAX:            return 0;
+>     case RBN_AUTOBREAK:         return sizeof(NMREBARAUTOBREAK);
+> 
+>     // IP address control notification
+>     case IPN_FIELDCHANGED:      return sizeof(NMIPADDRESS);
+> 
+>     // Status bar notifications
+>     case SBN_SIMPLEMODECHANGE:  return sizeof(NMHDR);
+> 
+>     // Pager control notifications
+>     case PGN_SCROLL:            return sizeof(NMPGSCROLL);
+>     case PGN_CALCSIZE:          return sizeof(NMPGCALCSIZE);
+>     case PGN_HOTITEMCHANGE:     return sizeof(NMPGHOTITEM);
+>     
+>     // Button control notifications
+>     case BCN_HOTITEMCHANGE:     return sizeof(NMBCHOTITEM);
+> 
+>     default:
+>         break;
+>     }
+> 
+>     //
+>     //  Categories of notifications we explicitly know nothing about.
+>     //
+3434,3440c3569,3570
+<             case TCN_SELCHANGE:
+<             case TCN_SELCHANGING:
+<                 return sizeof(NMHDR);
+< 
+<             default:
+<                 goto unknown_nmhdr_code;
+<         }
+---
+>     if (pnmhdr32->code >= WMN_LAST && pnmhdr32->code <= WMN_FIRST) { // Internet Mail and News
+>         return sizeof(NMHDR);
+3443,3454d3572
+<     if (pnmhdr32->code >= UDN_LAST) {
+<         LOGDEBUG(2,("%sUDN_ %x\n", szLabel, pnmhdr32->code));
+<         switch (pnmhdr32->code) {
+<             case UDN_DELTAPOS:
+<                 return sizeof(NM_UPDOWN);
+< 
+<             default:
+<                 goto unknown_nmhdr_code;
+<         }
+<     }
+< 
+< unknown_nmhdr_code:
 --- NT4\private\mvdm\wow32\wgdi.c
 +++ nt\private\mvdm\wow32\wgdi.c
 1686,1687d1685
