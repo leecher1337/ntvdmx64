@@ -542,7 +542,7 @@
 > #ifdef W10
 >     else
 >     {
->         x64SetClassLongByClassname(HMODINST32(t1.hInstance), pszClass, GCL_MY_WNDPROC, lpfnWndProc);
+>         x64SetClassLongByClassname(HMODINST32(LOWORD(t1.hInstance)), pszClass, GCL_MY_WNDPROC, lpfnWndProc);
 >     }
 > #endif
 652c818
@@ -637,7 +637,7 @@
 > 	LPARAM lParam;
 > 	WNDPROC  vpDlgProc;
 > };
-> volatile VPWNDPROC gvpWndProc16 = NULL;
+> volatile VPWNDPROC gvpWndProc16 = 0;
 > 
 > 
 > BOOL CALLBACK W32Win16DlgDispProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -650,7 +650,7 @@
 > 		struct init_param *param = (struct init_param*)lParam;
 > 		
 > 		SetProp(hwndDlg, (LPCTSTR)gidDLGPROC16, (HANDLE)param->vpDlgProc);
-> 		vpWndProc16 = param->vpDlgProc;
+> 		vpWndProc16 = (volatile VPWNDPROC)param->vpDlgProc;
 > 		lParam = param->lParam;
 > 	}
 > 	else
@@ -662,7 +662,7 @@
 > 			 * Better than NULL
 > 			 */
 > 			SetProp(hwndDlg, (LPCTSTR)gidDLGPROC16, (HANDLE)gvpWndProc16);
-> 			gvpWndProc16 = NULL;
+> 			gvpWndProc16 = 0;
 > 		}
 > 	}
 > 	if (!vpWndProc16)
@@ -693,7 +693,7 @@
 >         struct init_param param;
 > 
 >         param.lParam = (LPARAM) DWORD32(parg16->f5);
->         param.vpDlgProc = gvpWndProc16 = vpDlgProc;
+>         param.vpDlgProc = (WNDPROC)gvpWndProc16 = vpDlgProc;
 >         lParam = (LPARAM)&param;
 >         vpDlgProc = (WNDPROC)W32Win16DlgDispProc;
 >         RELEASE_THUNKLOCK
@@ -765,6 +765,10 @@
 ---
 > 
 >     hwnd32 = x64CreateWindowEx(
+760c761
+<                HWND32(parg16->hwndParent),
+---
+>                (HWND)FULLHWND32(parg16->hwndParent),
 763,764c764
 <                vpparam,
 <                CW_FLAGS_ANSI);
@@ -791,19 +795,19 @@
 >                 switch ( iOffset )
 >                 {
 >                     case DWL_DLGPROC:
->                         if (dwWndProc32Cur == W32Win16DlgDispProc)
->                             dwWndProc32Cur = GetProp(HWND32(parg16->f1), (LPCTSTR)gidDLGPROC16);
+>                         if (dwWndProc32Cur == (DWORD)W32Win16DlgDispProc)
+>                             dwWndProc32Cur = (DWORD)GetProp(HWND32(parg16->f1), (LPCTSTR)gidDLGPROC16);
 >                         break;
 >                     case GWL_WNDPROC:
->                         if (dwWndProc32Cur == W32Win16WndDispProc)
->                             dwWndProc32Cur = GetProp(HWND32(parg16->f1), (LPCTSTR)gidWNDPROC16);
+>                         if (dwWndProc32Cur == (DWORD)W32Win16WndDispProc)
+>                             dwWndProc32Cur = (DWORD)GetProp(HWND32(parg16->f1), (LPCTSTR)gidWNDPROC16);
 >                         break;
 >                 }
 > #endif
 1610c1627
 <     dwThreadID = GetWindowThreadProcessId(HWND32(parg16->f1), &dwProcessID);
 ---
->     dwThreadID = GetWindowThreadProcessId(FULLHWND32(parg16->f1), &dwProcessID);
+>     dwThreadID = GetWindowThreadProcessId((HWND)FULLHWND32(parg16->f1), &dwProcessID);
 1665a1683
 >     DECLARE_THUNKLOCK
 1670a1689
@@ -859,18 +863,18 @@
 >             switch ( iOffset )
 >             {
 >                 case DWL_DLGPROC:
->                     if (dwWndProc32Old == W32Win16DlgDispProc)
->                         dwWndProc32Old = GetProp(HWND32(parg16->f1), (LPCTSTR)gidDLGPROC16);
+>                     if (dwWndProc32Old == (DWORD)W32Win16DlgDispProc)
+>                         dwWndProc32Old = (DWORD)GetProp(HWND32(parg16->f1), (LPCTSTR)gidDLGPROC16);
 >                     else
->                         SetWindowLong(HWND32(parg16->f1), iOffset, W32Win16DlgDispProc);
->                     SetProp(HWND32(parg16->f1), gidDLGPROC16, (HANDLE)l);
+>                         SetWindowLong(HWND32(parg16->f1), iOffset, (LPARAM)W32Win16DlgDispProc);
+>                     SetProp(HWND32(parg16->f1), (LPCTSTR)gidDLGPROC16, (HANDLE)l);
 >                     break;
 >                 case GWL_WNDPROC:
->                     if (dwWndProc32Old == W32Win16WndDispProc)
->                         dwWndProc32Old = GetProp(HWND32(parg16->f1), (LPCTSTR)gidWNDPROC16);
+>                     if (dwWndProc32Old == (DWORD)W32Win16WndDispProc)
+>                         dwWndProc32Old = (DWORD)GetProp(HWND32(parg16->f1), (LPCTSTR)gidWNDPROC16);
 >                     else
->                         SetWindowLong(HWND32(parg16->f1), iOffset, W32Win16WndDispProc);
->                     SetProp(HWND32(parg16->f1), gidWNDPROC16, (HANDLE)l);
+>                         SetWindowLong(HWND32(parg16->f1), iOffset, (LPARAM)W32Win16WndDispProc);
+>                     SetProp(HWND32(parg16->f1), (LPCTSTR)gidWNDPROC16, (HANDLE)l);
 >                     break;
 >             }
 > #else
@@ -891,9 +895,9 @@
 2306c2353,2358
 <         ul = SetWindowLong(HWND32(parg16->f1), iOffset, new);
 ---
->         ul = SetWindowLong(FULLHWND32(parg16->f1), iOffset, new);
+>         ul = SetWindowLong((HWND)FULLHWND32(parg16->f1), iOffset, new);
 > 		{
-> 			ULONG chk = GetWindowLong(FULLHWND32(parg16->f1), iOffset);
+> 			ULONG chk = GetWindowLong((HWND)FULLHWND32(parg16->f1), iOffset);
 > 			WOW32ASSERT(chk == new);
 > 		}
 > 
@@ -922,7 +926,7 @@
 2632c2693
 <     hwnd = HWND32(parg16->f1);
 ---
->     hwnd = FULLHWND32(parg16->f1);
+>     hwnd = (HWND)FULLHWND32(parg16->f1);
 2737a2799
 >     DECLARE_THUNKLOCK
 2740a2803
@@ -1010,7 +1014,7 @@
 >     {
 >         DWORD dwWinTid = GetWindowThreadProcessId(hWndParent, NULL);
 > 
->         if (!dwWinTid) dwWinTid = GetWindowThreadProcessId(FULLHWND32(hWndParent), NULL);
+>         if (!dwWinTid) dwWinTid = GetWindowThreadProcessId(hWndParent, NULL);
 >         fRelease = dwWinTid != GetCurrentThreadId();
 >     }
 >     if (fRelease) RELEASE_THUNKLOCK
@@ -1066,7 +1070,7 @@
 130c130
 <     lpmpex->hwnd   = HWND32(lpmpex->Parm16.WndProc.hwnd);
 ---
->     lpmpex->hwnd   = FULLHWND32(lpmpex->Parm16.WndProc.hwnd);
+>     lpmpex->hwnd   = (HWND)FULLHWND32(lpmpex->Parm16.WndProc.hwnd);
 1398,1399d1397
 <      // FIXME: Enable the following when we are ready.
 <      /*
@@ -1328,7 +1332,9 @@
 >     LONG   l4;
 --- NT4\private\mvdm\wow32\wuman.c
 +++ nt\private\mvdm\wow32\wuman.c
-189,194c189,191
+110d109
+<                 PSZ pszFormat;
+189,194c188,189
 <                         if ( i & 3 ) {
 <                             pszFormat = ", %s";
 <                         } else {
@@ -1336,9 +1342,8 @@
 <                         }
 <                         LOGDEBUG(LOG_TRACE, (pszFormat, aw32Msg[wMsg].lpszW32));
 ---
->                         if (aw32Msg[wMsg].lpszW32) pszFormat=( i & 3 )?", %s":"\n%s";
->                         else pszFormat=( i & 3 )?", UNKNOWN (%d)":"\n UNKNOWN (%d)";
->                         LOGDEBUG(LOG_TRACE, (pszFormat, aw32Msg[wMsg].lpszW32?aw32Msg[wMsg].lpszW32:wMsg));
+>                         if (aw32Msg[wMsg].lpszW32) {LOGDEBUG(LOG_TRACE, ((( i & 3 )?", %s":"\n%s"), aw32Msg[wMsg].lpszW32));}
+>                         else {LOGDEBUG(LOG_TRACE, ((( i & 3 )?", UNKNOWN (%d)":"\n UNKNOWN (%d)"), wMsg));}
 --- NT4\private\mvdm\wow32\wmtbl32.c
 +++ nt\private\mvdm\wow32\wmtbl32.c
 213c213
@@ -1708,10 +1713,12 @@
 < #ifndef i386
 ---
 > #ifndef MONITOR
-120c120
+120,121c120,121
 < #ifndef i386
+<     Status = VdmFreeVirtualMemory( glpvDelayFree[gdwDelayFree]);
 ---
 > #ifndef MONITOR
+>     Status = VdmFreeVirtualMemory( (ULONG)glpvDelayFree[gdwDelayFree]);
 132c132
 < #ifndef i386
 ---
