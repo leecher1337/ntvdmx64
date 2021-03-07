@@ -122,6 +122,12 @@ ApphelpGetNTVDMInfo(
     OUT PSDBQUERYRESULT pQueryResult
     );
 
+BOOL
+ApphelpShowDialog(
+    IN  PAPPHELP_INFO   pAHInfo,
+    IN  PHANDLE         phProcess
+    );
+
 #define TAG_TYPE_QWORD          0x5000
 
 #define TAG_FLAGS_NTVDM1             (0x9 | TAG_TYPE_QWORD)

@@ -1,3 +1,7 @@
+--- NT4\private\mvdm\wow32\precomp.h
++++ nt\private\mvdm\wow32\precomp.h
+115a116
+> #include "wsyslevel.h"
 --- NT4\private\mvdm\wow32\hack.c
 +++ nt\private\mvdm\wow32\hack.c
 201a202,205

@@ -154,6 +154,7 @@ BOOL    xxxUserYield(VOID)
          return TRUE;
      }
      OldYield();
+     return TRUE;
 }
 
 BOOL    xxxWaitForMsgAndEvent(IN HANDLE hevent)
