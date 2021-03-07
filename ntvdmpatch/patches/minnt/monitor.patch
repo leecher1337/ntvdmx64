@@ -288,7 +288,8 @@ diff -r F:\Windows.Source.Code.w2k.nt4.wxp\minnt\q160765803-minint4-85fac4faadc7
 > #endif
 --- NT4\private\mvdm\softpc.new\host\src\nt_thred.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_thred.c
-40a41,61
+43a44,64
+> 
 > /*
 >  * leecher1337:
 >  * Hack for x64 kernel that doesn't initialize the TIB struct
@@ -309,8 +310,7 @@ diff -r F:\Windows.Source.Code.w2k.nt4.wxp\minnt\q160765803-minint4-85fac4faadc7
 > }
 > 
 > 		
-> 
-127a149,151
+131a153,155
 > #ifdef W10
 >        host_InitializeTib();
 > #endif

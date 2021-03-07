@@ -405,8 +405,12 @@
 > 	void	(CDECL *setMarkPointers)	IPT1(IUH,	markset);
 --- NT4\private\mvdm\softpc.new\base\cvidc\j_c_lang.c
 +++ nt\private\mvdm\softpc.new\base\cvidc\j_c_lang.c
-0a2
+0a1
 > #include <stdio.h>
+52c53
+<     if (bitpos > MAX_BITPOS || bitpos < 0)
+---
+>     if (bitpos > MAX_BITPOS)
 --- NT4\private\mvdm\softpc.new\base\cvidc\vglfunc.c
 +++ nt\private\mvdm\softpc.new\base\cvidc\vglfunc.c
 86c86

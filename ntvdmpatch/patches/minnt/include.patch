@@ -6,4 +6,10 @@
 +++ nt\private\mvdm\softpc.new\host\src\nt_mem.c
 39a40
 > #include <stdio.h>
-
+--- NT4\private\mvdm\softpc.new\host\src\nt_thred.c
++++ nt\private\mvdm\softpc.new\host\src\nt_thred.c
+30a31,34
+> #if defined(CCPU) || defined(PIG)
+> extern void ccpu386newthread();
+> extern void ccpu386exitthread();
+> #endif

@@ -1,9 +1,5 @@
 /* Quickly hacked together totally vandalized version of SoundFX2000 FM emulator */
 
-#define TRACE(x,y)
-#define ASSERT(x) 
-
-
 /****************************************************************************
  * DS.C                                                                     *
  * Application: Part of SBVDD.DLL                                           *
@@ -71,6 +67,31 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+#if DBG 
+void DbgOut(LPSTR lpszFormat, ...);
+extern int DebugLevel;
+
+NTSYSAPI
+VOID
+NTAPI
+RtlAssert(
+    PVOID FailedAssertion,
+    PVOID FileName,
+    ULONG LineNumber,
+    PCHAR Message
+    ); 
+
+#define TRACE(x,y) if ((x > 2 && (DebugLevel & 0x8)) || (x == 2 && (DebugLevel & 0x4)) || (x <= 1 && (DebugLevel & 0x2)) ) DbgOut y    
+#define ASSERT( exp ) \
+    ((!(exp)) ? \
+        (RtlAssert( #exp, __FILE__, __LINE__, NULL ),FALSE) : \
+        TRUE)
+#else
+    #define ASSERT( exp ) (exp)
+    #define TRACE(x,y) 
+#endif
+
 
 typedef HRESULT (WINAPI* DIRECTSOUNDCREATEPROC)(LPGUID, LPDIRECTSOUND*, IUnknown FAR *);
 DIRECTSOUNDCREATEPROC DirectSoundCreateProc;
