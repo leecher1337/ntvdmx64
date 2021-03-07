@@ -56,7 +56,10 @@
 > #if !defined(CCPU) && !defined(HAXM)
 --- NT4\private\mvdm\softpc.new\base\support\main.c
 +++ nt\private\mvdm\softpc.new\base\support\main.c
-256a257,259
+209c209,212
+< #endif
+---
+> #endif
 > #ifndef A3CPU
 > 	(VOID) setup_global_data_ptr();
 > #endif	/* not A3CPU */

@@ -15,14 +15,3 @@
 <   io_verbose = FALSE;
 ---
 >   //io_verbose = FALSE;  // Already set in trace_init() and is initialized with 0 globally anway
-209c209,212
-< #endif
----
-> #endif
-> #ifndef A3CPU
-> 	(VOID) setup_global_data_ptr();
-> #endif	/* not A3CPU */
-284,286d286
-< #ifndef A3CPU
-< 	(VOID) setup_global_data_ptr();
-< #endif	/* not A3CPU */
