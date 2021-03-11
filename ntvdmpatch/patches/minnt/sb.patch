@@ -1,0 +1,23 @@
+--- NT4\private\mvdm\softpc.new\base\inc\sndblst.h
++++ nt\private\mvdm\softpc.new\base\inc\sndblst.h
+105a106
+> #define DSP_WRITE_DIRECT    0x10    // Start direct mode single cycle output (8-bit PCM mono)
+--- NT4\private\mvdm\softpc.new\host\src\nt_sbdsp.c
++++ nt\private\mvdm\softpc.new\host\src\nt_sbdsp.c
+171c171,172
+<     MidiOutPoll
+---
+>     MidiOutPoll,
+>     DirectModeSingleByteWrite
+692a694,698
+>         
+>     case DirectModeSingleByteWrite:
+>         // Ignored
+>         DSPWriteState = WriteCommand;
+>         break;
+929a936,940
+>         
+>     case DSP_WRITE_DIRECT:
+>     	dprintf2(("Cmd- DSP Write direct"));
+>         DSPWriteState = DirectModeSingleByteWrite;
+>         break;

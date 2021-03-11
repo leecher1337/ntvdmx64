@@ -85,6 +85,7 @@ ntmem.patch         - Prevent crash on access of DOS application to uncommitted
                       memory
 pcibug.patch        - Some stupid programs try to read PCI BIOS even though 
                       installation check fails. So set CF on PCI INT 1Ah calls.
+sb.patch            - Crash fix for the lousy Soundblaster DSP emulation
 sas4gen.patch       - Fix sas4gen CCPU header file
 sas.patch           - Optimize SAS-interface for faster memory access, 
                       significantly speeding up i.e. text output on EGA emulation
