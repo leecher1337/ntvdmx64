@@ -167,11 +167,15 @@
 >     setCS(DosxRmCodeSegment);
 > 
 > #if !defined(i386) || !defined(MONITOR)
-97c97
+72a73,75
+>     //Set CPL to 0, now that we are in real mode, LGDT in 
+>     // SwitchToProtectedMode would crash otherwise.
+>     setCPL(0);
+97c100
 < #if defined(i386)
 ---
 > #if defined(i386) && defined(MONITOR)
-114c114
+114c117
 < #ifndef i386
 ---
 > #if !defined(i386) || !defined(MONITOR)
