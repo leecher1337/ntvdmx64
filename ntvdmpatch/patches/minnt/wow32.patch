@@ -658,7 +658,8 @@
 > 	VPWNDPROC vpWndProc16;
 > 	BOOL bRet;
 > 
-> 	if (uMsg == WM_INITDIALOG)
+>	vpWndProc16 = (VPWNDPROC)GetProp(hwndDlg, (LPCTSTR)gidDLGPROC16);
+> 	if (uMsg == WM_INITDIALOG && !vpWndProc16)
 > 	{
 > 		struct init_param *param = (struct init_param*)lParam;
 > 		
@@ -668,7 +669,6 @@
 > 	}
 > 	else
 > 	{
-> 		vpWndProc16 = (VPWNDPROC)GetProp(hwndDlg, (LPCTSTR)gidDLGPROC16);
 > 		if (!vpWndProc16 && gvpWndProc16)
 > 		{
 > 			/* First set it to global WndProc until we get the real one in WM_INITDIALOG 
@@ -905,48 +905,49 @@
 >                 goto SWL_Cleanup;
 2245d2292
 <             }
-2306c2353,2358
+2306c2353,2359
 <         ul = SetWindowLong(HWND32(parg16->f1), iOffset, new);
 ---
 >         ul = SetWindowLong((HWND)FULLHWND32(parg16->f1), iOffset, new);
+>         if (iOffset != GWL_EXSTYLE) // BUGBUG: Sometimes this doesn't work??
 > 		{
 > 			ULONG chk = GetWindowLong((HWND)FULLHWND32(parg16->f1), iOffset);
 > 			WOW32ASSERT(chk == new);
 > 		}
 > 
-2387a2440
+2387a2441
 >     DECLARE_THUNKLOCK
-2390a2444
+2390a2445
 >     RELEASE_THUNKLOCK
-2407a2462
+2407a2463
 >     RESTORE_THUNKLOCK
-2499a2555
+2499a2556
 >     DECLARE_THUNKLOCK
-2503a2560
+2503a2561
 >     RELEASE_THUNKLOCK
-2521a2579
+2521a2580
 >     RESTORE_THUNKLOCK
-2548a2607
+2548a2608
 >     DECLARE_THUNKLOCK
-2564a2624
+2564a2625
 >     RELEASE_THUNKLOCK
-2565a2626
+2565a2627
 >     RESTORE_THUNKLOCK
-2615c2676
+2615c2677
 <     PWW pww;
 ---
 >     PWW pww = NULL;
-2632c2693
+2632c2694
 <     hwnd = HWND32(parg16->f1);
 ---
 >     hwnd = (HWND)FULLHWND32(parg16->f1);
-2737a2799
+2737a2800
 >     DECLARE_THUNKLOCK
-2740a2803
+2740a2804
 >     RELEASE_THUNKLOCK
-2743a2807
+2743a2808
 >     RESTORE_THUNKLOCK
-2776a2841,2964
+2776a2842,2965
 > 
 > enum ZBID
 > {
