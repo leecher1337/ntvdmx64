@@ -103,14 +103,6 @@
 ---
 > #X86_SOURCES=..\x86\xmsmem86.c
 > X86_SOURCES=..\xmsmemr.c
---- NT4\private\mvdm\wow32\x86\sources
-+++ nt\private\mvdm\wow32\x86\sources
-1,2c1,2
-< X86_SOURCES=         \
-<     ..\x86\callpr32.asm
----
-> #X86_SOURCES=         \
-> #    ..\x86\callpr32.asm
 --- NT4\private\mvdm\softpc.new\obj.vdm\ntvdm.src
 +++ nt\private\mvdm\softpc.new\obj.vdm\ntvdm.src
 4c4

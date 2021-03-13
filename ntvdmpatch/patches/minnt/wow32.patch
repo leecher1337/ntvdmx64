@@ -592,6 +592,18 @@
 >             ul = SetClassWord(hwnd, iOffset + (iOffset>=0?GWL_OFFSET:0), (WORD)ul);
 --- NT4\private\mvdm\wow32\wow32.c
 +++ nt\private\mvdm\wow32\wow32.c
+57,59c57,59
+< CHAR    szLogFile[128];
+< int     fLog;
+< HANDLE  hfLog;
+---
+> __declspec(dllexport) CHAR    szLogFile[128];
+> __declspec(dllexport) int     fLog;
+> __declspec(dllexport) HANDLE  hfLog;
+71c71
+< INT     iLogLevel;           // logging level;  0 implies none
+---
+> __declspec(dllexport) INT     iLogLevel;           // logging level;  0 implies none
 96a97,101
 > #ifdef W10
 > #include "wtask.h"
@@ -611,7 +623,7 @@
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-691a701,720
+691a701,722
 > #ifdef W10
 >     pfnOut.pfnYieldTask = (PFNYIELDTASK)xxxUserYield;
 > 	pfnOut.pfnDirectedYield = (PFNDIRECTEDYIELD)xxxDirectedYield;
@@ -621,6 +633,7 @@
 >     TlsSetValue(gdwTLSWOW32Reserved, ptd);
 >     gidWNDPROC16 = GlobalAddAtom("WNDPROC16");
 >     gidDLGPROC16 = GlobalAddAtom("DLGPROC16");
+> #ifdef DEBUG
 >     if (GetEnvironmentVariableOem("WOWTRACE", szLogFile, sizeof(szLogFile)))
 > 	{
 > 		char szLogLvl[32];
@@ -628,23 +641,24 @@
 > 			iLogLevel = atoi(szLogLvl);
 > 		fLog = 2;
 > 	}
+> #endif
 >     // create dummy menu window, something like this exists on windows xp created by csrss
 >     // but is missing on windows starting with Win 7/conhost
 >     CreateWindowExA(0x181, "#32768", "", 0x84800000, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
 > #else
-692a722
+692a724
 > #endif
-1944c1974
+1944c1976
 < #ifdef _X86_
 ---
 > #ifdef _X86xx_
-2136c2166
+2136c2168
 <                                    FILE_SHARE_WRITE,
 ---
 >                                    FILE_SHARE_WRITE | FILE_SHARE_READ,
 --- NT4\private\mvdm\wow32\wudlg.c
 +++ nt\private\mvdm\wow32\wudlg.c
-22a23,75
+22a23,78
 > #ifdef W10
 > struct init_param {
 > 	LPARAM lParam;
@@ -659,13 +673,14 @@
 > 	BOOL bRet;
 > 
 >	vpWndProc16 = (VPWNDPROC)GetProp(hwndDlg, (LPCTSTR)gidDLGPROC16);
-> 	if (uMsg == WM_INITDIALOG && !vpWndProc16)
+> 	if (uMsg == WM_INITDIALOG)
 > 	{
 > 		struct init_param *param = (struct init_param*)lParam;
 > 		
 > 		SetProp(hwndDlg, (LPCTSTR)gidDLGPROC16, (HANDLE)param->vpDlgProc);
 > 		vpWndProc16 = (volatile VPWNDPROC)param->vpDlgProc;
 > 		lParam = param->lParam;
+		free_w(param);
 > 	}
 > 	else
 > 	{
@@ -675,7 +690,9 @@
 > 			 * Better than NULL
 > 			 */
 > 			SetProp(hwndDlg, (LPCTSTR)gidDLGPROC16, (HANDLE)gvpWndProc16);
+			vpWndProc16 = gvpWndProc16;
 > 			gvpWndProc16 = 0;
+			LOGDEBUG(LOG_ALWAYS, ("W32Win16DlgDispProc: hWnd %x: vpWndProc=NULL!\n", hwndDlg)); 
 > 		}
 > 	}
 > 	if (!vpWndProc16)
@@ -698,78 +715,78 @@
 > 
 > 
 > 
-142a196,197
+142a199,200
 >     LPARAM   lParam;
 >     DECLARE_THUNKLOCK
-172a228,238
+172a231,241
 > #ifdef W10
->         struct init_param param;
+>         struct init_param *param = malloc_w(sizeof(struct init_param));
 > 
->         param.lParam = (LPARAM) DWORD32(parg16->f5);
->         param.vpDlgProc = (WNDPROC)gvpWndProc16 = vpDlgProc;
->         lParam = (LPARAM)&param;
+>         param->lParam = (LPARAM) DWORD32(parg16->f5);
+>         param->vpDlgProc = (WNDPROC)gvpWndProc16 = vpDlgProc;
+>         lParam = (LPARAM)param;
 >         vpDlgProc = (WNDPROC)W32Win16DlgDispProc;
 >         RELEASE_THUNKLOCK
 > #else
 >         lParam = (LPARAM) DWORD32(parg16->f5);
 > #endif
-179c245
+179c248
 <                             (LPARAM) DWORD32(parg16->f5), SCDLG_ANSI));
 ---
 >                             lParam, SCDLG_ANSI));
-185c251
+185c254
 <                             (LPARAM) DWORD32(parg16->f5),  SCDLG_CLIENT | SCDLG_ANSI | SCDLG_NOREVALIDATE));
 ---
 >                             lParam,  SCDLG_CLIENT | SCDLG_ANSI | SCDLG_NOREVALIDATE));
-190a257
+190a260
 >         RESTORE_THUNKLOCK
-598a666
+598a669
 >     DECLARE_THUNKLOCK
-603a672
+603a675
 >     RELEASE_THUNKLOCK
-617a687
+617a690
 >     RESTORE_THUNKLOCK
-751a822
+751a825
 >     DECLARE_THUNKLOCK
-754a826
+754a829
 >     RELEASE_THUNKLOCK
-760a833
+760a836
 >     RESTORE_THUNKLOCK
-806a880
+806a883
 >     DECLARE_THUNKLOCK
-811a886
+811a889
 >     RELEASE_THUNKLOCK
-817a893
+817a896
 >     RESTORE_THUNKLOCK
-964a1041
+964a1044
 >     DECLARE_THUNKLOCK
-987a1065
+987a1068
 >     RELEASE_THUNKLOCK
-991a1070
+991a1073
 >     RESTORE_THUNKLOCK
-1030a1110
+1030a1113
 >     DECLARE_THUNKLOCK
-1033a1114
+1033a1117
 >     RELEASE_THUNKLOCK
-1037a1119
+1037a1122
 >     RESTORE_THUNKLOCK
-1229a1312
+1229a1315
 >     DECLARE_THUNKLOCK
-1247a1331
+1247a1334
 >     RELEASE_THUNKLOCK
-1253a1338
+1253a1341
 >     RESTORE_THUNKLOCK
-1298a1384
+1298a1387
 >     DECLARE_THUNKLOCK
-1303a1390
+1303a1393
 >     RELEASE_THUNKLOCK
-1309a1397
+1309a1400
 >     RESTORE_THUNKLOCK
-1343a1432
+1343a1435
 >     DECLARE_THUNKLOCK
-1353a1443
+1353a1446
 >     RELEASE_THUNKLOCK
-1358a1449
+1358a1452
 >     RESTORE_THUNKLOCK
 --- NT4\private\mvdm\wow32\wuwind.c
 +++ nt\private\mvdm\wow32\wuwind.c
@@ -2058,15 +2075,6 @@
 ---
 >     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_CE_ONLY_LAST")},
 >     {W32MSGFUN(WM32UNDOCUMENTED,      "WM_GETTITLEBARINFOEX")},
---- NT4\private\mvdm\wow32\wow32.def
-+++ nt\private\mvdm\wow32\wow32.def
-45a46,51
-> 
->     szLogFile
->     fLog
->     hfLog
->     iLogLevel
-> 
 --- NT4\private\mvdm\wow32\wcuricon.c
 +++ nt\private\mvdm\wow32\wcuricon.c
 1101c1101
@@ -2195,10 +2203,6 @@
 >     RELEASE_THUNKLOCK
 418a424
 >     RESTORE_THUNKLOCK
-504c510
-< #ifndef i386
----
-> #ifndef MONITOR
 559a566
 >     DECLARE_THUNKLOCK
 663a671
