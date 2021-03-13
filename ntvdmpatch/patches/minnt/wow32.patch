@@ -925,49 +925,44 @@
 >                 goto SWL_Cleanup;
 2245d2292
 <             }
-2306c2353,2359
+2306c2353,2354
 <         ul = SetWindowLong(HWND32(parg16->f1), iOffset, new);
 ---
 >         ul = SetWindowLong((HWND)FULLHWND32(parg16->f1), iOffset, new);
->         if (iOffset != GWL_EXSTYLE) // BUGBUG: Sometimes this doesn't work??
-> 		{
-> 			ULONG chk = GetWindowLong((HWND)FULLHWND32(parg16->f1), iOffset);
-> 			WOW32ASSERT(chk == new);
-> 		}
 > 
-2387a2441
+2387a2436
 >     DECLARE_THUNKLOCK
-2390a2445
+2390a2440
 >     RELEASE_THUNKLOCK
-2407a2463
+2407a2458
 >     RESTORE_THUNKLOCK
-2499a2556
+2499a2551
 >     DECLARE_THUNKLOCK
-2503a2561
+2503a2556
 >     RELEASE_THUNKLOCK
-2521a2580
+2521a2575
 >     RESTORE_THUNKLOCK
-2548a2608
+2548a2603
 >     DECLARE_THUNKLOCK
-2564a2625
+2564a2620
 >     RELEASE_THUNKLOCK
-2565a2627
+2565a2622
 >     RESTORE_THUNKLOCK
-2615c2677
+2615c2672
 <     PWW pww;
 ---
 >     PWW pww = NULL;
-2632c2694
+2632c2689
 <     hwnd = HWND32(parg16->f1);
 ---
 >     hwnd = (HWND)FULLHWND32(parg16->f1);
-2737a2800
+2737a2795
 >     DECLARE_THUNKLOCK
-2740a2804
+2740a2799
 >     RELEASE_THUNKLOCK
-2743a2808
+2743a2803
 >     RESTORE_THUNKLOCK
-2776a2842,2965
+2776a2837,2960
 > 
 > enum ZBID
 > {
