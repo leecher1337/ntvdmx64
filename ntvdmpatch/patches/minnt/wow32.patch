@@ -1173,6 +1173,14 @@
 >     HANDLE              yield_event;    /* yield event */
 >     HANDLE              yield_wait_event;/* yield event */
 > #endif
+306c353
+< extern HANDLE hfLog;        // log file handle, if any
+---
+> extern __declspec(dllexport) HANDLE hfLog;        // log file handle, if any
+310c357
+< extern INT    iLogLevel;    // logging level;  0 implies none
+---
+> extern __declspec(dllexport) INT    iLogLevel;    // logging level;  0 implies none
 381c428
 < #ifndef _X86_
 ---
