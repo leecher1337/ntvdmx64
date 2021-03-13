@@ -608,22 +608,23 @@
 > #ifdef W10
 > #include "wtask.h"
 > DWORD gdwTLSWOW32Reserved;
-> ATOM  gidWNDPROC16, gidDLGPROC16;
+> ATOM  gidWNDPROC16, gidDLGPROC16, gidDLGFLAG16;
 > #endif
 133c138
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-409a415,418
+409a415,419
 > #ifdef W10
 >         GlobalDeleteAtom(gidWNDPROC16);
 >         GlobalDeleteAtom(gidDLGPROC16);
+>         GlobalDeleteAtom(gidDLGFLAG16);
 > #endif
-625c634
+625c635
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-691a701,722
+691a702,724
 > #ifdef W10
 >     pfnOut.pfnYieldTask = (PFNYIELDTASK)xxxUserYield;
 > 	pfnOut.pfnDirectedYield = (PFNDIRECTEDYIELD)xxxDirectedYield;
@@ -633,6 +634,7 @@
 >     TlsSetValue(gdwTLSWOW32Reserved, ptd);
 >     gidWNDPROC16 = GlobalAddAtom("WNDPROC16");
 >     gidDLGPROC16 = GlobalAddAtom("DLGPROC16");
+>     gidDLGFLAG16 = GlobalAddAtom("DLGFLAG16");
 > #ifdef DEBUG
 >     if (GetEnvironmentVariableOem("WOWTRACE", szLogFile, sizeof(szLogFile)))
 > 	{
@@ -646,19 +648,19 @@
 >     // but is missing on windows starting with Win 7/conhost
 >     CreateWindowExA(0x181, "#32768", "", 0x84800000, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
 > #else
-692a724
+692a726
 > #endif
-1944c1976
+1944c1978
 < #ifdef _X86_
 ---
 > #ifdef _X86xx_
-2136c2168
+2136c2170
 <                                    FILE_SHARE_WRITE,
 ---
 >                                    FILE_SHARE_WRITE | FILE_SHARE_READ,
 --- NT4\private\mvdm\wow32\wudlg.c
 +++ nt\private\mvdm\wow32\wudlg.c
-22a23,78
+22a23,79
 > #ifdef W10
 > struct init_param {
 > 	LPARAM lParam;
@@ -672,15 +674,15 @@
 > 	VPWNDPROC vpWndProc16;
 > 	BOOL bRet;
 > 
->	vpWndProc16 = (VPWNDPROC)GetProp(hwndDlg, (LPCTSTR)gidDLGPROC16);
-> 	if (uMsg == WM_INITDIALOG)
+> 	vpWndProc16 = (VPWNDPROC)GetProp(hwndDlg, (LPCTSTR)gidDLGPROC16);
+> 	if (uMsg == WM_INITDIALOG && (!vpWndProc16 || GetProp(hwndDlg, (LPCTSTR)gidDLGFLAG16)))
 > 	{
 > 		struct init_param *param = (struct init_param*)lParam;
 > 		
 > 		SetProp(hwndDlg, (LPCTSTR)gidDLGPROC16, (HANDLE)param->vpDlgProc);
 > 		vpWndProc16 = (volatile VPWNDPROC)param->vpDlgProc;
 > 		lParam = param->lParam;
-		free_w(param);
+> 		free_w(param);
 > 	}
 > 	else
 > 	{
@@ -690,9 +692,10 @@
 > 			 * Better than NULL
 > 			 */
 > 			SetProp(hwndDlg, (LPCTSTR)gidDLGPROC16, (HANDLE)gvpWndProc16);
-			vpWndProc16 = gvpWndProc16;
+> 			SetProp(hwndDlg, (LPCTSTR)gidDLGFLAG16, (HANDLE)1);
+> 			vpWndProc16 = gvpWndProc16;
 > 			gvpWndProc16 = 0;
-			LOGDEBUG(LOG_ALWAYS, ("W32Win16DlgDispProc: hWnd %x: vpWndProc=NULL!\n", hwndDlg)); 
+> 			LOGDEBUG(LOG_ALWAYS, ("W32Win16DlgDispProc: hWnd %x: vpWndProc=NULL!\n", hwndDlg)); 
 > 		}
 > 	}
 > 	if (!vpWndProc16)
@@ -715,10 +718,10 @@
 > 
 > 
 > 
-142a199,200
+142a200,201
 >     LPARAM   lParam;
 >     DECLARE_THUNKLOCK
-172a231,241
+172a232,242
 > #ifdef W10
 >         struct init_param *param = malloc_w(sizeof(struct init_param));
 > 
@@ -730,63 +733,63 @@
 > #else
 >         lParam = (LPARAM) DWORD32(parg16->f5);
 > #endif
-179c248
+179c249
 <                             (LPARAM) DWORD32(parg16->f5), SCDLG_ANSI));
 ---
 >                             lParam, SCDLG_ANSI));
-185c254
+185c255
 <                             (LPARAM) DWORD32(parg16->f5),  SCDLG_CLIENT | SCDLG_ANSI | SCDLG_NOREVALIDATE));
 ---
 >                             lParam,  SCDLG_CLIENT | SCDLG_ANSI | SCDLG_NOREVALIDATE));
-190a260
+190a261
 >         RESTORE_THUNKLOCK
-598a669
+598a670
 >     DECLARE_THUNKLOCK
-603a675
+603a676
 >     RELEASE_THUNKLOCK
-617a690
+617a691
 >     RESTORE_THUNKLOCK
-751a825
+751a826
 >     DECLARE_THUNKLOCK
-754a829
+754a830
 >     RELEASE_THUNKLOCK
-760a836
+760a837
 >     RESTORE_THUNKLOCK
-806a883
+806a884
 >     DECLARE_THUNKLOCK
-811a889
+811a890
 >     RELEASE_THUNKLOCK
-817a896
+817a897
 >     RESTORE_THUNKLOCK
-964a1044
+964a1045
 >     DECLARE_THUNKLOCK
-987a1068
+987a1069
 >     RELEASE_THUNKLOCK
-991a1073
+991a1074
 >     RESTORE_THUNKLOCK
-1030a1113
+1030a1114
 >     DECLARE_THUNKLOCK
-1033a1117
+1033a1118
 >     RELEASE_THUNKLOCK
-1037a1122
+1037a1123
 >     RESTORE_THUNKLOCK
-1229a1315
+1229a1316
 >     DECLARE_THUNKLOCK
-1247a1334
+1247a1335
 >     RELEASE_THUNKLOCK
-1253a1341
+1253a1342
 >     RESTORE_THUNKLOCK
-1298a1387
+1298a1388
 >     DECLARE_THUNKLOCK
-1303a1393
+1303a1394
 >     RELEASE_THUNKLOCK
-1309a1400
+1309a1401
 >     RESTORE_THUNKLOCK
-1343a1435
+1343a1436
 >     DECLARE_THUNKLOCK
-1353a1446
+1353a1447
 >     RELEASE_THUNKLOCK
-1358a1452
+1358a1453
 >     RESTORE_THUNKLOCK
 --- NT4\private\mvdm\wow32\wuwind.c
 +++ nt\private\mvdm\wow32\wuwind.c
@@ -1134,7 +1137,7 @@
 >  * support in NtUser
 >  */
 > extern BOOL x64GetClassInfo(HINSTANCE hInstance, LPCTSTR lpClassName, LPWNDCLASS lpWndClass);
-> extern ATOM  gidWNDPROC16, gidDLGPROC16;
+> extern ATOM  gidWNDPROC16, gidDLGPROC16, gidDLGFLAG16;
 > 
 > // Offsets to store our Win16 WndProc in class
 > #define GWL_OFFSET			sizeof(VPWNDPROC)
