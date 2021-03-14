@@ -4,18 +4,18 @@ AdvancedINF= 2.5,"advpack.dll"
 
 [Uninstall.AddReg]
 ; Uninstall entry
-HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ConhostFullScreen,DisplayName,,"%REMOVE_DESC%"
-HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ConhostFullScreen,DisplayVersion,,"%FIX_VERSION%"
-HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ConhostFullScreen,HelpLink,,"https://github.com/leecher1337/ntvdmx64/issues"
-HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ConhostFullScreen,URLInfoAbout,,"https://github.com/leecher1337/ntvdmx64"
-HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ConhostFullScreen,URLUpdateInfo,,"https://github.com/leecher1337/ntvdmx64"
-HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ConhostFullScreen,Publisher,,"leecher1337"
-HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ConhostFullScreen,DisplayIcon,,"%11%\cmd.exe"
-HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ConhostFullScreen,EstimatedSize,0x00010001,1400
-HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ConhostFullScreen,NoModify,0x00010001,1
-HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ConhostFullScreen,NoRepair,0x00010001,1
-HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ConhostFullScreen,UninstallString,,"RunDll32 advpack.dll,LaunchINFSection ntvdmx64.Inf,DefaultUninstall"
-HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ConhostFullScreen
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ntvdmx64,DisplayName,,"%REMOVE_DESC%"
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ntvdmx64,DisplayVersion,,"%FIX_VERSION%"
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ntvdmx64,HelpLink,,"https://github.com/leecher1337/ntvdmx64/issues"
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ntvdmx64,URLInfoAbout,,"https://github.com/leecher1337/ntvdmx64"
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ntvdmx64,URLUpdateInfo,,"https://github.com/leecher1337/ntvdmx64"
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ntvdmx64,Publisher,,"leecher1337"
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ntvdmx64,DisplayIcon,,"%11%\cmd.exe"
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ntvdmx64,EstimatedSize,0x00010001,1400
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ntvdmx64,NoModify,0x00010001,1
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ntvdmx64,NoRepair,0x00010001,1
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ntvdmx64,UninstallString,,"RunDll32 advpack.dll,LaunchINFSection ntvdmx64.Inf,DefaultUninstall"
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ntvdmx64
 
 [Ntvdmx64.amd64.AddReg]
 HKLM,SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows,LoadAppInit_DLLs,0x00010001,1
