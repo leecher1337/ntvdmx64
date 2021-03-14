@@ -40,7 +40,10 @@ md %minntfix%\minnt\base\mvdm\softpc.new\host\inc\mips
 md %minntfix%\minnt\base\mvdm\softpc.new\host\inc\ppc
 md %workdir%
 
+rem minnt SDK Update to Win XP/2003 SDK
 if exist ..\..\NTOSBE-master\src\public\sdk\inc\commdlg.h xcopy /y ..\..\NTOSBE-master\src\public\sdk\inc %minntfix%\minnt\public\sdk\inc\
+for %%a in (libcmt.lib msvcrt.lib ntdll.lib) do if exist ..\..\NTOSBE-master\src\public\sdk\lib\x86\%%~a xcopy /y ..\..\NTOSBE-master\src\public\sdk\lib\x86\%%~a %minntfix%\minnt\public\sdk\lib\x86\
+
 if not exist %minntfix%\minnt\public\ddk\lib\x86\umpdddi.lib goto doddk
 if not exist %minntfix%\minnt\public\sdk\lib\x86\winspool.lib goto doddk
 if not exist %minntfix%\minnt\public\sdk\lib\x86\userenv.lib goto doddk
@@ -143,7 +146,7 @@ echo You have to find this yourself on the Internet
 pause
 goto fini
 )
-7z x -y %workdir%\%OLDSRC% old-src\nt\private\windows\inc\comctrlp.h old-src\nt\private\windows\inc\commdlgp.h old-src\nt\private\windows\inc\shlapip.h old-src\nt\private\windows\inc\prshtp.h old-src\nt\private\windows\inc\shlwapip.h old-src\nt\private\windows\inc\gdispool.h old-src\nt\private\windows\spooler\inc\splapip.h old-src\nt\public\oak\inc\winddiui.h old-src\nt\private\sdktools\jetadmin\inc\winioctl.h old-src\nt\private\sdktools\jetadmin\inc\dsound.h old-src\nt\public\oak\inc\compstui.h %WOW16% old-src\nt\private\mvdm\softpc.new\host\inc\alpha old-src\nt\private\mvdm\softpc.new\host\inc\mips old-src\nt\private\mvdm\softpc.new\host\inc\ppc old-src\nt\private\mvdm\dpmi old-src\nt\private\mvdm\dpmi32 old-src\nt\private\mvdm\inc\intmac.inc old-src\nt\private\mvdm\inc\dpmi.h old-src\nt\private\mvdm\tools16\implib.exe old-src\nt\private\mvdm\tools16\rc16.exe old-src\nt\private\mvdm\tools16\rcpp.exe old-src\tools\x86\idw\sednew.exe old-src\nt\private\sdktools\upd old-src\nt\private\sdktools\qgrep -o%workdir%
+7z x -y %workdir%\%OLDSRC% old-src\nt\private\windows\media\avi\mciavi32\vfw16 old-src\nt\private\windows\inc\comctrlp.h old-src\nt\private\windows\inc\commdlgp.h old-src\nt\private\windows\inc\shlapip.h old-src\nt\private\windows\inc\prshtp.h old-src\nt\private\windows\inc\shlwapip.h old-src\nt\private\windows\inc\gdispool.h old-src\nt\private\windows\spooler\inc\splapip.h old-src\nt\public\oak\inc\winddiui.h old-src\nt\private\sdktools\jetadmin\inc\winioctl.h old-src\nt\private\sdktools\jetadmin\inc\dsound.h old-src\nt\public\oak\inc\compstui.h %WOW16% old-src\nt\private\mvdm\softpc.new\host\inc\alpha old-src\nt\private\mvdm\softpc.new\host\inc\mips old-src\nt\private\mvdm\softpc.new\host\inc\ppc old-src\nt\private\mvdm\dpmi old-src\nt\private\mvdm\dpmi32 old-src\nt\private\mvdm\inc\intmac.inc old-src\nt\private\mvdm\inc\dpmi.h old-src\nt\private\mvdm\tools16\implib.exe old-src\nt\private\mvdm\tools16\rc16.exe old-src\nt\private\mvdm\tools16\rcpp.exe old-src\tools\x86\idw\sednew.exe old-src\nt\private\sdktools\upd old-src\nt\private\sdktools\qgrep -o%workdir%
 if not exist %workdir%\old-src\nt\private\windows\inc\gdispool.h (
 echo Cannot expand %workdir%\old-src\nt\private\windows\inc\gdispool.h from %workdir%\%OLDSRC%
 echo Cannot continue.
@@ -188,6 +191,9 @@ for %%I in (command debug edlin exe2bin graphics keyb loadfix mem nlsfunc setver
   md %minntfix%\minnt\base\mvdm\dos\v86\cmd\%%I
   xcopy /Y %minntfix%\minnt\base\mvdm\dos\v86\cmd\append\dirs %minntfix%\minnt\base\mvdm\dos\v86\cmd\%%I\
 )
+
+rem Copy Video for Windows to release template folder
+xcopy /e /y %workdir%\old-src\nt\private\windows\media\avi\mciavi32\vfw16 ..\release\vfw16\
 
 :oldsrcok
 echo The patch directory is now prepared. You may delete the contents of the 

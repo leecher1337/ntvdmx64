@@ -222,8 +222,15 @@ HKLM, "SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\WOW\keyboard", "
 HKLM, "SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\WOW\SetupPrograms", "SetupProgramNames", 0x10000, "setup","install","inst","imposta","ayarla","felrak","eviewset"
 HKLM, "SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\WOW\WowFax\SupportedFaxDrivers", "DriverNames", 0x10000, "WINFAX","E-FAX","MAXFAXP","Quick Link II Fax","Quick Link Gold","Procomm Plus"
 
+[Ntvdmx64.amd64.VFWAddReg]
+HKLM, "SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\MCI","AVIVideo",0x00000002,"mciavi.drv"
+HKLM, "SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\MCI","CDAudio",0x00000002,"mcicda.drv"
+HKLM, "SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\MCI","Sequencer",0x00000002,"mciseq.drv"
+HKLM, "SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\MCI","WaveAudio",0x00000002,"mciwave.drv"
+
 [SourceDisksNames.amd64]
 1="WOW32",,,"\wow32"
+2="VFW",,,"\vfw16"
 
 [SourceDisksFiles.amd64]
 comm.drv=1
@@ -268,6 +275,12 @@ wowdeb.exe=1
 wowexec.exe=1
 wowfax.dll=1
 wowfaxui.dll=1
+avicap.dll=2
+avifile.dll=2
+mciavi.drv=2
+mciseq.drv=2
+mciwave.drv=2
+msvideo.dll=2
 
 [Ntvdmx64.amd64.System.Files]
 comm.drv,,,0x4006
@@ -312,6 +325,21 @@ wowdeb.exe,,,0x20
 wowexec.exe,,,0x4006
 wowfax.dll,,,0x20
 wowfaxui.dll,,,0x20
+avicap.dll,,,0x4006
+avifile.dll,,,0x4006
+mciavi.drv,,,0x4006
+mciseq.drv,,,0x4006
+mciwave.drv,,,0x4006
+msvideo.dll,,,0x4006
+
+
+[Ntvdmx64.amd64.VFW.Files]
+avicap.dll,,,0x4006
+avifile.dll,,,0x4006
+mciavi.drv,,,0x4006
+mciseq.drv,,,0x4006
+mciwave.drv,,,0x4006
+msvideo.dll,,,0x4006
 
 
 [Ntvdmx64.amd64.Inf.Files.Add]
@@ -325,6 +353,7 @@ wow32.PNF
 Ntvdmx64.amd64.System.Files   = 16425
 Ntvdmx64.amd64.Inf.Files.Add = 17
 Ntvdmx64.amd64.Inf.Files.Del = 17
+Ntvdmx64.amd64.VFW.Files = 50
 
 [InstallCmdsPre]
 %10%\Symbols\instntvdmx64.bat instwow "%16425%" "%10%\Symbols\Backup"
@@ -344,14 +373,14 @@ ButtonType = YESNO
 BeginPrompt         = BeginInsPrompt
 RunPreSetupCommands = InstallCmdsPre
 SmartReboot = N
-CopyFiles   = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Inf.Files.Add
-AddReg      = Ntvdmx64.amd64.AddReg
+CopyFiles   = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Inf.Files.Add, Ntvdmx64.amd64.VFW.Files
+AddReg      = Ntvdmx64.amd64.AddReg, Ntvdmx64.amd64.VFWAddReg
 
 [DefaultUninstall.ntamd64]
 RunPostSetupCommands = UninstallCmds
 CleanUp = 1
-DelFiles    = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Inf.Files.Del
-Delreg      = Ntvdmx64.amd64.AddReg
+DelFiles    = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Inf.Files.Del, Ntvdmx64.amd64.VFW.Files
+Delreg      = Ntvdmx64.amd64.AddReg, Ntvdmx64.amd64.VFWAddReg
 
 [Strings]
 InsPrompt     = "Do you want to install WOW32 (Win16 application) support?"
