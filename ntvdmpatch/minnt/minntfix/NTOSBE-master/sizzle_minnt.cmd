@@ -40,7 +40,7 @@ REM //
 REM // SIZ_NTBLD: Target build type [fre, chk]
 REM //
 
-set SIZ_NTBLD=chk
+if "%SIZ_NTBLD%"=="" set SIZ_NTBLD=chk
 
 REM //
 REM // Repository-specific Parameters

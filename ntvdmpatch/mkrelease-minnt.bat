@@ -5,7 +5,12 @@ if not exist "%BASEPATH%" (
   goto fini
 )
 SETLOCAL ENABLEDELAYEDEXPANSION
-set BINDIR=%BASEPATH%\..\..\Binaries\x86chk
+if "%SIZ_NTBLD%"=="" (
+rem Probe, if checked or free build
+if exist %BASEPATH%\..\..\Binaries\x86chk set SIZ_NTBLD=chk
+if exist %BASEPATH%\..\..\Binaries\x86fre set SIZ_NTBLD=fre
+)
+set BINDIR=%BASEPATH%\..\..\Binaries\x86%SIZ_NTBLD%
 set LANG=br CHS CHT cs es fr GER hu it JPN KOR nl pl pt ru sv usa
 if not "%1"=="" set LANG=%1
 md releases >nul

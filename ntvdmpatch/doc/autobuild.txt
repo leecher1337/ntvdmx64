@@ -50,8 +50,11 @@ i.e. C:\NTVDMBLD
    old-src.trunk.r687.20150728.7z
 
 2) Now place the scripts from the autobuild directory there:
-   autobuild.cmd
-   autobuild-haxm.cmd
+
+   autobuild-ccpu-chk.cmd
+   autobuild-ccpu-fre.cmd
+   autobuild-haxm-chk.cmd
+   autobuild-haxm-fre.cmd
 
 3) Depending on your OS version and TLS-capabilities, either put supplied
 
@@ -66,8 +69,28 @@ i.e. C:\NTVDMBLD
 
 Run build
 =========
-Now simply run autobuild.cmd if you want NTVDMx64 CCPU build. 
-OR run autobuild-haxm.cmd if you want NTVDMx64 HAXM build. 
+Now you need to run the appropriate script depending on the version you
+want to compile.
+There are 2 CPUs available at the moment:
+
+  CCPU   - The emulated software CPU (default)
+  HAXM   - The VT-x hardware accellerated version, needs supplied driver
+           Read haxm.txt for details and advantages/disadvantages
+
+If unsure, CCPU is recommended.
+There are 2 types of builds available:
+
+  chk    - Checked, unoptimized debug build (default)
+  fre    - Free, optimized release build
+
+Free build doesn't have any debugging support, but is faster.
+So depending on whether your want to debug the NTVDM or want better 
+performance, choose the appropriate build.
+The filename scheme for the appropriate build is autobuildd-CPU-BLD.cmd
+
+So i.e. if you want to compile CCPU free build, just run
+
+  autobuild-ccpu-fre.cmd 
 
 It will fetch the required .ISOs from Microsoft download server (please keep 
 them so that you don't have to downnload these big files everytime!), fetch 

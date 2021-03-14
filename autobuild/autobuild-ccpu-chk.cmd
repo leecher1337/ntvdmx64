@@ -8,12 +8,13 @@ rem   old-src.trunk.r687.20150728.7z
 rem
 rem Optional environment vars:
 rem
-rem   PREREQ   Directory, where prerequired files are found. Default is current dir
-rem   SRCDIR   Directory, where current ntvdmpatch source folder can be found.
-rem            Not useful for end-users, just for automated testing on dev machine
-rem   WKDIR    Working directory for build process, default is %CD%\w
-rem   HAXBLD   If set to -haxm then HAXM build is built, otherwise normal build
-rem   DBGSTP   If set, pause is issued after every step, useful for testing build
+rem   PREREQ    Directory, where prerequired files are found. Default is current dir
+rem   SRCDIR    Directory, where current ntvdmpatch source folder can be found.
+rem             Not useful for end-users, just for automated testing on dev machine
+rem   WKDIR     Working directory for build process, default is %CD%\w
+rem   HAXBLD    If set to -haxm then HAXM build is built, otherwise normal build
+rem   DBGSTP    If set, pause is issued after every step, useful for testing build
+rem   SIZ_NTBLD [chk, fre] Checked of free build, default is checked (debug)
 rem
 
 echo ----------------------------------------------------

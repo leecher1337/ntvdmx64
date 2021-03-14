@@ -2,6 +2,7 @@ Debugging WOW applications
 ==========================
 
 ntsd contains a useful extension for debugging WOW problems.
+You need a checked build for debugging.
 Although you can of course debug the ntvdm using yoda, some specific WOW
 commands may become handy for i.e. finding exceptions.
 This requires some preparation first:

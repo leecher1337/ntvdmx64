@@ -1,3 +1,3 @@
 @echo off
 set HAXBLD=-haxm
-call autobuild
+call autobuild-ccpu-chk.cmd
