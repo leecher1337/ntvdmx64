@@ -170,8 +170,9 @@
 >     DECLARE_THUNKLOCK
 >     LRESULT lResult;
 > #endif
-1904a1971,1982
+1904a1971,1989
 > #ifdef W10
+>         if ( WM_DDE_EXECUTE != mpex.uMsg )
 >         {
 >             DWORD count;
 >             ReleaseThunkLock(&count);
@@ -182,14 +183,20 @@
 >                 LOGDEBUG(LOG_ALWAYS,("BUGBUG: SendMessage(%p,%d,%04x,%08x,uTimeout=1000ms) timed out.\n", hwnd, mpex.uMsg, mpex.uParam, mpex.lParam));
 >             }
 >         }
+>         else
+>         {
+>             // WM_DDE_EXECUTE should be Posted, therefore Post it and wait 
+>             mpex.lReturn = PostMessage(hwnd, mpex.uMsg, mpex.uParam, mpex.lParam);
+>             WU32WaitMessage(NULL);
+>         }
 > #else
-1905a1984
+1905a1991
 > #endif
-2177a2257
+2177a2264
 >     DECLARE_THUNKLOCK
-2180a2261
+2180a2268
 >     RELEASE_THUNKLOCK
-2184a2266
+2184a2273
 >     RESTORE_THUNKLOCK
 --- NT4\private\mvdm\wow32\wkman.c
 +++ nt\private\mvdm\wow32\wkman.c
