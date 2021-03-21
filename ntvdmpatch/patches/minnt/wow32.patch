@@ -256,28 +256,36 @@
 > #ifndef W10 // Do not assert, as this constellation can occur due to InputIdle logic for ghevWaitCreatorThread
 1066a1115
 > #endif
-1320c1369
+1292a1342,1344
+> #ifdef W10
+>     BOOL fWOA = FALSE;
+> #endif
+1317a1370,1372
+> #ifdef W10
+>         fWOA = TRUE;
+> #endif
+1320c1375
 <     CURRENTPTD() = &td;
 ---
 >     SETCURRENTPTD(&td);
-1505,1508c1554
+1505,1508c1560
 <         
 <         // FIXME: Enable the following when we are ready.
 <         gfTaskContinue = TRUE;
 <         //gfTaskContinue = CheckAppHelpInfo(&td,szFilePath,szModName);
 ---
 >         gfTaskContinue = CheckAppHelpInfo(&td,szFilePath,szModName);
-1561c1607
+1561c1613
 < #ifdef i386
 ---
 > #ifdef i386xx
-1569a1616
+1569a1622
 > #ifndef W10 /* Unfortunetely, no NtUserInitTask support... */
-1604a1652,1654
+1604a1658,1660
 > #else
 >         {
 >             static BOOL bFirstCall = TRUE;
-1605a1656,1670
+1605a1662,1676
 >             if (bFirstCall)
 >             {
 >                 HMODULE hUxTheme = GetModuleHandle("uxtheme.dll");
@@ -293,27 +301,28 @@
 >         }
 >         fRet = FALSE;
 > #endif
-1607a1673
+1607a1679
 >         td.hThread = hThread;
-1626a1693,1694
+1626a1699,1700
 > #ifdef W10
->             SetTimer(NULL, 0, 10, InputIdleCB);
-1627a1696,1697
+>             if (!fWOA) SetTimer(NULL, 0, 10, InputIdleCB);
+1627a1702,1704
 >             _EnterWin16Lock();
+>             if (fWOA) {WOW32VERIFY(SetEvent(ghevWaitCreatorThread));}
 > #else
-1628a1699
+1628a1706
 > #endif
-1631d1701
+1631d1708
 <         td.hThread = hThread;
-1832c1902
+1832c1909
 <     CURRENTPTD() = &td;
 ---
 >     SETCURRENTPTD(&td);
-1959c2029
+1959c2036
 < #ifdef i386
 ---
 > #ifdef i386xx
-1967,1971c2037,2039
+1967,1971c2044,2046
 <     // FIXME: Enable the following when we are ready.
 <     /*
 <     if(ptd->pWOWCompatFlagsEx_Info) {
@@ -323,7 +332,7 @@
 >     if(ptd->pWOWCompatFlagsEx_Info) {
 >        FreeFlagInfo(ptd->pWOWCompatFlagsEx_Info);
 >     }
-1973,1976c2041,2043
+1973,1976c2048,2050
 <     if(ptd->pWOWCompatFlags2_Info) {
 <        FreeFlagInfo(ptd->pWOWCompatFlags2_Info);
 <     }
@@ -332,12 +341,12 @@
 >     if(ptd->pWOWCompatFlags2_Info) {
 >        FreeFlagInfo(ptd->pWOWCompatFlags2_Info);
 >     }
-2170a2238,2241
+2170a2245,2248
 > #ifdef W10
 >     _LeaveWin16Lock();
 > 	if (CURRENTPTD()->yield_event) CloseHandle(CURRENTPTD()->yield_event);
 > #endif
-2237a2309,2316
+2237a2316,2323
 > #ifdef W10
 >     _LeaveWin16Lock();
 >     if (ptd->yield_event)
@@ -346,17 +355,21 @@
 > 		ptd->yield_event = NULL;
 > 	}
 > #endif
-2378a2458
+2378a2465
 > #if 0	// leecher1337: Seems to be always be 0 on XP and above? Call Fritz!
-2382a2463
+2382a2470
 > #endif
-3028a3110
+3028a3117
 >     DECLARE_THUNKLOCK
-3088a3171
+3088a3178
 >             RELEASE_THUNKLOCK
-3100a3184
+3100a3191
 >             RESTORE_THUNKLOCK
-6095,6099c6179,6182
+3218c3309
+<             *pch++ = *pSrc++;
+---
+>             *pch++ = *pSrc++; i++;
+6095,6099c6186,6189
 <         // FIXME: Enable the following when we are ready.
 <         /*if (WOWCSIDL_AllUsers == pMatchMapPath->dwCLSID) {
 <              cb = sizeof(szBuf);
