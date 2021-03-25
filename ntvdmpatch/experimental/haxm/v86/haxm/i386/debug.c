@@ -48,7 +48,9 @@ void EnterDebug(char *pDbg)
 	{
 		outerPrompts[GLOBAL_InsideDebugger] = pDbg;
 		GLOBAL_InsideDebugger++;
+#ifdef YODA
 		yoda_suspend_filter_process();
+#endif
 	}
 	else
 	{
@@ -102,7 +104,9 @@ BOOL GetCpuCmdLine(char *buff,int size,FILE *stream, char *who)
 			strcat(prompt, "> ");
 		fprintf(stdout, prompt);
 		fflush(stdout);
+#ifdef YODA
 		fflush(trace_file);
+#endif
 	}
 	if (fgets(buff, size, stream) != NULL)
 	{
@@ -124,6 +128,7 @@ BOOL GetCpuCmdLine(char *buff,int size,FILE *stream, char *who)
 	}
 	else
 	{
+#ifdef YODA
 		if (stream == in_stream && in_stream != stdin)
 		{
 			fclose(in_stream);
@@ -132,6 +137,7 @@ BOOL GetCpuCmdLine(char *buff,int size,FILE *stream, char *who)
 				fprintf(stdout,"(eof)");
 			return GetCpuCmdLine(buff,size,stream,who);
 		}
+#endif
 		return FALSE;
 	}
 }

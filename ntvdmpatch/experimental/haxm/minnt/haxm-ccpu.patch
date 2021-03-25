@@ -8,6 +8,12 @@
 < #ifndef MONITOR
 ---
 > #if !defined(MONITOR) && !defined(HAXM)
+--- NT4\private\mvdm\softpc.new\host\src\nt_aorc.c
++++ nt\private\mvdm\softpc.new\host\src\nt_aorc.c
+736c736
+< #if defined(PROD) && !defined(CCPU)
+---
+> #if defined(PROD) && !defined(CCPU) && !defined(HAXM)
 --- NT4\private\mvdm\softpc.new\host\src\nt_timer.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_timer.c
 202c202
@@ -79,6 +85,16 @@
 < #define SAS_VDD SAS_IO
 57a57
 > #define SAS_VDD SAS_IO
+92a93,96
+> #if defined(HAXM) && defined(PROD) // Ugly hack to work around Sas-Vector
+> #undef PROD
+> #define HAXM_PROD
+> #endif
+93a98,101
+> #ifdef HAXM_PROD
+> #define PROD
+> #undef HAXM_PROD
+> #endif
 --- NT4\private\mvdm\softpc.new\host\inc\host_def.h
 +++ nt\private\mvdm\softpc.new\host\inc\host_def.h
 37c37
@@ -91,6 +107,18 @@
 < #if defined(NTVDM) && defined(MONITOR)
 ---
 > #if defined(NTVDM) && (defined(MONITOR) || defined(HAXM))
+--- NT4\private\mvdm\softpc.new\base\inc\cpu4.h
++++ nt\private\mvdm\softpc.new\base\inc\cpu4.h
+61a62,65
+> #if defined(HAXM) && defined(PROD) // Ugly hack to work around Cpu-Vector
+> #undef PROD
+> #define HAXM_PROD
+> #endif
+62a67,70
+> #ifdef HAXM_PROD
+> #define PROD
+> #undef HAXM_PROD
+> #endif
 --- NT4\private\mvdm\softpc.new\base\dasm386\dasm386.c
 +++ nt\private\mvdm\softpc.new\base\dasm386\dasm386.c
 670c670
@@ -150,10 +178,43 @@
 >       haxm
 --- NT4\private\mvdm\softpc.new\host\src\nt_cpu.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_cpu.c
-127c127
+38a39,44
+> #ifdef HAXM
+> #include "gdpvar.h"
+> IMPORT	void	cpu_simulate	IPT0();
+> IMPORT	void	cpu_interrupt	IPT2(CPU_INT_TYPE, intType, IU16, intNum);
+> #endif
+> 
+127c133
 < #ifndef MONITOR
 ---
 > #if !defined(MONITOR) && !defined(HAXM)
+273c279
+< #if defined(CCPU)
+---
+> #if defined(CCPU) || defined(HAXM)
+311a318,338
+> #ifdef HAXM
+> #include "../../v86/haxm/x86/haxmvm.h"
+> extern struct vcpu_state_t state;
+> #define GLOBAL_HSP state._esp
+> #define GLOBAL_CsSel state._cs.selector
+> #define GLOBAL_DsSel state._ds.selector
+> #define GLOBAL_EsSel state._es.selector
+> #define GLOBAL_FsSel state._fs.selector
+> #define GLOBAL_GsSel state._gs.selector
+> #define GLOBAL_SsSel state._ss.selector
+> #define GLOBAL_CleanedRec state._eip
+> #define GLOBAL_EFLAGS state._eflags
+> #define GLOBAL_R_CR0 state._cr0
+> #define GLOBAL_R_EAX state._eax
+> #define GLOBAL_R_EBX state._ebx
+> #define GLOBAL_R_ECX state._ecx
+> #define GLOBAL_R_EDX state._edx
+> #define GLOBAL_R_ESI state._esi
+> #define GLOBAL_R_EDI state._edi
+> #define GLOBAL_R_EBP state._ebp
+> #endif /* HAXM */
 --- NT4\private\mvdm\dbg\dbg.c
 +++ nt\private\mvdm\dbg\dbg.c
 50a51

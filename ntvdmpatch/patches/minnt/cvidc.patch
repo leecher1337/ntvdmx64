@@ -1,12 +1,24 @@
 --- NT4\private\mvdm\softpc.new\base\inc\video.h
 +++ nt\private\mvdm\softpc.new\base\inc\video.h
-324a325,328
+309d308
+<   ((nm&0x7F) < 0) ||							       \
+324a324,327
 > #if (i386)
 > IMPORT VOID (__stdcall *bios_ch2_byte_wrt_fn) IPT2(ULONG, ch_attr, ULONG, ch_addr);
 > IMPORT VOID (__stdcall *bios_ch2_word_wrt_fn) IPT2(ULONG, ch_attr, ULONG, ch_addr);
 > #else
-326a331
+326a330
 > #endif
+--- NT4\private\mvdm\softpc.new\base\video\ega_vide.c
++++ nt\private\mvdm\softpc.new\base\video\ega_vide.c
+2342c2342
+<             #define check_video_func(AH)    ((AH >= 0 && AH < EGA_FUNC_SIZE) || (AH == 0x6f && video_adapter == VGA))
+---
+>             #define check_video_func(AH)    (AH < EGA_FUNC_SIZE || (AH == 0x6f && video_adapter == VGA))
+2344c2344
+<             #define check_video_func(AH)    (AH >= 0 && AH < EGA_FUNC_SIZE)
+---
+>             #define check_video_func(AH)    (AH < EGA_FUNC_SIZE)
 --- NT4\private\mvdm\softpc.new\base\cvidc\sources
 +++ nt\private\mvdm\softpc.new\base\cvidc\sources
 81c81

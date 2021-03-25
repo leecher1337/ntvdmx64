@@ -37,18 +37,6 @@ void cpu_clearHwInt()
 }
 
 #ifndef YODA
-void	check_I()
-{
-}
-
-void	check_D()
-{
-}
-
-void	force_yoda()
-{
-}
-
 USHORT dasm_internal(
    char * txt,	/* Buffer to hold dis-assembly text (-1 means not required) */
    USHORT  seg,	/* Segment for xxxx:... text in dis-assembly */

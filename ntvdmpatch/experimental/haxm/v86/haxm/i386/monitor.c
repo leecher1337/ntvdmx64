@@ -102,7 +102,7 @@ static ULONG vm_id;
 
 static struct hax_tunnel *tunnel;
 static PBYTE iobuf;
-static struct vcpu_state_t state ={0};
+struct vcpu_state_t state ={0};
 
 // [LATER]  how do you prevent a struct from straddling a page boundary?
 VDM_TIB VdmTib;
