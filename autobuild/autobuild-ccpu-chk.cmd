@@ -91,6 +91,7 @@ set BLDDIR=
 call :setupbe
 call :buildit
 popd
+rmdir /s /q releases 2>nul
 move /y %WKDIR%\ntvdmpatch\releases .
 if not "%WORKDRV%"=="" subst %WORKDRV%: /d
 set WORKDRV=
