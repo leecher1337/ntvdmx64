@@ -90,3 +90,11 @@
 > #if 0
 159a165
 > #endif
+--- NT4\private\mvdm\softpc.new\base\ccpu386\c_main.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\c_main.c
+3635a3636
+> #ifdef BOP8086 /* This used to be BOP on 8086, but is SALC on 286+, emulate old BOP? */
+3651a3653,3655
+> #else   /* BOP8086 */
+>       SET_AL(GET_CF()?0xFF:0);
+> #endif  /* BOP8086 */
