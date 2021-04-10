@@ -63,6 +63,38 @@
 > 	return c_getEBP();
 > }
 > 
+258c318
+< 	setAX( (getAX() & 0xFF00) | (val & 0xFF) );
+---
+> 	c_setAL(val);
+266c326
+< 	setCX( (getCX() & 0xFF00) | (val & 0xFF) );
+---
+> 	c_setCL(val);
+274c334
+< 	setDX( (getDX() & 0xFF00) | (val & 0xFF) );
+---
+> 	c_setDL(val);
+282c342
+< 	setBX( (getBX() & 0xFF00) | (val & 0xFF) );
+---
+> 	c_setBX(val);
+290c350
+< 	setAX( getAL() | ((val & 0xFF) << 8) );
+---
+> 	c_setAH(val);
+298c358
+< 	setCX( getCL() | ((val & 0xFF) << 8) );
+---
+> 	c_setCH(val);
+306c366
+< 	setDX( getDL() | ((val & 0xFF) << 8) );
+---
+> 	c_setDH(val);
+314c374
+< 	setBX( getBL() | ((val & 0xFF) << 8) );
+---
+> 	c_setBH(val);
 418a479,491
 > #undef setGS
 > GLOBAL 	setGS(val)
