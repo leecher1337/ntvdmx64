@@ -78,7 +78,7 @@
 282c342
 < 	setBX( (getBX() & 0xFF00) | (val & 0xFF) );
 ---
-> 	c_setBX(val);
+> 	c_setBL(val);
 290c350
 < 	setAX( getAL() | ((val & 0xFF) << 8) );
 ---
