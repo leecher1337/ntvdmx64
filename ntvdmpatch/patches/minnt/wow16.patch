@@ -1946,7 +1946,7 @@ diff -r \\10.0.0.245\work\minnt\base\mvdm\wow16.ok\ddeml\ddeml.c F:\Windows.Sour
 ---
 >     $(MAKE) clean
 68a70,73
->     $(MAKE) regedt16.exe
+>     $(MAKE) && $(MAKE)
 >     cd ..\lib
 >     $(MAKE) libw.lib
 >     cd ..\killwow
