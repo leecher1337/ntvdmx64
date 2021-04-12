@@ -1945,11 +1945,14 @@ diff -r \\10.0.0.245\work\minnt\base\mvdm\wow16.ok\ddeml\ddeml.c F:\Windows.Sour
 <     $(MAKE)
 ---
 >     $(MAKE) clean
-69a71,72
+68a70,73
+>     $(MAKE) regedt16.exe
 >     cd ..\lib
 >     $(MAKE) libw.lib
-70a74,77
->     $(MAKE)
+>     cd ..\killwow
+70c75,77
+<     cd ..\killwow
+---
 >     cd ..\wifeman
 >     $(MAKE)
 >     cd ..\winnls
