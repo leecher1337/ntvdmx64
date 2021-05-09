@@ -652,7 +652,7 @@
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-691a707,729
+691a707,738
 > #ifdef W10
 >     pfnOut.pfnYieldTask = (PFNYIELDTASK)xxxUserYield;
 > 	pfnOut.pfnDirectedYield = (PFNDIRECTEDYIELD)xxxDirectedYield;
@@ -664,31 +664,40 @@
 >     gidDLGPROC16 = GlobalAddAtom("DLGPROC16");
 >     gidDLGFLAG16 = GlobalAddAtom("DLGFLAG16");
 > #ifdef DEBUG
->     if (GetEnvironmentVariableOem("WOWTRACE", szLogFile, sizeof(szLogFile)))
-> 	{
-> 		char szLogLvl[32];
-> 		if (GetEnvironmentVariableOem("WOWLOGLVL", szLogLvl, sizeof(szLogLvl)))
-> 			iLogLevel = atoi(szLogLvl);
-> 		fLog = 2;
-> 	}
+>     {
+>         char szLogLvl[32];
+>         
+>         if (GetEnvironmentVariableOem("WOWLOGLVL", szLogLvl, sizeof(szLogLvl)))
+>         {
+>             iLogLevel = atoi(szLogLvl);
+>             if (GetEnvironmentVariableOem("WOWTRACE", szLogFile, sizeof(szLogFile)))
+>                 fLog = 2;
+>             else
+>                 flOptions |= OPT_DEBUG;
+>         }
+>         if (GetEnvironmentVariableOem("WOWLOGFILTER", szLogLvl, sizeof(szLogLvl)))
+>         {
+>             fLogFilter = strtoul(szLogLvl, NULL, 10);
+>         }
+>     }
 > #endif
 >     // create dummy menu window, something like this exists on windows xp created by csrss
 >     // but is missing on windows starting with Win 7/conhost
 >     CreateWindowExA(0x181, "#32768", "", 0x84800000, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
 > #else
-692a731
+692a740
 > #endif
-1944c1983
+1944c1992
 < #ifdef _X86_
 ---
 > #ifdef _X86xx_
-2136c2175
+2136c2184
 <                                    FILE_SHARE_WRITE,
 ---
 >                                    FILE_SHARE_WRITE | FILE_SHARE_READ,
-2161a2201
+2161a2210
 >     EnterCriticalSection(&csLog);
-2177a2218
+2177a2227
 >     LeaveCriticalSection(&csLog);
 --- NT4\private\mvdm\wow32\wudlg.c
 +++ nt\private\mvdm\wow32\wudlg.c

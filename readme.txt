@@ -283,6 +283,9 @@ To debug wow32, before launching your application:
 set WOWTRACE=C:\log.txt
 set WOWLOGLVL=16
 
+For more detailled information about debugging, please refer to 
+doc\debug-wow.txt
+
 
 Is there a way to enlarge the graphics window?
 ---------------------------------------------------------------------------

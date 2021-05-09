@@ -42,7 +42,7 @@ VOID WINAPI _CreateSysLevel(SYSLEVEL *lock, INT level)
     RtlInitializeCriticalSection( &lock->crst );
     lock->level = level;
 
-    LOGDEBUG(LOG_TRACE,("(%p, %d): handle is %p\n",
+    LOGDEBUG(15,("(%p, %d): handle is %p\n",
                   lock, level, lock->crst.LockSemaphore ));
 }
 
@@ -59,7 +59,7 @@ VOID WINAPI _EnterSysLevel(SYSLEVEL *lock)
 
     GETFRAMEPTR(ptd->vpStack, pFrame);
 #endif
-    LOGDEBUG(LOG_TRACE,("%04X          _EnterSysLevel(%p, level %d): thread %x count before %d\n",
+    LOGDEBUG(15,("%04X          _EnterSysLevel(%p, level %d): thread %x count before %d\n",
           pFrame->wTDB, lock, lock->level, GetCurrentThreadId(), ptd->sys_count[lock->level] ));
 
     for ( i = 3; i > lock->level; i-- )
@@ -86,9 +86,9 @@ VOID WINAPI _EnterSysLevel(SYSLEVEL *lock)
                 ptd->sys_mutex[lock->level] = NULL;
             RtlLeaveCriticalSection(&lock->crst);
         }
-        LOGDEBUG(LOG_TRACE,("%04X          _EnterSysLevel waiting for yield_wait_event\n", pFrame->wTDB));
+        LOGDEBUG(15,("%04X          _EnterSysLevel waiting for yield_wait_event\n", pFrame->wTDB));
         WaitForSingleObject(event, INFINITE);
-        LOGDEBUG(LOG_TRACE,("%04X          _EnterSysLevel got yield_wait_event\n", pFrame->wTDB));
+        LOGDEBUG(15,("%04X          _EnterSysLevel got yield_wait_event\n", pFrame->wTDB));
         count = mutex_count;
         /* restore lock */
         while (count-- > 0)
@@ -105,7 +105,7 @@ VOID WINAPI _EnterSysLevel(SYSLEVEL *lock)
     ptd->sys_mutex[lock->level] = lock;
     SetEvent(ptd->yield_event);
 
-    LOGDEBUG(LOG_TRACE,("%04X          _EnterSysLevel(%p, level %d): thread %x count after  %d\n",
+    LOGDEBUG(15,("%04X          _EnterSysLevel(%p, level %d): thread %x count after  %d\n",
           pFrame->wTDB, lock, lock->level, GetCurrentThreadId(), ptd->sys_count[lock->level] ));
 }
 
@@ -121,7 +121,7 @@ VOID WINAPI _LeaveSysLevel(SYSLEVEL *lock)
 
     GETFRAMEPTR(ptd->vpStack, pFrame);
 #endif
-    LOGDEBUG(LOG_TRACE,("%04X          _LeaveSysLevel(%p, level %d): thread %x count before %d\n",
+    LOGDEBUG(15,("%04X          _LeaveSysLevel(%p, level %d): thread %x count before %d\n",
           pFrame->wTDB, lock, lock->level, GetCurrentThreadId(), ptd->sys_count[lock->level] ));
 
     if ( ptd->sys_count[lock->level] <= 0 || ptd->sys_mutex[lock->level] != lock )
@@ -139,7 +139,7 @@ VOID WINAPI _LeaveSysLevel(SYSLEVEL *lock)
     RtlLeaveCriticalSection( &lock->crst );   
     SwitchToThread();
 
-    LOGDEBUG(LOG_TRACE,("%04X          _LeaveSysLevel(%p, level %d): thread %x count after  %d\n",
+    LOGDEBUG(15,("%04X          _LeaveSysLevel(%p, level %d): thread %x count after  %d\n",
           pFrame->wTDB, lock, lock->level, GetCurrentThreadId(), ptd->sys_count[lock->level] ));
 }
 
@@ -194,7 +194,7 @@ VOID WINAPI ReleaseThunkLock(DWORD *mutex_count)
     DWORD count = _ConfirmSysLevel(&Win16Mutex);
     *mutex_count = count;
 
-    LOGDEBUG(LOG_TRACE,("ReleaseThunkLock %d\n", count));
+    LOGDEBUG(15,("ReleaseThunkLock %d\n", count));
     while (count-- > 0)
         _LeaveSysLevel(&Win16Mutex);
 }
@@ -204,7 +204,7 @@ VOID WINAPI ReleaseThunkLock(DWORD *mutex_count)
  */
 VOID WINAPI RestoreThunkLock(DWORD mutex_count)
 {
-    LOGDEBUG(LOG_TRACE,("RestoreThunkLock %d\n", mutex_count));
+    LOGDEBUG(15,("RestoreThunkLock %d\n", mutex_count));
     while (mutex_count-- > 0)
         _EnterSysLevel(&Win16Mutex);
 }

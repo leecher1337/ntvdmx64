@@ -31,7 +31,11 @@ This requires some preparation first:
    mkdir c:\WINDBG\vdm
    copy Binaries\x86chk\dbg\files\bin\winxp\vdmexts.dll c:\WINDBG\vdm\
 
-4) Upon debugging, you need to load the correct extension, so you need to
+4) Start debugger, i.e. 
+
+   cdb myapp.exe
+
+   Upon debugging, you need to load the correct extension, so you need to
    specify with pathname:
 
    !vdm\vdmexts.load
@@ -42,3 +46,83 @@ This requires some preparation first:
    Enable break on each module load:
    !vdm\vdmexts.sxe cw
 
+
+Tracing WOW applications
+========================
+Using Debugger
+--------------
+Of course, you need a checked build for debugging.
+If you want to trace using debugger extensions mentioned above, just use the 
+commands:
+
+!vdm\vdmexts.SetLogLevel <loglevel>
+
+and if you want to log to a file, additionally use the command:
+
+!vdm\vdmexts.LogFile <WOW logfile>
+
+If you want to filter logs for specific modules, use the
+
+!vdm\vdmexts.filter 
+
+command.
+
+
+Standalone without debugger
+---------------------------
+In case you don't want to use the debugger and just let it trace, you can
+set the environment variables before launching your application:
+
+set WOWLOGLVL=<Loglevel>
+
+Set to 16, if you want to log everything.
+The debug output will be written to the system debug console, so you can use
+DebugView to check it. If you prefer to log to a file, additionally set:
+
+set WOWTRACE=<Logfile>
+
+If you want to not filter specific modules, you can set the filter mask with
+
+set WOWLOGFILTER=<Filter>
+
+Loglevels
+---------
+This list is not accurate, it's just important to know how you can turn off
+NTVDMx64's Syslevel Spamming by setting loglevel below 15.
+
+0	-	Always (so you cannot supress this output, Critical errors)
+1	-	Also Errors
+2	-	Also RegisterWindowMessage errors
+3	-	Also control messages
+4	-	Also Trace output
+5	-	Also callback errors
+6	-	Also thunking, dib drawing information
+7	-	Also adding aliases to list, control thunking
+8	-	Also File IO control stuff (open, close..)
+9	-	Also Callbacks, unthunking...
+10	-	Also information from log filters set by filter command
+12	-	Also recycled handles, DDE thunking, file read/write, kernel tracing...
+13	-	Also aliasing hints
+15	-	Also NTVDMx64 specific: Enter/Leave Syslevel
+
+
+Log filters
+-----------
+Taken from wow32.h, you should really use the debugger if possible, but in 
+case you don't want to, here are the relevant flags:
+
+#define FILTER_KERNEL   0x00000001
+#define FILTER_USER     0x00000002
+#define FILTER_GDI      0x00000004
+#define FILTER_KEYBOARD 0x00000008
+#define FILTER_SOUND    0x00000010
+#define FILTER_KERNEL16 0X00000020
+#define FILTER_MMEDIA   0x00000040
+#define FILTER_WINSOCK  0x00000080
+#define FILTER_COMMDLG  0x00000200
+#define FILTER_WINNLS   0x00000400
+#define FILTER_WIFEMAN  0x00000800
+
+#define FILTER_VERBOSE  0x00000100
+
+Note that all log filters are active by default
