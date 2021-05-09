@@ -624,27 +624,35 @@
 < INT     iLogLevel;           // logging level;  0 implies none
 ---
 > __declspec(dllexport) INT     iLogLevel;           // logging level;  0 implies none
-96a97,101
+95a96
+> CRITICAL_SECTION csLog;
+96a98,102
 > #ifdef W10
 > #include "wtask.h"
 > DWORD gdwTLSWOW32Reserved;
 > ATOM  gidWNDPROC16, gidDLGPROC16, gidDLGFLAG16;
 > #endif
-133c138
+133c139
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-409a415,419
+344a351,353
+>         
+>         // Critical section for circular log buffer
+>         InitializeCriticalSection(&csLog);
+408a418
+>         DeleteCriticalSection(&csLog);
+409a420,424
 > #ifdef W10
 >         GlobalDeleteAtom(gidWNDPROC16);
 >         GlobalDeleteAtom(gidDLGPROC16);
 >         GlobalDeleteAtom(gidDLGFLAG16);
 > #endif
-625c635
+625c640
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-691a702,724
+691a707,729
 > #ifdef W10
 >     pfnOut.pfnYieldTask = (PFNYIELDTASK)xxxUserYield;
 > 	pfnOut.pfnDirectedYield = (PFNDIRECTEDYIELD)xxxDirectedYield;
@@ -668,16 +676,20 @@
 >     // but is missing on windows starting with Win 7/conhost
 >     CreateWindowExA(0x181, "#32768", "", 0x84800000, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
 > #else
-692a726
+692a731
 > #endif
-1944c1978
+1944c1983
 < #ifdef _X86_
 ---
 > #ifdef _X86xx_
-2136c2170
+2136c2175
 <                                    FILE_SHARE_WRITE,
 ---
 >                                    FILE_SHARE_WRITE | FILE_SHARE_READ,
+2161a2201
+>     EnterCriticalSection(&csLog);
+2177a2218
+>     LeaveCriticalSection(&csLog);
 --- NT4\private\mvdm\wow32\wudlg.c
 +++ nt\private\mvdm\wow32\wudlg.c
 22a23,79
