@@ -202,7 +202,7 @@ if not "%1"=="batch" pause
 goto fini
 
 :expandf
-expand %1 -F:%2 %workdir%
+%systemroot%\system32\expand %1 -F:%2 %workdir%
 if not exist %workdir%\%2 (
 echo Cannot expand %2 from %1. 
 echo Cannot continue.
