@@ -103,12 +103,6 @@
 < #if defined(NTVDM) && defined(MONITOR)
 ---
 > #if defined(NTVDM) && (defined(MONITOR) || defined(HAXM))
---- NT4\private\mvdm\softpc.new\base\system\timer.c
-+++ nt\private\mvdm\softpc.new\base\system\timer.c
-1979c1979
-< #ifndef MONITOR
----
-> #if !defined(MONITOR) && !defined(HAXM)
 --- NT4\private\mvdm\softpc.new\base\system\qevnt.c
 +++ nt\private\mvdm\softpc.new\base\system\qevnt.c
 106c106

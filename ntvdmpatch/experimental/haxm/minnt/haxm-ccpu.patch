@@ -42,21 +42,21 @@
 > #endif /* NTVDM */
 --- NT4\private\mvdm\softpc.new\base\debug\yoda.c
 +++ nt\private\mvdm\softpc.new\base\debug\yoda.c
-4166a4167,4169
+4295a4296,4298
 > #ifdef HAXM
 > 	return sas_hw_at(addr);
 > #else
-4167a4171
+4296a4300
 > #endif
-5248c5252
+5380c5384
 < #ifdef CPU_40_STYLE
 ---
 > #if defined(CPU_40_STYLE) && !defined(HAXM)
-5468c5472
+5600c5604
 < #ifdef CPU_40_STYLE
 ---
 > #if defined(CPU_40_STYLE) && !defined(HAXM)
-6248c6252
+6380c6384
 < #ifndef	CCPU
 ---
 > #if !defined(CCPU) && !defined(HAXM)
@@ -131,12 +131,6 @@
 < #if defined(NTVDM) && defined(MONITOR)
 ---
 > #if defined(NTVDM) && (defined(MONITOR) || defined(HAXM))
---- NT4\private\mvdm\softpc.new\base\system\timer.c
-+++ nt\private\mvdm\softpc.new\base\system\timer.c
-2061c2061
-< #ifndef MONITOR
----
-> #if !defined(MONITOR) && !defined(HAXM)
 --- NT4\private\mvdm\softpc.new\base\system\qevnt.c
 +++ nt\private\mvdm\softpc.new\base\system\qevnt.c
 106c106

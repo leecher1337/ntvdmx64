@@ -21,9 +21,143 @@
 < #endif /* GISP_CPU */
 ---
 > 
-5015a5019
+3041a3045,3173
+> #ifdef NTVDM
+> // leecher1337: DOSX DPMI tracing support 
+> LOCAL YODA_COMMAND(do_dpmitr)
+> {
+> 	static struct {
+> 		char *name;
+> 		IU16 *addr;
+> 		char *descr;
+> 	}
+> 	 trace_flags[] = 
+> 	{
+> 	 {"tracedos",     NULL, "Trace DOS calls:\n"
+> 		"    Trace levels: 1 - print AX on all calls except 3F, 40, 42 (read, write,\n"
+> 		"                      seek--Windows does so many of these...)\n"
+> 		"                  2 - like level 1, but includes 3F, 40, 42\n"
+> 		"                  3 - print all regs on all calls"
+> 	 },
+> 	 {"tracefault",   NULL, "Trace faults on MIPS, currently unused"},
+> 	 {"tracea20",     NULL, "Make sure that A20 is enabled"},
+> 	 {"tracebug",     NULL, "Debug INT 41h Debugger interface"},
+> 	 {"trapdos",      NULL, "Trap DOS calls"},
+> 	 {"tableslow",    NULL, "unused"},
+> 	 {"tracereflect", NULL, "Trace Interrupt reflector:\n"
+> 		"    Trace levels: 1 - Trace all Interrupt reflector calls\n"
+> 		"                  2 - Also trace call ends\n"
+> 		"                  3 - Also trace Reflector stack location"
+> 	 },
+> 	 {"tracemode",    NULL, "Trace Real/Protectedmode switches"}
+> 	};
+> 	int n, n_found, negate;
+> 	IU16 mask;
+> 	char *flag_name, *flag_val;
+> 
+> 	UNUSED(com);
+> 	UNUSED(cs);
+> 	UNUSED(ip);
+> 	UNUSED(len);
+> 	UNUSED(stop);
+> 
+> 	/*
+> 	 * Collect offsets of DOSX trace flags
+> 	 */
+> 	if (!trace_flags[0].addr)
+> 	{
+> 		LIN_ADDR lin = effective_addr(0x0F00, 0);
+> 		IU8 *pDOSXDS = getPtrToLinAddrByte(lin);
+> 		int i, j;
+> 
+> 		if (pDOSXDS)
+> 		{ 
+> 			for (i=0; i<0x4000; i++)
+> 			{
+> 				if (pDOSXDS[0] == 't' && strncmp(pDOSXDS, "tracedos", 8) == 0)
+> 				{
+> 					// Assuming these are in order, no searching
+> 					for (j=0; *pDOSXDS && j<sizeof(trace_flags)/sizeof(trace_flags[0]); j++)
+> 					{
+> 						if (!strcmp(trace_flags[j].name, pDOSXDS))
+> 						{
+> 							pDOSXDS += strlen(pDOSXDS) + 1;
+> 							trace_flags[j].addr = (IU16*)pDOSXDS;
+> 							pDOSXDS += sizeof(IU16);
+> 						}
+> 					}
+> 					break;
+> 				}
+> 				pDOSXDS++;
+> 			}
+> 		}
+> 		if (!trace_flags[sizeof(trace_flags)/sizeof(trace_flags[0])-1].addr)
+> 		{
+> 			printf ("DOSX trace flags not found I have, sure running a DEBUG build of DOSX you are?\n");
+> 			return (YODA_LOOP);
+> 		}
+> 	}
+> 
+> 	/*
+> 	 * strip off command and get first flag name
+> 	 */
+> 	n_found = 0;
+> 	(void) strtok (str, " \t");
+> 
+> 	if (flag_name = strtok(NULL, " \t")) {
+> 		/*
+> 		 * Pick out symbolic flag name and see whether is is being set
+> 		 * or reset.
+> 	 	 */
+> 		n_found += 1;
+> 		negate = (flag_name[0] == '-');
+> 		if (negate)
+> 		{
+> 			flag_name += 1;
+> 			mask = 0;
+> 		}
+> 		else
+> 		{		
+> 			if (flag_val = strtok(NULL, " \t"))
+> 				mask = (IU16)atoi(flag_val);
+> 			else
+> 				mask = 1;
+> 		}
+> 
+> 		/*
+> 	 	 * Find flag and twiddle bits as appropriate.
+> 	 	 */
+> 		for (n = 0; n < sizeof(trace_flags)/sizeof(trace_flags[0]); n++)
+> 			if (!strcmp(flag_name, trace_flags[n].name) && trace_flags[n].addr) {
+> 				*trace_flags[n].addr = mask;
+> 				break;
+> 			}
+> 	}
+> 
+> 	/*
+> 	 * Print current trace flags if no recognised flags passed in command.
+> 	 * (or empty command line).
+> 	 */
+> 	if (n_found == 0) {
+> 		for (n = 0; n < sizeof(trace_flags)/sizeof(trace_flags[0]); n++) {
+> 			printf ("%-14s: %d\t%s\n", trace_flags[n].name,
+> 				trace_flags[n].addr ? *trace_flags[n].addr : 0,
+> 				trace_flags[n].descr);
+> 		}
+> 		printf ("\n\n");
+> 	}
+> 
+> 	return(YODA_LOOP);
+> }
+> #endif
+> 
+4912a5045,5047
+> #ifdef NTVDM
+> { "dpmitr",	do_dpmitr,FALSE, NULL, "Toggle DOSX Dpmi tracing, if DOSX debug build" },
+> #endif
+5015a5151
 > #endif	/* GISP_CPU */
-5018d5021
+5018d5153
 < #endif	/* GISP_CPU */
 --- NT4\private\mvdm\softpc.new\host\src\fprt.c
 +++ nt\private\mvdm\softpc.new\host\src\fprt.c

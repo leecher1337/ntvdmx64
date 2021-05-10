@@ -1,3 +1,8 @@
+--- NT4\private\mvdm\inc\dbgsvc.h
++++ nt\private\mvdm\inc\dbgsvc.h
+50a51,52
+> #define DBG_OUTCHAR     0x4100
+> #define DBG_OUTSTR      0x4112
 --- NT4\private\mvdm\dpmi32\data.c
 +++ nt\private\mvdm\dpmi32\data.c
 126c126
@@ -239,15 +244,34 @@
 > #ifndef MONITOR // Not available on MONITOR :(
 >     setIDT_BASE_LIMIT(SavedState->IDTBase, SavedState->IDTLimit);
 > #endif
+--- NT4\private\mvdm\dpmi\dxbug.asm
++++ nt\private\mvdm\dpmi\dxbug.asm
+40a41,42
+> include     intmac.inc
+> include     dbgsvc.inc
+493a496,501
+> IFDEF WOW
+>         push    ax
+>         push    DBG_OUTCHAR
+>         BOP     BOP_DEBUGGER
+>         add     sp, 4
+> ELSE
+544a553
+> ENDIF
 --- NT4\private\mvdm\dpmi\486\dxstrt.asm
 +++ nt\private\mvdm\dpmi\486\dxstrt.asm
 118a119
 >         extrn   HungAppExit:FAR
-804a806,808
+128a130,133
+> if DEBUG
+>         extrn   PMDebugInt:NEAR
+>         extrn	fTraceBug:WORD
+> endif
+804a810,812
 >         push    offset DXPMCODE:HungAppExit
 > 
 >         push    SEL_DXPMCODE OR STD_RING
-1260a1265,1272
+1260a1269,1276
 > 	; HACKHACK - Seems to fix DPMI applications running after termination,
 > 	; but is this the correct way to do..??
 > .386
@@ -258,37 +282,162 @@
 > 
 --- NT4\private\mvdm\dpmi\486\dxintr.asm
 +++ nt\private\mvdm\dpmi\486\dxintr.asm
+313c313
+< ; if DEBUG   ;------------------------------------------------------------
+---
+> if DEBUG   ;------------------------------------------------------------
+317,318c317,319
+< ;       extrn   fA20:BYTE
+< ;       extrn   fTraceFault:WORD
+---
+>        extrn   fA20:BYTE
+>        extrn   fTraceFault:WORD
+> endif ;DEBUG  --------------------------------------------------------
+327d327
+< ; endif ;DEBUG  --------------------------------------------------------
 491a492,496
 >         public  HungAppExit
 > HungAppExit:
 >         mov     ax,4CFFh
 >         int     21h
 > 
-3160a3166,3174
+565a571,574
+> ifndef WOW_x86
+>         and     ax,NOT 4300h    ;also clear interrupt flag to prevent
+>                                 ; transfer stack overflow on reentrance
+> else
+568a578
+> endif
+611c621
+<         jz      @f
+---
+>         jz      ndebug
+614a625,629
+>         cmp     fTraceReflect,3
+>         jb      @f
+>         mov     ax, pbReflStack
+>         Trace_Out "st=#AX",x
+> @@:
+616c631
+< @@:
+---
+> ndebug:
+710c725,726
+<         add     sp,4            ;'pop' off debugging info
+---
+>         pop     PMIntNo
+>         add     sp,2            ;'pop' off debugging info
+728a745,755
+> if DEBUG
+>         cmp     fTraceReflect,2
+>         jb      @f
+>         mov ax, PMIntNo
+>         Trace_Out "[/pr#AL]",x
+>         cmp     fTraceReflect,3
+>         jb      @f
+>         mov ax, pbReflStack
+>         Trace_Out "st=#AX",x
+> @@:
+> endif
+870a898,901
+> ifndef WOW_x86
+>         and     ax,NOT 4300h    ;also clear interrupt flag to prevent
+>                                 ; transfer stack overflow on reentrance
+> else
+873a905
+> endif
+1059c1091,1099
+<         add     sp,4            ;'pop' off debugging info
+---
+>         pop     PMIntNo
+>         cmp     fTraceReflect,2
+>         jb      @f
+>         push    ax
+>         mov     ax,PMIntNo
+>         Trace_Out "(/rp#AL)",x
+>         pop     ax
+> @@:
+>         add     sp, 2            ;'pop' off debugging info
+3068a3109,3114
+> if DEBUG
+> ;        cmp     fTraceReflect,3
+> ;        jb      @f
+> ;        Trace_Out "W32 St=#BX ",x
+> @@:
+> endif
+3084a3131,3133
+> ifndef WOW_x86
+>         and     ax, NOT 200h            ; clear interrupt flag 
+> endif
+3094a3144,3149
+> if DEBUG
+> ;        cmp     fTraceReflect,3
+> ;        jb      @f
+> ;        Trace_Out "Int=#DI"
+> @@:
+> endif
+3160a3216,3229
 > ifndef WOW_x86
 > ; leecher1337: Make sure that the nested task flag is clear
 > ; Interrupt hook code, i.e. DpmiSwIntHandler, DpmiHwintHandler ensure this,
 > ; but if we don't do the hooking for performance reasons, like in HAXM, not
 > ; doing this would lead to crash
->         and     ebx,NOT 4000h
+>         and     ebx,NOT 4000h       
 >         push    ebx
 >         rpopfd
+>         push    ax
+>         mov     ax,[esp + 14]           ; get flags on entry
+>         and     ax, 200h                ; was IF enabled?
+>         or      bx, ax                  ; if so, set it in iret frame
+>         pop     ax
 > endif
-3178a3193,3197
+3178a3248,3257
 > ifndef WOW_x86	; leecher1337: Make sure that the nested task flag is clear
 >         and     ebx,NOT 4000h
 >         push    ebx
 >         rpopfd
+>         push    ax
+>         mov     ax,[esp + 14]           ; get flags on entry
+>         and     ax, 200h                ; was IF enabled?
+>         or      bx, ax                  ; if so, set it in iret frame
+>         pop     ax
 > endif
+--- NT4\private\mvdm\dpmi\486\dxmain.asm
++++ nt\private\mvdm\dpmi\486\dxmain.asm
+2687c2687,2690
+<         jmp     short gec80
+---
+> gec80:  ; With debug code, gec80 would be out of range, so trampoline here
+>         jmp     short dbg_gec80
+> gec90:
+>         jmp     short dbg_gec90
+2702,2703c2705,2710
+< 
+< gec80:  mov     bl,ah
+---
+> if DEBUG   ;------------------------------------------------------------
+> dbg_gec80:
+> else    ;DEBUG  --------------------------------------------------------
+> gec80:
+> endif   ;DEBUG  --------------------------------------------------------
+>         mov     bl,ah
+2707a2715,2717
+> if DEBUG   ;------------------------------------------------------------
+> dbg_gec90:
+> else    ;DEBUG  --------------------------------------------------------
+2708a2719
+> endif   ;DEBUG  --------------------------------------------------------
 --- NT4\private\mvdm\dpmi\dxmmgr.asm
 +++ nt\private\mvdm\dpmi\dxmmgr.asm
-1153a1154,1158
+101a102
+> include intmac.inc
+1153a1155,1159
 > 			
 >         ; leecher1337: SwitchToRealMode saves fs and gs, SwitchToProtectedMode restores them
 >         ; If the selector to free is fs or gs, CPU would fault on restore, as it is already
 >         ; zapped. Therefore, zero them out before switching to real mode 
 >         call    ClearSegRegs
-1194a1200,1227
+1194a1201,1228
 > 
 > ; -------------------------------------------------------
 > ;   ClearSegRegs   -- This function will check if fs or 
@@ -317,3 +466,13 @@
 >         ret
 > ClearSegRegs    endp
 > 
+--- NT4\private\mvdm\dpmi\pmdefs.inc
++++ nt\private\mvdm\dpmi\pmdefs.inc
+446a447,451
+> 
+> if DEBUG
+> SEL_DYNALINK    = 0150h         ;first DynaLink call gate selector
+> GDT_SIZE        = (((SEL_DYNALINK + (NUM_DYNALINK shl 3) + 8) shr 4) shl 4)
+> else
+450a456
+> endif

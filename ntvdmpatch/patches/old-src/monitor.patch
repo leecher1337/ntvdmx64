@@ -229,3 +229,9 @@
 < #ifdef i386
 ---
 > #ifdef MONITOR
+--- NT4\private\mvdm\softpc.new\base\system\timer.c
++++ nt\private\mvdm\softpc.new\base\system\timer.c
+1979c1979
+< #ifndef MONITOR
+---
+> #ifndef i386

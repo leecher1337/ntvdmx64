@@ -15,3 +15,36 @@
 <   io_verbose = FALSE;
 ---
 >   //io_verbose = FALSE;  // Already set in trace_init() and is initialized with 0 globally anway
+--- NT4\private\mvdm\softpc.new\host\src\nt_bop.c
++++ nt\private\mvdm\softpc.new\host\src\nt_bop.c
+13a14
+> #include <dbgsvc.h>
+328a330,353
+> #ifdef YODA
+>     UNALIGNED WORD  *stack;
+>     char *p;
+>     
+>     stack = (UNALIGNED WORD *)Sim32GetVDMPointer(
+>                         ((ULONG)getSS() << 16) + (ULONG)getSP(),
+>                         MAX_DBG_FRAME, (getMSW() & MSW_PE ? 1 : 0));
+>                         
+>     // Resembles WDEB386 API, may become handy some day...
+>     if (stack && (*stack & 0x4100) == 0x4100)
+>     {
+>         switch (*stack++)
+>         {
+>             case DBG_OUTCHAR:
+>                 printf("%c", (*stack & 0xFF));
+>                 break;
+>             case DBG_OUTSTR:
+>                 p = Sim32GetVDMPointer(((ULONG)stack[0] << 16) + (ULONG)stack[1],
+>                     256, (getMSW() & MSW_PE ? 1 : 0));
+>                 if (p) printf("%s", p);
+>                 break;
+>         }
+>     }      
+> #endif
+754a780
+> #ifdef X86GFX
+762a789
+> #endif

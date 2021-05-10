@@ -214,9 +214,9 @@
 > #endif
 --- NT4\private\mvdm\softpc.new\host\src\nt_bop.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_bop.c
-754a755
+779a780
 > #ifdef X86GFX
-762a764
+787a789
 > #endif
 --- NT4\private\mvdm\v86\monitor\x86\monitor.c
 +++ nt\private\mvdm\v86\monitor\x86\monitor.c
@@ -323,3 +323,9 @@ diff -r F:\Windows.Source.Code.w2k.nt4.wxp\minnt\q160765803-minint4-85fac4faadc7
 > 	void host_InitializeTib(void);
 > 	host_InitializeTib();
 > #endif
+--- NT4\private\mvdm\softpc.new\base\system\timer.c
++++ nt\private\mvdm\softpc.new\base\system\timer.c
+2061c2061
+< #ifndef MONITOR
+---
+> #ifndef i386
