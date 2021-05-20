@@ -48,3 +48,227 @@
 > #ifdef X86GFX
 762a789
 > #endif
+--- NT4\private\mvdm\wow32\wow32.def
++++ nt\private\mvdm\wow32\wow32.def
+45a46,84
+> 
+> ; Debug symbols
+>     pDibInfoHead                DATA
+>     gptdTaskHead                DATA
+>     iLogLevel                   DATA
+>     DosWowData                  DATA
+>     aw32WOW                     DATA
+>     iCircBuffer                 DATA
+>     pachTmp                     DATA
+>     fLog                        DATA
+>     szLogFile                   DATA
+>     fDebugWait                  DATA
+>     pawfLogFunctionFilter       DATA
+>     fLogFilter                  DATA
+>     iLogFuncFiltIndex           DATA
+>     fLogTaskFilter              DATA
+>     lpCIAlias                   DATA
+>     gH16_deleted_count          DATA
+>     ghGdi16NextFree             DATA
+>     ghGdi16LastFree             DATA
+>     gMaxGdiHandlesPerProcess    DATA
+>     gLastAllowableIndex         DATA
+>     gFirstNonStockObject        DATA
+>     gwNextReclaimStart          DATA
+>     gdwPageCommitSize           DATA
+>     gprevNextFree               DATA
+>     gAllocatedHandleCount       DATA
+>     pGdiH16MappingTable         DATA
+>     pGdiH32MappingTable         DATA
+>     phDDEFirst                  DATA
+>     lpMemLeakStart              DATA
+>     tableoffsets                DATA
+>     iThunkTableMax              DATA
+>     pawThunkTables              DATA
+>     cAPIThunks                  DATA
+>     nModNames                   DATA
+>     iMsgMax                     DATA
+>     paw32Msg                    DATA
+>     fWMsgProfRT                 DATA
+--- NT4\private\mvdm\softpc.new\obj.vdm\ntvdm.src
++++ nt\private\mvdm\softpc.new\obj.vdm\ntvdm.src
+281a282,295
+> 
+> ; Debug symbols
+> 	pSFTHead                DATA
+> 	pusCurrentPDB           DATA
+> 	DpmiInterruptHandlers   DATA
+> 	DpmiFaultHandlers       DATA
+> 	XmemHead                DATA
+> 	Ldt                     DATA
+> 	InitialVdmDbgFlags      DATA
+> 	InitialVdmTibFlags      DATA
+> 	VirtualIca              DATA
+> 	pVdmTraceInfo           DATA
+> 	nt_cpu_info             DATA
+> 	Start_of_M_area         DATA
+--- NT4\private\mvdm\softpc.new\host\src\nt_yoda.c
++++ nt\private\mvdm\softpc.new\host\src\nt_yoda.c
+diff -r \\hundling\f\Windows.Source.Code.w2k.nt4.wxp\minnt\q160765803-minint4-85fac4faadc7\base\mvdm\softpc.new\host\src\nt_yoda.c D:\nt_yoda.c
+42a43
+> #include <stdlib.h>
+46a48
+> #include "sas.h"
+75c77
+< #define MAX_CALL_STACK	128
+---
+> #define MAX_CALL_STACK	256
+140a143,144
+> LOCAL int do_dpmitr	IPT5(char *, str, char *, com, long, cs,
+> 			     long, ip, long, len);
+153,156c157,161
+< { "ecbt", do_ecbt,	"                        - enable call-back-tracing" },
+< { "dcbt", do_dcbt,	"                        - disable call-back-tracing" },
+< { "pcbt", do_pcbt,	"                        - print call-back-trace" },
+< { "ntsd", do_ntsd,	"                        - break to ntsd" }
+---
+> { "dpmitr",	do_dpmitr,  "                     - Toggle DOSX debug Dpmi tracing" },
+> { "ecbt",   do_ecbt,	"                     - enable call-back-tracing" },
+> { "dcbt",   do_dcbt,	"                     - disable call-back-tracing" },
+> { "pcbt",   do_pcbt,	"                     - print call-back-trace" },
+> { "ntsd",   do_ntsd,	"                     - break to ntsd" }
+1192a1198,1336
+> /*
+> =========================================================================
+> 
+> FUNCTION        : do_dpmitr
+> 
+> PURPOSE         : sets the dpmi tracing parameters of the dosx debug build
+> 
+> RETURNED STATUS : 0 for success, 1 for failure
+> 
+> NOTES           :
+> 
+> =======================================================================
+> */
+> LOCAL int do_dpmitr	IPT5(char *, str, char *, com, long, cs,
+> 			     long, ip, long, len)
+> {
+> 	static struct {
+> 		char *name;
+> 		IU16 *addr;
+> 		char *descr;
+> 	}
+> 	 trace_flags[] = 
+> 	{
+> 	 {"tracedos",     NULL, "Trace DOS calls:\n"
+> 		"    Trace levels: 1 - print AX on all calls except 3F, 40, 42 (read, write,\n"
+> 		"                      seek--Windows does so many of these...)\n"
+> 		"                  2 - like level 1, but includes 3F, 40, 42\n"
+> 		"                  3 - print all regs on all calls"
+> 	 },
+> 	 {"tracefault",   NULL, "Trace faults on MIPS, currently unused"},
+> 	 {"tracea20",     NULL, "Make sure that A20 is enabled"},
+> 	 {"tracebug",     NULL, "Debug INT 41h Debugger interface"},
+> 	 {"trapdos",      NULL, "Trap DOS calls"},
+> 	 {"tableslow",    NULL, "unused"},
+> 	 {"tracereflect", NULL, "Trace Interrupt reflector:\n"
+> 		"    Trace levels: 1 - Trace all Interrupt reflector calls\n"
+> 		"                  2 - Also trace call ends\n"
+> 		"                  3 - Also trace Reflector stack location"
+> 	 },
+> 	 {"tracemode",    NULL, "Trace Real/Protectedmode switches"}
+> 	};
+> 	int n, n_found, negate;
+> 	IU16 mask;
+> 	char *flag_name, *flag_val;
+> 
+> 	UNUSED(com);
+> 	UNUSED(cs);
+> 	UNUSED(ip);
+> 	UNUSED(len);
+> 	UNUSED(stop);
+> 
+> 	/*
+> 	 * Collect offsets of DOSX trace flags
+> 	 */
+> 	if (!trace_flags[0].addr)
+> 	{
+> 		LIN_ADDR lin = effective_addr(0x0F00, 0);
+> 		IU8 *pDOSXDS = getPtrToLinAddrByte(lin);
+> 		int i, j;
+> 
+> 		if (pDOSXDS)
+> 		{ 
+> 			for (i=0; i<0x4000; i++)
+> 			{
+> 				if (pDOSXDS[0] == 't' && strncmp(pDOSXDS, "tracedos", 8) == 0)
+> 				{
+> 					// Assuming these are in order, no searching
+> 					for (j=0; *pDOSXDS && j<sizeof(trace_flags)/sizeof(trace_flags[0]); j++)
+> 					{
+> 						if (!strcmp(trace_flags[j].name, pDOSXDS))
+> 						{
+> 							pDOSXDS += strlen(pDOSXDS) + 1;
+> 							trace_flags[j].addr = (IU16*)pDOSXDS;
+> 							pDOSXDS += sizeof(IU16);
+> 						}
+> 					}
+> 					break;
+> 				}
+> 				pDOSXDS++;
+> 			}
+> 		}
+> 		if (!trace_flags[sizeof(trace_flags)/sizeof(trace_flags[0])-1].addr)
+> 		{
+> 			printf ("DOSX trace flags not found I have, sure running a DEBUG build of DOSX you are?\n");
+> 			return (0);
+> 		}
+> 	}
+> 
+> 	/*
+> 	 * strip off command and get first flag name
+> 	 */
+> 	n_found = 0;
+> 	(void) strtok (str, " \t");
+> 
+> 	if (flag_name = strtok(NULL, " \t")) {
+> 		/*
+> 		 * Pick out symbolic flag name and see whether is is being set
+> 		 * or reset.
+> 	 	 */
+> 		n_found += 1;
+> 		negate = (flag_name[0] == '-');
+> 		if (negate)
+> 		{
+> 			flag_name += 1;
+> 			mask = 0;
+> 		}
+> 		else
+> 		{		
+> 			if (flag_val = strtok(NULL, " \t"))
+> 				mask = (IU16)atoi(flag_val);
+> 			else
+> 				mask = 1;
+> 		}
+> 
+> 		/*
+> 	 	 * Find flag and twiddle bits as appropriate.
+> 	 	 */
+> 		for (n = 0; n < sizeof(trace_flags)/sizeof(trace_flags[0]); n++)
+> 			if (!strcmp(flag_name, trace_flags[n].name) && trace_flags[n].addr) {
+> 				*trace_flags[n].addr = mask;
+> 				break;
+> 			}
+> 	}
+> 
+> 	/*
+> 	 * Print current trace flags if no recognised flags passed in command.
+> 	 * (or empty command line).
+> 	 */
+> 	if (n_found == 0) {
+> 		for (n = 0; n < sizeof(trace_flags)/sizeof(trace_flags[0]); n++) {
+> 			printf ("%-14s: %d\t%s\n", trace_flags[n].name,
+> 				trace_flags[n].addr ? *trace_flags[n].addr : 0,
+> 				trace_flags[n].descr);
+> 		}
+> 		printf ("\n\n");
+> 	}
+> 
+> 	return(0);
+> }

@@ -42,21 +42,21 @@
 > #endif /* NTVDM */
 --- NT4\private\mvdm\softpc.new\base\debug\yoda.c
 +++ nt\private\mvdm\softpc.new\base\debug\yoda.c
-4295a4296,4298
+4166a4167,4169
 > #ifdef HAXM
 > 	return sas_hw_at(addr);
 > #else
-4296a4300
+4167a4171
 > #endif
-5380c5384
+5248c5252
 < #ifdef CPU_40_STYLE
 ---
 > #if defined(CPU_40_STYLE) && !defined(HAXM)
-5600c5604
+5468c5472
 < #ifdef CPU_40_STYLE
 ---
 > #if defined(CPU_40_STYLE) && !defined(HAXM)
-6380c6384
+6248c6252
 < #ifndef	CCPU
 ---
 > #if !defined(CCPU) && !defined(HAXM)

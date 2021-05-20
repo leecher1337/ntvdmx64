@@ -16,3 +16,14 @@ EXPORTS
     xxxDbgSegmentNotice
     xxxDbgTraceEvent
     xxxDbgTraceInt
+
+; Debug
+    VdmBreakPoints          DATA
+    DbgWowhGlobalHeap       DATA
+    DbgWowhExeHead          DATA
+    bWantsNtsdPrompt        DATA
+    VdmDbgTraceFlags        DATA
+    DbgTimerMode            DATA
+    DbgTimerInitialized     DATA
+    VdmDbgEFLAGS            DATA
+    InVdmDebugger           DATA
