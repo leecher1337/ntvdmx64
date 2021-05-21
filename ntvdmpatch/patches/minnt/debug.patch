@@ -48,6 +48,12 @@
 > #ifdef X86GFX
 762a789
 > #endif
+--- NT4\private\mvdm\vdmexts\dos.c
++++ nt\private\mvdm\vdmexts\dos.c
+411c411
+<         if (!READMEM((LPVOID)(GetIntelBase()+ppdb), &pdb, sizeof(pdb))) {
+---
+>         if (!READMEM((LPVOID)ppdb, &pdb, sizeof(pdb))) {
 --- NT4\private\mvdm\wow32\wow32.def
 +++ nt\private\mvdm\wow32\wow32.def
 45a46,84
@@ -109,7 +115,6 @@
 > 	Start_of_M_area         DATA
 --- NT4\private\mvdm\softpc.new\host\src\nt_yoda.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_yoda.c
-diff -r \\hundling\f\Windows.Source.Code.w2k.nt4.wxp\minnt\q160765803-minint4-85fac4faadc7\base\mvdm\softpc.new\host\src\nt_yoda.c D:\nt_yoda.c
 42a43
 > #include <stdlib.h>
 46a48
