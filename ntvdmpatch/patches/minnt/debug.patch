@@ -67,6 +67,12 @@
 >         sprintf(sym_text, "%s: %04d:%04d", filename, segment, offset);
 >         *dist = 0;
 >         return TRUE;
+--- NT4\private\mvdm\vdmdbg\segment.c
++++ nt\private\mvdm\vdmdbg\segment.c
+466c466
+<             if (pSegEntry->segment == 0 || pSegEntry->segment == SegNumber) {
+---
+>             if (pSegEntry->segment == SegNumber - 1) {
 --- NT4\private\mvdm\wow32\wow32.def
 +++ nt\private\mvdm\wow32\wow32.def
 45a46,84
