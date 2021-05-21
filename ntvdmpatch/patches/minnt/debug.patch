@@ -54,6 +54,19 @@
 <         if (!READMEM((LPVOID)(GetIntelBase()+ppdb), &pdb, sizeof(pdb))) {
 ---
 >         if (!READMEM((LPVOID)ppdb, &pdb, sizeof(pdb))) {
+--- NT4\private\mvdm\vdmexts\sym.c
++++ nt\private\mvdm\vdmexts\sym.c
+334c334
+<         return(pfnGetSymbol(filename,
+---
+>         if (pfnGetSymbol(filename,
+340c340,343
+<                              dist));
+---
+>                              dist)) return TRUE;
+>         sprintf(sym_text, "%s: %04d:%04d", filename, segment, offset);
+>         *dist = 0;
+>         return TRUE;
 --- NT4\private\mvdm\wow32\wow32.def
 +++ nt\private\mvdm\wow32\wow32.def
 45a46,84
