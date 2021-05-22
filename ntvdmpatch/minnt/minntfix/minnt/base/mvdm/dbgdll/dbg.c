@@ -498,8 +498,8 @@ void ModuleSegmentMove(
 
         RtlFillMemory( &se, sizeof(se), (UCHAR)0 );
 
-        se.Segment     = OldSelector;
-        se.Selector1   = Segment;
+        se.Segment     = Segment;
+        se.Selector1   = OldSelector;
         se.Selector2   = NewSelector;
         se.Length      = Length;
         se.Type        = 2;
