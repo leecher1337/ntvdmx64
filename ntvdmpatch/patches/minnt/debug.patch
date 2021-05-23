@@ -296,3 +296,21 @@
 > 
 > 	return(0);
 > }
+--- NT4\private\mvdm\dos\v86\doskrnl\dos\msinit.asm
++++ nt\private\mvdm\dos\v86\doskrnl\dos\msinit.asm
+319c319
+<         mov     bx, cs                  ; current base of DOS
+---
+>         mov     di, cs                  ; current base of DOS
+325c325
+<         mov     di, 2                   ; Hardcoded segment number
+---
+>         mov     bx, 2                   ; Hardcoded segment number
+948c948
+<         mov     bx, cs                  ; moving from here
+---
+>         mov     di, cs                  ; moving from here
+951c951
+<         mov     di, 1                   ; Hardcoded segment number
+---
+>         mov     bx, 1                   ; Hardcoded segment number
