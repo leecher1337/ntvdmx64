@@ -484,8 +484,8 @@ void ModuleLoad(
 void ModuleSegmentMove(
     LPSTR   lpModuleName,
     LPSTR   lpPathName,
+    WORD    ModuleSegment,
     WORD    OldSelector,
-    WORD    Segment,
     WORD    NewSelector,
     DWORD   Length
 ) {
@@ -498,7 +498,7 @@ void ModuleSegmentMove(
 
         RtlFillMemory( &se, sizeof(se), (UCHAR)0 );
 
-        se.Segment     = Segment;
+        se.Segment     = ModuleSegment;
         se.Selector1   = OldSelector;
         se.Selector2   = NewSelector;
         se.Length      = Length;
