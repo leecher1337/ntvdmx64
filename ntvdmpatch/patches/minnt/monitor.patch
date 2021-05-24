@@ -10,9 +10,9 @@
 < #ifdef i386
 ---
 > #ifdef MONITOR
-264a265
+276a277
 > #ifdef MONITOR
-267a269,271
+279a281,283
 > #else
 >         (*pfnDbgTraceEvent)(pVdmTraceInfo, Type, wData, lData);
 > #endif

@@ -3,8 +3,16 @@ Debugging WOW applications
 
 ntsd contains a useful extension for debugging WOW problems.
 You need a checked build for debugging.
-Although you can of course debug the ntvdm using yoda, some specific WOW
-commands may become handy for i.e. finding exceptions.
+NTVDM has a Windbg/ntsd extension for debugging WOW applications called
+vdmexts.dll, which  may become handy for i.e. finding exceptions.
+They are inteded for NTSD, however I feel more comfortable using YODA as the
+NTVDM debugger, therefore it is now also possible to use there extensions with
+YODA (preferred).
+
+So the instructions depend on what debugger you prefer.
+
+VDMEXTS WITH NTSD/CDB
+=====================
 This requires some preparation first:
 
 1) Install debug symbols for NTVDM and NTVDMD so that WinDBG can find the
@@ -46,6 +54,44 @@ This requires some preparation first:
    Enable break on each module load:
    !vdm\vdmexts.sxe cw
 
+Don't ask me on how to debug and step within a DOS application with it, 
+though. 
+
+
+VDMEXTS WITH YODA
+=================
+The extensions may be limited in YODA, as they were designed for NTSD, but
+anyway, you can mostly use them:
+
+This requires some preparation first:
+
+1) copy Binaries\x86chk\dbg\files\bin\winxp\vdmexts.dll %SYSTEMROOT%\SysWOW64\
+
+
+To debug:
+*) Enter YODA. There you can issue the vdmdbg extensions by starting your 
+   command with a dot, i.e.:
+
+   .help
+
+Note that yoda will switch its disassembly output to VDMEXT's view once
+you entered any vdmext command (i.e. .r). This has the advantage that 
+disassembler uses symbol lookup, if a .sym file is present, or it at least
+tells you which module you are currently in, if it recognizes its segment.
+However it has the disadvantage, that it's slow.
+To list available segments and their modules, ouy can use:
+
+.lm   - To display Win16 modules (if any)
+.lm 0 - To display DOS modules
+
+When setting breakpoints with .bp, you can give a symbol name, given that
+the .sym files for the application are installed (copied to SysWOW64 
+directory). Note that - in contrary to what you are maybe used to with
+ntsd - the symbol name has to be without its module prefix, so i.e. just:
+
+.bp SendMessage
+
+
 
 Tracing WOW applications
 ========================
@@ -53,17 +99,17 @@ Using Debugger
 --------------
 Of course, you need a checked build for debugging.
 If you want to trace using debugger extensions mentioned above, just use the 
-commands:
+commands (add !vdm\vdmexts prefix to it if useing ntsd):
 
-!vdm\vdmexts.SetLogLevel <loglevel>
+.setloglevel <loglevel>
 
 and if you want to log to a file, additionally use the command:
 
-!vdm\vdmexts.LogFile <WOW logfile>
+.logfile <WOW logfile>
 
 If you want to filter logs for specific modules, use the
 
-!vdm\vdmexts.filter 
+.filter 
 
 command.
 
@@ -93,9 +139,9 @@ NTVDMx64's Syslevel Spamming by setting loglevel below 15.
 0	-	Always (so you cannot supress this output, Critical errors)
 1	-	Also Errors
 2	-	Also RegisterWindowMessage errors
-3	-	Also control messages
+3	-	Also control messages, calling parameters
 4	-	Also Trace output
-5	-	Also callback errors
+5	-	Also callback errors, return from calls
 6	-	Also thunking, dib drawing information
 7	-	Also adding aliases to list, control thunking
 8	-	Also File IO control stuff (open, close..)
@@ -103,7 +149,9 @@ NTVDMx64's Syslevel Spamming by setting loglevel below 15.
 10	-	Also information from log filters set by filter command
 12	-	Also recycled handles, DDE thunking, file read/write, kernel tracing...
 13	-	Also aliasing hints
+14		Also all internal WOW kernel Calls
 15	-	Also NTVDMx64 specific: Enter/Leave Syslevel
+16	-	MAX the world (all 16 bit kernel internal calls
 
 
 Log filters

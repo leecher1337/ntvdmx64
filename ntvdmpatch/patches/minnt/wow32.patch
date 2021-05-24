@@ -687,6 +687,12 @@
 > #else
 692a740
 > #endif
+1806,1807c1854,1855
+<         fDebuggerAttached = NT_SUCCESS(Status) && (MyDebugPort != NULL);
+< 
+---
+>         fDebuggerAttached = NT_SUCCESS(Status) && (MyDebugPort != NULL) ? TRUE : DbgIsDebuggee();
+>         
 1944c1992
 < #ifdef _X86_
 ---

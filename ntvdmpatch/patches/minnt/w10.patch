@@ -19,8 +19,8 @@
 > #define RegisterConsoleVDM (fpRegisterConsoleVDMxp)((GetVersion() & 0xF) <= 5?RegisterConsoleVDM:w7WrapRegisterConsoleVDM)
 --- NT4\private\mvdm\softpc.new\host\src\sources.inc
 +++ nt\private\mvdm\softpc.new\host\src\sources.inc
-99c99,100
-<     ..\vdpm.c
+100c100,101
+<     ..\vdmexts.c
 ---
->     ..\vdpm.c          \
+>     ..\vdmexts.c       \
 >     ..\nt_w10.c

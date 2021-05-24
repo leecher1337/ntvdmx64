@@ -1,0 +1,1 @@
+BOOL VdmExtCommand(char *pname, char *args);

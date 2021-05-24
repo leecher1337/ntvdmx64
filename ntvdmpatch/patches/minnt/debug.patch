@@ -1,14 +1,23 @@
 --- NT4\private\mvdm\softpc.new\base\debug\trace.c
 +++ nt\private\mvdm\softpc.new\base\debug\trace.c
-493a496,497
+72a73
+> static pf_trace_hook trace_hook_func = NULL;
+295a297
+>      if (trace_hook_func) trace_hook_func(&dump_info);
+493a496,502
 > 
 >  /* No YODA in i386, so let use set this via env too */
->  start = host_getenv("SUB_IO_VERBOSE");
->  if (start) sub_io_verbose = atoi(start);
+>   start = host_getenv("SUB_IO_VERBOSE");
+>   if (start) sub_io_verbose = atoi(start);
+>  
+>   start = host_getenv("IO_VERBOSE");
+>   if (start) io_verbose = atoi(start);
+494a504,508
+> }
 > 
->  start = host_getenv("IO_VERBOSE");
->  if (start) io_verbose = atoi(start);
-> 
+> void trace_install_hook(pf_trace_hook hook)
+> {
+>     trace_hook_func = hook;
 --- NT4\private\mvdm\softpc.new\base\support\main.c
 +++ nt\private\mvdm\softpc.new\base\support\main.c
 183c183
@@ -56,20 +65,83 @@
 >         if (!READMEM((LPVOID)ppdb, &pdb, sizeof(pdb))) {
 --- NT4\private\mvdm\vdmexts\sym.c
 +++ nt\private\mvdm\vdmexts\sym.c
-334c334
+221c221,222
+<     WORD       *psegment
+---
+>     WORD       *psegment,
+>     SEGENTRY  **ppse
+236a238
+>         ppse     - pptr that receives SEGENTRY, if entry found in segtbl
+247a250
+>     if (ppse) *ppse = NULL;
+259a263
+>             if (ppse) *ppse = se;
+264c268,282
+< 
+---
+>     
+>     if (mode == V86_MODE)
+>     {
+>         se = GetSegtablePointer();
+>         while ( se ) {
+>             if (selector >= se->selector && selector <= se->selector + (se->length>>4)) {
+>                 ParseModuleName(szModule, se->szExePath);
+>                 *psegment = se->segment;
+>                 if (ppse) *ppse = se;
+>                 return TRUE;
+>             }
+>             se = se->Next;
+>         }
+>     }
+>     
+326a345
+>     SEGENTRY *se;
+333,334c352,354
+<     if (GetOwnerSegmentFromSelector(selector, mode, filename, &segment)) {
 <         return(pfnGetSymbol(filename,
 ---
+>     if (GetOwnerSegmentFromSelector(selector, mode, filename, &segment, &se)) {
+>         sym_text += sprintf (sym_text, "%s!", filename);
 >         if (pfnGetSymbol(filename,
-340c340,343
+340c360,363
 <                              dist));
 ---
 >                              dist)) return TRUE;
->         sprintf(sym_text, "%s: %04d:%04d", filename, segment, offset);
+>         sprintf(sym_text-1, ": %04x:%04x", selector - (se?se->selector:0) + 0x1000, offset);
 >         *dist = 0;
 >         return TRUE;
+385c408
+<                                              module, psegment)) {
+---
+>                                              module, psegment, NULL)) {
 --- NT4\private\mvdm\vdmdbg\segment.c
 +++ nt\private\mvdm\vdmdbg\segment.c
-466c466
+214c214,215
+<     WORD Selector,
+---
+>     WORD Selector1,
+>     WORD Selector2,
+229c230
+<             (pSegEntry->segment == segment)) {
+---
+>             (pSegEntry->selector == Selector1)) {
+231c232
+<             pSegEntry->selector = Selector;
+---
+>             pSegEntry->selector = Selector2;
+241c242
+<     ModuleLoad(Selector, segment, length, szExePath);
+---
+>     ModuleLoad(Selector2, segment, length, szExePath);
+346c347
+<             V86SegmentMove(se.Selector2, se.Segment, se.Length, se.FileName);
+---
+>             V86SegmentMove(se.Selector1, se.Selector2, se.Segment, se.Length, se.FileName);
+369c370
+<         ModuleLoad(se.Selector1, 0, se.Length, se.FileName);
+---
+>         ModuleLoad(se.Selector1?se.Selector1:se.Segment, 0, se.Length, se.FileName);
+466c467
 <             if (pSegEntry->segment == 0 || pSegEntry->segment == SegNumber) {
 ---
 >             if (pSegEntry->segment == SegNumber - 1) {
@@ -117,7 +189,9 @@
 >     fWMsgProfRT                 DATA
 --- NT4\private\mvdm\softpc.new\obj.vdm\ntvdm.src
 +++ nt\private\mvdm\softpc.new\obj.vdm\ntvdm.src
-281a282,295
+214a215
+>     DbgIsDebuggee
+281a283,296
 > 
 > ; Debug symbols
 > 	pSFTHead                DATA
@@ -136,27 +210,35 @@
 +++ nt\private\mvdm\softpc.new\host\src\nt_yoda.c
 42a43
 > #include <stdlib.h>
-46a48
+46a48,49
 > #include "sas.h"
-75c77
+> #include "vdmexts.h"
+75c78
 < #define MAX_CALL_STACK	128
 ---
 > #define MAX_CALL_STACK	256
-140a143,144
+140a144,147
 > LOCAL int do_dpmitr	IPT5(char *, str, char *, com, long, cs,
 > 			     long, ip, long, len);
-153,156c157,161
+> LOCAL int do_vdmexts	IPT5(char *, str, char *, com, long, cs,
+> 			     long, ip, long, len);
+153,156c160,165
 < { "ecbt", do_ecbt,	"                        - enable call-back-tracing" },
 < { "dcbt", do_dcbt,	"                        - disable call-back-tracing" },
 < { "pcbt", do_pcbt,	"                        - print call-back-trace" },
 < { "ntsd", do_ntsd,	"                        - break to ntsd" }
 ---
 > { "dpmitr",	do_dpmitr,  "                     - Toggle DOSX debug Dpmi tracing" },
+> { ".<cmd>", do_vdmexts, "                     - Execute vdmexts command, i.e. .help"},
 > { "ecbt",   do_ecbt,	"                     - enable call-back-tracing" },
 > { "dcbt",   do_dcbt,	"                     - disable call-back-tracing" },
 > { "pcbt",   do_pcbt,	"                     - print call-back-trace" },
 > { "ntsd",   do_ntsd,	"                     - break to ntsd" }
-1192a1198,1336
+365a375,377
+>     /* VDM extensions special */
+>     if (*com == '.') return do_vdmexts(str, com, cs, ip, len);
+>     
+1192a1205,1370
 > /*
 > =========================================================================
 > 
@@ -296,9 +378,67 @@
 > 
 > 	return(0);
 > }
+> 
+> /*
+> =========================================================================
+> 
+> FUNCTION        : do_vdmexts
+> 
+> PURPOSE         : invokes a command from vdmexts extension
+> 
+> RETURNED STATUS : 0 for success, 1 for failure
+> 
+> NOTES           :
+> 
+> =======================================================================
+> */
+> LOCAL int do_vdmexts	IPT5(char *, str, char *, com, long, cs,
+> 			     long, ip, long, len)
+> {
+> 	UNUSED(cs);
+> 	UNUSED(ip);
+> 	UNUSED(len);
+> 	UNUSED(stop);
+> 
+>     VdmExtCommand(com + 1, str + strlen(com) + 1);
+>     return(0);
+> }
+> 
+> 
 --- NT4\private\mvdm\dos\v86\doskrnl\bios\sysinit1.asm
 +++ nt\private\mvdm\dos\v86\doskrnl\bios\sysinit1.asm
 990c990
 <         mov     bx, 1                   ; bugbug: Hardcoded segment number
 ---
 >         mov     di, 1                   ; bugbug: Hardcoded segment number
+--- NT4\private\mvdm\dbg\dbg.c
++++ nt\private\mvdm\dbg\dbg.c
+54a55,56
+> 
+> VOID VdmDbgAttach (VOID);
+91a94,102
+> #ifdef YODA
+>             if (!bDbgDebuggerLoaded)
+>             {
+>                 extern PVOID SetYodaVDMEventHandler(BOOL fEnable);
+> 
+>                 // No real debugger is attached, so let YODA handle all stuff
+>                 SetYodaVDMEventHandler(TRUE);
+>             }
+> #endif
+133a145
+>         pfnDbgDispatch      = (VOID (WINAPI *)(VOID)) GetProcAddress( hmodDBG, "xxxDbgDispatch" );
+--- NT4\private\mvdm\inc\dbgexp.h
++++ nt\private\mvdm\inc\dbgexp.h
+19a20,21
+> extern BOOL DbgIsDebuggee( VOID );
+> 
+--- NT4\private\mvdm\softpc.new\base\inc\trace.h
++++ nt\private\mvdm\softpc.new\base\inc\trace.h
+123a124,125
+> typedef int (*pf_trace_hook)(int *);
+> 
+126a129
+> extern void trace_install_hook(pf_trace_hook hook);
+135a139
+> extern void trace_install_hook();

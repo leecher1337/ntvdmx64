@@ -200,7 +200,7 @@
 >     DBGTRACE(VDMTR_TYPE_DPMI | DPMI_OP_EMULATION, Opcode, (ULONG) bReturn); 
 --- NT4\private\mvdm\softpc.new\obj.vdm\ntvdm.src
 +++ nt\private\mvdm\softpc.new\obj.vdm\ntvdm.src
-260c260
+261c261
 < #ifdef  _X86_
 ---
 > #ifdef  _X86dpmi_

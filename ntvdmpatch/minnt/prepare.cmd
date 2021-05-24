@@ -42,7 +42,7 @@ md %workdir%
 
 rem minnt SDK Update to Win XP/2003 SDK
 if exist ..\..\NTOSBE-master\src\public\sdk\inc\commdlg.h xcopy /y ..\..\NTOSBE-master\src\public\sdk\inc %minntfix%\minnt\public\sdk\inc\
-for %%a in (libcmt.lib msvcrt.lib ntdll.lib) do if exist ..\..\NTOSBE-master\src\public\sdk\lib\x86\%%~a xcopy /y ..\..\NTOSBE-master\src\public\sdk\lib\x86\%%~a %minntfix%\minnt\public\sdk\lib\x86\
+for %%a in (libcmt.lib msvcrt.lib ntdll.lib imagehlp.lib) do if exist ..\..\NTOSBE-master\src\public\sdk\lib\x86\%%~a xcopy /y ..\..\NTOSBE-master\src\public\sdk\lib\x86\%%~a %minntfix%\minnt\public\sdk\lib\x86\
 
 if not exist %minntfix%\minnt\public\ddk\lib\x86\umpdddi.lib goto doddk
 if not exist %minntfix%\minnt\public\sdk\lib\x86\winspool.lib goto doddk

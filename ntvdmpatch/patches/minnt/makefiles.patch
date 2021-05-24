@@ -24,13 +24,14 @@
 >         ..\quick_ev.c    \
 --- NT4\private\mvdm\softpc.new\host\src\sources.inc
 +++ nt\private\mvdm\softpc.new\host\src\sources.inc
-97c97,99
+97c97,100
 <     ..\nt_sbmid.c
 ---
 >     ..\nt_sbmid.c      \
 >     ..\longpath.c      \
->     ..\vdpm.c
-99a102
+>     ..\vdpm.c          \
+>     ..\vdmexts.c
+99a103
 > X86_SOURCES=..\nt_aorc.c
 --- NT4\private\mvdm\softpc.new\obj.vdm\cdefine.inc
 +++ nt\private\mvdm\softpc.new\obj.vdm\cdefine.inc
@@ -65,7 +66,7 @@
 < !if !$(X86)
 ---
 > !if !$(X86)  && "$(CCPU)" == "" && "$(HAXM)" == ""
-49,51c49,52
+49,51c49,53
 <         $(SDK_LIB_PATH)\advapi32.lib
 < #       $(SDK_LIB_PATH)\kernl32p.lib    \
 < #       $(WINDOWS_LIB_PATH)\apphelp.lib \
@@ -73,28 +74,29 @@
 >         $(SDK_LIB_PATH)\advapi32.lib    \
 >         $(SDK_LIB_PATH)\kernl32p.lib    \
 >         $(SDK_LIB_PATH)\gdi32.lib \
->         $(WINDOWS_LIB_PATH)\apphelp.lib
-80c81
+>         $(WINDOWS_LIB_PATH)\apphelp.lib \
+>         $(SDK_LIB_PATH)\imagehlp.lib
+80c82
 < !if $(X86)
 ---
 > !if $(X86)  && "$(CCPU)" == "" && "$(HAXM)" == ""
-99a101,105
+99a102,106
 > # Use Monitor, HAXM or CCPU?
 > !if $(X86) && "$(CCPU)" == "" && "$(HAXM)" == ""
 > CPULIBS=$(BASEDIR)\public\sdk\lib\*\monitor.lib
 > !else
 > !if "$(HAXM)" == ""
-104a111,113
+104a112,114
 > !if $(X86)
 > CPULIBS=$(SOFTPC_TREE)\base\ccpu386\$(O)\ccpu386.lib $(SOFTPC_TREE)\base\cvidcnew\$(O)\cvidc.lib
 > !else
-106a116,120
+106a117,121
 > !endif
 > !else
 > CPULIBS=$(MVDM_TREE)\v86\haxm\$(ALT_PROJECT_OBJS)\$(O)\haxm.lib $(SOFTPC_TREE)\base\cvidcnew\$(O)\cvidc.lib
 > !endif
 > !endif
-115a130
+115a131
 >         ..\fmstubs.c \
 --- NT4\private\mvdm\xms.486\sources.inc
 +++ nt\private\mvdm\xms.486\sources.inc
@@ -113,7 +115,7 @@
 >     MGetVdmPointer = ExpSim32GetVDMPointer      ; for 1.0 VDD compatibility
 75a77
 >     pgDpmVdmFamTbls
-266c268
+267c269
 < #ifndef _X86_
 ---
 > #ifndef MONITOR
