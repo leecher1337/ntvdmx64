@@ -53,6 +53,12 @@
 //#define CREATEPROCESS_HOOK
 #endif
 
+/* This is an experimental patch to enforce ConhostV1 to also load on users
+ * who haven't installed NTVDMx64 themselves and therefore, ForceV2 key for
+ * console is still TRUE in their user accounts.
+ */
+#define HOOK_CONHOSTV2
+
 /* On Windows >=7, appinfo.dll needs to get patched inside svchost.exe netsvcs */
 #if !defined(TARGET_WINXP) && defined(_WIN64) 
 #define NEED_APPINFO

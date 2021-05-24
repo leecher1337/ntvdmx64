@@ -63,8 +63,10 @@ ScreenInfo->BufferInfo.GraphicsInfo.ClientBitMap = 0;
 #include "ldntvdm.h"
 #include "consbmp.h"
 #include "iathook.h"
+#include "reg.h"
+#include "symcache.h"
 
-#ifndef TARGET_WINXP
+#if !defined(TARGET_WINXP) && defined(_WIN64)
 
 typedef PVOID(WINAPI *RtlAllocateHeapFunc)(PVOID  HeapHandle, ULONG  Flags, SIZE_T Size);
 RtlAllocateHeapFunc RtlAllocateHeapReal;
@@ -95,17 +97,53 @@ HMODULE WINAPI LoadLibraryExWHook(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwF
 }
 #endif
 
+#ifdef HOOK_CONHOSTV2
+/* The key for forcing V1 console is in HKEY_CURRENT_USER, thus it cannot be set globally during setup.
+ * Therefore we patch ShouldUseConhostV2 function in conhost to always return FALSE so that ntvdmx64
+ * works for all users on the system, as long as the loader is installed.
+ * If admin doesn't want to have its console V2 disabled globally (i.e users not using ntvdmx64), Admin
+ * can create ObeyForceV2 DWORD-value in ldntvdm configuration key and we will leave conhost alone 
+ */
+void ForceV1Console(HMODULE hConhost)
+{
+	DWORD dwAddress;
+	HKEY hKey;
+
+	if (NT_SUCCESS(REG_OpenLDNTVDM(KEY_READ, &hKey)))
+	{
+		if ((!NT_SUCCESS(REG_QueryDWORD(hKey, L"ObeyForceV2", &dwAddress)) || dwAddress == 0) &&
+			SymCache_GetDLLKey(hKey, L"conhost.exe", FALSE) &&
+			NT_SUCCESS(REG_QueryDWORD(hKey, L"ShouldUseConhostV2", &dwAddress)))
+		{
+			DWORD OldProt;
+			ULONG_PTR Address = (ULONG_PTR)hConhost + dwAddress;
+
+			OldProt = PAGE_EXECUTE_READWRITE;
+			if (VirtualProtect((LPVOID)Address, sizeof(DWORD), OldProt, &OldProt))
+			{
+				*(DWORD*)Address = 0x24C3C031; // xor eax, eax; retn
+				VirtualProtect((LPVOID)Address, sizeof(DWORD), OldProt, &OldProt);
+				TRACE("ShouldUseConhostV2 hook installed @%08X\n", Address);
+			}
+			else TRACE("ShouldUseConhostV2 hook: VirtualProtect failed\n");
+		}
+		REG_CloseKey(hKey);
+	}
+}
+#endif
 
 /* Returns true if the target system doesn't have a conhostv1.dll to directly use */
 BOOL ConsBmpBug_Install(HMODULE *phmodConhost)
 {
 	BOOL fNoConhostDll = FALSE;
+	HMODULE hConhost = GetModuleHandle(NULL);
 
-#ifdef TARGET_WIN7
-#ifdef _WIN64
-	ConsBmp_Install();
+#ifdef HOOK_CONHOSTV2
+	ForceV1Console(hConhost);
 #endif
-	Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "ntdll.dll", "RtlAllocateHeap", RtlAllocateHeapHook, (PULONG_PTR)&RtlAllocateHeapReal);
+#ifdef TARGET_WIN7
+	ConsBmp_Install(hConhost);
+	Hook_IAT_x64_IAT((LPBYTE)hConhost, "ntdll.dll", "RtlAllocateHeap", RtlAllocateHeapHook, (PULONG_PTR)&RtlAllocateHeapReal);
 	return TRUE;
 #else
 	if (*phmodConhost = GetModuleHandle(_T("ConHostV1.dll")))
@@ -117,9 +155,9 @@ BOOL ConsBmpBug_Install(HMODULE *phmodConhost)
 		GetSystemDirectoryA(szFile, sizeof(szFile) / sizeof(szFile[0]));
 		strcat(szFile, "\\ConhostV1.dll");
 		if (fNoConhostDll = GetFileAttributesA(szFile) == 0xFFFFFFFF) // Windows 8
-			Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "ntdll.dll", "RtlAllocateHeap", RtlAllocateHeapHook, (PULONG_PTR)&RtlAllocateHeapReal);
+			Hook_IAT_x64_IAT((LPBYTE)hConhost, "ntdll.dll", "RtlAllocateHeap", RtlAllocateHeapHook, (PULONG_PTR)&RtlAllocateHeapReal);
 		else
-			Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "api-ms-win-core-libraryloader-l1-2-0.dll", "LoadLibraryExW", LoadLibraryExWHook, (PULONG_PTR)&LoadLibraryExWReal);
+			Hook_IAT_x64_IAT((LPBYTE)hConhost, "api-ms-win-core-libraryloader-l1-2-0.dll", "LoadLibraryExW", LoadLibraryExWHook, (PULONG_PTR)&LoadLibraryExWReal);
 	}
 	return fNoConhostDll;
 #endif /* TARGET_WIN7 */

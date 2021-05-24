@@ -44,6 +44,7 @@ DWORD WINAPI InjectIntoCreatedThreadThread(INJECTOR_PARAM *param)
 				ResumeThread(param->hThread);
 				WaitForSingleObject(hThread, 1000);
 				SetThreadPriority(param->hThread, prio);
+				CloseHandle(hThread);
 			}
 		} else ResumeThread(param->hThread);
 	}

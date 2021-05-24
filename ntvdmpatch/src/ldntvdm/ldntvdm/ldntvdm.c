@@ -148,7 +148,7 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 	)
 {
 #if defined (USE_SYMCACHE) && !defined(CREATEPROCESS_HOOK)
-	UpdateSymbolCache();
+	UpdateSymbolCache(TRUE);
 #endif
 	LastCreateUserProcessError = 
 		NtCreateUserProcessReal(ProcessHandle,
@@ -567,6 +567,8 @@ void EnsureWin7Symbols(HMODULE hKrnl32)
 	}
 }
 #endif
+
+
 
 #ifdef CRYPT_LDR
 BOOL WINAPI real_DllMainCRTStartup(

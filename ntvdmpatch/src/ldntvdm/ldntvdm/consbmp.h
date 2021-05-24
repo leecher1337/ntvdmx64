@@ -1,1 +1,2 @@
-BOOL ConsBmp_Install(void);
+BOOL ConsBmp_Install(HMODULE hConhost);
+

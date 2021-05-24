@@ -16,7 +16,7 @@ __declspec(dllexport) NTSTATUS NTAPI CreateProcessNotify(
 	)
 {
 #ifdef TARGET_WIN7
-	UpdateSymbolCache();
+	UpdateSymbolCache(TRUE);
 #endif
 	switch (uNotifyReason)
 	{

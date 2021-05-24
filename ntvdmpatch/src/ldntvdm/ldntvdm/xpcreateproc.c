@@ -532,7 +532,7 @@ NtCreateSectionHook(
 			{
 				bRecursive = TRUE;
 #ifdef USE_SYMCACHE
-				UpdateSymbolCache();
+				UpdateSymbolCache(TRUE);
 #endif
 				if (!NtVdm64CreateProcessReal)
 				{
@@ -605,14 +605,14 @@ static BOOL ResolveLocalSymbols(void)
 			// NB: ! When updating this list, also expand list in symcache.c !
 		};
 
-		if (UpdateSymbolCache())
+		if (UpdateSymbolCache(TRUE))
 		{
 			NTSTATUS Status;
 			HKEY hKey;
 
 			if (bRet = NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ | KEY_WRITE, &hKey)))
 			{
-				if (bRet = (SymCache_GetDLLKey(hKey, L"kernel32.dll")?TRUE:FALSE))
+				if (bRet = (SymCache_GetDLLKey(hKey, L"kernel32.dll", TRUE)?TRUE:FALSE))
 				{
 					for (i = 0; i < sizeof(syms) / sizeof(syms[0]); i++)
 					{

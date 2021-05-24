@@ -112,15 +112,13 @@ static DWORD dwConBaseTag = 0;
 static DWORD *pdwConBaseTag = &dwConBaseTag;
 static HANDLE pConHeap = INVALID_HANDLE_VALUE;
 
-BOOL ConsBmp_Install(void)
+BOOL ConsBmp_Install(HMODULE hConhost)
 {
-	HMODULE hConhost;
 	DWORD flOld = 0;
 	DWORD dwAddress;
 	BYTE *pConsBmp;
 	HKEY hKey;
 	
-	hConhost = GetModuleHandleA("conhost.exe");
 	if (NT_SUCCESS(REG_OpenLDNTVDM(KEY_READ, &hKey)))
 	{
 		if (NT_SUCCESS(REG_QueryDWORD(hKey, L"dwConBaseTag", &dwAddress))) pdwConBaseTag = (DWORD*)((DWORD64)hConhost + dwAddress);

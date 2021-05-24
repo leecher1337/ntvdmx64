@@ -61,12 +61,17 @@ static REGKEY_PAIR m_aSymsKERNEL32[] =
 #endif
 #endif
 
-#if defined(TARGET_WIN7) && defined(_WIN64)
+#if defined(_WIN64) && !defined(TARGET_WINXP) && (defined(TARGET_WIN7) || defined(HOOK_CONHOSTV2))
 static REGKEY_PAIR m_aSymsCONHOST[] = 
 {
+#if defined(TARGET_WIN7)
 	_E("dwConBaseTag"),
 	_E("FindProcessInList"),
 	_E("CreateConsoleBitmap"),
+#endif
+#if defined(HOOK_CONHOSTV2)
+	_E("ShouldUseConhostV2"),
+#endif
 	{ NULL, NULL }
 };
 #endif
@@ -83,7 +88,7 @@ static REGKEY_SYMS m_aSyms[] = {
 	#if defined(TARGET_WIN7) || defined(TARGET_WINXP) // Windows 7 has some functions internal to kernel32.dll, XP has all internal
 	{"kernel32.dll", L"kernel32.dll", m_aSymsKERNEL32},
 	#endif
-	#if defined(TARGET_WIN7) && defined(_WIN64) // consbmp.c fix
+	#if defined(_WIN64) && !defined(TARGET_WINXP) && (defined(TARGET_WIN7) || defined(HOOK_CONHOSTV2)) // consbmp.c fix
 	{"conhost.exe", L"conhost.exe", m_aSymsCONHOST},
 	#endif
 	#ifdef NEED_APPINFO
@@ -93,7 +98,7 @@ static REGKEY_SYMS m_aSyms[] = {
 
 extern void EnsureWin7Symbols(HMODULE hKrnl32);
 
-static BOOL UpdateSymsForModule(HKEY hKey, char *pszDLL, LPWSTR lpDLLKey, REGKEY_PAIR *keys)
+static BOOL UpdateSymsForModule(HKEY hKey, char *pszDLL, LPWSTR lpDLLKey, REGKEY_PAIR *keys, BOOL fUpdate)
 {
 	char szKernel32[MAX_PATH];
 	DWORD dwAddress, i;
@@ -115,13 +120,18 @@ static BOOL UpdateSymsForModule(HKEY hKey, char *pszDLL, LPWSTR lpDLLKey, REGKEY
 			{
 				if (!NT_SUCCESS(REG_QueryDWORD(hKey, keys[i].lpKeyName, &dwAddress)) || !dwAddress) break;
 			}
-			if (!keys[i].lpKeyName) return TRUE; // No update needed, everything fine
+			if (!keys[i].lpKeyName)
+			{
+				// No update needed, everything fine
+				CloseHandle(hFile);
+				return TRUE; 
+			}
 		}
 		CloseHandle(hFile);
 	}
 
 	// Update needed
-	if (SymEng_LoadModule(szKernel32, &dwBase) == 0 || GetLastError() == 0x1E7)
+	if (fUpdate && (SymEng_LoadModule(szKernel32, &dwBase) == 0 || GetLastError() == 0x1E7))
 	{
 		if (!dwBase) dwBase = (DWORD64)GetModuleHandleA(pszDLL);
 		TRACE("UpdateSymbolCache() loading %s symbols\n", pszDLL);
@@ -129,6 +139,12 @@ static BOOL UpdateSymsForModule(HKEY hKey, char *pszDLL, LPWSTR lpDLLKey, REGKEY
 		{
 			if (dwAddress = SymEng_GetAddr(dwBase, keys[i].pszFunction))
 				REG_SetDWORD(hKey, keys[i].lpKeyName, dwAddress);
+#ifdef HOOK_CONHOSTV2
+			// Special treatment for Symbol with multiple possible names :(
+			else if (keys[i].pszFunction == "ShouldUseConhostV2" &&
+				(dwAddress = SymEng_GetAddr(dwBase, "ConhostV2ForcedInRegistry")))
+				REG_SetDWORD(hKey, keys[i].lpKeyName, dwAddress);
+#endif
 		}
 		SymEng_UnloadModule(dwBase);
 		if (tm.dwLowDateTime)
@@ -152,14 +168,14 @@ static BOOL UpdateSymsForModule(HKEY hKey, char *pszDLL, LPWSTR lpDLLKey, REGKEY
 
 // NB: Only pass in static string lpDLLKey so that comparison with pointer to string in Data segment works 
 // and no expensive strcmp is needed
-HANDLE SymCache_GetDLLKey(HKEY hKey, LPWSTR lpDLLKey)
+HANDLE SymCache_GetDLLKey(HKEY hKey, LPWSTR lpDLLKey, BOOL fUpdate)
 {
 	int i;
 
 	for (i = 0; i < sizeof(m_aSyms) / sizeof(m_aSyms[0]); i++)
 		if (m_aSyms[i].lpDLLKey == lpDLLKey)
 		{
-			if (UpdateSymsForModule(hKey, m_aSyms[i].pszDLL, m_aSyms[i].lpDLLKey, m_aSyms[i].keys))
+			if (UpdateSymsForModule(hKey, m_aSyms[i].pszDLL, m_aSyms[i].lpDLLKey, m_aSyms[i].keys, fUpdate))
 				return (HANDLE)&m_aSyms[i];
 			return NULL;
 		}
@@ -182,21 +198,21 @@ DWORD SymCache_GetProcAddress(HKEY hKey, LPWSTR lpKeyName)
 	return 0;
 }
 
-BOOL UpdateSymbolCache()
+BOOL UpdateSymbolCache(BOOL fUpdate)
 {
 	HKEY hKey = NULL;
 	DWORD64 dwBase = 0;
 	NTSTATUS Status;
-	static BOOL bUpdated = FALSE;
+	static BOOL fUpdated = FALSE;
 
-	if (bUpdated) return TRUE;
+	if (fUpdated) return TRUE;
 	TRACE("UpdateSymbolCache()\n");
 	if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ | KEY_WRITE, &hKey)))
 	{
 		int i;
 
-		for (i = 0, bUpdated = TRUE; i < sizeof(m_aSyms) / sizeof(m_aSyms[0]); i++)
-			bUpdated &= UpdateSymsForModule(hKey, m_aSyms[i].pszDLL, m_aSyms[i].lpDLLKey, m_aSyms[i].keys);
+		for (i = 0, fUpdated = TRUE; i < sizeof(m_aSyms) / sizeof(m_aSyms[0]); i++)
+			fUpdated &= UpdateSymsForModule(hKey, m_aSyms[i].pszDLL, m_aSyms[i].lpDLLKey, m_aSyms[i].keys, fUpdate);
 		REG_CloseKey(hKey);
 	}
 	else
@@ -204,6 +220,6 @@ BOOL UpdateSymbolCache()
 		TRACE("RegCreateKeyEx failed: %08X\n", Status);
 	}
 
-	return bUpdated;
+	return fUpdated;
 }
 #endif /* USE_SYMCACHE */

@@ -84,7 +84,7 @@ BOOL WINAPI CreateProcessAHook(LPCSTR lpApplicationName, LPSTR lpCommandLine, LP
 	DWORD dwDebugged = (dwCreationFlags&DEBUG_PROCESS) ? 0 : CREATE_SUSPENDED;
 
 #ifdef USE_SYMCACHE
-	UpdateSymbolCache();
+	UpdateSymbolCache(TRUE);
 #endif
 	bRet = CreateProcessAReal(lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
 		bInheritHandles, dwCreationFlags | dwDebugged, lpEnvironment, lpCurrentDirectory, lpStartupInfo,
@@ -110,7 +110,7 @@ BOOL WINAPI CreateProcessWHook(LPCWSTR lpApplicationName, LPWSTR lpCommandLine, 
 	DWORD dwDebugged = (dwCreationFlags&DEBUG_PROCESS) ? 0 : CREATE_SUSPENDED;
 
 #ifdef USE_SYMCACHE
-	UpdateSymbolCache();
+	UpdateSymbolCache(TRUE);
 #endif
 	bRet = CreateProcessWReal(lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
 		bInheritHandles, dwCreationFlags | dwDebugged, lpEnvironment, lpCurrentDirectory, lpStartupInfo,
