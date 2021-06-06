@@ -1,13 +1,13 @@
 /*
  * SoftPC Revision 3.0
  *
- * Title	: vdmexts.c
+ * Title    : vdmexts.c
  *
- * Description	: Glue code between vdmexts.dll and YODA 
+ * Description  : Glue code between vdmexts.dll and YODA 
  *
- * Author	: Han (leecher1337) Solo
+ * Author   : Han (leecher1337) Solo
  *
- * Notes	: It's not my fault.
+ * Notes    : It's not my fault.
  *
  */
 #undef _WIN32_WINNT
@@ -15,6 +15,7 @@
 #include "insignia.h"
 #include "host_def.h"
 
+#ifdef YODA
 #include "xt.h"
 #define CPU_PRIVATE
 #include CpuH
@@ -105,60 +106,60 @@ BOOL VdmExtCommand(char *pname, char *args);
 // so we have a static verison here that parses public Environment
 static char *getenv( const char *varname )
 {
-	static char result[1024];
+    static char result[1024];
 
-	if (!GetEnvironmentVariable(varname, result, sizeof(result)))
-		return NULL;
-	return result;
+    if (!GetEnvironmentVariable(varname, result, sizeof(result)))
+        return NULL;
+    return result;
 }
 
 static ULONG
 GetExpressionRoutine(char * CommandString)
 {
-	ULONG value;
+    ULONG value;
 
-	// First check, if it's an internal NTVDM symbol, we can use a shortcut here
-	if (strncmp(CommandString, "ntvdm!", 6) == 0)
-	{
-		CommandString += 6;
+    // First check, if it's an internal NTVDM symbol, we can use a shortcut here
+    if (strncmp(CommandString, "ntvdm!", 6) == 0)
+    {
+        CommandString += 6;
 
-		if (_stricmp(CommandString, "adaptor") == 0)
-			return dmaGetAdaptor();
+        if (_stricmp(CommandString, "adaptor") == 0)
+            return dmaGetAdaptor();
 
 #define _X(k) { extern ULONG k; if (_stricmp(CommandString, #k) == 0) return (ULONG)&k; }
-		_X(pSFTHead);
-		_X(pusCurrentPDB);
-		_X(DpmiInterruptHandlers);
-		_X(DpmiFaultHandlers); 
+        _X(pSFTHead);
+        _X(pusCurrentPDB);
+        _X(DpmiInterruptHandlers);
+        _X(DpmiFaultHandlers); 
 #ifdef NEW_DPMIHOST // We are not using 'new' DPMI
-		_X(DpmiRmcb);
-		_X(RMCallBackBopSeg);
+        _X(DpmiRmcb);
+        _X(RMCallBackBopSeg);
 #endif
-		_X(XmemHead);
-		//_X(DosMemHead);
-		_X(Ldt);
-		_X(InitialVdmDbgFlags);
-		_X(InitialVdmTibFlags);
-		_X(VirtualIca);
-		_X(pVdmTraceInfo);
-		_X(nt_cpu_info);
-		_X(Start_of_M_area);
+        _X(XmemHead);
+        //_X(DosMemHead);
+        _X(Ldt);
+        _X(InitialVdmDbgFlags);
+        _X(InitialVdmTibFlags);
+        _X(VirtualIca);
+        _X(pVdmTraceInfo);
+        _X(nt_cpu_info);
+        _X(Start_of_M_area);
 #undef _X
 
-		CommandString -= 6;
-	}
+        CommandString -= 6;
+    }
     
     if ( strcmp(CommandString,"WOW_BIG_BDE_HACK") == 0 ) {
         return( (ULONG)(&segtable[0]) );
     }
 
-	if (strchr(CommandString, '!') && GetOffsetFromSym(CommandString, &value, 0))
-		return value;
+    if (strchr(CommandString, '!') && GetOffsetFromSym(CommandString, &value, 0))
+        return value;
 
-	if (sscanf(CommandString, "%x", &value))
-		return value;
+    if (sscanf(CommandString, "%x", &value))
+        return value;
 
-	return 0;
+    return 0;
 }
 
 static BOOL
@@ -214,19 +215,19 @@ GetSymbolRoutine (
 
 static DWORD disasmExportRoutine(ULONG_PTR *lpOffset, LPSTR lpBuffer, ULONG fShowEA)
 {
-	// This is utter nonsense, but vdmdbg ext shouldn't call it anyway
+    // This is utter nonsense, but vdmdbg ext shouldn't call it anyway
 
-	// extern IU16 dasm IPT4(char *, txt, IU16, seg, LIN_ADDR, off, SIZE_SPECIFIER, default_size);
-	dasm(lpBuffer, (IU16)(*lpOffset >> 4), (USHORT)*lpOffset, fShowEA?THIRTY_TWO_BIT:SIXTEEN_BIT);
+    // extern IU16 dasm IPT4(char *, txt, IU16, seg, LIN_ADDR, off, SIZE_SPECIFIER, default_size);
+    dasm(lpBuffer, (IU16)(*lpOffset >> 4), (USHORT)*lpOffset, fShowEA?THIRTY_TWO_BIT:SIXTEEN_BIT);
     return TRUE;
 }
 
 static DWORD CheckControlC (VOID)
 {
-	// This is nonsense either, but it also shouldn't get called 
+    // This is nonsense either, but it also shouldn't get called 
 
     if (EventStatus & ES_YODA) 
-	{
+    {
         EventStatus &= ~ES_YODA;
         return 1;
     }
@@ -799,32 +800,32 @@ static int trace_hook(int *dump_info)
 
 BOOL VdmExtCommand(char *pname, char *args)
 {
-	PNTSD_EXTENSION_ROUTINE ExtensionRoutine = NULL;
-	char *modname = "vdmexts.dll";
-	HANDLE hThread;
-	static BOOL fSymInitialized = FALSE;
+    PNTSD_EXTENSION_ROUTINE ExtensionRoutine = NULL;
+    char *modname = "vdmexts.dll";
+    HANDLE hThread;
+    static BOOL fSymInitialized = FALSE;
 
-	hProcess = GetCurrentProcess();
-	hThread = GetCurrentThread();
+    hProcess = GetCurrentProcess();
+    hThread = GetCurrentThread();
 
-	if ( NtsdExtensions.nSize == 0 ) {
+    if ( NtsdExtensions.nSize == 0 ) {
         NtsdExtensions.nSize = sizeof(NtsdExtensions);
         NtsdExtensions.lpOutputRoutine = dprintf;
         NtsdExtensions.lpGetExpressionRoutine = GetExpressionRoutine;
         NtsdExtensions.lpGetSymbolRoutine = GetSymbolRoutine;
         NtsdExtensions.lpDisasmRoutine = disasmExportRoutine;
         NtsdExtensions.lpCheckControlCRoutine = CheckControlC;
-	}
+    }
 
-	if ( !hModule )
-	{
-		if (!(hModule = LoadLibrary(modname)))
-		{
-			dprintf("Error %d loading %s\n", GetLastError(), modname);
-			return FALSE;
-		}
+    if ( !hModule )
+    {
+        if (!(hModule = LoadLibrary(modname)))
+        {
+            dprintf("Error %d loading %s\n", GetLastError(), modname);
+            return FALSE;
+        }
         trace_install_hook(trace_hook);
-	}
+    }
 
     if (!bDbgDebuggerLoaded)
     {
@@ -832,28 +833,28 @@ BOOL VdmExtCommand(char *pname, char *args)
         if (!bDbgDebuggerLoaded) SetYodaVDMEventHandler(TRUE);
     }
 
-	if (!fSymInitialized)
-	{
-	    if (fSymInitialized = SymInitialize( hProcess, NULL, TRUE ))
-		{
-			SymRegisterCallback( hProcess, SymbolCallbackFunction, NULL );
-			SetSymbolSearchPath();
-		}
-	}
+    if (!fSymInitialized)
+    {
+        if (fSymInitialized = SymInitialize( hProcess, NULL, TRUE ))
+        {
+            SymRegisterCallback( hProcess, SymbolCallbackFunction, NULL );
+            SetSymbolSearchPath();
+        }
+    }
 
-	if (!(ExtensionRoutine = (PNTSD_EXTENSION_ROUTINE)GetProcAddress(hModule, pname)))
-	{
-		if (!_stricmp( pname, "unload" )) {
-			FreeLibrary(hModule);
-			hModule = NULL;
+    if (!(ExtensionRoutine = (PNTSD_EXTENSION_ROUTINE)GetProcAddress(hModule, pname)))
+    {
+        if (!_stricmp( pname, "unload" )) {
+            FreeLibrary(hModule);
+            hModule = NULL;
             trace_install_hook(NULL);
-			return TRUE;
-		} else {
-			dprintf("GetProcAddress(\"%s\",\"%s\") failed with %d\n",
-				modname, pname, GetLastError());
-			return FALSE;
-		}
-	}
+            return TRUE;
+        } else {
+            dprintf("GetProcAddress(\"%s\",\"%s\") failed with %d\n",
+                modname, pname, GetLastError());
+            return FALSE;
+        }
+    }
 
     __try {
         (ExtensionRoutine)(
@@ -868,5 +869,12 @@ BOOL VdmExtCommand(char *pname, char *args)
         return FALSE;
     }
 
-	return TRUE;
+    return TRUE;
 }
+#else /* YODA */
+PVOID
+SetYodaVDMEventHandler(BOOL fEnable)
+{
+  return NULL;
+}
+#endif /* YODA */

@@ -147,8 +147,9 @@
 >             if (pSegEntry->segment == SegNumber - 1) {
 --- NT4\private\mvdm\wow32\wow32.def
 +++ nt\private\mvdm\wow32\wow32.def
-45a46,84
+45a46,86
 > 
+> #if DBG
 > ; Debug symbols
 >     pDibInfoHead                DATA
 >     gptdTaskHead                DATA
@@ -187,6 +188,7 @@
 >     iMsgMax                     DATA
 >     paw32Msg                    DATA
 >     fWMsgProfRT                 DATA
+> #endif
 --- NT4\private\mvdm\softpc.new\obj.vdm\ntvdm.src
 +++ nt\private\mvdm\softpc.new\obj.vdm\ntvdm.src
 214a215
