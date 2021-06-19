@@ -30,6 +30,9 @@ Requirements
    https://www.microsoft.com/en-us/download/details.aspx?id=8442
  * NTOSBE-master build environment
    https://github.com/stephanosio/NTOSBE
+ * Recommended: Windows 7 x86 ISO named 
+   de_windows_7_professional_with_sp1_x86_dvd_u_677093.iso
+   https://winfuture.de/downloadvorschalt,3291.html
  * An installed version of 7-zip file manager
    https://www.7-zip.de
 
@@ -65,17 +68,19 @@ You now have:
     experimental
     ...
 
-2) Download required SDK ISOs and old-src.trunk.r687.20150728.7z and place them in
+2) Download required SDK and Windows ISOs and old-src.trunk.r687.20150728.7z and place them in
    ntvdmpatch\minnt\work
 
  * https://www.microsoft.com/en-us/download/details.aspx?id=11800
  * https://www.microsoft.com/en-us/download/details.aspx?id=8442
+ * https://winfuture.de/downloadvorschalt,3291.html
  * Google old-src.trunk.r687.20150728.7z or old-src-sr687.7z
 
 You now have in ntvdmpatch\minnt\work:
 
   GRMSDK_EN_DVD.iso
   GRMWDK_EN_7600_1.ISO
+  de_windows_7_professional_with_sp1_x86_dvd_u_677093.iso
   old-src.trunk.r687.20150728.7z
 
 3) Run ntvdmpatch\minnt\prepare.cmd

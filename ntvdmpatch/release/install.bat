@@ -5,6 +5,8 @@ if "%1"=="install" goto addappinit
 if "%1"=="uninstall" goto delappinit
 if "%1"=="instwow" goto instwow
 if "%1"=="delwow" goto delwow
+if "%1"=="instole" goto instole
+if "%1"=="delole" goto delole
 if "%1"=="link" goto hardlink
 
 rem Ensure that we are run from 64bit prompt
@@ -38,6 +40,7 @@ if not errorlevel 1 (
   echo This NTVDMx64 is only meant to be used on an x64 machine, please use 
   echo NTVDM shipped with your windows installation instead.
   echo Installation aborted
+  pause
   goto fini
 )
 
@@ -47,6 +50,15 @@ for /F "skip=2 tokens=3" %%r in ('reg query HKLM\SYSTEM\CurrentControlSet\Contro
   echo therefore prevents start of NTVDM.
   echo Please disabe secure boot in BIOS, reboot and try again
   start https://msdn.microsoft.com/en-us/windows/hardware/commercialize/manufacture/desktop/disabling-secure-boot
+  pause
+  goto fini
+)
+
+if exist %SYSTEMROOT%\syswow64\ntvdm.exe (
+  echo It seems that you have ntvdm.exe already on your system.
+  echo I assume that it's NTVDMx64. Before reinstalling ntvdmx64, you should 
+  echo uninstall the old version via control panel first.
+  pause
   goto fini
 )
 
@@ -130,17 +142,29 @@ goto fini
 rem Windows XP SFP 
 for %%I in (gdi.exe user.exe wow32.dll wowexec.exe comm.drv keyboard.drv lanman.drv mouse.drv sound.drv system.drv timer.drv vga.drv wfwnet.drv) do util\wfpreplace %2\%%I
 md %3
-takeown /f %2\wow32.dll
-cacls %2\wow32.dll /e /p %USERNAME%:F
-move %2\wow32.dll %3\
-takeown /f %2\user.exe
-cacls %2\user.exe /e /p %USERNAME%:F
-move %2\user.exe %3\
+for %%F in (wow32.dll user.exe) do call :replsysfil %%F %2 %3
+if exist %CD%\ole2\olethk32.dll (
+  for /f "tokens=4-5 delims=[.XP " %%i in ('ver') do (
+    if %%i GEQ 6 (
+      rem only on Win 8 or above
+      if %%i EQU 6 if %%j LSS 3 goto fini
+      rundll32.exe advpack.dll,LaunchINFSection %CD%\ole2.inf
+    )
+  )
+)
 goto fini
 
 :delwow
-if exist %3\wow32.dll move %3\wow32.dll %2\
-if exist %3\user.exe move %3\user.exe %2\
+for %%F in (wow32.dll user.exe) do if exist %3\%%I move /y %3\%%I %2\
+if exist %windir%\inf\ole2.inf RunDll32 advpack.dll,LaunchINFSection %windir%\inf\ole2.inf,DefaultUninstall
+goto fini
+
+:instole
+for %%F in (olethk32.dll compobj.dll ole2.dll ole2disp.dll ole2nls.dll storage.dll typelib.dll) do call :replsysfil %%F %2 %3
+goto fini
+
+:delole
+for %%F in (olethk32.dll compobj.dll ole2.dll ole2disp.dll ole2nls.dll storage.dll typelib.dll) do if exist %3\%%I move /y %3\%%I %2\
 goto fini
 
 :hardlink
@@ -148,6 +172,14 @@ if exist %2\%4 del %2\%4
 if exist %2\%4 echo %2\%4 is in use, please delete manually and then install again
 fsutil hardlink create %2\%4 %3\%4 
 goto fini
+
+:replsysfil
+if not exist %3\%1 (
+  takeown /f %2\%1
+  cacls %2\%1 /e /p %USERNAME%:F
+  move %2\%1 %3\
+)
+exit /B
 
 :fini
 exit /b

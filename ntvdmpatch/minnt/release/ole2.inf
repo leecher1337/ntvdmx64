@@ -1,0 +1,53 @@
+[Version]
+Signature=$Windows NT$
+AdvancedINF= 2.5,"advpack.dll" 
+
+[SourceDisksNames.amd64]
+1="OLE2",,,"\ole2"
+
+[SourceDisksFiles.amd64]
+olethk32.dll=1
+compobj.dll=1
+ole2.dll=1
+ole2disp.dll=1
+ole2nls.dll=1
+storage.dll=1
+typelib.dll=1
+
+[Ntvdmx64.amd64.System.Files]
+olethk32.dll,,,0x4006
+compobj.dll,,,0x4006
+ole2.dll,,,0x4006
+ole2disp.dll,,,0x4006
+ole2nls.dll,,,0x4006
+storage.dll,,,0x4006
+typelib.dll,,,0x4006
+
+[Ntvdmx64.amd64.Inf.Files.Add]
+ole2.inf
+
+[Ntvdmx64.amd64.Inf.Files.Del]
+ole2.inf
+ole2.PNF
+
+[DestinationDirs]
+Ntvdmx64.amd64.System.Files  = 16425
+Ntvdmx64.amd64.Inf.Files.Add = 17
+Ntvdmx64.amd64.Inf.Files.Del = 17
+
+[InstallCmdsPre]
+%10%\Symbols\instntvdmx64.bat instole "%16425%" "%10%\Symbols\Backup"
+
+
+[UninstallCmds]
+%10%\Symbols\instntvdmx64.bat delole  "%16425%" "%10%\Symbols\Backup"
+
+[DefaultInstall.ntamd64]
+SmartReboot = N
+CopyFiles   = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Inf.Files.Add
+RunPreSetupCommands = InstallCmdsPre
+
+[DefaultUninstall.ntamd64]
+RunPostSetupCommands = UninstallCmds
+CleanUp = 1
+DelFiles    = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Inf.Files.Del

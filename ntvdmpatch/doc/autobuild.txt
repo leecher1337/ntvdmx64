@@ -35,7 +35,7 @@ Requirements
  The other requirements (as outlined in minnt.txt) are also still required,
  but can be downlaoded by the autobuild script automatically.
 
- You need approx. 5GB of free disk space.
+ You need approx. 8GB of free disk space.
 
 Setup MINNT build environment
 =============================

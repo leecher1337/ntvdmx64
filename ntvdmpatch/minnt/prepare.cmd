@@ -196,6 +196,49 @@ rem Copy Video for Windows to release template folder
 xcopy /e /y %workdir%\old-src\nt\private\windows\media\avi\mciavi32\vfw16 ..\release\vfw16\
 
 :oldsrcok
+rem -- Windows 7 ISO
+rem
+rem We could use old-src\nt\private\ole32\olethunk\ and compile it ourselves, but it's not up-to-date
+rem so it's better to take up-to-date binaries from Win7 ISO
+rem 
+set W7ISO=none
+if exist %workdir%\de_windows_7_professional_with_sp1_x86_dvd_u_677093.iso (
+  set W7ISO=%workdir%\de_windows_7_professional_with_sp1_x86_dvd_u_677093.iso
+  set W7SYSDIR=system32
+) else (
+  if exist %workdir%\de_windows_7_professional_with_sp1_x64_dvd_u_676919.iso (
+    set W7ISO=%workdir%\de_windows_7_professional_with_sp1_x64_dvd_u_676919.iso
+    set W7SYSDIR=SysWOW64
+  ) else (
+    if exist %workdir%\7601.24214.180801-1700.win7sp1_ldr_escrow_CLIENT_PROFESSIONAL_x86FRE_en-us.iso (
+      set W7ISO=%workdir%\7601.24214.180801-1700.win7sp1_ldr_escrow_CLIENT_PROFESSIONAL_x86FRE_en-us.iso
+      set W7SYSDIR=system32
+    )
+  )
+)
+if exist %W7ISO% (
+  echo Expanding working 16bit OLE DLLs from Win 7 ISO
+  7z x -y %W7ISO% sources\install.wim -o%workdir%
+  if exist %workdir%\sources\install.wim (
+    7z x -y %workdir%\sources\install.wim 1\Windows\%W7SYSDIR%\olethk32.dll 1\Windows\%W7SYSDIR%\compobj.dll 1\Windows\%W7SYSDIR%\ole2.dll 1\Windows\%W7SYSDIR%\ole2disp.dll 1\Windows\%W7SYSDIR%\ole2nls.dll 1\Windows\%W7SYSDIR%\storage.dll 1\Windows\%W7SYSDIR%\typelib.dll -o%workdir%
+    xcopy /e /y %workdir%\1\Windows\%W7SYSDIR% ..\release\ole2\
+  )
+)
+if not exist %workdir%\1\Windows\%W7SYSDIR%\olethk32.dll (
+  if "%NOWIN7%"=="" (
+    echo Windows 7 ISO was not found / OLE2 components could not be extracted
+    echo This may lead to problems on Windows Versions ^>= 8 when using OLE2 WOW32
+    echo applications. However, basic functionality is not affected.
+    echo If you want to continue without OLE2 support, press any key now, otherwise
+    echo abort with CTRL+C, download the Windows 7 Professional 32bit ISO
+    echo de_windows_7_professional_with_sp1_x86_dvd_u_677093.iso and start over again.
+    start https://winfuture.de/downloadvorschalt,3291.html
+    pause
+  )
+)
+:prepared
+
+
 echo The patch directory is now prepared. You may delete the contents of the 
 echo of the %workdir% directory now.
 if not "%1"=="batch" pause

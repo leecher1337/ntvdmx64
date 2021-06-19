@@ -15,6 +15,7 @@ rem   WKDIR     Working directory for build process, default is %CD%\w
 rem   HAXBLD    If set to -haxm then HAXM build is built, otherwise normal build
 rem   DBGSTP    If set, pause is issued after every step, useful for testing build
 rem   SIZ_NTBLD [chk, fre] Checked of free build, default is checked (debug)
+rem   NOWIN7    Ignore missing Windows 7 ISO (i.e. build only for Win < 8 or no OLE2)
 rem
 
 echo ----------------------------------------------------
@@ -130,6 +131,38 @@ exit /B
 call :dlprq GRMWDK_EN_7600_1.ISO https://download.microsoft.com/download/4/A/2/4A25C7D5-EFBE-4182-B6A9-AE6850409A78/GRMWDK_EN_7600_1.ISO
 call :dlprq GRMSDK_EN_DVD.iso https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDK_EN_DVD.iso
 call :dlprq NTOSBE-master.zip https://github.com/stephanosio/NTOSBE/archive/master.zip
+
+rem Windows 7 x86:
+rem This one would be direct download of en version, but it's very big and therefore slows us down, so better ask for user intervention
+rem to download smaller ISO.
+rem https://download.microsoft.com/download/C/0/6/C067D0CD-3785-4727-898E-60DC3120BB14/7601.24214.180801-1700.win7sp1_ldr_escrow_CLIENT_PROFESSIONAL_x86FRE_en-us.iso
+rem
+if not exist %PREREQ%\de_windows_7_professional_with_sp1_x86_dvd_u_677093.iso (
+  echo On Windows Versions ^>= 8 when using WOW32, OLE2 support has been removed
+  echo from OS. Therefore it is recommended to download Windows 7 ISO as a prereq
+  echo to restore OLE2 support in these Windows versions. 
+  echo If you plan to use NTVDMx64 only on lower versions of Windows, or not use
+  echo WOW32, you can continue without it.
+  echo.
+  echo By pressing a key, you will be redirected to the Windows 7 ISO download page.
+  echo You need to download the Windows 7 Professional 32bit ISO
+  echo de_windows_7_professional_with_sp1_x86_dvd_u_677093.iso from there and
+  echo place it in this directory.
+  echo If you want to continue without it, just press a key afterwards again.
+  pause
+  start https://winfuture.de/downloadvorschalt,3291.html
+  echo.
+  echo Now please either download the ISO and put it here and afterwards continue
+  echo or continue now to go without it
+  pause
+  if not exist %PREREQ%\de_windows_7_professional_with_sp1_x86_dvd_u_677093.iso (
+    if not exist %PREREQ%\de_windows_7_professional_with_sp1_x64_dvd_u_676919.iso (
+      echo OK, Continuing without OLE2 then
+      set NOWIN7=1
+    )
+  )
+)
+
 if exist old-src-sr687.7z ren old-src-sr687.7z old-src.trunk.r687.20150728.7z
 exit /b
 
@@ -154,6 +187,7 @@ if "%SRCDIR%"=="" (
 call :cpyprq GRMSDK_EN_DVD.iso 
 call :cpyprq GRMWDK_EN_7600_1.ISO 
 call :cpyprq old-src.trunk.r687.20150728.7z 
+copy /y %PREREQ%\de_windows_7_professional_with_sp1*.iso ntvdmpatch\minnt\work\
 echo Build environment ready
 exit /b
 
