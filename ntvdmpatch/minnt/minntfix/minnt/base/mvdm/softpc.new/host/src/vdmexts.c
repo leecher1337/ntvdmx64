@@ -27,6 +27,7 @@
 #include <dbgexp.h>
 #include "yoda.h"
 #include "trace.h"
+#include "dbginfo.h"
 
 #ifdef SPC386
 #define DASM_INTERNAL
@@ -619,11 +620,13 @@ BOOL VDMEvent(DEBUG_EVENT* pDebugEvent)
                         im.Module,
                         im.FileName );
             }
+            if (*(ULONG*)((VDMINTERNALINFO*)lpdw[3])->lpVdmDbgFlags & VDMDBG_BREAK_WOWTASK) fNeedInteractive = TRUE;
             break;
         case DBG_DLLSTART:
             if ( fNeedInteractive || fVerbose ) {
                 dprintf("%s: VDM Start Dll <%s:%s>\n", DebuggerName, im.Module, im.FileName );
             }
+            if (*(ULONG*)((VDMINTERNALINFO*)lpdw[3])->lpVdmDbgFlags & VDMDBG_BREAK_LOADDLL) fNeedInteractive = TRUE;
             break;
         case DBG_TASKSTOP:
             fNeedInteractive = FALSE;
