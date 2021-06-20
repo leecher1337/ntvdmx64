@@ -1,0 +1,136 @@
+[Version]
+Signature=$Windows NT$
+AdvancedINF= 2.5,"advpack.dll" 
+
+[SourceDisksNames.amd64]
+1="SYMBOLS",,,"\symbols"
+
+[SourceDisksFiles.amd64]
+comm.sym=1
+commdlg.sym=1
+ctl3dv2.sym=1
+ddeml.sym=1
+dosx.sym=1
+drwatson.sym=1
+gdi.sym=1
+keyboard.sym=1
+krnl386.sym=1
+mciole16.sym=1
+mmsystem.sym=1
+mmtask.sym=1
+mouse.sym=1
+ntdos.sym=1
+ntdos404.sym=1
+ntdos411.sym=1
+ntdos412.sym=1
+ntdos804.sym=1
+ntio.sym=1
+ntio404.sym=1
+ntio411.sym=1
+ntio412.sym=1
+ntio804.sym=1
+olesvr.sym=1
+shell.sym=1
+sound.sym=1
+system.sym=1
+timer.sym=1
+toolhelp.sym=1
+user.sym=1
+vga.sym=1
+wfwnet.sym=1
+wifeman.sym=1
+winnls.sym=1
+winoldap.sym=1
+winsock.sym=1
+winspool.sym=1
+wowdeb.sym=1
+wowexec.sym=1
+write16.sym=1
+vdmdbg.pdb=1
+vdmexts.pdb=1
+vdmredir.pdb=1
+ntvdm.pdb=1
+ntvdmd.pdb=1
+wow32.pdb=1
+vdmexts.dll=1
+
+[Ntvdmx64.amd64.System.Files]
+comm.sym,,,,0x4004
+commdlg.sym,,,,0x4004
+ctl3dv2.sym,,,,0x4004
+ddeml.sym,,,,0x4004
+dosx.sym,,,,0x4004
+drwatson.sym,,,,0x4004
+gdi.sym,,,,0x4004
+keyboard.sym,,,,0x4004
+krnl386.sym,,,,0x4004
+mciole16.sym,,,,0x4004
+mmsystem.sym,,,,0x4004
+mmtask.sym,,,,0x4004
+mouse.sym,,,,0x4004
+ntdos.sym,,,,0x4004
+ntdos404.sym,,,,0x4004
+ntdos411.sym,,,,0x4004
+ntdos412.sym,,,,0x4004
+ntdos804.sym,,,,0x4004
+ntio.sym,,,,0x4004
+ntio404.sym,,,,0x4004
+ntio411.sym,,,,0x4004
+ntio412.sym,,,,0x4004
+ntio804.sym,,,,0x4004
+olesvr.sym,,,,0x4004
+shell.sym,,,,0x4004
+sound.sym,,,,0x4004
+system.sym,,,,0x4004
+timer.sym,,,,0x4004
+toolhelp.sym,,,,0x4004
+user.sym,,,,0x4004
+vga.sym,,,,0x4004
+wfwnet.sym,,,,0x4004
+wifeman.sym,,,,0x4004
+winnls.sym,,,,0x4004
+winoldap.sym,,,,0x4004
+winsock.sym,,,,0x4004
+winspool.sym,,,,0x4004
+wowdeb.sym,,,,0x4004
+wowexec.sym,,,,0x4004
+write16.sym,,,,0x4004
+vdmdbg.pdb,,,,0x4004
+vdmexts.pdb,,,,0x4004
+vdmredir.pdb,,,,0x4004
+ntvdm.pdb,,,,0x4004
+ntvdmd.pdb,,,,0x4004
+wow32.pdb,,,,0x4004
+vdmexts.dll,,,,0x4004
+
+
+[Ntvdmx64.amd64.Inf.Files.Add]
+ntvdmdbg.inf
+
+[Ntvdmx64.amd64.Inf.Files.Del]
+ntvdmdbg.inf
+ntvdmdbg.PNF
+
+[DestinationDirs]
+Ntvdmx64.amd64.System.Files   = 16425
+Ntvdmx64.amd64.Inf.Files.Add = 17
+Ntvdmx64.amd64.Inf.Files.Del = 17
+
+
+[BeginInsPrompt]
+Title      = NTVDMx64 Debug Symbols
+Prompt     = %InsPrompt%
+ButtonType = YESNO
+
+[DefaultInstall.ntamd64]
+CheckAdminRights = 1
+BeginPrompt         = BeginInsPrompt
+SmartReboot = N
+CopyFiles   = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Inf.Files.Add
+
+[DefaultUninstall.ntamd64]
+CleanUp = 1
+DelFiles    = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Inf.Files.Del
+
+[Strings]
+InsPrompt     = "Do you want to install NTVDM debug symbols?"

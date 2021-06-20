@@ -18,8 +18,13 @@ This requires some preparation first:
 1) Install debug symbols for NTVDM and NTVDMD so that WinDBG can find the
    required symbols:
 
+   To facilitate the process, just run inst-sym.cmd from NTVDM installation
+   root to install all debugging symbols of your NTVDM version.
+
+   Manual copy of necessary smybols would be:
    copy Binaries\x86chk\Symbols\retail\exe\ntvdm.pdb %systemroot%\SysWOW64\
    copy Binaries\x86chk\Symbols\retail\dll\ntvdmd.pdb %systemroot%\SysWOW64\
+
 
 2) Install x86 Debugging Tools for Windows (Windbg), if you haven't yet.
    Can be found in GRMWDK_EN_7600_1.ISO that you downloaded to build NTVDMx64
@@ -66,6 +71,9 @@ anyway, you can mostly use them:
 This requires some preparation first:
 
 1) copy Binaries\x86chk\dbg\files\bin\winxp\vdmexts.dll %SYSTEMROOT%\SysWOW64\
+
+   To facilitate the process, just run inst-sym.cmd from NTVDM installation
+   root to install all debugging symbols of your NTVDM version and vdmexts.dll.  
 
 
 To debug:

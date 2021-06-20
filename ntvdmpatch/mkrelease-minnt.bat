@@ -1,4 +1,4 @@
-@echo off
+@echo on
 call basepath.cmd
 if not exist "%BASEPATH%" (
   echo Invalid NT Base path %BASEPATH%
@@ -49,5 +49,21 @@ for %%L in (!LANG!) do (
   )
   md releases\%%L\wow32 >nul
   for %%I in (comm.drv commdlg.dll ctl3dv2.dll ddeml.dll drwatson.exe gdi.exe keyboard.drv krnl386.exe lanman.drv lzexpand.dll mciole16.dll mmsystem.dll mmtask.tsk mouse.drv netapi.dll olecli.dll olesvr.dll pmspl.dll rasapi16.dll regedt16.exe shell.dll sound.drv sysedit.exe system.drv timer.drv toolhelp.dll user.exe ver.dll wfwnet.drv vga.drv wifeman.dll win.com win87em.dll winhelp.exe winnls.dll winoldap.mod winsock.dll winspool.exe wow32.dll wowdeb.exe wowexec.exe wowfax.dll wowfaxui.dll) do if exist !BINDIR!\%%I xcopy /Y !BINDIR!\%%I releases\%%L\wow32\
+
+  rem
+  rem Debug symbols and stuff
+  rem
+  xcopy /Y !BINDIR!\system32\*.sym releases\%%L\Symbols\
+  if not "!LANGDIR!"=="!BINDIR!" xcopy /Y !LANGDIR!\system32\*.sym releases\%%L\Symbols\
+  if "%SIZ_NTBLD%"=="chk" for /R %BINDIR%\Symbols %%I in (*.pdb) do xcopy /Y %%I releases\%%L\Symbols\
+  if "%SIZ_NTBLD%"=="fre" xcopy /Y !BINDIR!\*.pdb releases\%%L\Symbols\
+  for /R !LANGDIR! %%I in (*.pdb) do (
+    set FN=%%I
+    set FN=!FN:_%%J=!
+    xcopy /Y %%I releases\Symbols\!FN!
+  )
+  xcopy /Y !BINDIR!\dbg\files\bin\winxp\*.* releases\%%L\Symbols\
+  rem Doesn't get binplaced by default, so take it from compilation dir
+  xcopy /Y %BASEPATH%\mvdm\softpc.new\debugger\obj%SIZ_NTBLD%\x86\vdmdebug.exe releases\%%L\Symbols\
 )
 :fini

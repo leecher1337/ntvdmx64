@@ -1,3 +1,16 @@
+--- NT4\private\mvdm\softpc.new\dirs
++++ nt\private\mvdm\softpc.new\dirs
+26c26,27
+<         data
+---
+>         data \
+>         debugger
+--- NT4\private\mvdm\softpc.new\debugger\sources
++++ nt\private\mvdm\softpc.new\debugger\sources
+35c35
+< TARGETPATH=$(SOFTPC_ROOT)\debugger\$(_OBJ_DIR)
+---
+> TARGETPATH=obj
 --- NT4\private\mvdm\softpc.new\base\debug\trace.c
 +++ nt\private\mvdm\softpc.new\base\debug\trace.c
 72a73

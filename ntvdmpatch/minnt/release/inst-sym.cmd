@@ -1,0 +1,1 @@
+@rundll32.exe advpack.dll,LaunchINFSection %CD%\ntvdmdbg.inf
