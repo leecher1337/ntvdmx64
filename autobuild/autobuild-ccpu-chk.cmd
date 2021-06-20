@@ -16,6 +16,7 @@ rem   HAXBLD    If set to -haxm then HAXM build is built, otherwise normal build
 rem   DBGSTP    If set, pause is issued after every step, useful for testing build
 rem   SIZ_NTBLD [chk, fre] Checked of free build, default is checked (debug)
 rem   NOWIN7    Ignore missing Windows 7 ISO (i.e. build only for Win < 8 or no OLE2)
+rem   LANG      Only build this language (for a complete list, see documentation)
 rem
 
 echo ----------------------------------------------------
@@ -123,7 +124,7 @@ call patch.cmd
 if not "%DBGSTP%"=="" pause
 call bld-minnt%HAXBLD%.cmd
 if not "%DBGSTP%"=="" pause
-call mkrelease-minnt%HAXBLD%.bat
+call mkrelease-minnt%HAXBLD%.bat %LANG%
 pause
 exit /B
 

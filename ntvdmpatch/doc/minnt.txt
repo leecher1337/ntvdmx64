@@ -142,6 +142,7 @@ pl	-	Polish
 pt	-	Portuguese
 ru	-	Russian
 sv	-	Swedish
+usa	-	English
 
 The result is built in newly created releases\ directory where you have
 one release-folder per language that you can use.
