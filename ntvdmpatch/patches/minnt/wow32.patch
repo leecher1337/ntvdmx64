@@ -1165,15 +1165,16 @@
 < //#include <tsappcmp.h>
 ---
 > #include <tsappcmp.h>
-142a144,174
+142a144,175
 > #ifdef W10
 > /* In 64bit Windows, WOW32Reserved is used by WOW64 to store pointer to 
 >  * syscall dispatcher, therefore we unfortunately have to reserve our
 >  * own slot for WOW32 data
 >  */
 > extern DWORD gdwTLSWOW32Reserved;
-> #define CURRENTPTD()        ((PTD)TlsGetValue(gdwTLSWOW32Reserved))
-> #define SETCURRENTPTD(x)	TlsSetValue(gdwTLSWOW32Reserved, x)
+> // NB: TlsGetValue would override Last Error code, therefore write directly.
+> #define CURRENTPTD()        ((PTD)(NtCurrentTeb()->TlsSlots[gdwTLSWOW32Reserved]))
+> #define SETCURRENTPTD(x)	CURRENTPTD() = x
 > 
 > /* Functions that do special treatment to compensate missing scheduler
 >  * support in NtUser
@@ -1197,9 +1198,9 @@
 > #define RESTORE_THUNKLOCK	{_EnterWin16Lock();}
 > 
 > #else // W10
-143a176
+143a177
 > #define SETCURRENTPTD(x)	CURRENTPTD() = x
-144a178,185
+144a179,186
 > #define x64GetClassInfo		GetClassInfo
 > #define GWL_OFFSET			0
 > #define GCL_MY_WNDPROC		GCL_WNDPROC
@@ -1208,36 +1209,36 @@
 > #define RELEASE_THUNKLOCK	
 > #define RESTORE_THUNKLOCK	
 > #endif // W10
-264a306,311
+264a307,312
 > #ifdef W10
 >     DWORD               sys_count[4];   /* syslevel mutex entry counters */
 >     struct tagSYSLEVEL *sys_mutex[4];   /* syslevel mutex pointers */
 >     HANDLE              yield_event;    /* yield event */
 >     HANDLE              yield_wait_event;/* yield event */
 > #endif
-306c353
+306c354
 < extern HANDLE hfLog;        // log file handle, if any
 ---
 > extern __declspec(dllexport) HANDLE hfLog;        // log file handle, if any
-310c357
+310c358
 < extern INT    iLogLevel;    // logging level;  0 implies none
 ---
 > extern __declspec(dllexport) INT    iLogLevel;    // logging level;  0 implies none
-381c428
+381c429
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-382a430
+382a431
 > #undef pNtVDMState // Wrongly set in vdm.h on x86 
-551c599
+551c600
 < #ifndef _X86_  // emulated CPU
 ---
 > #ifndef _X86xx_  // emulated CPU
-561c609
+561c610
 < #ifndef _X86_
 ---
 > #ifndef _X86xx_
-808c856
+808c857
 < //PTERMSRVCORINIFILE gpfnTermsrvCORIniFile;
 ---
 > PTERMSRVCORINIFILE gpfnTermsrvCORIniFile;
