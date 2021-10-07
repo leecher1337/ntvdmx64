@@ -11,11 +11,13 @@
 	TARGET_WINXP	- Windows XP / Server 2003
 	TARGET_WIN7		- Windows 7 / Server 2008
 	TARGET_WIN80	- Windows 8 / Server 2012
+	TARGET_WIN10    - Windows 10
+	TARGET_WIN11    - Windows 11
 
 	Default is TARGET_WIN10, which is set when none of these are set
  */
 
-#if !defined(TARGET_WINXP) && !defined(TARGET_WIN7) && !defined(TARGET_WIN80)
+#if !defined(TARGET_WINXP) && !defined(TARGET_WIN7) && !defined(TARGET_WIN80) && !defined(TARGET_WIN11)
 #define TARGET_WIN10	// Default
 #endif
 
@@ -40,22 +42,49 @@
 //#define CRYPT_LDR
 #endif
 
-// Not really useful method, but maybe we need it some day, leave disabled
-//#define APPCERT_DLL
+/* Normally, the loader gets injected with Appinit_DLLs
+* On systems with SecureBoot on, this is not possible :(
+*/
+#ifdef TARGET_WIN11
+#define NO_APPINIT_DLL
+#endif
 
-#if !defined(APPCERT_DLL)
-/* If this is set, CreateProcess() APIs are hooked. This is just needed because
+// Inject as AppCert DLL. This loads the DLL on first launch of another process,
+// but due to process propagation code (CREATEPROCESS_HOOK), this is better than
+// nothing to ensure injection
+#ifdef NO_APPINIT_DLL
+#define APPCERT_DLL
+#endif
+
+#ifdef NO_APPINIT_DLL
+/* If this is set, CreateProcess() APIs are hooked. This is needed because
  * the AppInit-Hooks don't invade console applications.
  * If not set, ldntvdm, which gets injected into conhost.exe via AppInit,
  * instead tries to inject itself into the target application from conhost.exe,
  * which may be a more stable solution than hooking CreateProcess
+ * However AppInitDlls are only available with Secure Boot turned off.
  */
-//#define CREATEPROCESS_HOOK
+#define CREATEPROCESS_HOOK
+#endif
+
+#ifdef CREATEPROCESS_HOOK
+/* If this is set, bit CreateProcess() APIs are hooked, but the depper
+ * NtCreateUserProcess call. Thsi has the advantage that a process newly
+ * invaded by APPCERT_DLL method can also inject into the first process
+ * that gets launched from it.
+ */
+#ifndef TARGET_WINXP
+#define CREATEPROCESS_HOOKNTCREATE
+#endif
 #endif
 
 /* This is an experimental patch to enforce ConhostV1 to also load on users
  * who haven't installed NTVDMx64 themselves and therefore, ForceV2 key for
  * console is still TRUE in their user accounts.
+ * It's pretty useless, though, because AppInit_DLLs get loaded after decision
+ * about console version was already made, therefore we come too late.
+ * Would need to patch condrv.sys in order to add -ForceV1 parameter, but it's
+ * kernel mode and therefore not possible.
  */
 #define HOOK_CONHOSTV2
 
@@ -75,8 +104,10 @@
  * Windows >=7: The appinfo.dll is used in the service where the symbol loader also
  * doesn't seem to work, so a logged on user first needs to lookup the symbols and
  * add them to the cache, so the service can read the cache and hook the function
+ * If CreateProcess hook is needed, the hooking is preferably done with METHOD_HOOKLDR,
+ * which also needs a symbol lookup, so symcache is also benificial there.
  */
-#if defined(TARGET_WIN7) || defined(TARGET_WINXP) || defined(NEED_APPINFO)
+#if defined(TARGET_WIN7) || defined(TARGET_WINXP) || defined(NEED_APPINFO) || defined(CREATEPROCESS_HOOK)
 #define USE_SYMCACHE
 #endif
 
@@ -153,6 +184,9 @@ NtGetNextThread(
 #define BASEP_CALL WINAPI
 #endif
 
+#ifndef STATUS_SUCCESS
+#   define STATUS_SUCCESS 0
+#endif
 
 #ifdef CRYPT_LDR
 #pragma section(".code",execute, read, write)

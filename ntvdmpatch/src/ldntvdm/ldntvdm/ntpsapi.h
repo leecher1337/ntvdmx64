@@ -38,6 +38,15 @@ typedef struct {
 	LARGE_INTEGER OtherTransferCount;
 } xpSYSTEM_PROCESS_INFORMATION, *PxpSYSTEM_PROCESS_INFORMATION;
 
+typedef struct {
+	NTSTATUS ExitStatus;
+	PPEB PebBaseAddress;
+	KAFFINITY AffinityMask;
+	KPRIORITY BasePriority;
+	ULONG_PTR UniqueProcessId;
+	ULONG_PTR InheritedFromUniqueProcessId;
+} xpPROCESS_BASIC_INFORMATION, *PxpPROCESS_BASIC_INFORMATION;
+
 typedef struct _INITIAL_TEB {
 	struct {
 		PVOID OldStackBase;

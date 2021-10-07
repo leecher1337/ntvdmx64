@@ -15,6 +15,9 @@
 #include "ntregapi.h"
 #include "Winternl.h"
 
+NTSTATUS REG_CreateKey(HKEY hKeyRoot, PWCHAR pwszKey, DWORD dwAccess, PHKEY phKey);
+NTSTATUS REG_OpenLDNTVDMUser(DWORD dwAccess, PHKEY phKey);
+
 #if defined(WOW16_SUPPORT)
 BOOL REG_CheckForOTVDM(void)
 {
@@ -49,13 +52,8 @@ BOOL REG_CheckForOTVDM(void)
 NTSTATUS REG_OpenLDNTVDM(DWORD dwAccess, PHKEY phKey)
 {
 	NTSTATUS Status;
-	UNICODE_STRING uStr;
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	DWORD Disposition;
 
-	RtlInitUnicodeString(&uStr, L"\\Registry\\Machine\\Software\\ldntvdm");
-	InitializeObjectAttributes(&ObjectAttributes, &uStr, OBJ_CASE_INSENSITIVE, NULL, NULL);
-	Status = NtCreateKey(phKey, dwAccess, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, &Disposition);
+	Status = REG_CreateKey(NULL, L"\\Registry\\Machine\\Software\\ldntvdm", dwAccess, phKey);
 	if (!NT_SUCCESS(Status)) return REG_OpenLDNTVDMUser(dwAccess, phKey);
 	return Status;
 }
@@ -63,19 +61,47 @@ NTSTATUS REG_OpenLDNTVDM(DWORD dwAccess, PHKEY phKey)
 
 NTSTATUS REG_OpenLDNTVDMUser(DWORD dwAccess, PHKEY phKey)
 {
-	HKEY hKeyCU;
 	NTSTATUS Status;
-	UNICODE_STRING uStr;
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	DWORD Disposition;
+	HKEY hKeyCU;
 
 	if (!(NT_SUCCESS(Status = RtlOpenCurrentUser(MAXIMUM_ALLOWED, &hKeyCU)))) return Status;
-	RtlInitUnicodeString(&uStr, L"Software\\ldntvdm");
-	InitializeObjectAttributes(&ObjectAttributes, &uStr, OBJ_CASE_INSENSITIVE, hKeyCU, NULL);
-	Status = NtCreateKey(phKey, dwAccess, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, &Disposition);
+	Status = REG_CreateKey(hKeyCU, L"Software\\ldntvdm", dwAccess, phKey);
 	NtClose(hKeyCU);
 	return Status;
 }
+
+NTSTATUS REG_CreateKey(HKEY hKeyRoot, PWCHAR pwszKey, DWORD dwAccess, PHKEY phKey)
+{
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	DWORD Disposition;
+	UNICODE_STRING uStr;
+
+	RtlInitUnicodeString(&uStr, pwszKey);
+	InitializeObjectAttributes(&ObjectAttributes, &uStr, OBJ_CASE_INSENSITIVE, hKeyRoot, NULL);
+	return NtCreateKey(phKey, dwAccess, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, &Disposition);
+}
+
+#if defined(_WIN64) && defined(USE_SYMCACHE)
+NTSTATUS REG_OpenLDNTVDMWOW64(DWORD dwAccess, PHKEY phKey)
+{
+	NTSTATUS Status;
+
+	Status = REG_CreateKey(NULL, L"\\Registry\\Machine\\Software\\WOW6432Node\\ldntvdm", dwAccess, phKey);
+	if (!NT_SUCCESS(Status)) return REG_OpenLDNTVDMUser(dwAccess, phKey);
+	return Status;
+}
+
+NTSTATUS REG_OpenLDNTVDMUserWOW64(DWORD dwAccess, PHKEY phKey)
+{
+	NTSTATUS Status;
+	HKEY hKeyCU;
+
+	if (!(NT_SUCCESS(Status = RtlOpenCurrentUser(MAXIMUM_ALLOWED, &hKeyCU)))) return Status;
+	Status = REG_CreateKey(hKeyCU, L"Software\\WOW6432Node\\ldntvdm", dwAccess, phKey);
+	NtClose(hKeyCU);
+	return Status;
+}
+#endif
 
 NTSTATUS REG_QueryNum(HKEY hKey, LPWSTR lpKey, PBYTE pdwResult, UINT Type)
 {

@@ -21,6 +21,9 @@ struct stProcDisp {
 /*--------------------------------------------------------------------------*
  * Ghisler Total Commander 64bit edition                                    *
  *--------------------------------------------------------------------------*/
+typedef DWORD_PTR (*fpSHGetFileInfoW)(_In_ LPCWSTR pszPath, DWORD dwFileAttributes, _Inout_updates_bytes_opt_(cbFileInfo) SHFILEINFOW *psfi,
+	UINT cbFileInfo, UINT uFlags);
+
  DWORD_PTR SHGetFileInfoWHook(
 	LPCWSTR     pszPath,
 	DWORD       dwFileAttributes,
@@ -30,9 +33,15 @@ struct stProcDisp {
 	)
 {
 	/* TOTALCMD64 checks return value of SHGetFileInfoW. If it is NE, it refuses to run the application,
-	 * even though it would be able to run. Therefire fake return value to MZ
+	 * even though it would be able to run. Therefore fake return value to MZ
 	 */
-	DWORD_PTR ret = SHGetFileInfoW(pszPath, dwFileAttributes, psfi, cbFileInfo, uFlags);
+	static fpSHGetFileInfoW pSHGetFileInfoW = NULL;
+	DWORD_PTR ret;
+
+	// Avoid dependency to shell32.dll
+	if (!pSHGetFileInfoW && !(pSHGetFileInfoW = GetProcAddress(GetModuleHandle("shell32.dll"), "SHGetFileInfoW")))
+		return 'ZM'; // We are doomed!
+	ret = pSHGetFileInfoW(pszPath, dwFileAttributes, psfi, cbFileInfo, uFlags);
 	if (LOWORD(ret) == 'EN') return 'ZM'; else return ret;
 }
 

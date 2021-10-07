@@ -1,6 +1,15 @@
 @echo off
 Setlocal EnableDelayedExpansion
 
+for /f "tokens=4-5 delims=[.XP " %%i in ('ver') do set VERSION=%%i.%%j
+if "%version%"=="10.0" (
+  for /f "tokens=6 delims=[.XP " %%i in ('ver') do set BUILD=%%i
+  if "!build!" geq "22000" (
+    set VERSION=11.0
+  )
+)
+set ORIGVERSION=%VERSION%
+
 if "%1"=="install" goto addappinit
 if "%1"=="uninstall" goto delappinit
 if "%1"=="instwow" goto instwow
@@ -44,16 +53,37 @@ if not errorlevel 1 (
   goto fini
 )
 
-for /F "skip=2 tokens=3" %%r in ('reg query HKLM\SYSTEM\CurrentControlSet\Control\SecureBoot\State /v UEFISecureBootEnabled') do if "%%r"=="0x1" (
-  echo It seems that your machine has secure boot feature enabled.
-  echo This prevents our AppInit_DLL loader from working properly and 
-  echo therefore prevents start of NTVDM.
-  echo Please disabe secure boot in BIOS, reboot and try again
-  start https://msdn.microsoft.com/en-us/windows/hardware/commercialize/manufacture/desktop/disabling-secure-boot
-  pause
-  goto fini
+if not "%VERSION%"=="11.0" (
+  for /F "skip=2 tokens=3" %%r in ('reg query HKLM\SYSTEM\CurrentControlSet\Control\SecureBoot\State /v UEFISecureBootEnabled') do if "%%r"=="0x1" (
+    rem AppInit_DLLs can also be bypassed by Testsigning mode, so check for it too
+    reg query HKLM\SYSTEM\CurrentControlSet\Control /v SystemStartOptions | findstr /i "TESTSIGNING" >nul
+    if errorlevel 1 (
+      echo It seems that your machine has secure boot feature enabled.
+      echo This prevents our AppInit_DLL loader from working properly and 
+      echo therefore prevents start of NTVDM.
+      echo Please disabe secure boot in BIOS, reboot and try again
+      echo.
+      echo You can also circumvent the limitation by enabling Testsigning mode
+      echo which also makes it possible to run HAXM build.
+      echo You can do this by running the following command as administrator:
+      echo.
+      echo            bcdedit /set testsigning on 
+      if "%VERSION%"=="10.0" (
+        echo.
+        echo The third possibility is to use the Windows 11 loader instead of the
+        echo Windows 10 loader, but it may not be as stable as with AppInit_DLLs
+        echo.
+        CHOICE /C YN /M "Do you want to try the Windows 11 loader?"
+        if errorlevel 2 goto fini
+        set VERSION=11.0
+      ) else (
+        start https://msdn.microsoft.com/en-us/windows/hardware/commercialize/manufacture/desktop/disabling-secure-boot
+        pause
+        goto fini
+      )
+    )
+  )
 )
-
 if exist %SYSTEMROOT%\syswow64\ntvdm.exe (
   echo It seems that you have ntvdm.exe already on your system.
   echo I assume that it's NTVDMx64. Before reinstalling ntvdmx64, you should 
@@ -62,7 +92,6 @@ if exist %SYSTEMROOT%\syswow64\ntvdm.exe (
   goto fini
 )
 
-for /f "tokens=4-5 delims=[.XP " %%i in ('ver') do set VERSION=%%i.%%j
 if "%version%"=="5.1" goto ossupp
 if "%version%"=="5.2" (
   set VERSION=5.1
@@ -72,6 +101,7 @@ if "%version%"=="6.1" goto ossupp
 if "%version%"=="6.2" goto ossupp
 if "%version%"=="6.3" goto usew10
 if "%version%"=="10.0" goto ossupp
+if "%version%"=="11.0" goto ossupp
 echo Your operating system version %VERSION% is currently not officially supported
 echo by the loader code. You can try Windows 7 loader at your own risk by pressing
 echo any key to continue. Otherwise please quit now (CTRL+C)
@@ -81,8 +111,6 @@ goto ossupp
 :usew10
 set VERSION=10.0
 :ossupp
-copy /y ldntvdm\system32\%VERSION%\ldntvdm.dll ldntvdm\system32\
-copy /y ldntvdm\syswow64\%VERSION%\ldntvdm.dll ldntvdm\syswow64\
 
 cls
 echo ---------------------------------------------
@@ -91,12 +119,28 @@ echo ---------------------------------------------
 echo Please check for completion-message from installer in taskbar.
 if exist haxm\IntelHaxm.sys RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultInstall 132 %CD%\ntvdmx64-haxm.inf
 
+echo [*] Preparing correct loader
+if not "%version%"=="5.1" (
+  rem Stupid Antivirus detects loader also during copying, so add exclusion to source and target prior to copying
+  for %%F in (system32 syswow64) do (
+    set "DefExclusion=%CD%\ldntvdm\%%F\%VERSION%\ldntvdm.dll"
+    powershell -noprofile -command Add-MpPreference -Force -ExclusionPath "$env:DefExclusion" >nul
+    set "DefExclusion=%CD%\ldntvdm\%%F\ldntvdm.dll"
+    powershell -noprofile -command Add-MpPreference -Force -ExclusionPath "$env:DefExclusion" >nul
+  )
+)
+copy /y ldntvdm\system32\%VERSION%\ldntvdm.dll ldntvdm\system32\
+copy /y ldntvdm\syswow64\%VERSION%\ldntvdm.dll ldntvdm\syswow64\
 echo [*] Trying to download necessary debug symbols
+md %SYSTEMROOT%\symbols >nul 2>&1
+icacls %SYSTEMROOT%\symbols /grant *S-1-1-0:(OI)(CI)F /T >nul
+if "%version%"=="11.0" if "%ORIGVERSION%"=="10.0" echo 1>%SYSTEMROOT%\symbols\w11ldr
 util\symfetch %SYSTEMROOT%\system32\kernel32.dll
 util\symfetch %SYSTEMROOT%\syswow64\kernel32.dll
 if not "%version%"=="5.1" util\symfetch %SYSTEMROOT%\system32\appinfo.dll
 if "%version%"=="6.1" util\symfetch %SYSTEMROOT%\system32\conhost.exe
-
+if "%version%"=="11.0" util\symfetch %SYSTEMROOT%\system32\ntdll.dll
+if "%version%"=="11.0" util\symfetch %SYSTEMROOT%\syswow64\ntdll.dll
 if "%version%"=="5.1" goto nodefender
 echo [*] Adding Loader to Windows Defender exclusion list, as there are always false positives...
 set "DefExclusion=%SystemRoot%\system32\ldntvdm.dll"
@@ -110,30 +154,44 @@ rundll32.exe advpack.dll,LaunchINFSection %CD%\ntvdmx64.inf
 goto fini
 
 :addappinit
-set AppInit=
-for /F "skip=2 tokens=2*" %%r in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs') do set AppInit=%AppInit%%%s
-echo %AppInit% | findstr /I /C:ldntvdm.dll >nul
-if errorlevel 1 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs /f /d "%AppInit% ldntvdm.dll"
-set AppInit=
-for /F "skip=2 tokens=2*" %%r in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs') do set AppInit=%AppInit%%%s
-echo %AppInit% | findstr /I /C:ldntvdm.dll >nul
-if errorlevel 1 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs /f /d "%AppInit% ldntvdm.dll"
-set AppInit=
+icacls %SYSTEMROOT%\system32\ldntvdm.dll /grant *S-1-1-0:(RX) >nul
+icacls %SYSTEMROOT%\syswow64\ldntvdm.dll /grant *S-1-1-0:(RX) >nul
+if exist %SYSTEMROOT%\symbols\w11ldr set VERSION=11.0
+if not "%VERSION%"=="11.0" (
+  set AppInit=
+  for /F "skip=2 tokens=2*" %%r in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs') do set AppInit=%AppInit%%%s
+  echo %AppInit% | findstr /I /C:ldntvdm.dll >nul
+  if errorlevel 1 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs /f /d "%AppInit% ldntvdm.dll"
+  set AppInit=
+  for /F "skip=2 tokens=2*" %%r in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs') do set AppInit=%AppInit%%%s
+  echo %AppInit% | findstr /I /C:ldntvdm.dll >nul
+  if errorlevel 1 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs /f /d "%AppInit% ldntvdm.dll"
+  set AppInit=
+) else (
+  reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\AppCertDlls" /v ldntvdm /f /d "%SystemRoot%\system32\ldntvdm.dll"
+)
 goto fini
 
 :delappinit
-set AppInit=
-for /F "skip=2 tokens=2*" %%r in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs') do (
-  for %%t in (%%s) do if not "%%t"=="ldntvdm.dll" set AppInit=!AppInit!%%t 
+if exist %SYSTEMROOT%\symbols\w11ldr (
+  set VERSION=11.0
+  del %SYSTEMROOT%\symbols\w11ldr
 )
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs /f /d "%AppInit%"
-set AppInit=
-for /F "skip=2 tokens=2*" %%r in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs') do (
-  for %%t in (%%s) do if not "%%t"=="ldntvdm.dll" set AppInit=!AppInit!%%t 
+if not "%VERSION%"=="11.0" (
+  set AppInit=
+  for /F "skip=2 tokens=2*" %%r in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs') do (
+    for %%t in (%%s) do if not "%%t"=="ldntvdm.dll" set AppInit=!AppInit!%%t 
+  )
+  reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs /f /d "%AppInit%"
+  set AppInit=
+  for /F "skip=2 tokens=2*" %%r in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs') do (
+    for %%t in (%%s) do if not "%%t"=="ldntvdm.dll" set AppInit=!AppInit!%%t 
+  )
+  reg add "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs /f /d "%AppInit%"
+  set AppInit=
+) else (
+  reg delete "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\AppCertDlls" /v ldntvdm /f
 )
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs /f /d "%AppInit%"
-set AppInit=
-
 if exist %windir%\inf\wow32.inf RunDll32 advpack.dll,LaunchINFSection %windir%\inf\wow32.inf,DefaultUninstall
 if exist %windir%\inf\ntvdmdbg.inf RunDll32 advpack.dll,LaunchINFSection %windir%\inf\ntvdmdbg.inf,DefaultUninstall
 if exist %windir%\inf\ntvdmx64-haxm.inf RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultUninstall 132 %windir%\inf\ntvdmx64-haxm.inf

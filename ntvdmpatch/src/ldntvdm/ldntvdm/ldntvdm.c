@@ -39,12 +39,13 @@
 #include "ntregapi.h"
 #include "apppatch.h"
 #include "appinfo.h"
+#include "injector32.h"
 
 #pragma comment(lib, "ntdll.lib")
 
 volatile char av_vendor_info[] = "AV-vendors: This is NOT malware! This is the loader of https://github.com/leecher1337/ntvdmx64 project";
 
-#if !defined(TARGET_WIN10)
+#if !defined(TARGET_WIN10) && !defined(TARGET_WIN11)
 #define KRNL32_CALL BASEP_CALL
 #else
 #define KRNL32_CALL __fastcall
@@ -116,7 +117,7 @@ void Trace(char *pszLine)
 }
 #endif
 	
-#if defined(WOW16_SUPPORT) || (defined(USE_SYMCACHE) && !defined(CREATEPROCESS_HOOK))
+#if defined(WOW16_SUPPORT) || (defined(USE_SYMCACHE) && !defined(CREATEPROCESS_HOOK)) || defined(CREATEPROCESS_HOOKNTCREATE)
 NTSTATUS LastCreateUserProcessError = STATUS_SUCCESS;
 #ifndef TARGET_WINXP
 typedef NTSTATUS (NTAPI *fpNtCreateUserProcess)(
@@ -147,7 +148,7 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 	PVOID AttributeList
 	)
 {
-#if defined (USE_SYMCACHE) && !defined(CREATEPROCESS_HOOK)
+#if defined (USE_SYMCACHE) && (!defined(CREATEPROCESS_HOOK) || defined(CREATEPROCESS_HOOKNTCREATE))
 	UpdateSymbolCache(TRUE);
 #endif
 	LastCreateUserProcessError = 
@@ -166,6 +167,16 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 	{
 		TRACE("NtCreateUserProcess(ThreadHandle=%X, CommandLine=%wZ) failed with %08X\n", ThreadHandle?*ThreadHandle:-1, &ProcessParameters->CommandLine, LastCreateUserProcessError);
 	}
+#ifdef CREATEPROCESS_HOOKNTCREATE
+	else
+	{
+		PROCESS_INFORMATION pi;
+
+		pi.hProcess = *ProcessHandle;
+		pi.hThread = *ThreadHandle;
+		InjectIntoCreatedThread(&pi, METHOD_HOOKLDR);
+	}
+#endif
 #ifdef WOW16_SUPPORT
 	return (!gfHasOTVDM && LastCreateUserProcessError==STATUS_INVALID_IMAGE_WIN_16)?STATUS_INVALID_IMAGE_PROTECT:LastCreateUserProcessError;
 #else
@@ -278,8 +289,32 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 		{
 			// Load the private loader functions by using DbgHelp and Symbol server
 			DWORD64 dwBase = 0, dwAddress;
-			char szKernel32[MAX_PATH];
 			HMODULE hKrnl32 = GetModuleHandle(_T("kernel32.dll"));
+#ifdef USE_SYMCACHE
+			NTSTATUS Status;
+			HKEY hKey;
+
+			if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ | KEY_WRITE, &hKey)))
+			{
+				if (SymCache_GetDLLKey(hKey, L"kernel32.dll", TRUE))
+				{
+					if ((dwAddress = (DWORD64)SymCache_GetProcAddress(hKey, L"BaseCreateVDMEnvironment")) &&
+						(BaseCreateVDMEnvironment = (fpBaseCreateVDMEnvironment)((DWORD64)hKrnl32 + dwAddress)) &&
+						(dwAddress = (DWORD64)SymCache_GetProcAddress(hKey, L"BaseGetVdmConfigInfo")) &&
+						(BaseGetVdmConfigInfo = (fpBaseGetVdmConfigInfo)((DWORD64)hKrnl32 + dwAddress)) &&
+						(dwAddress = (DWORD64)SymCache_GetProcAddress(hKey, L"BaseCheckVDM")))
+					{
+						BaseCheckVDM = (fpBaseCheckVDM)((DWORD64)hKrnl32 + dwAddress);
+					}
+					else
+					{
+						OutputDebugStringA("NTVDM: Resolving symbols failed.");
+					}
+				}
+				REG_CloseKey(hKey);
+			}
+#else	// USE_SYMCACHE
+			char szKernel32[MAX_PATH];
 
 			GetSystemDirectoryA(szKernel32, sizeof(szKernel32) / sizeof(szKernel32[0]));
 			strcat(szKernel32, "\\kernel32.dll");
@@ -303,6 +338,7 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 			{
 				OutputDebugStringA("NTVDM: Symbol engine loading failed");
 			}
+#endif	// USE_SYMCACHE
 			// If resolution fails, fallback to normal loader code and display error
 		}
 		if (BaseCheckVDM)
@@ -459,9 +495,7 @@ BOOL FixNTDLL(void)
 	return FALSE;
 }
 
-#define SUBSYS_OFFSET 0x128
 #else	// _WIN32
-#define SUBSYS_OFFSET 0xB4
 
 BOOL FixNTDLL(void)
 {
@@ -553,7 +587,7 @@ void EnsureWin7Symbols(HMODULE hKrnl32)
 			if (dwAddress = SymCache_GetProcAddress(hKey, REGKEY_BasepProcessInvalidImage))
 			{
 				lpProcII = (LPBYTE)((DWORD64)hKrnl32 + dwAddress);
-				BasepProcessInvalidImageReal = (fpBasepProcessInvalidImage)Hook_Inline(lpProcII, BasepProcessInvalidImage);
+				BasepProcessInvalidImageReal = (fpBasepProcessInvalidImage)Hook_Inline(GetCurrentProcess(), hKrnl32, lpProcII, BasepProcessInvalidImage);
 			}
 #endif /* !NEED_BASEVDM */
 			if (dwAddress = SymCache_GetProcAddress(hKey, REGKEY_BaseIsDosApplication))
@@ -594,6 +628,7 @@ BOOL WINAPI _DllMainCRTStartup(
 		LPBYTE lpProcII = NULL;
 		TCHAR *pszProcess;
 
+		DisableThreadLibraryCalls(hDllHandle);
 		g_hInst = hDllHandle;
 		hKrnl32 = GetModuleHandle(_T("kernel32.dll"));
 #ifndef TARGET_WINXP
@@ -608,7 +643,7 @@ BOOL WINAPI _DllMainCRTStartup(
 		{
 			char szTmpFile[MAX_PATH];
 			sprintf(szTmpFile + GetWindowsDirectoryA(szTmpFile, sizeof(szTmpFile)), "\\Temp\\ldntvdm.%d.log", GetCurrentProcessId());
-			g_hLog = CreateFileA(szTmpFile, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_NEW,
+			g_hLog = CreateFileA(szTmpFile, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_NEW,
 				0, NULL);
 		}
 #endif // TRACE_FILE
@@ -698,8 +733,8 @@ BOOL WINAPI _DllMainCRTStartup(
  * N      N         N           Y      N	WOW16 support not needed
  * N      N         N           N      N	WOW16 support not needed
  */
-#if !defined (TARGET_WINXP) && (defined(WOW16_SUPPORT) || (defined(USE_SYMCACHE) && !defined(CREATEPROCESS_HOOK)))
-#if !defined(USE_SYMCACHE) || defined(CREATEPROCESS_HOOK)
+#if !defined (TARGET_WINXP) && (defined(WOW16_SUPPORT) || (defined(USE_SYMCACHE) && !defined(CREATEPROCESS_HOOK)) || defined(CREATEPROCESS_HOOKNTCREATE))
+#if !defined(USE_SYMCACHE) || (defined(CREATEPROCESS_HOOK) && !defined(CREATEPROCESS_HOOKNTCREATE))
 		if (!gfHasOTVDM)
 #endif // !defined(USE_SYMCACHE) || defined(CREATEPROCESS_HOOK)
 			if (Hook_IAT_x64_IAT((LPBYTE)hKernelBase, "ntdll.dll", "NtCreateUserProcess", NtCreateUserProcessHook, (PULONG_PTR)&NtCreateUserProcessReal) == -2)
@@ -707,7 +742,7 @@ BOOL WINAPI _DllMainCRTStartup(
 #endif // defined(WOW16_SUPPORT) || (defined(USE_SYMCACHE) && !defined(CREATEPROCESS_HOOK))
 
 /* Use CreateProcess Hook? */
-#ifdef CREATEPROCESS_HOOK
+#if defined(CREATEPROCESS_HOOK) && !defined(CREATEPROCESS_HOOKNTCREATE)
 		CreateProcessHook_Install(hKrnl32);
 #endif
 
@@ -756,7 +791,17 @@ BOOL WINAPI _DllMainCRTStartup(
 		HookExtractIcon();
 #endif
 
-		TRACE("ldntvdm Init done\n");
+/* If we cannot propagate via AppInit-DLLs, we have to inject into child processes manually */
+#ifdef NO_APPINIT_DLL
+		InjectIntoChildren(GetCurrentProcess());
+#endif
+
+#ifdef NEED_APPINFO
+		AppInfo_InstallHook();
+#endif
+
+
+		TRACE("ldntvdm Init done (https://github.com/leecher1337/ntvdmx64)\n");
 		break;
 	}
 	case DLL_PROCESS_DETACH:

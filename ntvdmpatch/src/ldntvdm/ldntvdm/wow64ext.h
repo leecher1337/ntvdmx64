@@ -1,7 +1,3 @@
-#ifndef STATUS_SUCCESS
-#   define STATUS_SUCCESS 0
-#endif
-
 ULONG __stdcall BaseSetLastNTError(NTSTATUS NtStatus);
 ULONGLONG getNTDLL64();
 ULONGLONG __cdecl X64Call(ULONGLONG func, int argC, ...);

@@ -123,7 +123,7 @@ BOOL HookExtractIcon()
 	{
 		// As many functions are using this, we cannot do IAT hooking but have to do an inline hook here
 		PrivateExtractIconsWReal = (fpPrivateExtractIconsW)GetProcAddress(hUser, "PrivateExtractIconsW");
-		PrivateExtractIconsWReal = (fpPrivateExtractIconsW)Hook_Inline(PrivateExtractIconsWReal, PrivateExtractIconsWHook);
+		PrivateExtractIconsWReal = (fpPrivateExtractIconsW)Hook_Inline(GetCurrentProcess(), hUser, PrivateExtractIconsWReal, PrivateExtractIconsWHook);
 	}
 	if (hUser)
 	{

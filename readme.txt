@@ -90,14 +90,15 @@ is a nice mechanism by Windows that allows DLLs to be injected into every
 GUI process.
 Unfortunately these DLLs nowadays have a signature enforcement in order to
 get loaded, but this can be turned off in registry. As far as I know this
-only works if "Secure Boot" is off, which therefore is a requirement for
-this all to work (however I don't know what this exactly is, I guess it is
-some UEFI-stuff). AppInit-DLLs only get injected to GUI processes by the 
+only works if "Secure Boot" is off OR if Windows is in Testsigning mode, 
+which therefore is a requirement for this all to work.
+Starting with Windows 11, "Secure Boot" cannot be disabled out of the box,
+therefore we use AppCert.DLL approach on Win 11 loader.
+AppInit-DLLs only get injected to GUI processes by the 
 CSRSS, but injection is also required into CLI processes as these are even
 more likely to launch a DOS application. Therefore the AppInit-DLL also has
-to hook CreateProcess() functions in order to determine if the called process
-is a Commandline process and if so, inject the process via remote thread
-injection.
+to invade the console server and inject into created console applications
+from there (WinEvent hook).
 Of course this mess could be all avaoided if Microsoft would implement all
 the required patches from the AppInit-DLL into their WOW64 and into NTDLL
 (which wouldn't hurt anyway). Further technical details will be provided 
@@ -223,6 +224,7 @@ Windows 7 x64
 Windows 8 x64
 Windows Server 2008 x64
 Windows 10 x64
+Windows 11 x64
 
 You are invited to improve this project to bring back DOS to Windows.
 

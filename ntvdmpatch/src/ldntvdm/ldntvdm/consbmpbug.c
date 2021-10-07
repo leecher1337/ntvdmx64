@@ -98,6 +98,55 @@ HMODULE WINAPI LoadLibraryExWHook(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwF
 #endif
 
 #ifdef HOOK_CONHOSTV2
+#include "xpwrap.h"
+#include "ntpsapi.h"
+DWORD GetParentProcessName(HANDLE hModule, LPSTR lpFilename, DWORD nSize)
+{
+	xpPROCESS_BASIC_INFORMATION BasicInfo;
+	NTSTATUS status;
+	HANDLE hProcess;
+	DWORD dwRet;
+
+	status = NtQueryInformationProcess(
+		hModule,
+		ProcessBasicInformation,
+		&BasicInfo,
+		sizeof(BasicInfo),
+		NULL
+		);
+	if (!NT_SUCCESS(status)) return 0;
+	hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, (DWORD)BasicInfo.InheritedFromUniqueProcessId);
+	if (!hProcess) return 0;
+	dwRet = GetModuleFileNameA(hProcess, lpFilename, nSize);
+	CloseHandle(hProcess);
+	return dwRet;
+}
+
+static BOOL IsV2ParentProcess(void)
+{
+	char szProcess[MAX_PATH];
+	char *pszExcludedProcesses[] = {
+		"wsl.exe",
+		"wslhost.exe",
+		"debian.exe"
+	};
+	size_t len;
+	int i, proclen;
+
+	if (proclen = GetParentProcessName(GetCurrentProcess(), szProcess, sizeof(szProcess)))
+	{
+		TRACE("LDNTVDM: Parent process is %s\n", szProcess)
+		for (i = 0; i < sizeof(pszExcludedProcesses) / sizeof(pszExcludedProcesses[0]); i++)
+		{
+			len = strlen(pszExcludedProcesses[i]);
+			TRACE("%s = %s?\n", szProcess + proclen - len, pszExcludedProcesses[i]);
+			if (proclen >= len && strcmp(szProcess + proclen - len, pszExcludedProcesses[i]) == 0)
+				return TRUE;
+		}
+	}
+	return FALSE;
+}
+
 /* The key for forcing V1 console is in HKEY_CURRENT_USER, thus it cannot be set globally during setup.
  * Therefore we patch ShouldUseConhostV2 function in conhost to always return FALSE so that ntvdmx64
  * works for all users on the system, as long as the loader is installed.
@@ -112,6 +161,7 @@ void ForceV1Console(HMODULE hConhost)
 	if (NT_SUCCESS(REG_OpenLDNTVDM(KEY_READ, &hKey)))
 	{
 		if ((!NT_SUCCESS(REG_QueryDWORD(hKey, L"ObeyForceV2", &dwAddress)) || dwAddress == 0) &&
+			!IsV2ParentProcess() &&
 			SymCache_GetDLLKey(hKey, L"conhost.exe", FALSE) &&
 			NT_SUCCESS(REG_QueryDWORD(hKey, L"ShouldUseConhostV2", &dwAddress)))
 		{

@@ -20,7 +20,6 @@
 #include "consbmp.h"
 #include "reg.h"
 
-#define STATUS_SUCCESS                   ((NTSTATUS)0x00000000L)    // ntsubauth
 #define DPFLTR_USERGDI_ID 112
 #define MAKE_TAG( t ) (RTL_HEAP_MAKE_TAG( *pdwConBaseTag, t ))
 #define BMP_TAG 1

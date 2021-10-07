@@ -46,7 +46,7 @@ BOOL AppInfo_InstallHook(void)
 				(dwAddress = (DWORD64)SymCache_GetProcAddress(hKey, L"AiOpenWOWStubs")))
 			{
 				dwAddress += (DWORD64)hAppInfo;
-				fInstalled = Hook_Inline((PVOID)dwAddress, AiOpenWOWStubs) ? TRUE : FALSE;
+				fInstalled = Hook_Inline(GetCurrentProcess(), hAppInfo, (PVOID)dwAddress, AiOpenWOWStubs) ? TRUE : FALSE;
 			}
 			REG_CloseKey(hKey);
 		}

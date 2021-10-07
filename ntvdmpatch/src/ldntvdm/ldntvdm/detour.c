@@ -12,15 +12,60 @@
 
 #if defined(USE_SYMCACHE) || defined(TARGET_WINXP) || defined(EXTRACTICON_HOOK)
 
-static PBYTE Hook_FindAddr(ULONG_PTR src)
+struct _HOOK_HEAPPTR;
+struct _HOOK_HEAPPTR {
+	struct _HOOK_HEAPPTR *Next;
+	HANDLE hProcess;
+	PVOID BaseAddress;
+	DWORD Offset;
+	PBYTE pMem;
+};
+typedef struct _HOOK_HEAPPTR HOOK_HEAPPTR;
+HOOK_HEAPPTR *m_pHeapPtrList = NULL;
+
+static HOOK_HEAPPTR *Hook_AddrList_Find(HANDLE hProcess, PVOID BaseAddress, DWORD cbReqSize)
+{
+	HOOK_HEAPPTR *ptr;
+
+	for (ptr = m_pHeapPtrList; ptr; ptr = ptr->Next)
+	{
+		if (ptr->hProcess == hProcess && ptr->BaseAddress == BaseAddress)
+		{
+			if (0x1000 - ptr->Offset > cbReqSize) return ptr;
+		}
+	}
+	return NULL;
+}
+
+static PVOID Hook_AddrList_Reserve(HOOK_HEAPPTR *pList, DWORD cbReqSize)
+{
+	PVOID pRet = pList->pMem + pList->Offset;
+	pList->Offset += cbReqSize;
+	return pRet;
+}
+
+static HOOK_HEAPPTR *Hook_AddrList_Add(HANDLE hProcess, PVOID BaseAddress, DWORD cbReqSize, PBYTE pMem)
+{
+	HOOK_HEAPPTR **ppNext = &m_pHeapPtrList;
+
+	while (*ppNext) ppNext = &(*ppNext)->Next;
+	if (!(*ppNext = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(HOOK_HEAPPTR)))) return NULL;
+	(*ppNext)->hProcess = hProcess;
+	(*ppNext)->BaseAddress = BaseAddress;
+	(*ppNext)->pMem = pMem;
+	return *ppNext;
+}
+
+static PBYTE Hook_FindAddr(HANDLE hProcess, ULONG_PTR src, DWORD cbReqSize)
 {
 	MEMORY_BASIC_INFORMATION mbi;
 	ULONG_PTR addr, min = src>0x80000000 ? src - 0x80000000 : 0, i;
+	HOOK_HEAPPTR *pList;
 
 	RtlZeroMemory(&mbi, sizeof(mbi));
 	for (addr = src, i = 0; addr > min && i < 1000; addr = (ULONG_PTR)mbi.BaseAddress - 1, i++)
 	{
-		if (VirtualQuery((LPCVOID)addr, &mbi, sizeof(mbi)) != sizeof(MEMORY_BASIC_INFORMATION))
+		if (VirtualQueryEx(hProcess, (LPCVOID)addr, &mbi, sizeof(mbi)) != sizeof(MEMORY_BASIC_INFORMATION))
 		{
 			TRACE("VirtualQuery failed: %08X\n", GetLastError());
 			break;
@@ -30,23 +75,51 @@ static PBYTE Hook_FindAddr(ULONG_PTR src)
 		{
 			PBYTE ret;
 			TRACE("About to alloc page @%"PRIxPTR"\n", mbi.BaseAddress);
-			if ((ret = VirtualAlloc(mbi.BaseAddress, 0x1000, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE)))
-				return ret;
+			if ((ret = VirtualAllocEx(hProcess, mbi.BaseAddress, 0x1000, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE)))
+			{
+				if (pList = Hook_AddrList_Add(hProcess, mbi.BaseAddress, cbReqSize, ret))
+					return Hook_AddrList_Reserve(pList, cbReqSize);
+			}
+		}
+		else
+		{
+			// If we already have reserved space and it's big enough, just reuse the reserved page
+			if (pList = Hook_AddrList_Find(hProcess, mbi.BaseAddress, cbReqSize))
+				return Hook_AddrList_Reserve(pList, cbReqSize);
 		}
 	}
 	return NULL;
 }
-static PBYTE Hook_ReserveSpace(PVOID src, DWORD cbPatch)
+static PBYTE Hook_ReserveSpace(HANDLE hModule, PVOID src, DWORD cbPatch)
 {
-	LPBYTE hMod = (LPBYTE)GetModuleHandle(_T("kernel32.dll"));
+	LPBYTE hMod = (LPBYTE)hModule, ret = 0;
 	PIMAGE_DOS_HEADER DosHeader = (PIMAGE_DOS_HEADER)hMod;
 	PIMAGE_NT_HEADERS NtHeaders = (PIMAGE_NT_HEADERS)(hMod + DosHeader->e_lfanew);
 	PIMAGE_SECTION_HEADER Sect = GetEnclosingSectionHeader((DWORD)((LPBYTE)src - hMod), NtHeaders);
 
 	/* Is there enough room at the end of the section? */
 	if (Sect && (Sect->SizeOfRawData - Sect->Misc.VirtualSize) >= cbPatch)
-		return hMod + Sect->VirtualAddress + Sect->Misc.VirtualSize;
-	return 0;
+	{
+		/* Check if already in hook address list */
+		HOOK_HEAPPTR *pList;
+
+		if (Hook_AddrList_Find(GetCurrentProcess(), (PVOID)Sect->VirtualAddress, 0))
+		{
+			if (pList = Hook_AddrList_Find(GetCurrentProcess(), (PVOID)Sect->VirtualAddress, cbPatch))
+				return Hook_AddrList_Reserve(pList, cbPatch);
+			return FALSE; // Not enough space left
+		}
+		else
+		{
+			if (pList = Hook_AddrList_Add(GetCurrentProcess(), (PVOID)Sect->VirtualAddress, cbPatch, hMod + Sect->VirtualAddress))
+			{
+				pList->Offset = Sect->Misc.VirtualSize;
+				return Hook_AddrList_Reserve(pList, cbPatch);
+			}
+		}
+		//ret = hMod + Sect->VirtualAddress + Sect->Misc.VirtualSize;
+	}
+	return ret;
 }
 
 #ifndef _WIN64
@@ -73,34 +146,63 @@ static size_t Hook_DetermineLength(PBYTE Address, DWORD dwSizeReq)
 	return LenCount;
 }
 
-BOOL Hook_EnoughSpace(PBYTE Address, DWORD dwSizeReq)
+BOOL Hook_EnoughSpace(HANDLE hProcess, PBYTE Address, DWORD dwSizeReq)
 {
-	PBYTE t, pEnd = Address + dwSizeReq;
+	PBYTE t, pEnd;
+	BYTE buffer[128]; // Just assuming it, as this is enough for our internal needs
 
-	if (!IsBadReadPtr(Address, dwSizeReq))
+	if (hProcess == GetCurrentProcess())
 	{
-		for (t = Address; t < pEnd; t++) if (*t != 0xCC && *t != 0x90) break;
-		return t == pEnd;
+		if (IsBadReadPtr(Address, dwSizeReq)) return FALSE;
+		t = Address;
+		pEnd = Address + dwSizeReq;
 	}
-	return FALSE;
+	else
+	{
+		SIZE_T dwRead;
+
+		if (dwSizeReq > sizeof(buffer) ||
+			!ReadProcessMemory(hProcess, Address, buffer, dwSizeReq, &dwRead) || dwRead != dwSizeReq)
+			return FALSE;
+		t = buffer;
+		pEnd = buffer + dwSizeReq;
+	}
+
+	for (; t < pEnd; t++) if (*t != 0xCC && *t != 0x90) break;
+	return t == pEnd;
 }
 
-LPBYTE Hook_Inline(PVOID src, PVOID tgt)
+// ptr_size default: ULONG_PTR
+LPBYTE Hook_Inline_Func(HANDLE hProcess, HANDLE hModule, PVOID src, PVOID tgt, SIZE_T ptr_size, const char *pszHookName)
 {
 	// Find free region for allocation
 	DWORD cbContext;
-	PBYTE context = NULL, p;
+	PBYTE context = NULL, p, dst_ptr;
 	DWORD flOld = 0, OldProt = 0, dwOrigSize;
-	static DWORD SectOffset = 0;
+	HANDLE hCurrentProcess = GetCurrentProcess();
+	PVOID src_ptr;
+	BYTE buffer[128];
+	DWORD len, result;
+	SIZE_T dwRead;
 
-	TRACE("Hook_Inline(%"PRIxPTR", %"PRIxPTR")\n", src, tgt);
+	TRACE("Hook_Inline(%"PRIxPTR", %"PRIxPTR", %s)\n", src, tgt, pszHookName);
 
-#ifndef _WIN64
-	// If this is a Hot-patchable function, we can save ourselves a lot of work
-	if (*((WORD*)src) == 0xFF8B)
+	len = sizeof(DWORD) + 1; // JMP ....
+	if (hProcess == hCurrentProcess)
 	{
-		p = (PBYTE)src - sizeof(ULONG_PTR) - 1; // JMP ....
-		if (Hook_EnoughSpace(p, (PBYTE)src - p) && VirtualProtect(p, (PBYTE)src - p + 2, PAGE_READWRITE, &OldProt))
+		src_ptr = src;
+	}
+	else
+	{
+		if (!ReadProcessMemory(hProcess, (PBYTE)src - len, buffer, 32 + len, &dwRead))
+			return NULL;
+		src_ptr = buffer + len;
+	}
+
+	// If this is a Hot-patchable function, we can save ourselves a lot of work
+	if (ptr_size == sizeof(DWORD) && *((WORD*)src_ptr) == 0xFF8B)
+	{
+		if (Hook_EnoughSpace(hProcess, (PBYTE)src - len, len) && VirtualProtectEx(hProcess, (PBYTE)src - len, len + 2, PAGE_READWRITE, &OldProt))
 		{
 			/* Looks good, simple trampoline:
 			 * JMP tgt     E9 xx xx xx xx
@@ -109,35 +211,39 @@ LPBYTE Hook_Inline(PVOID src, PVOID tgt)
 			 * JMP $-6     EB F9
 			 * <orig fun>  ...
 			 */
+			p = (PBYTE)src_ptr - len; // JMP ....
 			*p = 0xE9;
-			*((PDWORD)(p + 1)) = (DWORD)tgt - (DWORD)p - 5;
+			*((PDWORD)(p + 1)) = (DWORD)tgt - (DWORD)src;
 			*((PWORD)(p + 5)) = 0xF9EB;
-			VirtualProtect((LPVOID)p, (PBYTE)src - p + 2, OldProt, &OldProt);
-			FlushInstructionCache(GetCurrentProcess(), NULL, 0);
-			TRACE("Hook_Inline did hotpatch -> context=%"PRIxPTR"\n", p + 7);
-			return p + 7;
+			if (hProcess != hCurrentProcess) result = WriteProcessMemory(hProcess, (PBYTE)src - len, buffer, len + 2, &dwRead); else result = TRUE;
+			VirtualProtectEx(hProcess, (PBYTE)src - len, len + 2, OldProt, &OldProt);
+			FlushInstructionCache(hProcess, NULL, 0);
+			if (result)
+			{
+				TRACE("Hook_Inline did hotpatch -> context=%"PRIxPTR"\n", p + 7);
+				return (PBYTE)src + 2;
+			}
 		}
 	}
-#endif
 
 	// Determine dwOrigSize with LDASM. We need at least 2 + sizeof(DWORD) bytes 
-	dwOrigSize = (DWORD)Hook_DetermineLength(src, 2 + sizeof(DWORD));
+	dwOrigSize = (DWORD)Hook_DetermineLength(src_ptr, 2 + sizeof(DWORD));
 	TRACE("dwOrigSize detected: %d\n", dwOrigSize);
-	cbContext = dwOrigSize + 1 + sizeof(DWORD) + sizeof(ULONG_PTR);
+	cbContext = dwOrigSize + 1 + sizeof(DWORD) + ptr_size;
 
 	/* First check if there is enough space before the function */
 	context = (PBYTE)src - cbContext;
-	if (Hook_EnoughSpace(context, cbContext) &&
-		VirtualProtect(context, cbContext, PAGE_READWRITE, &OldProt))
+	if (Hook_EnoughSpace(hProcess, context, cbContext) &&
+		VirtualProtectEx(hProcess, context, cbContext, PAGE_READWRITE, &OldProt))
 	{
 		TRACE("Hook: Enough space before function\n")
 	}
 	else
 	{
 		// Reuse wasted space at the end of text section if possible
-		if (!(context = Hook_ReserveSpace(src, cbContext)))
+		if (hProcess != hCurrentProcess || !(context = Hook_ReserveSpace(hModule, src, cbContext)))
 		{
-			if (!(context = Hook_FindAddr((ULONG_PTR)src)))
+			if (!(context = Hook_FindAddr(hProcess, (ULONG_PTR)src, cbContext)))
 			{
 				TRACE("Hook_FindAddr failed.\n");
 				return NULL;
@@ -145,9 +251,7 @@ LPBYTE Hook_Inline(PVOID src, PVOID tgt)
 		}
 		else
 		{
-			context += SectOffset;
-			SectOffset += cbContext;
-			VirtualProtect(context, cbContext, PAGE_READWRITE, &OldProt);
+			VirtualProtectEx(hProcess, context, cbContext, PAGE_READWRITE, &OldProt);
 		}
 	}
 
@@ -162,36 +266,46 @@ LPBYTE Hook_Inline(PVOID src, PVOID tgt)
 	*/
 
 	// Save original. Length check missing
-	RtlMoveMemory(context, src, dwOrigSize);
-	p = context + dwOrigSize;
+	if (hProcess != hCurrentProcess) dst_ptr = buffer; else dst_ptr = context;
+	RtlMoveMemory(dst_ptr, src_ptr, dwOrigSize);
+	p = dst_ptr + dwOrigSize;
 	*p = 0xE9;
-	*(DWORD*)(++p) = (DWORD)((ULONG_PTR)src - (ULONG_PTR)context - 5);
+	*(DWORD*)(++p) = (DWORD)((ULONG_PTR)src - (ULONG_PTR)context - len);
 	p += sizeof(DWORD);
 
 	// final jump address
-	*((ULONG_PTR*)p) = (ULONG_PTR)tgt;
-	p += sizeof(ULONG_PTR);
-
-	if (OldProt) VirtualProtect(context, cbContext, OldProt, &OldProt);
+	if (ptr_size == sizeof(ULONGLONG))
+	{
+		*((ULONGLONG*)p) = (ULONG_PTR)tgt;
+		p += sizeof(ULONGLONG);
+	}
+	else
+	{
+		*((DWORD*)p) = (DWORD)tgt;
+		p += sizeof(DWORD);
+	}
+	if (hProcess != hCurrentProcess && !WriteProcessMemory(hProcess, context, dst_ptr, cbContext, &dwRead)) return FALSE;
+	if (OldProt) VirtualProtectEx(hProcess, context, cbContext, OldProt, &OldProt);
 
 	// write hook
-	if (!VirtualProtect(src, 2 + sizeof(DWORD), PAGE_EXECUTE_READWRITE, &flOld))
+	len = 2 + sizeof(DWORD);
+	if (!VirtualProtectEx(hProcess, src, len, PAGE_EXECUTE_READWRITE, &flOld))
 	{
 		TRACE("Hook_Inline failed: VirtualProtect err=%08X\n", GetLastError());
 		return 0;
 	}
 
 	// Build jump (jmp [rip - offset])
-	p = src;
+	p = hProcess != hCurrentProcess?buffer:src;
 	*p = 0xFF;
 	*(++p) = 0x25;
-#ifdef _WIN64
-	*(PDWORD)(++p) = (DWORD)((ULONG_PTR)context - (ULONG_PTR)src + dwOrigSize + 1 + sizeof(DWORD) - 2 - sizeof(DWORD));
-#else
-	*(PDWORD)(++p) = (DWORD)((ULONG_PTR)context + dwOrigSize + 1 + sizeof(DWORD));
-#endif
+	if (ptr_size == sizeof(ULONGLONG))
+		*(PDWORD)(++p) = (DWORD)((ULONG_PTR)context - (ULONG_PTR)src + dwOrigSize + 1 + sizeof(DWORD) - 2 - sizeof(DWORD));
+	else
+		*(PDWORD)(++p) = (DWORD)((ULONG_PTR)context + dwOrigSize + 1 + sizeof(DWORD));
 
-	VirtualProtect(src, 2 + sizeof(DWORD), flOld, &flOld);
+	if (hProcess != hCurrentProcess && !WriteProcessMemory(hProcess, src, buffer, len, &dwRead)) return FALSE;
+	VirtualProtectEx(hProcess, src, len, flOld, &flOld);
 
 	TRACE("Hook_Inline context=%"PRIxPTR"\n", context);
 	return context;

@@ -538,7 +538,8 @@ NtCreateSectionHook(
 				{
 					if (ResolveLocalSymbols())
 					{
-						NtVdm64CreateProcessReal = (fpNtVdm64CreateProcess)Hook_Inline(NtVdm64CreateProcess, NtVdm64CreateProcessHook);
+						HMODULE hKrnl32 = GetModuleHandle(_T("kernel32.dll"));
+						NtVdm64CreateProcessReal = (fpNtVdm64CreateProcess)Hook_Inline(GetCurrentProcess(), hKrnl32, NtVdm64CreateProcess, NtVdm64CreateProcessHook);
 					}
 				}
 				bRecursive = FALSE;

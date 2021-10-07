@@ -1,4 +1,6 @@
+#ifndef DEFINE_BASEMSG32
 #include "basemsg64.h"
+#endif
 
 #define NtCurrentProcess() ( (HANDLE)(LONG_PTR) -1 )
 

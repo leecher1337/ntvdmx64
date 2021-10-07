@@ -200,5 +200,8 @@
     <ClInclude Include="appinfo.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="injector.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

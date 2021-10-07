@@ -7,61 +7,29 @@
  */
 
 #include "ldntvdm.h"
-#include "basemsg64.h"
+#include "injector.h"
 #include "injector32.h"
+#include "detour.h"
+#include "reg.h"
+#include "symcache.h"
+#include "symeng.h"
+#include <stddef.h>
 
-#ifdef _WIN64
-#undef METHOD_APC
-#undef METHOD_MODIFYSTARTUP
-#endif
-
-typedef NTSTATUS(NTAPI *pRtlInitUnicodeString)(PUNICODE_STRING, PCWSTR);
-typedef NTSTATUS(NTAPI *pLdrLoadDll)(PWCHAR, ULONG, PUNICODE_STRING, PHANDLE);
-typedef NTSTATUS(NTAPI *pNtTerminateThread)(IN HANDLE ThreadHandle, IN NTSTATUS ExitStatus);
 #define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )   // ntddk wdm ntifs
 
-typedef struct _THREAD_DATA
-{
-	pRtlInitUnicodeString fnRtlInitUnicodeString;
-	pLdrLoadDll fnLdrLoadDll;
-	pNtTerminateThread fnNtTerminateThread;
-	UNICODE_STRING UnicodeString;
-	WCHAR DllName[MAX_PATH];
-	PWCHAR DllPath;
-	ULONG Flags;
-	LPTHREAD_START_ROUTINE OrigEIP;
-	PVOID EIPParams;
-	HANDLE ModuleHandle;
-}THREAD_DATA, *PTHREAD_DATA;
-
-EXTERN_C NTSTATUS NTAPI RtlCreateUserThread(
-	HANDLE,
-	PSECURITY_DESCRIPTOR,
-	BOOLEAN,
-	ULONG,
-	PULONG,
-	PULONG,
-	PVOID,
-	PVOID,
-	PHANDLE,
-	CLIENT_ID*);
-
-static VOID WINAPI ThreadProc(PTHREAD_DATA data)
-{
-	data->fnRtlInitUnicodeString(&data->UnicodeString, data->DllName);
-	data->fnLdrLoadDll(data->DllPath, data->Flags, &data->UnicodeString, &data->ModuleHandle);
-	data->fnNtTerminateThread(NtCurrentThread(), 0);
-}
-
-static HANDLE WINAPI APCProc(PTHREAD_DATA data)
-{
-	data->fnRtlInitUnicodeString(&data->UnicodeString, data->DllName);
-	data->fnLdrLoadDll(data->DllPath, data->Flags, &data->UnicodeString, &data->ModuleHandle);
-	if (data->OrigEIP) return (HANDLE)data->OrigEIP(data->EIPParams);
-	return data->ModuleHandle;
-}
-static DWORD WINAPI dummy() { return 0; }
-static BOOL isProcessInitialized(HANDLE hProcess);
+#include "injector_pl64.c"
+#include "injector_pl32.c"
+#ifdef _WIN64
+#define ThreadProc ThreadProcx64
+#define APCProc APCProcx64
+#define PostProcProc PostProcProcx64
+#define LdrpInitializeProcessProc LdrpInitializeProcessProcx64
+#else
+#define ThreadProc ThreadProcx86
+#define APCProc APCProcx86
+#define PostProcProc PostProcProcx86
+#define LdrpInitializeProcessProc LdrpInitializeProcessProcx86
+#endif
 
 #ifdef METHOD_APC
 
@@ -82,28 +50,9 @@ BYTE apc_stub_x86[] =
 "\x51\x68\x38\x68\x0D\x16\xFF\xD3\xC9\xC2\x0C\x00\x00\x00\x00\x00"
 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 "\x00\x00\x00\x00";
-
-// The context used for injection via inject_via_apcthread
-typedef struct _APCCONTEXT
-{
-	union
-	{
-		LPVOID lpStartAddress;
-		BYTE bPadding1[8];
-	} s;
-
-	union
-	{
-		LPVOID lpParameter;
-		BYTE bPadding2[8];
-	} p;
-
-	BYTE bExecuted;
-
-} APCCONTEXT, *LPAPCCONTEXT;
+int apc_stub_x86_size = sizeof(apc_stub_x86);
 
 typedef NTSTATUS(NTAPI * NTQUEUEAPCTHREAD)(HANDLE hThreadHandle, LPVOID lpApcRoutine, LPVOID lpApcRoutineContext, LPVOID lpApcStatusBlock, LPVOID lpApcReserved);
-
 
 BOOL inject_via_apcthread(HANDLE hProcess, HANDLE hThread, LPVOID lpStartAddress, LPVOID lpParameter)
 {
@@ -133,10 +82,13 @@ BOOL inject_via_apcthread(HANDLE hProcess, HANDLE hThread, LPVOID lpStartAddress
 }
 #endif
 
-#ifdef METHOD_INTERCEPTTHREAD
-BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, char *DllName)
-{
 #ifdef _WIN64
+#undef METHOD_APC
+#undef METHOD_MODIFYSTARTUP
+#endif
+
+PBYTE InjectWriteLoadLibraryShellcodex64(HANDLE hProc, DWORD64 lpLoadLibraryW, DWORD64 Rip, WCHAR *DllName, DWORD *pdwSize)
+{
 	BYTE code[] = {
 		// pushfq
 		0x9c,
@@ -165,7 +117,30 @@ BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, char *DllName)
 		// Target address:
 		0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33,
 	};
-#else
+
+	//allocate a remote buffer
+	PBYTE InjData =
+		(PBYTE)VirtualAllocEx(hProc, NULL, sizeof(code) + (wcslen(DllName) + 1)*sizeof(WCHAR),
+			MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+	*(PDWORD64)&code[3] = lpLoadLibraryW;
+	*(PDWORD64)&code[8] = (DWORD64)(InjData + sizeof(code));
+	*(PDWORD64)&code[17] = Rip;
+
+	//write the tmp buff + dll
+	//Format: [RemoteFunction][DllName][null char]
+	SIZE_T dwWritten;
+	if (!WriteProcessMemory(hProc, InjData, code, sizeof(code), &dwWritten) ||
+		!WriteProcessMemory(hProc, InjData + sizeof(code), DllName, (wcslen(DllName) + 1)*sizeof(WCHAR), &dwWritten))
+	{
+		TRACE("Writing memory failed: %d\n", GetLastError());
+		return NULL;
+	}
+	*pdwSize = sizeof(code);
+	return InjData;
+}
+
+PBYTE  InjectWriteLoadLibraryShellcodex86(HANDLE hProc, DWORD lpLoadLibraryW, DWORD Eip, WCHAR *DllName, DWORD *pdwSize)
+{
 	BYTE code[] = {
 		0x60,	// PUSHAD
 		0x9C,	// PUSHFD
@@ -177,49 +152,59 @@ BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, char *DllName)
 		0x68, 0xCC, 0xCC, 0xCC, 0xCC,	// PUSH CCCCCCCC
 		0xc3	// RET
 	};
-#endif
-	//get the thread context
-	CONTEXT ThreadContext;
-	ULONG_PTR dwLoadLibrary;
-	ThreadContext.ContextFlags = CONTEXT_CONTROL;
-	GetThreadContext(hThread, &ThreadContext);
-	
-#ifdef _WIN64
-	TRACE("Hijacked Thread currently @%016llX, Flags: %016llX\n", ThreadContext.Rip, ThreadContext.ContextFlags);
-#else
-	TRACE("Hijacked Thread currently @%08X, Flags: %08X\n", ThreadContext.Eip, ThreadContext.ContextFlags);
-#endif
 
 	//allocate a remote buffer
 	PBYTE InjData =
-		(PBYTE)VirtualAllocEx(hProc, NULL, sizeof(code) + (strlen(DllName) + 1),
+		(PBYTE)VirtualAllocEx(hProc, NULL, sizeof(code) + (wcslen(DllName) + 1)*sizeof(WCHAR),
 			MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-	dwLoadLibrary = (ULONG_PTR)GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "LoadLibraryA");
-	//DWORD dwTestAlert = GetProcAddress(GetModuleHandle(_T("ntdll.dll")), "NtTestAlert");
-#ifdef _WIN64
-	*(ULONG_PTR*)&code[17] = dwLoadLibrary;
-	*(ULONG_PTR*)&code[27] = (ULONG_PTR)(InjData + sizeof(code));
-	*(ULONG_PTR*)&code[58] = ThreadContext.Rip;
-#else
-	*(ULONG_PTR*)&code[3] = dwLoadLibrary;
-	*(ULONG_PTR*)&code[8] = (ULONG_PTR)(InjData + sizeof(code));
-	*(ULONG_PTR*)&code[17] = ThreadContext.Eip;
-#endif
+	*(DWORD*)&code[3] = lpLoadLibraryW;
+	*(DWORD*)&code[8] = (DWORD)(InjData + sizeof(code));
+	*(DWORD*)&code[17] = Eip;
 
 	//write the tmp buff + dll
 	//Format: [RemoteFunction][DllName][null char]
 	SIZE_T dwWritten;
-	WriteProcessMemory(hProc, InjData, code, sizeof(code), &dwWritten);
-	WriteProcessMemory(hProc, InjData + sizeof(code), DllName, (strlen(DllName) + 1), &dwWritten);
+	if (!WriteProcessMemory(hProc, InjData, code, sizeof(code), &dwWritten) ||
+		!WriteProcessMemory(hProc, InjData + sizeof(code), DllName, (wcslen(DllName) + 1)*sizeof(WCHAR), &dwWritten))
+	{
+		TRACE("Writing memory failed: %d\n", GetLastError());
+		return NULL;
+	}
+	*pdwSize = sizeof(code);
+	return InjData;
+}
+
+#ifdef METHOD_INTERCEPTTHREAD
+BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, WCHAR *DllName)
+{
+	ULONG_PTR InjData;
+	DWORD dwSize;
+	//get the thread context
+	CONTEXT ThreadContext;
+	ULONG_PTR lpLoadLibraryW;
+	ThreadContext.ContextFlags = CONTEXT_CONTROL;
+	GetThreadContext(hThread, &ThreadContext);
+
+	lpLoadLibraryW = (ULONG_PTR)GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "LoadLibraryW");
+	
+#ifdef _WIN64
+	TRACE("Hijacked Thread currently @%016llX, Flags: %016llX\n", ThreadContext.Rip, ThreadContext.ContextFlags);
+	if (!(InjData = InjectWriteLoadLibraryShellcodex64(hProc, lpLoadLibraryW, ThreadContext.Rip, DllName, &dwSize)))
+		return FALSE;
+#else
+	TRACE("Hijacked Thread currently @%08X, Flags: %08X\n", ThreadContext.Eip, ThreadContext.ContextFlags);
+	if (!(InjData = InjectWriteLoadLibraryShellcodex86(hProc, lpLoadLibraryW, ThreadContext.Eip, DllName, &dwSize)))
+		return FALSE;
+#endif
 
 	if (!isProcessInitialized(hProc))
 	{
 		/* process has not yet been initialized... As hijacking threads is a bit dangerous anyway,
 		 * we back out by queuing an APC instead. NtTestAlert() call in loader should call us just
 		 * in time in this case... */
-		if (QueueUserAPC((PAPCFUNC)dwLoadLibrary, hThread, (ULONG_PTR)InjData + sizeof(code)))
+		if (QueueUserAPC((PAPCFUNC)lpLoadLibraryW, hThread, (ULONG_PTR)InjData + dwSize))
 		{
-			TRACE("Queued loader injection via APC @%08X\n", dwLoadLibrary);
+			TRACE("Queued loader injection via APC @%08X\n", lpLoadLibraryW);
 			return TRUE;
 		}
 		else
@@ -246,7 +231,7 @@ BOOL InjectDllHijackThread(HANDLE hProc, HANDLE hThread, char *DllName)
 
 #endif
 
-static BOOL isProcessInitialized(HANDLE hProcess)
+BOOL isProcessInitialized(HANDLE hProcess)
 {
 #ifdef TARGET_WINXP
 	/* On Windows XP, we get called at ConnectConsoleInternal, Hijacking would be
@@ -310,6 +295,7 @@ static BOOL isProcessInitialized(HANDLE hProcess)
 
 BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR method)
 {
+	PROCESS_BASIC_INFORMATION basicInfo;
 	THREAD_DATA data;
 	PVOID pData, code, pProc;
 	BOOL bRet = TRUE;
@@ -317,6 +303,7 @@ BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR metho
 	NTSTATUS Status;
 	HMODULE nt;
 	CONTEXT ctx;
+	static pLdrpInitializeProcess fnLdrpInitializeProcess = NULL;
 
 #ifdef METHOD_INTERCEPTTHREAD
 	if (method == METHOD_INTERCEPTTHREAD)
@@ -329,18 +316,17 @@ BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR metho
 				return FALSE;
 			}
 		}
-		bRet = InjectDllHijackThread(hProcess, hThread, "ldntvdm.dll");
+		bRet = InjectDllHijackThread(hProcess, hThread, L"ldntvdm.dll");
 		if (bRet) return TRUE;
 		method = METHOD_CREATETHREAD;
 	}
 #endif
 
-#if defined(METHOD_MODIFYSTARTUP) || defined (METHOD_CREATETHREAD) || defined(METHOD_APC)
+#if defined(METHOD_MODIFYSTARTUP) || defined (METHOD_CREATETHREAD) || defined(METHOD_APC) || defined(METHOD_POSTPROCESSINIT) || defined(METHOD_HOOKLDR)
 
 	nt = GetModuleHandleW(L"ntdll.dll");
 
 	ZeroMemory(&data, sizeof(data));
-	data.fnRtlInitUnicodeString = (pRtlInitUnicodeString)GetProcAddress(nt, "RtlInitUnicodeString");
 	data.fnLdrLoadDll = (pLdrLoadDll)GetProcAddress(nt, "LdrLoadDll");
 	lstrcpyW(data.DllName, szDLL);
 
@@ -363,22 +349,100 @@ BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR metho
 	}
 #endif
 
-	if (method == METHOD_CREATETHREAD)
+	switch (method)
 	{
+#ifdef METHOD_CREATETHREAD
+	case METHOD_CREATETHREAD:
 		data.fnNtTerminateThread = (pNtTerminateThread)GetProcAddress(nt, "NtTerminateThread");
 		pProc = ThreadProc;
-		ulSizeOfCode = (ULONG)((LPBYTE)APCProc - (LPBYTE)ThreadProc);
-	}
-	else
+		ulSizeOfCode = sizeof(ThreadProc) / sizeof(ThreadProc[0]);
+		break;
+#endif
+#ifdef METHOD_HOOKLDR
+	case METHOD_HOOKLDR:
 	{
+		pProc = LdrpInitializeProcessProc;
+		ulSizeOfCode = sizeof(LdrpInitializeProcessProc)/sizeof(LdrpInitializeProcessProc[0]);
+		if (!fnLdrpInitializeProcess)
+		{
+			DWORD64 dwAddress;
+#ifdef USE_SYMCACHE
+			NTSTATUS Status;
+			HKEY hKey;
+
+			if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ | KEY_WRITE, &hKey)))
+			{
+				if (SymCache_GetDLLKey(hKey, L"ntdll.dll", TRUE) &&
+					(dwAddress = (DWORD64)SymCache_GetProcAddress(hKey, L"LdrpInitializeProcess")))
+				{
+					dwAddress += (DWORD64)nt;
+					fnLdrpInitializeProcess = (pLdrpInitializeProcess)dwAddress;
+				}
+				REG_CloseKey(hKey);
+			}
+#else
+			DWORD64 dwBase;
+			char szNTDLL[MAX_PATH];
+
+			GetSystemDirectoryA(szNTDLL, sizeof(szNTDLL) / sizeof(szNTDLL[0]));
+			strcat(szNTDLL, "\\ntdll.dll");
+			if (SymEng_LoadModule(szNTDLL, &dwBase) == 0)
+			{
+				if ((dwAddress = SymEng_GetAddr(dwBase, "LdrpInitializeProcess")))
+				{
+					dwAddress += (DWORD64)nt;
+					fnLdrpInitializeProcess = (pLdrpInitializeProcess)dwAddress;
+				}
+				else
+				{
+					OutputDebugStringA("NTVDM: Resolving symbols failed.");
+				}
+				SymEng_UnloadModule(dwBase);
+			}
+#endif
+
+		}
+		if (!fnLdrpInitializeProcess) return FALSE;
+		break;
+	}
+#endif
+#ifdef METHOD_POSTPROCESSINIT
+	case METHOD_POSTPROCESSINIT:
+	{
+		DWORD result;
+		// Get remote PEB
+		if (!NT_SUCCESS(NtQueryInformationProcess(hProcess, ProcessBasicInformation, &basicInfo, sizeof(basicInfo), NULL))) return FALSE;
+		pProc = (PVOID)PostProcProc;
+		ulSizeOfCode = sizeof(PostProcProc) / sizeof(PostProcProc[0]);
+		ReadProcessMemory(hProcess, (PVOID)((ULONG_PTR)basicInfo.PebBaseAddress + offsetof(PEB, PostProcessInitRoutine)), (PVOID)&data.fnOrigPostProcessInit, sizeof(data.fnOrigPostProcessInit), &result);
+		break;
+	}
+#endif
+	default:
 		pProc = APCProc;
-		ulSizeOfCode = (ULONG)((LPBYTE)dummy - (LPBYTE)APCProc);
+		ulSizeOfCode = sizeof(APCProc) / sizeof(APCProc[0]);
+		break;
 	}
 
 	
-	if (!(pData = VirtualAllocEx(hProcess, NULL, sizeof(data), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE)) ||
-		!(code = VirtualAllocEx(hProcess, NULL, ulSizeOfCode, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)) ||
-		!WriteProcessMemory(hProcess, pData, &data, sizeof(data), NULL) ||
+	if (!(code = VirtualAllocEx(hProcess, NULL, ulSizeOfCode + sizeof(data), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)))
+		return FALSE;
+	pData = (LPBYTE)code + ulSizeOfCode;
+#ifdef METHOD_POSTPROCESSINIT
+	if (method == METHOD_POSTPROCESSINIT) data.EIPParams = pData;
+#endif
+#ifdef METHOD_HOOKLDR
+	if (method == METHOD_HOOKLDR)
+	{
+		if (!(data.fnLdrpInitializeProcess = (pLdrpInitializeProcess)Hook_Inline(hProcess, nt, fnLdrpInitializeProcess, code)))
+			return FALSE;
+		data.EIPParams = pData;
+	}
+#endif
+	data.UnicodeString.Length = (USHORT)wcslen(data.DllName) * sizeof(WCHAR);
+	data.UnicodeString.MaximumLength = sizeof(data.DllName);
+	data.UnicodeString.Buffer = (PWSTR)((PBYTE)pData + offsetof(THREAD_DATA, DllName));
+	if (!WriteProcessMemory(hProcess, pData, &data, sizeof(data), NULL) ||
 		!WriteProcessMemory(hProcess, code, (PVOID)pProc, ulSizeOfCode, NULL))
 	{
 		return FALSE;
@@ -388,6 +452,32 @@ BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR metho
 #ifdef METHOD_APC
 	case METHOD_APC:
 		return inject_via_apcthread(hProcess, hThread, code, pData);
+#endif
+#if defined(METHOD_POSTPROCESSINIT) || defined(METHOD_HOOKLDR)
+	case METHOD_POSTPROCESSINIT:
+	case METHOD_HOOKLDR:
+	{
+		ULONG i;
+	
+		// Write pointer to pData into shellcode
+		for (i = 0; i < ulSizeOfCode; i++)
+			if (*((PULONG_PTR)&((PBYTE)pProc)[i]) == ((ULONG_PTR)1 << (sizeof(ULONG_PTR) * 8 - 1)))
+			{
+				PVOID pDataPtr = (PBYTE)pData + offsetof(THREAD_DATA, EIPParams);
+				if (!WriteProcessMemory(hProcess, (LPVOID)((ULONG_PTR)code + i), (PVOID)&pDataPtr, sizeof(pDataPtr), NULL)) return FALSE;
+				break;
+			}
+		if (i == ulSizeOfCode) return FALSE;
+
+		if (method == METHOD_POSTPROCESSINIT)
+		{
+			// Modify PostProcessInitRoutine to point to our routine
+			if (!WriteProcessMemory(hProcess, (PVOID)((ULONG_PTR)basicInfo.PebBaseAddress + offsetof(PEB, PostProcessInitRoutine)), (PVOID)&code, sizeof(code), NULL)) return FALSE;
+		}
+
+		// Now caller needs to resume the main thread and cross fingers..
+		return TRUE;
+	}
 #endif
 #ifdef METHOD_CREATETHREAD
 	case METHOD_CREATETHREAD:
