@@ -24,10 +24,17 @@ echo Autobuild NTVDMx64
 echo ----------------------------------------------------
 echo.
 
+rem There seem to be some strange constellations where even on syswow64
+rem cmd.exe, PROCESSOR_ARCHITECTURE is AMD64 for unknown reasons. Overwrite it
+if not "%PROCESSOR_ARCHITECTURE%"=="x86" set PROCESSOR_ARCHITECTURE=x86
+
+setlocal enableDelayedExpansion
 if exist "%ProgramFiles%\7-Zip" set PATH=%PATH:)=^)%;"%ProgramFiles%\7-Zip"
 7z >nul 2>&1
 if errorlevel 255 (
-for /F "skip=2 tokens=3*" %%r in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\7-zip" /v Path') do echo set PATH=%PATH:)=^)%;%%r
+for /F "tokens=2*" %%r in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\7-zip" /v Path 2^>nul') do set ZPATH=%%s
+if "!ZPATH!"=="" for /F "tokens=2*" %%r in ('reg query "HKEY_CURRENT_USER\SOFTWARE\7-zip" /v Path 2^>nul') do set ZPATH=%%s
+if not "!ZPATH!"=="" set PATH=%PATH:)=^)%;!ZPATH!
 7z >nul 2>&1
 if errorlevel 255 (
 echo Please install 7zip first, then run again
@@ -36,6 +43,7 @@ pause
 exit /b
 )
 )
+endlocal & set PATH=%PATH%
 
 set ABPATH=%CD%
 if "%PREREQ%"=="" set PREREQ=%CD%\

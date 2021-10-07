@@ -4,10 +4,13 @@ echo Preparing MINNT repository, please wait...
 echo ----------------------------------------------------
 echo.
 
+setlocal enableDelayedExpansion
 if exist "%ProgramFiles%\7-Zip" set PATH=%PATH:)=^)%;"%ProgramFiles%\7-Zip"
 7z >nul 2>&1
 if errorlevel 255 (
-for /F "skip=2 tokens=3*" %%r in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\7-zip" /v Path') do echo set PATH=%PATH:)=^)%;%%r
+for /F "tokens=2*" %%r in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\7-zip" /v Path 2^>nul') do set ZPATH=%%s
+if "!ZPATH!"=="" for /F "tokens=2*" %%r in ('reg query "HKEY_CURRENT_USER\SOFTWARE\7-zip" /v Path 2^>nul') do set ZPATH=%%s
+if not "!ZPATH!"=="" set PATH=%PATH:)=^)%;!ZPATH!
 7z >nul 2>&1
 if errorlevel 255 (
 echo Please install 7zip first, then run again
@@ -16,6 +19,8 @@ pause
 goto fini
 )
 )
+endlocal & set PATH=%PATH%
+
 
 rem Directory that contains the fixes to be applied to minnt
 set minntfix=minntfix
