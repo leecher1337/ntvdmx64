@@ -74,6 +74,13 @@ static REGKEY_PAIR m_aSymsCONHOST[] =
 	{ NULL, NULL }
 };
 #endif
+#ifdef TARGET_WIN11
+static REGKEY_PAIR m_aSymsCONHOSTV1[] =
+{
+	_E("InitializeCustomCP"),
+	{ NULL, NULL }
+};
+#endif
 #ifdef NEED_APPINFO
 static REGKEY_PAIR m_aSymsAPPINFO[] =
 {
@@ -95,11 +102,14 @@ static REGKEY_SYMS m_aSyms[] = {
 	#if defined(_WIN64) && !defined(TARGET_WINXP) && (defined(TARGET_WIN7) || defined(HOOK_CONHOSTV2)) // consbmp.c fix
 	{"conhost.exe", L"conhost.exe", m_aSymsCONHOST},
 	#endif
+	#ifdef TARGET_WIN11
+	{ "conhostV1.dll", L"conhostV1.dll", m_aSymsCONHOSTV1 },
+	#endif
 	#ifdef NEED_APPINFO
 	{"appinfo.dll", L"appinfo.dll", m_aSymsAPPINFO},
 	#endif
 	#ifdef METHOD_HOOKLDR
-	{"ntdll.dll", L"ntdll.dll", m_aSymsNTDLL}
+	{"ntdll.dll", L"ntdll.dll", m_aSymsNTDLL},
 	#endif
 };
 

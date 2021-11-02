@@ -4,6 +4,7 @@
 #include "injector32.h"
 #include "ntmmapi.h"
 #include "detour.h"
+#include "ntpeb.h"
 #include <stddef.h>
 #include <Psapi.h>
 
@@ -25,91 +26,6 @@ extern BYTE LdrpInitializeProcessProcx86[];
 extern unsigned int LdrpInitializeProcessProcx86Size;
 
 #pragma pack(1)
-typedef struct _PEB32
-{
-	UCHAR				InheritedAddressSpace;				// 0
-	UCHAR				ReadImageFileExecOptions;			// 1
-	UCHAR				BeingDebugged;					// 2
-	union
-	{
-		UCHAR BitField;                                                     //0x3
-		struct
-		{
-			UCHAR ImageUsesLargePages : 1;                                    //0x3
-			UCHAR IsProtectedProcess : 1;                                     //0x3
-			UCHAR IsImageDynamicallyRelocated : 1;                            //0x3
-			UCHAR SkipPatchingUser32Forwarders : 1;                           //0x3
-			UCHAR IsPackagedProcess : 1;                                      //0x3
-			UCHAR IsAppContainer : 1;                                         //0x3
-			UCHAR IsProtectedProcessLight : 1;                                //0x3
-			UCHAR IsLongPathAwareProcess : 1;                                 //0x3
-		};
-	};
-	ULONG				Mutant;						// 4
-	ULONG				ImageBaseAddress;				// 8
-	ULONG				Ldr;							// C
-	ULONG				ProcessParameters;				// 10
-	ULONG				SubSystemData;
-	ULONG				ProcessHeap;
-	ULONG				FastPebLock;
-	ULONG				AtlThunkSListPtr;
-	ULONG				IFEOKey;
-	union
-	{
-		ULONG CrossProcessFlags;
-		struct
-		{
-			ULONG ProcessInJob : 1;
-			ULONG ProcessInitializing : 1;
-			ULONG ProcessUsingVEH : 1;
-			ULONG ProcessUsingVCH : 1;
-			ULONG ReservedBits0 : 28;
-		};
-	};
-	union
-	{
-		ULONG KernelCallbackTable;                                          //0x2c
-		ULONG UserSharedInfoPtr;                                            //0x2c
-	};
-	ULONG SystemReserved;                                                   //0x30
-	ULONG AtlThunkSListPtr32;                                               //0x34
-	ULONG ApiSetMap;                                                        //0x38
-	ULONG TlsExpansionCounter;                                              //0x3c
-	ULONG TlsBitmap;                                                        //0x40
-	ULONG TlsBitmapBits[2];                                                 //0x44
-	ULONG ReadOnlySharedMemoryBase;                                         //0x4c
-	ULONG SharedData;                                                       //0x50
-	ULONG ReadOnlyStaticServerData;                                         //0x54
-	ULONG AnsiCodePageData;                                                 //0x58
-	ULONG OemCodePageData;                                                  //0x5c
-	ULONG UnicodeCaseTableData;                                             //0x60
-	ULONG NumberOfProcessors;                                               //0x64
-	ULONG NtGlobalFlag;                                                     //0x68
-	union _LARGE_INTEGER CriticalSectionTimeout;                            //0x70
-	ULONG HeapSegmentReserve;                                               //0x78
-	ULONG HeapSegmentCommit;                                                //0x7c
-	ULONG HeapDeCommitTotalFreeThreshold;                                   //0x80
-	ULONG HeapDeCommitFreeBlockThreshold;                                   //0x84
-	ULONG NumberOfHeaps;                                                    //0x88
-	ULONG MaximumNumberOfHeaps;                                             //0x8c
-	ULONG ProcessHeaps;                                                     //0x90
-	ULONG GdiSharedHandleTable;                                             //0x94
-	ULONG ProcessStarterHelper;                                             //0x98
-	ULONG GdiDCAttributeList;                                               //0x9c
-	ULONG LoaderLock;                                                       //0xa0
-	ULONG OSMajorVersion;                                                   //0xa4
-	ULONG OSMinorVersion;                                                   //0xa8
-	USHORT OSBuildNumber;                                                   //0xac
-	USHORT OSCSDVersion;                                                    //0xae
-	ULONG OSPlatformId;                                                     //0xb0
-	ULONG ImageSubsystem;                                                   //0xb4
-	ULONG ImageSubsystemMajorVersion;                                       //0xb8
-	ULONG ImageSubsystemMinorVersion;                                       //0xbc
-	ULONG ActiveProcessAffinityMask;                                        //0xc0
-	ULONG GdiHandleBuffer[34];                                              //0xc4
-	ULONG PostProcessInitRoutine;                                           //0x14c
-} PEB32, *PPEB32;
-
 typedef struct _LDR_DATA_TABLE_ENTRY32
 {
 	LIST_ENTRY32 InLoadOrderModuleList;

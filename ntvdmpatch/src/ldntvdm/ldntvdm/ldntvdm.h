@@ -136,19 +136,19 @@ void Trace(char *pszLine);
 typedef int (__cdecl *fpstrcmp)(char * str, char *str2);
 typedef int (__cdecl *fp_stricmp)(const char * str, const char *str2);
 typedef int (__cdecl *fp_wcsicmp)(PWCHAR str, PWCHAR str2);
+typedef int(__cdecl *fpswprintf)(wchar_t *buffer, const wchar_t *format, ...);
 extern fp_stricmp __stricmp;
 extern fp_wcsicmp __wcsicmp;
 extern fpstrcmp _strcmp;
+extern fpswprintf __swprintf;
 #ifdef NEED_BASEVDM
 typedef wchar_t * (__cdecl *fpwcsncpy)(wchar_t *strDest, const wchar_t *strSource, size_t count);
 typedef int(__cdecl *fp_wcsnicmp)(const wchar_t *string1, const wchar_t *string2, size_t count);
 typedef wchar_t * (__cdecl *fpwcsrchr)(const wchar_t *str, wchar_t c);
-typedef int (__cdecl *fpswprintf)(wchar_t *buffer, const wchar_t *format, ...);
 typedef char *(__cdecl *fpstrstr)(const char *str, const char *strSearch);
 extern fpwcsncpy _wcsncpy;
 extern fp_wcsnicmp __wcsnicmp;
 extern fpwcsrchr _wcsrchr;
-extern fpswprintf __swprintf;
 extern fpstrstr _strstr;
 #endif
 

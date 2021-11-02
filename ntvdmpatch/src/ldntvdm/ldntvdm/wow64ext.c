@@ -26,20 +26,7 @@
 #include "Winternl.h"
 #include "wow64int.h"
 #include "wow64ext.h"
-
-typedef struct tag_UNICODE_STRING64
-{
-	union
-	{
-		struct
-		{
-			WORD Length;
-			WORD MaximumLength;
-		};
-		ULONGLONG dummy;
-	};
-	ULONGLONG Buffer;
-} UNICODE_STRING64;
+#include "ntpeb.h"
 
 typedef struct tag_CLIENT_ID64
 {
@@ -117,95 +104,6 @@ typedef struct tag_PEB_LDR_DATA64
 	ULONGLONG ShutdownThreadId;
 } PEB_LDR_DATA64;
 
-typedef struct tag_PEB
-{
-	union
-	{
-		struct
-		{
-			BYTE InheritedAddressSpace;
-			BYTE ReadImageFileExecOptions;
-			BYTE BeingDebugged;
-			BYTE BitField;
-		};
-		ULONGLONG dummy01;
-	};
-	ULONGLONG Mutant;
-	ULONGLONG ImageBaseAddress;
-	ULONGLONG Ldr;
-	ULONGLONG ProcessParameters;
-	ULONGLONG SubSystemData;
-	ULONGLONG ProcessHeap;
-	ULONGLONG FastPebLock;
-	ULONGLONG AtlThunkSListPtr;
-	ULONGLONG IFEOKey;
-	ULONGLONG CrossProcessFlags;
-	ULONGLONG UserSharedInfoPtr;
-	DWORD SystemReserved;
-	DWORD AtlThunkSListPtr32;
-	ULONGLONG ApiSetMap;
-	ULONGLONG TlsExpansionCounter;
-	ULONGLONG TlsBitmap;
-	DWORD TlsBitmapBits[2];
-	ULONGLONG ReadOnlySharedMemoryBase;
-	ULONGLONG HotpatchInformation;
-	ULONGLONG ReadOnlyStaticServerData;
-	ULONGLONG AnsiCodePageData;
-	ULONGLONG OemCodePageData;
-	ULONGLONG UnicodeCaseTableData;
-	DWORD NumberOfProcessors;
-	union
-	{
-		DWORD NtGlobalFlag;
-		DWORD dummy02;
-	};
-	LARGE_INTEGER CriticalSectionTimeout;
-	ULONGLONG HeapSegmentReserve;
-	ULONGLONG HeapSegmentCommit;
-	ULONGLONG HeapDeCommitTotalFreeThreshold;
-	ULONGLONG HeapDeCommitFreeBlockThreshold;
-	DWORD NumberOfHeaps;
-	DWORD MaximumNumberOfHeaps;
-	ULONGLONG ProcessHeaps;
-	ULONGLONG GdiSharedHandleTable;
-	ULONGLONG ProcessStarterHelper;
-	ULONGLONG GdiDCAttributeList;
-	ULONGLONG LoaderLock;
-	DWORD OSMajorVersion;
-	DWORD OSMinorVersion;
-	WORD OSBuildNumber;
-	WORD OSCSDVersion;
-	DWORD OSPlatformId;
-	DWORD ImageSubsystem;
-	DWORD ImageSubsystemMajorVersion;
-	ULONGLONG ImageSubsystemMinorVersion;
-	ULONGLONG ActiveProcessAffinityMask;
-	ULONGLONG GdiHandleBuffer[30];
-	ULONGLONG PostProcessInitRoutine;
-	ULONGLONG TlsExpansionBitmap;
-	DWORD TlsExpansionBitmapBits[32];
-	ULONGLONG SessionId;
-	ULARGE_INTEGER AppCompatFlags;
-	ULARGE_INTEGER AppCompatFlagsUser;
-	ULONGLONG pShimData;
-	ULONGLONG AppCompatInfo;
-	UNICODE_STRING64 CSDVersion;
-	ULONGLONG ActivationContextData;
-	ULONGLONG ProcessAssemblyStorageMap;
-	ULONGLONG SystemDefaultActivationContextData;
-	ULONGLONG SystemAssemblyStorageMap;
-	ULONGLONG MinimumStackCommit;
-	ULONGLONG FlsCallback;
-	LIST_ENTRY64 FlsListHead;
-	ULONGLONG FlsBitmap;
-	DWORD FlsBitmapBits[4];
-	ULONGLONG FlsHighIndex;
-	ULONGLONG WerRegistrationData;
-	ULONGLONG WerShipAssertPtr;
-	ULONGLONG pContextData;
-	ULONGLONG pImageHeaderHash;
-	ULONGLONG TracingFlags;
-} PEB64;
 
 #ifndef _WIN64
 

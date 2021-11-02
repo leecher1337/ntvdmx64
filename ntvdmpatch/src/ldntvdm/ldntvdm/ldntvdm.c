@@ -40,6 +40,7 @@
 #include "apppatch.h"
 #include "appinfo.h"
 #include "injector32.h"
+#include "oemcp.h"
 
 #pragma comment(lib, "ntdll.lib")
 
@@ -192,11 +193,11 @@ fpsprintf sprintf;
 fp_stricmp __stricmp;
 fp_wcsicmp __wcsicmp;
 fpstrcmp _strcmp;
+fpswprintf __swprintf;
 #ifdef NEED_BASEVDM
 fpwcsncpy _wcsncpy;
 fp_wcsnicmp __wcsnicmp;
 fpwcsrchr _wcsrchr;
-fpswprintf __swprintf;
 fpstrstr _strstr;
 #endif
 fpBaseIsDosApplication BaseIsDosApplication = NULL;
@@ -637,6 +638,7 @@ BOOL WINAPI _DllMainCRTStartup(
 		__stricmp = (fp_stricmp)GetProcAddress(hNTDLL, "_stricmp");
 		__wcsicmp = (fp_wcsicmp)GetProcAddress(hNTDLL, "_wcsicmp");
 		_strcmp = (fpstrcmp)GetProcAddress(hNTDLL, "strcmp");
+		__swprintf = (fpswprintf)GetProcAddress(hNTDLL, "swprintf");
 #ifdef TRACING
 		sprintf = (fpsprintf)GetProcAddress(hNTDLL, "sprintf");
 #ifdef TRACE_FILE
@@ -652,7 +654,6 @@ BOOL WINAPI _DllMainCRTStartup(
 		_wcsncpy = (fpwcsncpy)GetProcAddress(hNTDLL, "wcsncpy");
 		__wcsnicmp = (fp_wcsnicmp)GetProcAddress(hNTDLL, "_wcsnicmp");
 		_wcsrchr = (fpwcsrchr)GetProcAddress(hNTDLL, "wcsrchr");
-		__swprintf = (fpswprintf)GetProcAddress(hNTDLL, "swprintf");
 		 _strstr = (fpstrstr)GetProcAddress(hNTDLL, "strstr");
 #endif
 
@@ -766,6 +767,16 @@ BOOL WINAPI _DllMainCRTStartup(
 			FixNTDLL();
 			// Fix ConhostV1.dll bug where memory isn't initialized properly
 			fNoConhostDll = ConsBmpBug_Install(&hModConhost);
+
+#ifdef TARGET_WIN11
+			// Windows 11 bug: OEM NLS Table not mapped
+			if (OEMCP_FixNLSTable())
+			{
+				//SuspendThread(GetCurrentThread());
+				OEMCP_CallInitializeCustomCP();
+			}
+#endif
+
 #ifndef CREATEPROCESS_HOOK
 			// We want notification when new console process gets started so that we can inject
 			WinEventHook_Install(fNoConhostDll ? GetModuleHandle(NULL) : hModConhost);
