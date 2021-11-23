@@ -147,6 +147,9 @@ set "DefExclusion=%SystemRoot%\system32\ldntvdm.dll"
 powershell -noprofile -command Add-MpPreference -Force -ExclusionPath "$env:DefExclusion" >nul
 set "DefExclusion=%SystemRoot%\syswow64\ldntvdm.dll"
 powershell -noprofile -command Add-MpPreference -Force -ExclusionPath "$env:DefExclusion" >nul
+rem MSE is so dumb, that behavioral detection also sometimes detects NTVDM.EXE as a virus...
+set "DefExclusion=%SystemRoot%\syswow64\ntvdm.exe"
+powershell -noprofile -command Add-MpPreference -Force -ExclusionPath "$env:DefExclusion" >nul
 
 :nodefender
 echo [*] Installing components
