@@ -34,7 +34,7 @@ HKLM,SYSTEM\CurrentControlSet\Control\WOW,NTVDMInstalled,0x00010001,1
 
 [Ntvdmx64.amd64.AddRegConfig]
 HKLM,SOFTWARE\ldntvdm
-HKLM,SOFTWARE\ldntvdm,,0x00004000
+HKLM,SOFTWARE\WOW6432Node\ldntvdm
 
 [Ntvdmx64.amd64.AddRegConfig.Security]
 "D:(A;CI;KA;;;WD)"
