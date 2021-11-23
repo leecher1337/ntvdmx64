@@ -2271,6 +2271,12 @@
 > 	RELEASE_THUNKLOCK
 2362a2365
 > 	RESTORE_THUNKLOCK
+--- NT4\private\mvdm\wow32\wkernel.c
++++ nt\private\mvdm\wow32\wkernel.c
+228c228
+<     if(strlen(pszSrc) < cbDst) {
+---
+>     if(pszSrc && strlen(pszSrc) < cbDst) {
 --- NT4\private\mvdm\wow32\sources.inc
 +++ nt\private\mvdm\wow32\sources.inc
 31,32c31,32
