@@ -120,14 +120,13 @@ static int InitSymEng(void)
 		// Prefer global Windows Symbols path over local temp path
 		strcpy(szPath, "SRV*"); p += 4;
 		p2 = p;
-		p += GetTempPathA(MAX_PATH, p);
-		strcpy(p, "SymbolCache"); p += 11;
-		CreateDirectoryA(p2, NULL);
-		*p = '*'; p++;
 		p += GetWindowsDirectoryA(p, MAX_PATH);
-		strcpy(p, "\\Symbols*"); p += 9;
+		strcpy(p, "\\Symbols"); p += 8;
+		CreateDirectoryA(p2, NULL);
+		*p++ = '*';
+		p += GetTempPathA(MAX_PATH, p);
+		strcpy(p, "SymbolCache*"); p += 12;
 		strcpy(p, pszSymSrv);
-
 		if (!SymInitialize(hProcess, 0, FALSE))
 		{
 			TRACE("SymInitialize failed: %08X\n", GetLastError());
