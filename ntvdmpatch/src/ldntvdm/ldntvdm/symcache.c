@@ -165,6 +165,7 @@ static BOOL UpdateSymsForModule(HKEY hKey, char *pszDLL, LPWSTR lpDLLKey, REGKEY
 				(dwAddress = SymEng_GetAddr(dwBase, "ConhostV2ForcedInRegistry")))
 				REG_SetDWORD(hKey, keys[i].lpKeyName, dwAddress);
 #endif
+			else tm.dwLowDateTime = 0;
 		}
 		SymEng_UnloadModule(dwBase);
 		if (tm.dwLowDateTime)
