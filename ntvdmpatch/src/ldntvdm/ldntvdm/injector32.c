@@ -454,8 +454,12 @@ BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR metho
 		return inject_via_apcthread(hProcess, hThread, code, pData);
 #endif
 #if defined(METHOD_POSTPROCESSINIT) || defined(METHOD_HOOKLDR)
+#ifdef METHOD_POSTPROCESSINIT
 	case METHOD_POSTPROCESSINIT:
+#endif
+#ifdef METHOD_HOOKLDR
 	case METHOD_HOOKLDR:
+#endif
 	{
 		ULONG i;
 	

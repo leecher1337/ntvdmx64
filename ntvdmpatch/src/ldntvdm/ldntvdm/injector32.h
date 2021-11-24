@@ -25,7 +25,9 @@
  * This has the same effect as METHOD_POSTPROCESSINIT, but it works on all
  * subsystems
  */
+#ifdef NO_APPINIT_DLL
 #define METHOD_HOOKLDR	5
+#endif
 
 BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR method);
 
