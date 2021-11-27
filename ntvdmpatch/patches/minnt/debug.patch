@@ -457,3 +457,9 @@
 > extern void trace_install_hook(pf_trace_hook hook);
 135a139
 > extern void trace_install_hook();
+--- NT4\private\mvdm\vdmexts\disasm.c
++++ nt\private\mvdm\vdmexts\disasm.c
+820c820
+<     { szBad },
+---
+>     { GROUP_1B },
