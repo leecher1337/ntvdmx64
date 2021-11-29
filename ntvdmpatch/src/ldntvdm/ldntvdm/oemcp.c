@@ -127,6 +127,7 @@ BOOL OEMCP_FixNLSTable(void)
 	return FALSE;
 }
 
+#ifdef _WIN64
 BOOL OEMCP_CallInitializeCustomCP()
 {
 	DWORD64 dwAddress;
@@ -169,3 +170,4 @@ BOOL OEMCP_CallInitializeCustomCP()
 	if (!nt || !fnInitializeCustomCP) return FALSE;
 	return fnInitializeCustomCP();
 }
+#endif

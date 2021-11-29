@@ -102,7 +102,7 @@ static REGKEY_SYMS m_aSyms[] = {
 	#if defined(_WIN64) && !defined(TARGET_WINXP) && (defined(TARGET_WIN7) || defined(HOOK_CONHOSTV2)) // consbmp.c fix
 	{"conhost.exe", L"conhost.exe", m_aSymsCONHOST},
 	#endif
-	#ifdef TARGET_WIN11
+	#if defined(TARGET_WIN11) && defined(_WIN64)
 	{ "conhostV1.dll", L"conhostV1.dll", m_aSymsCONHOSTV1 },
 	#endif
 	#ifdef NEED_APPINFO
