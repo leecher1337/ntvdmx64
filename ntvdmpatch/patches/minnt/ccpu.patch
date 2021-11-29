@@ -74,6 +74,14 @@
 < SOFTPC_TREE=$(BASEDIR)\private\mvdm\softpc.new
 ---
 > SOFTPC_TREE=$(PROJECT_ROOT)\mvdm\softpc.new
+103d102
+< 	fpu.c \
+175d173
+< 	zfrsrvd.c \
+180a179,181
+> X86_SOURCES = zfrsrvdx86.c
+> ALPHA_SOURCES = fpu.c zfrsrvd.c
+> PPC_SOURCES = $(ALPHA_SOURCES)
 --- NT4\private\mvdm\softpc.new\base\ccpu386\ntstubs.c
 +++ nt\private\mvdm\softpc.new\base\ccpu386\ntstubs.c
 31a32
@@ -98,3 +106,19 @@
 > #else   /* BOP8086 */
 >       SET_AL(GET_CF()?0xFF:0);
 > #endif  /* BOP8086 */
+--- NT4\private\mvdm\softpc.new\base\ccpu386\c_page.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\c_page.c
+449a450,453
+> #ifdef i386
+>    if ( phy_addr ) c_sas_PRS(phy_addr, destbuff, num_bytes); 
+>    else c_sas_loads(lin_addr, destbuff, num_bytes);
+> #else
+462a467
+> #endif
+567a573,576
+> #ifdef i386
+>    if ( phy_addr ) c_sas_PWS(phy_addr, data, num_bytes); 
+>    else c_sas_stores(lin_addr, data, num_bytes);
+> #else
+582a592
+> #endif
