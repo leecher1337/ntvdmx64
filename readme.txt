@@ -94,6 +94,8 @@ only works if "Secure Boot" is off OR if Windows is in Testsigning mode,
 which therefore is a requirement for this all to work.
 Starting with Windows 11, "Secure Boot" cannot be disabled out of the box,
 therefore we use AppCert.DLL approach on Win 11 loader.
+Fortunately, the Windows 11 loader can also be used under Windows 10, so
+it is now possible to also use ntvdmx64 without Secure Boot.
 AppInit-DLLs only get injected to GUI processes by the 
 CSRSS, but injection is also required into CLI processes as these are even
 more likely to launch a DOS application. Therefore the AppInit-DLL also has
@@ -188,9 +190,9 @@ Run install.bat so that all files will be installed on
 the target machine and Registry patches will get applied.
 Afterwards you may need to reboot the machine to get the AppInit-DLL loaded
 into explorer, but it should already get loaded into the next GUI process
-you start (if you don't have secure boot enabled which would prevent
-proper operation anyway), so if you start a DOS-Application from this 
-process, it should also work.
+you start (as long as it's a loader based on AppInitDLLs which is true for
+Windows Versions <10 and Windows 10 with Secure Boot disabled), 
+so if you start a DOS-Application from this process, it should also work.
 
 You must also ensure, that the machine is connected to the Internet during 
 the first run of a DOS-Application, because the loader code needs to fetch
