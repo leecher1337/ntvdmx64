@@ -42,7 +42,7 @@ BOOL AppInfo_InstallHook(void)
 
 		if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ | KEY_WRITE, &hKey)))
 		{
-			if (SymCache_GetDLLKey(hKey, L"appinfo.dll", TRUE) &&
+			if (SymCache_GetDLLKey(hKey, L"appinfo.dll", FALSE) &&
 				(dwAddress = (DWORD64)SymCache_GetProcAddress(hKey, L"AiOpenWOWStubs")))
 			{
 				dwAddress += (DWORD64)hAppInfo;

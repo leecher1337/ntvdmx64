@@ -630,6 +630,8 @@ BOOL WINAPI _DllMainCRTStartup(
 		TCHAR *pszProcess;
 
 		DisableThreadLibraryCalls(hDllHandle);
+		// Prevent from unloadiung DLL
+		GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN, (LPCSTR)&_DllMainCRTStartup, &hKrnl32);
 		g_hInst = hDllHandle;
 		hKrnl32 = GetModuleHandle(_T("kernel32.dll"));
 #ifndef TARGET_WINXP
