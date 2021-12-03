@@ -94,6 +94,13 @@ timers.patch        - Fix crash on startup caued by uninitialized timer
                       defaults.
 quicked.patch       - Disable Quick edit when entering DOS app or graphics mode
                       to prevent conhost-crashes
+vdmredir.patch      - Some LAN Manager APIs for the VDM redirector have been 
+                      ripped out in newer Windows Versions (Vista+?). Therefore
+                      VDMREDIR.DLL was unable to load on newer Windows versions,
+                      as DLL dependencies for functions I_NetNameCanonicalize 
+                      and NetpNtStatusToApiStatus in NETAPI32.DLL could not be
+                      resolved. So stub some VDM Redir functions like on Win7
+                      32bit to make VDMREDIR.DLL loadable.
 w10.patch           - Patches function calls that changed in later versions
                       of Windows so that NTVDM also works on Windows 10
                       and not only NT4 where source originates from.

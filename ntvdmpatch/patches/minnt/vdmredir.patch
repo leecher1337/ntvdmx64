@@ -1,0 +1,65 @@
+--- NT4\private\mvdm\vdmredir\sources.inc
++++ nt\private\mvdm\vdmredir\sources.inc
+67c67
+< C_DEFINES=-DVDMREDIR_DLL -DUNALIGNED_VDM_POINTERS $(C_DEFINES)
+---
+> C_DEFINES=-DVDMREDIR_DLL -DUNALIGNED_VDM_POINTERS -DW10 $(C_DEFINES)
+--- NT4\private\mvdm\vdmredir\vrdisp.c
++++ nt\private\mvdm\vdmredir\vrdisp.c
+53a54,63
+> // Unfortunately, some functions are unimplemented on Windows >XP
+> // Therefore, stub them out so that we can load DLL on newe Windows versions at least
+> //
+> #ifdef W10
+> #define U(x) VrPeekMailslot // This function returns error unimplemented
+> #else
+> #define U(x) x
+> #endif
+> 
+> //
+75,85c85,95
+<     VrNetTransactApi,           // 0x10
+<     VrNetRemoteApi,             // 0x11
+<     VrNetNullTransactApi,       // 0x12
+<     VrNetServerEnum,            // 0x13
+<     VrNetUseAdd,                // 0x14
+<     VrNetUseDel,                // 0x15
+<     VrNetUseEnum,               // 0x16
+<     VrNetUseGetInfo,            // 0x17
+<     VrNetWkstaGetInfo,          // 0x18
+<     VrNetWkstaSetInfo,          // 0x19
+<     VrNetMessageBufferSend,     // 0x1a
+---
+>     U(VrNetTransactApi),           // 0x10
+>     U(VrNetRemoteApi),             // 0x11
+>     U(VrNetNullTransactApi),       // 0x12
+>     U(VrNetServerEnum),            // 0x13
+>     U(VrNetUseAdd),                // 0x14
+>     U(VrNetUseDel),                // 0x15
+>     U(VrNetUseEnum),               // 0x16
+>     U(VrNetUseGetInfo),            // 0x17
+>     U(VrNetWkstaGetInfo),          // 0x18
+>     U(VrNetWkstaSetInfo),          // 0x19
+>     U(VrNetMessageBufferSend),     // 0x1a
+88,90c98,100
+<     VrGetUserName,              // 0x1d
+<     VrGetDomainName,            // 0x1e
+<     VrGetLogonServer,           // 0x1f
+---
+>     U(VrGetUserName),              // 0x1d
+>     U(VrGetDomainName),            // 0x1e
+>     U(VrGetLogonServer),           // 0x1f
+93c103
+<     VrNetGetDCName,             // 0x22
+---
+>     U(VrNetGetDCName),             // 0x22
+102,105c112,115
+<     VrGetAssignListEntry,       // 0x2b
+<     VrDefineMacro,              // 0x2c
+<     VrBreakMacro,               // 0x2d
+<     VrNetServiceControl,        // 0x2e
+---
+>     U(VrGetAssignListEntry),       // 0x2b
+>     U(VrDefineMacro),              // 0x2c
+>     U(VrBreakMacro),               // 0x2d
+>     U(VrNetServiceControl),        // 0x2e
