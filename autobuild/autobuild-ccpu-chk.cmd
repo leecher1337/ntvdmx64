@@ -139,7 +139,7 @@ exit /B
 :fetchprq
 call :dlprq GRMWDK_EN_7600_1.ISO https://download.microsoft.com/download/4/A/2/4A25C7D5-EFBE-4182-B6A9-AE6850409A78/GRMWDK_EN_7600_1.ISO
 call :dlprq GRMSDK_EN_DVD.iso https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDK_EN_DVD.iso
-call :dlprq NTOSBE-master.zip https://github.com/stephanosio/NTOSBE/archive/master.zip
+call :dlprq NTOSBE-master.zip http://web.archive.org/web/20210804144408/https://codeload.github.com/stephanosio/NTOSBE/zip/master
 
 rem Windows 7 x86:
 rem This one would be direct download of en version, but it's very big and therefore slows us down, so better ask for user intervention
