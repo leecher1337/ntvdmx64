@@ -350,6 +350,13 @@ I want to print to my windows GDI printer
 Google "DOSPR.ZIP"
 
 
+I have trouble printing to a printer which has been redirected via "net use"
+---------------------------------------------------------------------------
+You may need to use SMBv1 and disable SMBv2.
+See:
+https://github.com/leecher1337/ntvdmx64/issues/161
+https://docs.microsoft.com/en-us/windows-server/storage/file-server/troubleshoot/detect-enable-and-disable-smbv1-v2-v3
+
 Why doesn't QUAKE work?
 ---------------------------------------------------------------------------
 See: http://www.delorie.com/djgpp/v2faq/faq18_6.html
