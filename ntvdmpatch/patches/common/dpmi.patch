@@ -137,6 +137,10 @@
 > #if !defined(i386) || !defined(MONITOR)
 --- NT4\private\mvdm\dpmi32\dpmiselr.c
 +++ nt\private\mvdm\dpmi32\dpmiselr.c
+37c37
+< USHORT CheckValue=0;
+---
+> USHORT CheckValue=-1;
 40c40
 < #ifndef i386
 ---
