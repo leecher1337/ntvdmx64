@@ -480,3 +480,11 @@
 > else
 450a456
 > endif
+--- NT4\private\mvdm\dos\v86\doskrnl\dos\msctrlc.asm
++++ nt\private\mvdm\dos\v86\doskrnl\dos\msctrlc.asm
+1091c1091,1093
+< 	MOV	AH, 0F2h
+---
+> ;	MOV	AH, 0F2h
+> ;   leecher1337: We are a 386, so set the dreaded nested task (NT) flag to 0 to not upset DPMI extenders
+> 	MOV	AH, 02h
