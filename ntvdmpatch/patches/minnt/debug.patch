@@ -253,7 +253,7 @@
 >     /* VDM extensions special */
 >     if (*com == '.') return do_vdmexts(str, com, cs, ip, len);
 >     
-1192a1205,1370
+1192a1205,1369
 > /*
 > =========================================================================
 > 
@@ -310,13 +310,12 @@
 > 	 */
 > 	if (!trace_flags[0].addr)
 > 	{
-> 		LIN_ADDR lin = effective_addr(0x0F00, 0);
-> 		IU8 *pDOSXDS = getPtrToLinAddrByte(lin);
+> 		IU8 *pDOSXDS = Sim32pGetVDMPointer(0xF00000, 1); // Selector F0 should point to DOSX data segment
 > 		int i, j;
 > 
 > 		if (pDOSXDS)
 > 		{ 
-> 			for (i=0; i<0x4000; i++)
+> 			for (i=0; i<0x10000; i++)
 > 			{
 > 				if (pDOSXDS[0] == 't' && strncmp(pDOSXDS, "tracedos", 8) == 0)
 > 				{
