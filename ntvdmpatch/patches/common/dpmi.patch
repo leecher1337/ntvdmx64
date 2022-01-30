@@ -470,6 +470,16 @@
 >         ret
 > ClearSegRegs    endp
 > 
+--- NT4\private\mvdm\dpmi\486\dxint31.asm
++++ nt\private\mvdm\dpmi\486\dxint31.asm
+2835a2836
+> .386p
+2839a2841
+> .286p
+2868a2871
+> .386p
+2872a2876
+> .286p
 --- NT4\private\mvdm\dpmi\pmdefs.inc
 +++ nt\private\mvdm\dpmi\pmdefs.inc
 446a447,451
