@@ -9,109 +9,22 @@
 
 #include "ldntvdm.h"
 #include "symcache.h"
+#include "symcachep.h"
 #include "symeng.h"
 #include "reg.h"
 #include "injector32.h"
 
 #ifdef USE_SYMCACHE
 
-typedef struct {
-	char *pszFunction;
-	LPWSTR lpKeyName;
-} REGKEY_PAIR;
+#include "symcachefunc.h"
+#ifdef _WIN64
+#define m_aSyms g_aSyms64
+extern REGKEY_SYMS g_aSyms32[];
+extern const int g_aSyms32Size;
+#else
+#define m_aSyms g_aSyms32
+#endif
 
-typedef struct {
-	char *pszDLL;
-	LPWSTR lpDLLKey;
-	REGKEY_PAIR *keys;
-} REGKEY_SYMS;
-
-#define _E(x) {x,L##x}
-
-static REGKEY_PAIR m_aSymsKERNEL32[] =
-{
-	_E("BaseCreateVDMEnvironment"),
-	_E("BaseGetVdmConfigInfo"),
-	_E("BaseCheckVDM"),
-#if defined(TARGET_WIN7)
-	{ "BasepProcessInvalidImage", REGKEY_BasepProcessInvalidImage },
-	{ "BaseIsDosApplication", REGKEY_BaseIsDosApplication },
-#endif // TARGET_WIN7
-#if defined(TARGET_WINXP)
-	_E("NtVdm64CreateProcess"),
-	_E("BaseIsDosApplication"),
-	_E("BaseCreateStack"),
-	_E("BaseFormatObjectAttributes"),
-	_E("BasepIsProcessAllowed"),
-	_E("BasePushProcessParameters"),
-	_E("BasepIsRealtimeAllowed"),
-	_E("BaseInitializeContext"),
-	_E("BaseStaticServerData"),
-	_E("StuffStdHandle"),
-	_E("BasepFreeAppCompatData"),
-	_E("BasepReplaceProcessThreadTokens"),
-	_E("BasepCheckBadapp"),
-	_E("BasepCheckWinSaferRestrictions"),
-#ifndef _WIN64
-	_E("CsrBasepCreateProcess"),
-#endif
-	_E("BuildSubSysCommandLine"),
-#endif // TARGET_WINXP
-	{ NULL, NULL }
-};
-
-#if defined(_WIN64) && !defined(TARGET_WINXP) && (defined(TARGET_WIN7) || defined(HOOK_CONHOSTV2))
-static REGKEY_PAIR m_aSymsCONHOST[] = 
-{
-#if defined(TARGET_WIN7)
-	_E("dwConBaseTag"),
-	_E("FindProcessInList"),
-	_E("CreateConsoleBitmap"),
-#endif
-#if defined(HOOK_CONHOSTV2)
-	_E("ShouldUseConhostV2"),
-#endif
-	{ NULL, NULL }
-};
-#endif
-#ifdef TARGET_WIN11
-static REGKEY_PAIR m_aSymsCONHOSTV1[] =
-{
-	_E("InitializeCustomCP"),
-	{ NULL, NULL }
-};
-#endif
-#ifdef NEED_APPINFO
-static REGKEY_PAIR m_aSymsAPPINFO[] =
-{
-	_E("AiOpenWOWStubs"),
-	{ NULL, NULL }
-};
-#endif
-#ifdef METHOD_HOOKLDR
-static REGKEY_PAIR m_aSymsNTDLL[] =
-{
-	_E("LdrpInitializeProcess"),
-	{ NULL, NULL }
-};
-#endif
-#undef _E
-
-static REGKEY_SYMS m_aSyms[] = {
-	{"kernel32.dll", L"kernel32.dll", m_aSymsKERNEL32},
-	#if defined(_WIN64) && !defined(TARGET_WINXP) && (defined(TARGET_WIN7) || defined(HOOK_CONHOSTV2)) // consbmp.c fix
-	{"conhost.exe", L"conhost.exe", m_aSymsCONHOST},
-	#endif
-	#if defined(TARGET_WIN11) && defined(_WIN64)
-	{ "conhostV1.dll", L"conhostV1.dll", m_aSymsCONHOSTV1 },
-	#endif
-	#ifdef NEED_APPINFO
-	{"appinfo.dll", L"appinfo.dll", m_aSymsAPPINFO},
-	#endif
-	#ifdef METHOD_HOOKLDR
-	{"ntdll.dll", L"ntdll.dll", m_aSymsNTDLL},
-	#endif
-};
 
 extern void EnsureWin7Symbols(HMODULE hKrnl32);
 
@@ -208,11 +121,11 @@ HANDLE SymCache_GetDLLKeyWOW64(HKEY hKey, LPWSTR lpDLLKey, BOOL fUpdate)
 {
 	int i;
 
-	for (i = 0; i < sizeof(m_aSyms) / sizeof(m_aSyms[0]); i++)
-		if (m_aSyms[i].lpDLLKey == lpDLLKey)
+	for (i = 0; i < g_aSyms32Size; i++)
+		if (g_aSyms32[i].lpDLLKey == lpDLLKey)
 		{
-			if (UpdateSymsForModule(hKey, m_aSyms[i].pszDLL, m_aSyms[i].lpDLLKey, m_aSyms[i].keys, fUpdate, TRUE))
-				return (HANDLE)&m_aSyms[i];
+			if (UpdateSymsForModule(hKey, g_aSyms32[i].pszDLL, g_aSyms32[i].lpDLLKey, g_aSyms32[i].keys, fUpdate, TRUE))
+				return (HANDLE)&g_aSyms32[i];
 			return NULL;
 		}
 	return NULL;
@@ -240,6 +153,7 @@ BOOL UpdateSymbolCache(BOOL fUpdate)
 {
 	HKEY hKey = NULL;
 	DWORD64 dwBase = 0;
+	int i;
 	NTSTATUS Status;
 	static BOOL fUpdated = FALSE;
 
@@ -247,11 +161,18 @@ BOOL UpdateSymbolCache(BOOL fUpdate)
 	TRACE("UpdateSymbolCache()\n");
 	if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ | KEY_WRITE, &hKey)))
 	{
-		int i;
-
 		for (i = 0, fUpdated = TRUE; i < sizeof(m_aSyms) / sizeof(m_aSyms[0]); i++)
 			fUpdated &= UpdateSymsForModule(hKey, m_aSyms[i].pszDLL, m_aSyms[i].lpDLLKey, m_aSyms[i].keys, fUpdate, FALSE);
 		REG_CloseKey(hKey);
+
+#ifdef _WIN64
+		if (NT_SUCCESS(Status = REG_OpenLDNTVDMWOW64(KEY_READ | KEY_WRITE, &hKey)))
+		{
+			for (i = 0; i < g_aSyms32Size; i++)
+				fUpdated &= UpdateSymsForModule(hKey, g_aSyms32[i].pszDLL, g_aSyms32[i].lpDLLKey, g_aSyms32[i].keys, fUpdate, TRUE);
+			REG_CloseKey(hKey);
+		}
+#endif
 	}
 	else
 	{

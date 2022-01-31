@@ -372,7 +372,7 @@ BOOL injectLdrLoadDLL(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR metho
 
 			if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ | KEY_WRITE, &hKey)))
 			{
-				if (SymCache_GetDLLKey(hKey, L"ntdll.dll", TRUE) &&
+				if (SymCache_GetDLLKey(hKey, L"ntdll.dll", FALSE) &&
 					(dwAddress = (DWORD64)SymCache_GetProcAddress(hKey, L"LdrpInitializeProcess")))
 				{
 					dwAddress += (DWORD64)nt;

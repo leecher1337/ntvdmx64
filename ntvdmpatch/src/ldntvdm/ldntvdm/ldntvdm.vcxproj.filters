@@ -96,6 +96,9 @@
     <ClCompile Include="oemcp.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="symcachefunc32.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="basemsg64.h">
@@ -210,6 +213,15 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="oemcp.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="symcachep.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="symcachefunc.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="config.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

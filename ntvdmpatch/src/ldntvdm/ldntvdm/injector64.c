@@ -600,13 +600,17 @@ BOOL injectLdrLoadDLLWow64(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR 
 
 			if (NT_SUCCESS(Status = REG_OpenLDNTVDMWOW64(KEY_READ | KEY_WRITE, &hKey)))
 			{
-				if (SymCache_GetDLLKeyWOW64(hKey, L"ntdll.dll", TRUE) &&
+				if (SymCache_GetDLLKeyWOW64(hKey, L"ntdll.dll", FALSE) &&
 					(dwAddress = (DWORD64)SymCache_GetProcAddress(hKey, L"LdrpInitializeProcess")))
 				{
 					dwAddress += (DWORD64)ntRemote;
 					fnLdrpInitializeProcess = dwAddress;
 				}
 				REG_CloseKey(hKey);
+			}
+			else
+			{
+				TRACE("Cannot open WOW64 ldntvdm node: %08X\n", Status);
 			}
 #else
 			DWORD64 dwBase;

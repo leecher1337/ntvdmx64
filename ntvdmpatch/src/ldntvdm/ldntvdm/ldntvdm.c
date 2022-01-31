@@ -295,6 +295,9 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 			NTSTATUS Status;
 			HKEY hKey;
 
+#ifdef USE_SYMCACHE
+			UpdateSymbolCache(TRUE);
+#endif
 			if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ | KEY_WRITE, &hKey)))
 			{
 				if (SymCache_GetDLLKey(hKey, L"kernel32.dll", TRUE))
