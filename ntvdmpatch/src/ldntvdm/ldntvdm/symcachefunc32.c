@@ -9,11 +9,10 @@
 #define WIN32_LEAN_AND_MEAN
 #define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
+#include "symcache.h"
 #include "symcachep.h"
 #undef _WIN64
 #include "config.h"
-#ifdef USE_SYMCACHE
 #include "symcachefunc.h"
 const int g_aSyms32Size = sizeof(g_aSyms32) / sizeof(g_aSyms32[0]);
-#endif
 #endif
