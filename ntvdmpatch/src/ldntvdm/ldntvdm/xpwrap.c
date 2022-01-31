@@ -142,4 +142,59 @@ NtGetNextThread(
 }
 
 
+typedef struct _OBJECT_NAME_INFORMATION {
+	UNICODE_STRING Name;
+} OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
+
+DWORD
+WINAPI
+GetMappedFileNameW(
+	HANDLE hProcess,
+	LPVOID lpv,
+	LPWSTR lpFilename,
+	DWORD nSize
+	)
+{
+	struct {
+		OBJECT_NAME_INFORMATION ObjectNameInfo;
+		WCHAR FileName[MAX_PATH];
+	} s;
+	DWORD ReturnLength;
+	NTSTATUS Status;
+	DWORD cb;
+
+	//
+	// See if we can figure out the name associated with
+	// this mapped region
+	//
+
+	Status = NtQueryVirtualMemory(hProcess,
+		lpv,
+		MemoryMappedFilenameInformation,
+		&s.ObjectNameInfo,
+		sizeof(s),
+		&ReturnLength
+		);
+
+	if (!NT_SUCCESS(Status)) {
+		SetLastError(RtlNtStatusToDosError(Status));
+		return(0);
+	}
+
+	nSize *= sizeof(WCHAR);
+
+	cb = s.ObjectNameInfo.Name.MaximumLength;
+	if (nSize < cb) {
+		cb = nSize;
+	}
+
+	RtlMoveMemory(lpFilename, s.ObjectNameInfo.Name.Buffer, cb);
+
+	if (cb == s.ObjectNameInfo.Name.MaximumLength) {
+		cb -= sizeof(WCHAR);
+	}
+
+	return(cb / sizeof(WCHAR));
+}
+
 #endif

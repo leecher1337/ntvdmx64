@@ -1,6 +1,9 @@
 #pragma once
 #define WIN32_LEAN_AND_MEAN
 #define _CRT_SECURE_NO_WARNINGS
+#ifdef TARGET_WINXP
+#define _WIN32_WINNT _WIN32_WINNT_WINXP
+#endif
 #include <Windows.h>
 #include "Winternl.h"
 #include <tchar.h>
