@@ -126,13 +126,13 @@ static int InitSymEng(void)
 		else pszSymSrv = "http://msdl.microsoft.com/download/symbols";
 		// Prefer global Windows Symbols path over local temp path
 		strcpy(szPath, "SRV*"); p += 4;
+		p += GetWindowsDirectoryA(p, MAX_PATH);
+		strcpy(p, "\\Symbols*"); p += 9;
 		p2 = p;
 		p += GetTempPathA(MAX_PATH, p);
 		strcpy(p, "SymbolCache"); p += 11;
 		CreateDirectoryA(p2, NULL);
 		*p = '*'; p++;
-		p += GetWindowsDirectoryA(p, MAX_PATH);
-		strcpy(p, "\\Symbols*"); p += 9;
 		strcpy(p, pszSymSrv);
 
 		if (!SymInitialize(hProcess, 0, FALSE))
