@@ -439,11 +439,11 @@ static BOOL ResolveLocalSymbols(void);
 NTSTATUS GetFileNameFromFileHandle(HANDLE FileHandle, struct FILEHANDLE_NAME_INFO *s)
 {
 	HANDLE SectionHandle;
-	DWORD ReturnLength;
+	SIZE_T ReturnLength;
 	NTSTATUS Status;
 	PVOID BaseAddress = NULL;
 	LARGE_INTEGER SectionOffset = { 0 };
-	ULONG ViewSize = 1;
+	SIZE_T ViewSize = 1;
 
 	Status = NtCreateSection(&SectionHandle,
 		STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ,
@@ -454,7 +454,7 @@ NTSTATUS GetFileNameFromFileHandle(HANDLE FileHandle, struct FILEHANDLE_NAME_INF
 		FileHandle);
 	if (!NT_SUCCESS(Status))
 	{
-		TRACE("GetFileNameFromFileHandle, Section error: %08X\n", Status);
+		TRACE("GetFileNameFromFileHandle(%08X), Section error: %08X\n", FileHandle, Status);
 		return Status;
 	}
 
@@ -472,7 +472,7 @@ NTSTATUS GetFileNameFromFileHandle(HANDLE FileHandle, struct FILEHANDLE_NAME_INF
 
 	if (!NT_SUCCESS(Status))
 	{
-		TRACE("GetFileNameFromFileHandle, Map error: %08X\n", Status);
+		TRACE("GetFileNameFromFileHandle(%08X), Map error: %08X\n", FileHandle, Status);
 		NtClose(SectionHandle);
 		return Status;
 	}
@@ -489,7 +489,7 @@ NTSTATUS GetFileNameFromFileHandle(HANDLE FileHandle, struct FILEHANDLE_NAME_INF
 
 	if (!NT_SUCCESS(Status)) 
 	{ 
-		TRACE("GetFileNameFromFileHandle, Query mem error: %08X\n", Status); 
+		TRACE("GetFileNameFromFileHandle(%08X), Query mem error: %08X\n", FileHandle, Status); 
 	}
 
 	return Status;
