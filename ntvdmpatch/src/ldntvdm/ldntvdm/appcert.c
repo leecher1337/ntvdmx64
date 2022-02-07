@@ -1,5 +1,3 @@
-/* Just in case we need to be loaded as appcert DLL. 
- * Currently this is not used */
 #include "ldntvdm.h"
 
 #ifdef APPCERT_DLL

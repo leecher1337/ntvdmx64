@@ -57,7 +57,7 @@ typedef struct _LDR_DATA_TABLE_ENTRY32
 typedef struct _PEB_LDR_DATA32
 {
 	ULONG Length;
-	BOOLEAN Initialized;
+	BOOL Initialized;
 	ULONG SsHandle;
 	LIST_ENTRY32 InLoadOrderModuleList;
 	LIST_ENTRY32 InMemoryOrderModuleList;
@@ -248,7 +248,7 @@ HMODULE GetRemoteModuleHandle32(HANDLE ProcessHandle, LPWSTR lpDllName)
 		if (!ReadProcessMemory(ProcessHandle, pMod, &ldrMod, sizeof(ldrMod), NULL))
 		{
 			TRACE("Reading process list entry failed: %08X\n", GetLastError());
-			break;
+			return GetRemoteModuleHandle32FromMemList(ProcessHandle, lpDllName);
 		}
 		if (ldrMod.DllBase &&
 			ReadProcessMemory(ProcessHandle, (LPCVOID)ldrMod.BaseDllName.Buffer, dllName, min(ldrMod.BaseDllName.Length, sizeof(dllName) / sizeof(WCHAR)), NULL))
