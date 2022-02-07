@@ -27,7 +27,7 @@ DWORD WINAPI InjectIntoCreatedThreadThread(INJECTOR_PARAM *param)
 	/* 64 -> 32 */
 	if (param->bIsWow64)
 	{
-		if (isProcessInitialized(param->hProcess) || !InjectDllHijackThreadX32(param->hProcess, param->hThread, LDNTVDM_NAME))
+		if (/*isProcessInitialized(param->hProcess) || */ !InjectDllHijackThreadX32(param->hProcess, param->hThread, LDNTVDM_NAME))
 		{
 			HANDLE hThread;
 			

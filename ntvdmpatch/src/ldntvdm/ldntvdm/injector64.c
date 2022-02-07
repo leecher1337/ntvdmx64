@@ -421,7 +421,7 @@ BOOL InjectDllHijackThreadX32(HANDLE hProc, HANDLE hThread, WCHAR *DllName)
 	else
 	{
 		// FIXME: Too dangerous?
-		return FALSE;
+		//return FALSE;
 	}
 
 	//set the EIP
