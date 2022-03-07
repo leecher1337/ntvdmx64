@@ -65,6 +65,48 @@ typedef BOOL(WINAPI *fpSymUnloadModule64)(
 	_In_ DWORD64 BaseOfDll
 	);
 
+
+typedef struct {
+	DWORD sizeofstruct;
+	char file[MAX_PATH + 1];
+	BOOL  stripped;
+	DWORD timestamp;
+	DWORD size;
+	char dbgfile[MAX_PATH + 1];
+	char pdbfile[MAX_PATH + 1];
+	GUID  guid;
+	DWORD sig;
+	DWORD age;
+} SYMSRV_INDEX_INFO, *PSYMSRV_INDEX_INFO;
+
+typedef BOOL(WINAPI *fpSymSrvGetFileIndexInfo)(
+	__in PCSTR File,
+	__out PSYMSRV_INDEX_INFO Info,
+	__in DWORD Flags
+	);
+
+typedef BOOL
+(CALLBACK *PFINDFILEINPATHCALLBACK)(
+	__in PCSTR filename,
+	__in PVOID context
+	);
+
+#define SSRVOPT_GUIDPTR             0x00000008
+
+typedef BOOL(WINAPI *fpSymFindFileInPath)(
+	__in           HANDLE                  hprocess,
+	__in_opt       PCSTR                   SearchPathA,
+	__in           PCSTR                   FileName,
+	__in_opt       PVOID                   id,
+	__in           DWORD                   two,
+	__in           DWORD                   three,
+	__in           DWORD                   flags,
+	__out          PSTR                    FoundFile,
+	__in_opt       PFINDFILEINPATHCALLBACK callback,
+	__in_opt       PVOID                   context
+	);
+
+
 fpSymInitialize SymInitialize;
 fpSymSetOptions SymSetOptions;
 fpSymGetOptions SymGetOptions;
@@ -72,6 +114,8 @@ fpSymSetSearchPath SymSetSearchPath;
 fpSymLoadModule64 SymLoadModule64;
 fpSymFromName SymFromName;
 fpSymUnloadModule64 SymUnloadModule64;
+fpSymSrvGetFileIndexInfo SymSrvGetFileIndexInfo;
+fpSymFindFileInPath SymFindFileInPath;
 
 static void fprintf(DWORD dwConsole, const char  *pszFormat, ...)
 {
@@ -117,7 +161,9 @@ static int InitSymEng(void)
 		(SymSetSearchPath = (fpSymSetSearchPath)GetProcAddress(hDbgHelp, "SymSetSearchPath")) &&
 		(SymLoadModule64 = (fpSymLoadModule64)GetProcAddress(hDbgHelp, "SymLoadModule64")) &&
 		(SymFromName = (fpSymFromName)GetProcAddress(hDbgHelp, "SymFromName")) &&
-		(SymUnloadModule64 = (fpSymUnloadModule64)GetProcAddress(hDbgHelp, "SymUnloadModule64"))
+		(SymUnloadModule64 = (fpSymUnloadModule64)GetProcAddress(hDbgHelp, "SymUnloadModule64")) &&
+		(SymFindFileInPath = (fpSymFindFileInPath)GetProcAddress(hDbgHelp, "SymFindFileInPath")) &&
+		(SymSrvGetFileIndexInfo = (fpSymSrvGetFileIndexInfo)GetProcAddress(hDbgHelp, "SymSrvGetFileIndexInfo"))
 		)
 	{
 		char *p = szPath, *p2, *pszSymSrv;
@@ -153,6 +199,56 @@ static int InitSymEng(void)
 	return -1;
 }
 
+BOOL SymEng_GetPDBFile(char *pszSymPath, char *pszFile, char *pszPathPDB)
+{
+	BOOL fRet;
+	SYMSRV_INDEX_INFO Info;
+
+	Info.sizeofstruct = sizeof(Info);
+	if (!SymSrvGetFileIndexInfo(pszFile, &Info, 0))
+	{
+		fprintf(STD_ERROR_HANDLE, "SymSrvGetFileIndexInfo(%s) failed: %d", pszFile, GetLastError());
+		return FALSE;
+	}
+	fRet = SymFindFileInPath(GetCurrentProcess(), pszSymPath, Info.pdbfile, &Info.guid, Info.age, Info.sig, SSRVOPT_GUIDPTR, pszPathPDB, NULL, NULL);
+	if (!fRet)
+	{
+		fprintf(STD_ERROR_HANDLE, "SymFindFileInPath(%s, %d, %d) failed: %d", pszFile, Info.age, Info.sig, GetLastError());
+	}
+	return fRet;
+}
+
+void SymEng_Delete0ByteSyms(char *pszFile)
+{
+	char szPDB[MAX_PATH];
+
+	// Check, if the PDB is 0 bytes (common problem with symbol server, it seems, then SymSrv is stuck)
+	if (SymEng_GetPDBFile(NULL, pszFile, szPDB))
+	{
+		WIN32_FILE_ATTRIBUTE_DATA fad;
+		if (GetFileAttributesExA(szPDB, GetFileExInfoStandard, &fad) && fad.nFileSizeLow == 0)
+		{
+			fprintf(STD_OUTPUT_HANDLE, "Detected 0 byte symbol file: %s, removing\n", szPDB);
+			DeleteFileA(szPDB);
+			/* Now it has beed removed from main Symbol cache.
+			 * However, the damaged file can also sit in the temporary cache, 
+			 * so we must locate and delete it there, too
+			 */
+			char szSymPath[MAX_PATH], *p = szSymPath;
+
+			p += GetTempPathA(MAX_PATH, p);
+			strcpy(p, "SymbolCache");
+			if (SymEng_GetPDBFile(szSymPath, pszFile, szPDB) &&
+				GetFileAttributesExA(szPDB, GetFileExInfoStandard, &fad) &&
+				fad.nFileSizeLow == 0)
+			{
+				fprintf(STD_OUTPUT_HANDLE, "Detected 0 byte symbol file: %s, removing\n", szPDB);
+				DeleteFileA(szPDB);
+			}
+		}
+	}
+}
+
 int SymEng_LoadModule(char *pszFile, DWORD64 *pdwBase)
 {
 	static int iStatus = -1;
@@ -169,6 +265,8 @@ int SymEng_LoadModule(char *pszFile, DWORD64 *pdwBase)
 		return -3;
 	}
 
+	SymEng_Delete0ByteSyms(pszFile);
+	
 	return 0;
 }
 

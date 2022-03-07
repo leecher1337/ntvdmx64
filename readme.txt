@@ -347,7 +347,7 @@ as the correct user to fix that key.
 
 I want to print to my windows GDI printer
 ---------------------------------------------------------------------------
-Google "DOSPR.ZIP"
+Use DOSPR.ZIP, see here: https://github.com/leecher1337/ntvdmx64/issues/161
 
 
 I have trouble printing to a printer which has been redirected via "net use"
