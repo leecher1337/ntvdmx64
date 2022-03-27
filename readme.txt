@@ -345,7 +345,7 @@ You can just execute reg\conhost.reg from the release-folder of NTVDMx64
 as the correct user to fix that key.
 
 
-I want to print to my windows GDI printer
+I want to print to my windows GDI printer or a network printer
 ---------------------------------------------------------------------------
 Use DOSPR.ZIP, see here: https://github.com/leecher1337/ntvdmx64/issues/161
 
@@ -356,6 +356,14 @@ You may need to use SMBv1 and disable SMBv2.
 See:
 https://github.com/leecher1337/ntvdmx64/issues/161
 https://docs.microsoft.com/en-us/windows-server/storage/file-server/troubleshoot/detect-enable-and-disable-smbv1-v2-v3
+I still suggest you use DOSPR.ZIP
+
+
+I have a HASP/HARDLOCK dongle for my DOS application and want to get it
+working with NTVDMx64
+---------------------------------------------------------------------------
+Use the HASPNT64 driver: https://github.com/leecher1337/haspnt64
+
 
 Why doesn't QUAKE work?
 ---------------------------------------------------------------------------
