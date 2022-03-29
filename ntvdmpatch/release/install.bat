@@ -3,10 +3,12 @@ Setlocal EnableDelayedExpansion
 
 for /f "tokens=4-5 delims=[.XP " %%i in ('ver') do set VERSION=%%i.%%j
 if "%version%"=="10.0" (
-  for /f "tokens=6 delims=[.XP " %%i in ('ver') do set BUILD=%%i
-  if "!build!" geq "22000" (
+rem   -- Make Windows 11 loader default for Windows 10, as it is more reliable
+rem
+rem   for /f "tokens=6 delims=[.XP " %%i in ('ver') do set BUILD=%%i
+rem  if "!build!" geq "22000" (
     set VERSION=11.0
-  )
+rem  )
 )
 set ORIGVERSION=%VERSION%
 
