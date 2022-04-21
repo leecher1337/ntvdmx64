@@ -102,7 +102,7 @@ Basically:
   * certmgr /add haxm\IntelHaxm.cer /s /r localMachine root
 
 If the certmgr command just opens up a window and doesn't add the certificate, try
-  * certutil -addstore "TrustedPublisher" /add haxm\IntelHaxm.cer
+  * certutil -addstore "TrustedPublisher" haxm\IntelHaxm.cer
 instead.
 
 
