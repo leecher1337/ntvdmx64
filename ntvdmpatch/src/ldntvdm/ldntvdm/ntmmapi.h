@@ -99,10 +99,10 @@ NtMapViewOfSection(
 	IN HANDLE SectionHandle,
 	IN HANDLE ProcessHandle,
 	IN OUT PVOID *BaseAddress,
-	IN ULONG ZeroBits,
-	IN ULONG CommitSize,
+	IN ULONG_PTR ZeroBits,
+	IN SIZE_T CommitSize,
 	IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
-	IN OUT PULONG ViewSize,
+	IN OUT PSIZE_T ViewSize,
 	IN SECTION_INHERIT InheritDisposition,
 	IN ULONG AllocationType,
 	IN ULONG Protect
