@@ -138,7 +138,7 @@ int IAT_SetHook(PULONG_PTR Address, LPVOID NewFun, PULONG_PTR OldFun)
 #endif
 	VirtualProtect(Address, sizeof(ULONG_PTR), OldProt, &OldProt);
 	if (OldFun) *OldFun = *Address;
-	TRACE("Hooked %08X -> %08X\n", *Address, NewFun);
+	TRACE("Hooked %08X: %08X -> %08X\n", Address, *Address, NewFun);
 	*Address = (ULONG_PTR)NewFun;
 	VirtualProtect(Address, sizeof(ULONG_PTR), OldProt, &OldProt);
 	return 0;

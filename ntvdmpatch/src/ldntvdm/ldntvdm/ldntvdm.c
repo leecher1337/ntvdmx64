@@ -525,7 +525,7 @@ TCHAR *GetProcessName(void)
 	return ++p;
 }
 
-#ifdef TARGET_WIN10
+#ifndef TARGET_WINXP
 
 VOID APIENTRY myCmdBatNotification(IN ULONG fBeginEnd)
 {
@@ -533,6 +533,8 @@ VOID APIENTRY myCmdBatNotification(IN ULONG fBeginEnd)
 	BASE_BAT_NOTIFICATION_MSG *a = (BASE_BAT_NOTIFICATION_MSG*)&m.u.BatNotification;
 
 	a->ConsoleHandle = GetConsoleHost();
+	TRACE("CmdBatNotification(%d), hConhost = %X\n", fBeginEnd, a->ConsoleHandle);
+
 	if (a->ConsoleHandle == (HANDLE)-1)
 		return;
 
@@ -540,9 +542,6 @@ VOID APIENTRY myCmdBatNotification(IN ULONG fBeginEnd)
 	myCsrClientCallServer(&m, NULL, CSR_MAKE_API_NUMBER(BASESRV_SERVERDLL_INDEX, 
 		BasepBatNotification),	sizeof(*a));
 }
-#endif /* TARGET_WIN10 */
-
-#ifndef TARGET_WINXP
 
 UNICODE_STRING g_ComponentsKey = {
 	28 * sizeof(WCHAR),
@@ -753,10 +752,21 @@ BOOL WINAPI _DllMainCRTStartup(
 #endif
 
 /* Fix CmdBatNotification in cmd.exe */
-#ifdef TARGET_WIN10
+#ifndef TARGET_WINXP
 		// These idiots recently replaced CmdBatNotification function with a nullstub?!?
 		if (__wcsicmp(pszProcess, _T("cmd.exe")) == 0)
-			Hook_IAT_x64((LPBYTE)GetModuleHandle(NULL), "ext-ms-win-cmd-util-l1-1-0.dll", "CmdBatNotificationStub", myCmdBatNotification);
+		{
+#ifdef TARGET_WIN7
+			Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "kernel32.dll", "CmdBatNotification", myCmdBatNotification, NULL);
+#else
+			// Unfortunately, this gets delay-loaed by cmd.exe later, therefore place an inline-hook
+			//Hook_IAT_x64((LPBYTE)GetModuleHandle(NULL), "ext-ms-win-cmd-util-l1-1-0.dll", "CmdBatNotificationStub", myCmdBatNotification);
+			HANDLE hModCmdUtil = GetModuleHandleA("ext-ms-win-cmd-util-l1-1-0.dll");
+			if (!hModCmdUtil) hModCmdUtil = LoadLibraryA("ext-ms-win-cmd-util-l1-1-0.dll");
+			if (hModCmdUtil)
+				Hook_Inline(GetCurrentProcess(), hModCmdUtil, (PVOID)GetProcAddress(hModCmdUtil, "CmdBatNotificationStub"), myCmdBatNotification);
+#endif
+		}
 #endif
 
 

@@ -59,7 +59,7 @@ HANDLE GetConsoleHost(void)
 	{
 		if (myNtQueryInformationProcess((HANDLE)-1, ProcessConsoleHostProcess, &hConHost, sizeof(hConHost), NULL) != STATUS_SUCCESS)
 			return INVALID_HANDLE_VALUE;
-		if (hConHost & 1) hConHost &= ~1; else hConHost = 0;
+		if (hConHost & 1) hConHost &= ~1; // else hConHost = 0;
 	}
 	return (HANDLE)hConHost;
 }
