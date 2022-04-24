@@ -30,9 +30,8 @@ move %BASEPATH%\..\..\minnt\public\sdk\inc\commctrl.h %BASEPATH%\..\..\minnt\pub
 rem Prepend include of sal.h to new header file from SDK
 echo #include ^<sal.h^> >%BASEPATH%\..\..\minnt\public\sdk\inc\commctrl.h
 type %BASEPATH%\..\..\minnt\public\sdk\inc\commctrl.h_ >>%BASEPATH%\..\..\minnt\public\sdk\inc\commctrl.h
-del /y %BASEPATH%\..\..\minnt\public\sdk\inc\commctrl.h_
+del %BASEPATH%\..\..\minnt\public\sdk\inc\commctrl.h_
 
-move 
 rem ... But in makefile, it's with _ ..?
 rem ren %BASEPATH%\mvdm\bin86\jpn\_disp.sys $disp.sys
 rem ren %BASEPATH%\mvdm\bin86\jpn\_ias.sys $ias.sys

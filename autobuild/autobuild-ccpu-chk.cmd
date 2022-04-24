@@ -206,7 +206,7 @@ if not exist %PREREQ%\%1 (
   rem -- bitsadmin fails for some urls and thus is the least preferred solution
   rem
   if exist %ABPATH%\wget.exe (
-    %ABPATH%\wget %2 -O %PREREQ%\%1
+    %ABPATH%\wget --no-check-certificate %2 -O %PREREQ%\%1
   ) else (
     if exist %ABPATH%\dwnl.exe (
       %ABPATH%\dwnl %2 %PREREQ%\%1
