@@ -433,7 +433,7 @@ NTSTATUS CallBaseGetNextVDMCommand(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 
 	TRACE("BaseGetNextVDMCommand: ConsoleHandle=%08X, iTask=%08X\n", b32->ConsoleHandle, b32->iTask);
 	Status = CsrClientCallServer((struct _CSR_API_MESSAGE*)&m, CaptureBuffer, ApiNumber, sizeof(*b));
-	TRACE("BaseGetNextVDMCommand(%d) = %08X\n", ApiNumber, Status);
+	TRACE("BaseGetNextVDMCommand(%d) = %08X, fComingFromBat=%d\n", ApiNumber, Status, b->fComingFromBat);
 
 	m32->ReturnValue = m.ReturnValue;
 	if (b->VDMState & STARTUP_INFO_RETURNED)

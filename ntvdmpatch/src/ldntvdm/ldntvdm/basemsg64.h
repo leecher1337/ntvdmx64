@@ -52,6 +52,11 @@ typedef enum _BASESRV_API_NUMBER
 	BasepSetReenterCount,
 	BasepSetProcessShutdownParam,
 	BasepGetProcessShutdownParam,
+#ifdef TARGET_WINXP
+	BaseSrvNlsSetUserInfo,
+	BaseSrvNlsSetMultipleUserInfo,
+	BaseSrvNlsCreateSection,
+#endif
 	BasepSetVDMCurDirs,
 	BasepGetVDMCurDirs,
 	BasepBatNotification,

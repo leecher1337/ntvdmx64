@@ -525,8 +525,6 @@ TCHAR *GetProcessName(void)
 	return ++p;
 }
 
-#ifndef TARGET_WINXP
-
 VOID APIENTRY myCmdBatNotification(IN ULONG fBeginEnd)
 {
 	BASE_API_MSG m;
@@ -542,6 +540,8 @@ VOID APIENTRY myCmdBatNotification(IN ULONG fBeginEnd)
 	myCsrClientCallServer(&m, NULL, CSR_MAKE_API_NUMBER(BASESRV_SERVERDLL_INDEX, 
 		BasepBatNotification),	sizeof(*a));
 }
+
+#ifndef TARGET_WINXP
 
 UNICODE_STRING g_ComponentsKey = {
 	28 * sizeof(WCHAR),
@@ -752,11 +752,9 @@ BOOL WINAPI _DllMainCRTStartup(
 #endif
 
 /* Fix CmdBatNotification in cmd.exe */
-#ifndef TARGET_WINXP
-		// These idiots recently replaced CmdBatNotification function with a nullstub?!?
 		if (__wcsicmp(pszProcess, _T("cmd.exe")) == 0)
 		{
-#ifdef TARGET_WIN7
+#if defined(TARGET_WIN7) || defined(TARGET_WINXP)
 			Hook_IAT_x64_IAT((LPBYTE)GetModuleHandle(NULL), "kernel32.dll", "CmdBatNotification", myCmdBatNotification, NULL);
 #else
 			// Unfortunately, this gets delay-loaed by cmd.exe later, therefore place an inline-hook
@@ -767,7 +765,6 @@ BOOL WINAPI _DllMainCRTStartup(
 				Hook_Inline(GetCurrentProcess(), hModCmdUtil, (PVOID)GetProcAddress(hModCmdUtil, "CmdBatNotificationStub"), myCmdBatNotification);
 #endif
 		}
-#endif
 
 
 #ifdef _WIN64
