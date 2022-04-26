@@ -22,13 +22,18 @@
 > #endif
 --- NT4\private\mvdm\wow32\wshimdb.c
 +++ nt\private\mvdm\wow32\wshimdb.c
-499a500,503
-> #ifdef W10 /* On Win10, this calls RtlAllocateHeap internally. If we use ZwAllocate instead, we will crash on free */
->         if (lpEnvNew = RtlAllocateHeap(GetProcessHeap(), 0, MemoryInformation.RegionSize))
->             Status = STATUS_SUCCESS; else Status = STATUS_NO_MEMORY;
-> #else
-505a510
-> #endif
+500c500,506
+<         Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+---
+>         if ((GetVersion() & 0xF) > 5)
+>         {
+>             /* On Win10, this calls RtlAllocateHeap internally. If we use ZwAllocate instead, we will crash on free */
+>             if (lpEnvNew = RtlAllocateHeap(GetProcessHeap(), 0, MemoryInformation.RegionSize))
+>                 Status = STATUS_SUCCESS; else Status = STATUS_NO_MEMORY;
+>         } else {
+>             Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+505a512
+>         }
 --- NT4\private\mvdm\wow32\intthunk.c
 +++ nt\private\mvdm\wow32\intthunk.c
 51a52,54
