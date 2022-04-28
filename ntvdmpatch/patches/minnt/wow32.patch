@@ -869,13 +869,39 @@
 >     RELEASE_THUNKLOCK
 902a905
 >     RESTORE_THUNKLOCK
-1446c1449
+973a977
+>     DECLARE_THUNKLOCK
+978a983
+>     RELEASE_THUNKLOCK
+979a985
+>     RESTORE_THUNKLOCK
+1047a1054
+>     DECLARE_THUNKLOCK
+1053a1061
+>     RELEASE_THUNKLOCK
+1056a1065,1066
+>     RESTORE_THUNKLOCK
+>                                     
+1120a1131
+>     DECLARE_THUNKLOCK
+1126a1138
+>     RELEASE_THUNKLOCK
+1129a1142,1143
+>     RESTORE_THUNKLOCK
+>     
+1188a1203
+>     DECLARE_THUNKLOCK
+1194a1210
+>     RELEASE_THUNKLOCK
+1195a1212
+>     RESTORE_THUNKLOCK
+1446c1463
 <     register PWW pww;
 ---
 >     register PWW pww = NULL;
-1482a1486
+1482a1500
 > 
-1483a1488,1500
+1483a1502,1514
 > #ifdef W10
 >                 switch ( iOffset )
 >                 {
@@ -889,56 +915,56 @@
 >                         break;
 >                 }
 > #endif
-1610c1627
+1610c1641
 <     dwThreadID = GetWindowThreadProcessId(HWND32(parg16->f1), &dwProcessID);
 ---
 >     dwThreadID = GetWindowThreadProcessId((HWND)FULLHWND32(parg16->f1), &dwProcessID);
-1665a1683
+1665a1697
 >     DECLARE_THUNKLOCK
-1670a1689
+1670a1703
 >     RELEASE_THUNKLOCK
-1671a1691
+1671a1705
 >     RESTORE_THUNKLOCK
-1725c1745
+1725c1759
 <     PWW pww;
 ---
 >     PWW pww = NULL;
-1999a2020
+1999a2034
 >     DECLARE_THUNKLOCK
-2020a2042
+2020a2056
 >             RELEASE_THUNKLOCK
-2022a2045
+2022a2059
 >             RESTORE_THUNKLOCK
-2027a2051
+2027a2065
 >     RELEASE_THUNKLOCK
-2033a2058
+2033a2072
 >     RESTORE_THUNKLOCK
-2105a2131
+2105a2145
 >     DECLARE_THUNKLOCK
-2110a2137
+2110a2151
 >     RELEASE_THUNKLOCK
-2117a2145
+2117a2159
 >     RESTORE_THUNKLOCK
-2175c2203
+2175c2217
 <     register PWW pww;
 ---
 >     register PWW pww = NULL;
-2198a2227
+2198a2241
 >             LONG    l;
-2212d2240
+2212d2254
 <                 dwWndProc32Old = SetWindowLong(HWND32(parg16->f1), iOffset, dwWndProc32New);
-2214,2217c2242
+2214,2217c2256
 <                 // If the 32 bit set failed, perhaps because its another process,
 <                 // then we want to fail too
 <                 if (!dwWndProc32Old)
 <                     goto SWL_Cleanup;
 ---
 >                 l = dwWndProc32New;
-2223c2248
+2223c2262
 <                 LONG    l;
 ---
 >                 
-2238c2263,2286
+2238c2277,2300
 <                 dwWndProc32Old = SetWindowLong(HWND32(parg16->f1), iOffset, l);
 ---
 >             }
@@ -965,7 +991,7 @@
 > #else
 >             dwWndProc32Old = SetWindowLong(HWND32(parg16->f1), iOffset, l);
 > #endif
-2240,2243c2288,2291
+2240,2243c2302,2305
 <                 // If the 32 bit set failed, perhaps because its another process,
 <                 // then we want to fail too
 <                 if (!dwWndProc32Old)
@@ -975,46 +1001,46 @@
 >             // then we want to fail too
 >             if (!dwWndProc32Old)
 >                 goto SWL_Cleanup;
-2245d2292
+2245d2306
 <             }
-2306c2353,2354
+2306c2367,2368
 <         ul = SetWindowLong(HWND32(parg16->f1), iOffset, new);
 ---
 >         ul = SetWindowLong((HWND)FULLHWND32(parg16->f1), iOffset, new);
 > 
-2387a2436
+2387a2450
 >     DECLARE_THUNKLOCK
-2390a2440
+2390a2454
 >     RELEASE_THUNKLOCK
-2407a2458
+2407a2472
 >     RESTORE_THUNKLOCK
-2499a2551
+2499a2565
 >     DECLARE_THUNKLOCK
-2503a2556
+2503a2570
 >     RELEASE_THUNKLOCK
-2521a2575
+2521a2589
 >     RESTORE_THUNKLOCK
-2548a2603
+2548a2617
 >     DECLARE_THUNKLOCK
-2564a2620
+2564a2634
 >     RELEASE_THUNKLOCK
-2565a2622
+2565a2636
 >     RESTORE_THUNKLOCK
-2615c2672
+2615c2686
 <     PWW pww;
 ---
 >     PWW pww = NULL;
-2632c2689
+2632c2703
 <     hwnd = HWND32(parg16->f1);
 ---
 >     hwnd = (HWND)FULLHWND32(parg16->f1);
-2737a2795
+2737a2809
 >     DECLARE_THUNKLOCK
-2740a2799
+2740a2813
 >     RELEASE_THUNKLOCK
-2743a2803
+2743a2817
 >     RESTORE_THUNKLOCK
-2776a2837,2960
+2776a2851,2974
 > 
 > enum ZBID
 > {
