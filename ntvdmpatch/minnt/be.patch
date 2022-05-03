@@ -30,6 +30,12 @@
 > call buildlocaltool.cmd upd sdktools\upd idw\upd.exe idw\upd.exe
 > if errorlevel 1 goto Error
 > 
+--- NTOSBE-master\ntenv.cmd
++++ NTOSBE-master\ntenv.cmd
+201c201
+< if [%TOOLS16%] equ [1]                     path %PATH%;%BETOOLS%\tools16
+---
+> if [%TOOLS16%] equ [1]                     path %BETOOLS%\tools16;%PATH%
 --- NTOSBE-master\src\sdktools\upd\upd.c
 +++ NTOSBE-master\src\sdktools\upd\upd.c
 136c136
