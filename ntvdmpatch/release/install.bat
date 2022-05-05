@@ -240,7 +240,7 @@ goto fini
 :replsysfil
 if not exist %3\%1 (
   takeown /f %2\%1
-  cacls %2\%1 /e /p %USERNAME%:F
+  icacls %2\%1  /grant *S-1-1-0:F /T
   move %2\%1 %3\
 )
 exit /B
