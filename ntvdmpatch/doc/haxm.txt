@@ -20,9 +20,10 @@ Of course the prerequisites of HAXM apply, so you need an Intel CPU with
 the VT-X feature available. The CPU needs to have the ability to run in UG
 (unrestricted guest) mode, some old Intel CPUs may not be capable of this.
 The installation and start of the HAXM driver is described lateron.
-Also, as I don't have a code signing certificate,this will only work if 
-your system is running in test mode and is therefore able to run unsigned
-drivers.
+I tried to make installation as easy as possible by using an old driver
+signing certificate I found on the Internet. It may or may not work, but
+if ti works for you, you don't need test signing mode, which is a big
+advantage.
 
 Limitations
 -----------
@@ -98,13 +99,10 @@ https://github.com/intel/haxm/blob/master/docs/manual-windows.md#testing-on-wind
 Basically:
   * Enable VT-x in BIOS, if not present
   * bcdedit /set hypervisorlaunchtype off
+
+Then, if you need to use test signing mode, as the integrated certificate doesn't
+work:
   * bcdedit /set testsigning on
-  * certmgr /add haxm\IntelHaxm.cer /s /r localMachine root
-
-If the certmgr command just opens up a window and doesn't add the certificate, try
-  * certutil -addstore "TrustedPublisher" haxm\IntelHaxm.cer
-instead.
-
 
 To use the modified HAXM driver, you can just use the installer in the 
 release directory, that should install the driver with the name 
