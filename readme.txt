@@ -233,6 +233,18 @@ You are invited to improve this project to bring back DOS to Windows.
 
 FAQ
 ===
+NTVDMx64 stops working after Patch Tuesday updates, what shall I do?
+---------------------------------------------------------------------------
+It always takes some time (up to 7 days) after new symbols for updated dll
+files required by the loader get released.
+So the only thing you can do in such a situation is to wait until the new
+symbols appear. The loader should start working again automatically, after
+the symbols become available and you have an Internet connection available
+that allows downloads from the Microsoft Symbol Server.
+
+You can verify if the missing symbosl are the problem by checking the
+loader output via DebugView.
+
 I want to have a proper soundcard emulation
 ---------------------------------------------------------------------------
 MINNT build supports AdLib soundcard emulation by incorporating code parts
@@ -266,7 +278,7 @@ https://www.vogons.org/viewtopic.php?f=46&t=58233
 
 I want to run 16bit Windows applications
 ---------------------------------------------------------------------------
-As ob 05/2020, NTVDMx64 now generally supports WOW32, so your applications 
+As of 05/2020, NTVDMx64 now generally supports WOW32, so your applications 
 should run.
 However, they currently only work with the CCPU build and we know that the
 CCPU is slow, so I still recommend wineVDM:
