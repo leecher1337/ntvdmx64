@@ -44,7 +44,7 @@ NtGetNextThread(
 	// Looks pretty ugly, any better idea?
 	PxpSYSTEM_PROCESS_INFORMATION ProcessInfo;
 	PUCHAR  pucLargeBuffer = 0;
-	ULONG   LargeBufferSize = 32 * 1024;
+	SIZE_T  LargeBufferSize = 32 * 1024;
 	ULONG   RegionSize;
 	NTSTATUS status;
 	ULONG TotalOffset;
@@ -65,7 +65,7 @@ NtGetNextThread(
 		status = NtAllocateVirtualMemory(NtCurrentProcess(), &pucLargeBuffer, 0, &LargeBufferSize, MEM_COMMIT, PAGE_READWRITE);
 		if (!NT_SUCCESS(status))
 		{
-			TRACE("Out of memory? %08X\n", status);
+			TRACE("Out of memory (Allocating %d bytes)? %08X\n", LargeBufferSize, status);
 			return status;
 		}
 

@@ -28,8 +28,8 @@ typedef struct _RTL_RELATIVE_NAME_U {
 
 NTSYSAPI ULONG NTAPI RtlGetCurrentDirectory_U(ULONG nBufferLength, PWSTR lpBuffer);
 NTSYSAPI PVOID NTAPI RtlAllocateHeap(IN PVOID HeapHandle, IN ULONG Flags, IN ULONG Size);
-NTSYSAPI NTSTATUS NTAPI NtAllocateVirtualMemory(IN HANDLE ProcessHandle, IN OUT PVOID *BaseAddress, IN ULONG ZeroBits,
-	IN OUT PULONG RegionSize, IN ULONG AllocationType, IN ULONG Protect);
+NTSYSAPI NTSTATUS NTAPI NtAllocateVirtualMemory(IN HANDLE ProcessHandle, IN OUT PVOID *BaseAddress, IN ULONG_PTR ZeroBits,
+	IN OUT PSIZE_T RegionSize, IN ULONG AllocationType, IN ULONG Protect);
 NTSYSAPI BOOLEAN NTAPI RtlFreeHeap(IN PVOID HeapHandle, IN ULONG Flags, IN PVOID BaseAddress);
 NTSYSAPI NTSTATUS NTAPI RtlCreateEnvironment(BOOLEAN CloneCurrentEnvironment, PVOID *Environment);
 NTSYSAPI NTSTATUS NTAPI RtlDestroyEnvironment(PVOID Environment);

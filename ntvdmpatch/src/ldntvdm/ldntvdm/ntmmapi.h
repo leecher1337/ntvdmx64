@@ -46,8 +46,8 @@ NTAPI
 NtAllocateVirtualMemory(
 	IN HANDLE ProcessHandle,
 	IN OUT PVOID *BaseAddress,
-	IN ULONG ZeroBits,
-	IN OUT PULONG RegionSize,
+	IN ULONG_PTR ZeroBits,
+	IN OUT PSIZE_T RegionSize,
 	IN ULONG AllocationType,
 	IN ULONG Protect
 	);

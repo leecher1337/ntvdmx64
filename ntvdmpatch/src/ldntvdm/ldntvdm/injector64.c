@@ -310,11 +310,17 @@ BOOL xpWow64GetThreadContext(PWOW64_CONTEXT *ppRemoteCtx, HANDLE hProc, HANDLE h
 
 		if (!NT_SUCCESS(NtQueryInformationThread(hThread, ThreadBasicInformation, &ThreadInfo, sizeof(THREAD_BASIC_INFORMATION), 0)) ||
 			!ReadProcessMemory(hProc, &((PTEB)ThreadInfo.TebBaseAddress)->TlsSlots[WOW64_TLS_CPURESERVED], ppRemoteCtx, sizeof(PWOW64_CONTEXT), &Transferred) ||
-			Transferred != sizeof(PWOW64_CONTEXT) ||
-			!ReadProcessMemory(hProc, (PUCHAR)(ppRemoteCtx)+sizeof(ULONG), ThreadContext, sizeof(WOW64_CONTEXT), &Transferred) ||
+			Transferred != sizeof(PWOW64_CONTEXT))
+		{
+			TRACE("Reading WOW64 thread context ptr failed: %d, Bytes: %d, Needed: %d\n", GetLastError(), Transferred, sizeof(PWOW64_CONTEXT));
+			return FALSE;
+		}
+		if (!ReadProcessMemory(hProc, (PUCHAR)(*ppRemoteCtx)+sizeof(ULONG), ThreadContext, sizeof(WOW64_CONTEXT), &Transferred) ||
 			Transferred != sizeof(WOW64_CONTEXT))
 		{
-			TRACE("Reading WOW64 thread context failed: %d\n", GetLastError());
+			TRACE("Reading WOW64 thread context @%08X failed: %d, Bytes: %d, Needed: %d, TebBaseAddress: %08X, Ptr: %08X\n", 
+				(PUCHAR)(*ppRemoteCtx)+sizeof(ULONG), GetLastError(), Transferred, sizeof(WOW64_CONTEXT), 
+				ThreadInfo.TebBaseAddress, &((PTEB)ThreadInfo.TebBaseAddress)->TlsSlots[WOW64_TLS_CPURESERVED]);
 			return FALSE;
 		}
 	}
@@ -385,13 +391,14 @@ BOOL InjectDllHijackThreadX32(HANDLE hProc, HANDLE hThread, WCHAR *DllName)
 	//get the thread context
 	WOW64_CONTEXT ThreadContext;
 	DWORD InjData, lpLoadLibraryW, dwSize;
+	BOOL fGotThreadCtx = FALSE;
 #ifdef TARGET_WINXP
 	PWOW64_CONTEXT           RemoteCtx = NULL;
 
-	if (!xpWow64GetThreadContext(&RemoteCtx, hProc, hThread, &ThreadContext)) return FALSE;
+	fGotThreadCtx = xpWow64GetThreadContext(&RemoteCtx, hProc, hThread, &ThreadContext);
 #else  // TARGET_WINXP
 	ThreadContext.ContextFlags = CONTEXT_CONTROL;
-	if (!Wow64GetThreadContext(hThread, &ThreadContext)) return FALSE;
+	fGotThreadCtx = Wow64GetThreadContext(hThread, &ThreadContext);
 #endif // TARGET_WINXP
 	TRACE("InjectDllHijackThreadX32(%08X, %08X, %S)...", hProc, hThread, DllName);
 
@@ -400,7 +407,7 @@ BOOL InjectDllHijackThreadX32(HANDLE hProc, HANDLE hThread, WCHAR *DllName)
 		!(InjData = InjectWriteLoadLibraryShellcodex86(hProc, lpLoadLibraryW, ThreadContext.Eip, DllName, &dwSize)))
 		return FALSE;
 
-	if (!isx64ProcessInitialized(hProc))
+	if (!fGotThreadCtx || !isx64ProcessInitialized(hProc))
 	{
 		/* process has not yet been initialized... As hijacking threads is a bit dangerous anyway,
 		* we back out by queuing an APC instead. NtTestAlert() call in loader should call us just
