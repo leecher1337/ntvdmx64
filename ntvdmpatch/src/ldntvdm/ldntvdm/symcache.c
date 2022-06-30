@@ -13,6 +13,7 @@
 #include "symeng.h"
 #include "reg.h"
 #include "injector32.h"
+#include "matcheng.h"
 
 #ifdef USE_SYMCACHE
 
@@ -35,6 +36,7 @@ static BOOL UpdateSymsForModule(HKEY hKey, char *pszDLL, LPWSTR lpDLLKey, REGKEY
 	DWORD64 dwBase = 0;
 	FILETIME tm = { 0 };
 	HANDLE hFile;
+	MATCHENG_INST hMatchEng;
 
 #ifdef _WIN64
 	if (fWOW64) sprintf(szKernel32 + GetWindowsDirectoryA(szKernel32, sizeof(szKernel32) / sizeof(szKernel32[0])), "\\SysWOW64\\%s", pszDLL); else
@@ -78,6 +80,10 @@ static BOOL UpdateSymsForModule(HKEY hKey, char *pszDLL, LPWSTR lpDLLKey, REGKEY
 				(dwAddress = SymEng_GetAddr(dwBase, "ConhostV2ForcedInRegistry")))
 				REG_SetDWORD(hKey, keys[i].lpKeyName, dwAddress);
 #endif
+#ifdef NEED_APPINFO
+			else if (pszDLL == "appinfo.dll")
+				goto appinfo_load;
+#endif
 			else tm.dwLowDateTime = 0;
 		}
 		SymEng_UnloadModule(dwBase);
@@ -96,6 +102,30 @@ static BOOL UpdateSymsForModule(HKEY hKey, char *pszDLL, LPWSTR lpDLLKey, REGKEY
 
 		return TRUE;
 	}
+#ifdef NEED_APPINFO
+	else
+	{
+appinfo_load:
+		if (fUpdate && pszDLL == "appinfo.dll" && MatchEng_LoadModule(szKernel32, &hMatchEng) == 0)
+		{
+			// Special treatment for appinfo.dll, where unfortunately, debug Symbols are often missing, so 
+			// Pattern matching is needed
+
+			for (i = 0; keys[i].lpKeyName; i++)
+			{
+				if (keys[i].pszFunction == "AiOpenWOWStubs" && (dwAddress = MatchEng_FindSig(&hMatchEng, "\x48\x89\x5C\x24\x10\x4C\x89", 7, 2)))
+					REG_SetDWORD(hKey, keys[i].lpKeyName, dwAddress);
+				else tm.dwLowDateTime = 0;
+			}
+			MatchEng_UnloadModule(&hMatchEng);
+			if (tm.dwLowDateTime)
+			{
+				REG_SetQWORD(hKey, lpDLLKey, *((PULONGLONG)&tm));
+			}
+		}
+	}
+#endif
+
 
 	return FALSE;
 }
@@ -111,8 +141,10 @@ HANDLE SymCache_GetDLLKey(HKEY hKey, LPWSTR lpDLLKey, BOOL fUpdate)
 		{
 			if (UpdateSymsForModule(hKey, m_aSyms[i].pszDLL, m_aSyms[i].lpDLLKey, m_aSyms[i].keys, fUpdate, FALSE))
 				return (HANDLE)&m_aSyms[i];
+			TRACE("SymCache_GetDLLKey(%S) found, but update failed\n", lpDLLKey);
 			return NULL;
 		}
+	TRACE("SymCache_GetDLLKey(%S) not found\n", lpDLLKey);
 	return NULL;
 }
 

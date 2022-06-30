@@ -99,6 +99,9 @@
     <ClCompile Include="symcachefunc32.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="matcheng.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="basemsg64.h">
@@ -222,6 +225,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="config.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="matcheng.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

@@ -552,6 +552,7 @@
     <ClCompile Include="injector32.c" />
     <ClCompile Include="injector64.c" />
     <ClCompile Include="ldntvdm.c" />
+    <ClCompile Include="matcheng.c" />
     <ClCompile Include="oemcp.c" />
     <ClCompile Include="reg.c" />
     <ClCompile Include="symcache.c" />
@@ -584,6 +585,7 @@
     <ClInclude Include="injector32.h" />
     <ClInclude Include="injector64.h" />
     <ClInclude Include="ldntvdm.h" />
+    <ClInclude Include="matcheng.h" />
     <ClInclude Include="newexe.h" />
     <ClInclude Include="newres.h" />
     <ClInclude Include="ntmmapi.h" />
