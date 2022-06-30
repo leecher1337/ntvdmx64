@@ -79,12 +79,10 @@ ldntvdm.dll,,,0x14022
 _default.pif,,,0x41
 ansi.sys,,,0x41
 append.exe,,,0x41
-autoexec.nt,,,0x10
 backup.exe,,,0x41
 bios1.rom,,,0x4022
 bios4.rom,,,0x4022
 command.com,,,0x4022
-config.nt,,,0x10
 country.sys,,,0x4022
 debug.exe,,,0x41
 dosx.exe,,,0x4022
@@ -131,6 +129,10 @@ vdmdbg.dll,,,0x4022
 vdmredir.dll,,,0x4022
 v7vga.rom,,,0x4022
 
+[Ntvdmx64.amd64.System.Files.Config]
+autoexec.nt,,,0x10
+config.nt,,,0x10
+
 [Ntvdmx64.amd64.Symbol.Files]
 dbghelp.dll,,,0x4022
 symsrv.dll,,,0x4022
@@ -152,7 +154,7 @@ Ntvdmx64.amd64.Inf.Files.Del = 17
 [DefaultInstall.ntamd64]
 ;CheckAdminRights = 1
 SmartReboot = N
-CopyFiles   = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Symbol.Files, Ntvdmx64.amd64.Inf.Files.Add
+CopyFiles   = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.System.Files.Config, Ntvdmx64.amd64.Symbol.Files, Ntvdmx64.amd64.Inf.Files.Add
 AddReg      = Ntvdmx64.amd64.AddReg
 
 [DefaultUninstall.ntamd64]
