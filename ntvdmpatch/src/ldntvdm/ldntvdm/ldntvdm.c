@@ -572,6 +572,23 @@ BOOL IsSystemUpdating(void)
 }
 #endif /* TARGET_WINXP */
 
+BOOL IsProcessBlacklisted(WCHAR *pszProcess)
+{
+	WCHAR szBlacklist[1024], *p;
+
+	if (!GetPrivateProfileSectionW(L"blacklist", szBlacklist, sizeof(szBlacklist)/sizeof(WCHAR), L"ldntvdm.ini"))
+		return FALSE;
+	for (p = szBlacklist; *p; p += wcslen(p) + 1)
+	{
+		if (__wcsicmp(pszProcess, p) == 0)
+		{
+			TRACE("Process %S is blacklisted, not injecting.\n", pszProcess);
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
 #if defined(USE_SYMCACHE) && defined(TARGET_WIN7)
 void EnsureWin7Symbols(HMODULE hKrnl32)
 {
@@ -677,6 +694,11 @@ BOOL WINAPI _DllMainCRTStartup(
 		 }
 #endif /* TARGET_WINXP && _WIN64*/
 
+		 if (IsProcessBlacklisted(pszProcess))
+		 {
+			 bRet = FALSE;
+			 break;
+		 }
 #ifndef TARGET_WINXP
 		 if (IsSystemUpdating())
 		 {
