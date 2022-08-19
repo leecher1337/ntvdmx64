@@ -118,7 +118,7 @@ echo Installing, please wait...
 echo ---------------------------------------------
 echo Please check for completion-message from installer in taskbar.
 if exist haxm\IntelHaxm.sys (
-  certutil -addstore "TrustedPublisher" haxm\IntelHaxm.cer
+  certutil -f -addstore "TrustedPublisher" haxm\IntelHaxm.cer
   RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultInstall 132 %CD%\ntvdmx64-haxm.inf
 )
 
