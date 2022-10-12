@@ -202,7 +202,7 @@ LPBYTE Hook_Inline_Func(HANDLE hProcess, HANDLE hModule, PVOID src, PVOID tgt, S
 	// If this is a Hot-patchable function, we can save ourselves a lot of work
 	if (ptr_size == sizeof(DWORD) && *((WORD*)src_ptr) == 0xFF8B)
 	{
-		if (Hook_EnoughSpace(hProcess, (PBYTE)src - len, len) && VirtualProtectEx(hProcess, (PBYTE)src - len, len + 2, PAGE_READWRITE, &OldProt))
+		if (Hook_EnoughSpace(hProcess, (PBYTE)src - len, len) && VirtualProtectEx(hProcess, (PBYTE)src - len, len + 2, PAGE_EXECUTE_READWRITE, &OldProt))
 		{
 			/* Looks good, simple trampoline:
 			 * JMP tgt     E9 xx xx xx xx
@@ -234,7 +234,7 @@ LPBYTE Hook_Inline_Func(HANDLE hProcess, HANDLE hModule, PVOID src, PVOID tgt, S
 	/* First check if there is enough space before the function */
 	context = (PBYTE)src - cbContext;
 	if (Hook_EnoughSpace(hProcess, context, cbContext) &&
-		VirtualProtectEx(hProcess, context, cbContext, PAGE_READWRITE, &OldProt))
+		VirtualProtectEx(hProcess, context, cbContext, PAGE_EXECUTE_READWRITE, &OldProt))
 	{
 		TRACE("Hook: Enough space before function\n")
 	}
@@ -251,7 +251,7 @@ LPBYTE Hook_Inline_Func(HANDLE hProcess, HANDLE hModule, PVOID src, PVOID tgt, S
 		}
 		else
 		{
-			VirtualProtectEx(hProcess, context, cbContext, PAGE_READWRITE, &OldProt);
+			VirtualProtectEx(hProcess, context, cbContext, PAGE_EXECUTE_READWRITE, &OldProt);
 		}
 	}
 
