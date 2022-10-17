@@ -371,6 +371,29 @@ https://docs.microsoft.com/en-us/windows-server/storage/file-server/troubleshoot
 I still suggest you use DOSPR.ZIP
 
 
+I want to completely disable error messages regarding direct disk access etc.
+---------------------------------------------------------------------------
+There is a non-standard extension as this feature was requested by a user.
+Under
+
+  HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\WOW
+
+create a new REG_DWORD value called TlsDirectErrorDefault
+There you must use a bitmask which error messages you want to suppress
+(OR the values together):
+
+Hex Flag               An application has attempted to....
+-------------------------------------------------------------------------
+1        D_A_FLOPPY,   "directly access an incompatible diskette format"
+2        D_A_HARDDISK, "directly access the hard disk"
+4        D_A_DRIVER,   "load a 16-bit Dos device driver"
+8        D_A_ILLBOP,   "perform an unknown internal 'BOP' opcode"
+10       D_A_NOLIM,    "allocate Expanded Memory"
+20       D_A_MOUSEDRVR "use a third party mouse driver"
+
+i.e., if you want to suppress the first 2 errors, set it to 3.
+
+
 I have a HASP/HARDLOCK dongle for my DOS application and want to get it
 working with NTVDMx64
 ---------------------------------------------------------------------------

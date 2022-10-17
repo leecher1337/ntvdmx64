@@ -39,6 +39,8 @@ dpmimem.patch       - Patches DPMI default mem size to 16MB under DOS and
                       adds code to get requested DPMI memory size from .PIF
                       file, as well as a registry key to set global size of 
                       DPMI mem to get more than default (see readme.txt FAQ)
+errmsg.patch        - Extension that allows user to suppress error message 
+                      dialogs via registry setting.
 ega_crash.patch     - Console graphics is required, as newer Windows display 
                       drivers with WDDM driver model do not support fullscreen
                       anymore. Some DOS programs, like i.e. Commander Keen 4, 

@@ -1,0 +1,34 @@
+--- NT4\private\mvdm\softpc.new\host\src\nt_event.c
++++ nt\private\mvdm\softpc.new\host\src\nt_event.c
+1838a1839,1865
+> // leecher1337, Non-standard extension: Default warning level can be defined
+> // in registry
+> static DWORD GetTlsDirectErrorDefault(void)
+> {
+>     HKEY  hWowKey;
+> 	DWORD dwRet, cbData = sizeof(dwRet);
+> 
+>     if (RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
+>                        "SYSTEM\\CurrentControlSet\\Control\\WOW",
+>                        0,
+>                        KEY_QUERY_VALUE,
+>                        &hWowKey
+>                        ) == 0)
+>     {
+>         
+> 		RegQueryValueEx (hWowKey,
+> 						 "TlsDirectErrorDefault",
+> 						 NULL,
+> 						 NULL,
+> 						 (LPBYTE)&dwRet,
+> 						 &cbData);
+> 
+> 		RegCloseKey (hWowKey);
+> 	}
+> 	return dwRet;
+> }
+> 
+1896c1923
+<     TlsSetValue(TlsDirectError, 0);
+---
+>     TlsSetValue(TlsDirectError, (LPVOID)GetTlsDirectErrorDefault());
