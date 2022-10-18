@@ -13,6 +13,7 @@
 #include "injector64.h"
 #include "injector32.h"
 #include "iathook.h"
+#include "detour.h"
 
 #if !defined(CREATEPROCESS_HOOK) && defined(_WIN64)
 
@@ -141,7 +142,11 @@ void WinEventHook_Install(HMODULE hModule)
 	if (hModule = GetModuleHandle(_T("winsrv.dll")))
 		Hook_IAT_x64_IAT((LPBYTE)hModule, "user32.dll", "IsWinEventHookInstalled", ConsoleNotifyWinEventHook, (PULONG_PTR)&IsWinEventHookInstalledReal);
 #else
+	HMODULE hUser32;
+
 	if (hModule) Hook_IAT_x64_IAT((LPBYTE)hModule, "user32.dll", "NotifyWinEvent", NotifyWinEventHook, (PULONG_PTR)&NotifyWinEventReal);
+	else if ((hUser32 = GetModuleHandle(_T("user32.dll"))) || (hUser32 = LoadLibrary(_T("user32.dll")))) 
+		NotifyWinEventReal = Hook_Inline_Func(GetCurrentProcess(), hUser32, GetProcAddress(hUser32, "NotifyWinEvent"), (PULONG_PTR)&NotifyWinEventHook, sizeof(ULONG_PTR), "NotifyWinEvent");
 #endif
 }
 

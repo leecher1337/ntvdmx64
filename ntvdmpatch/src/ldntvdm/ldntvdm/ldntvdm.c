@@ -98,6 +98,20 @@ typedef BOOL (KRNL32_CALL *fpBaseGetVdmConfigInfo)(
 #endif
 	);
 
+#define VDM_HIDE_WINDOW 	1
+#define VDM_IS_ICONIC           2
+#define VDM_CLIENT_RECT         3
+#define VDM_CLIENT_TO_SCREEN    4
+#define VDM_SCREEN_TO_CLIENT    5
+
+#define ERR_NOT_IMPLEMENTED         0x4001
+
+typedef BOOL (BASEP_CALL *fpVDMConsoleOperation)(
+	DWORD iFunction,
+	LPVOID lpData
+	);
+fpVDMConsoleOperation VDMConsoleOperation = NULL;
+
 #ifdef TRACE_FILE
 HANDLE g_hLog = INVALID_HANDLE_VALUE;
 
@@ -376,6 +390,22 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 			PCWCH ApplicationName = *lppApplicationName;
 			__asm mov esi, ApplicationName
 #endif
+
+#ifndef TARGET_WINXP
+			if (GetConsoleHost() != (HANDLE)-1)
+			{
+				BOOL bIcon;
+
+				if (VDMConsoleOperation && !VDMConsoleOperation(VDM_IS_ICONIC, &bIcon) && GetLastError() == ERR_NOT_IMPLEMENTED)
+				{
+					// We are running on a V2 console, so enforce creating a new 
+					// window for NTVDM (which runs on V1 console). It's better than error, at least
+					*pdwCreationFlags |= CREATE_NEW_CONSOLE;
+					TRACE("LDNTVDM: Running on a V2 console, thus opening DOS application in new V1 console window.\n")
+				}
+			}
+#endif
+
 			Status = BaseCheckVDM(
 				*pVdmBinaryType | BinarySubType,
 #if !(defined(TARGET_WIN80) && !defined(_WIN64))
@@ -705,6 +735,7 @@ BOOL WINAPI _DllMainCRTStartup(
 			 bRet = FALSE;
 			 break;
 		 }
+		 VDMConsoleOperation = (fpVDMConsoleOperation)GetProcAddress(hKrnl32, "VDMConsoleOperation");
 #endif // !TARGET_WINXP
 		 AppPatch_Check(pszProcess);
 
@@ -813,7 +844,7 @@ BOOL WINAPI _DllMainCRTStartup(
 
 #ifndef CREATEPROCESS_HOOK
 			// We want notification when new console process gets started so that we can inject
-			WinEventHook_Install(fNoConhostDll ? GetModuleHandle(NULL) : hModConhost);
+			WinEventHook_Install(fNoConhostDll ? NULL : hModConhost);
 #endif /* CREATEPROCESS_HOOK */
 		}
 #endif /* !TARGET_WINXP */
