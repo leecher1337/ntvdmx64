@@ -220,7 +220,11 @@ if exist %CD%\ole2\olethk32.dll (
 goto fini
 
 :delwow
-for %%F in (wow32.dll user.exe) do if exist %3\%%I move /y %3\%%I %2\
+for %%F in (wow32.dll user.exe) do if exist %3\%%I (
+  move /y %3\%%I %2\
+  if exist %3\%%I del %3\%%I
+)
+
 if exist %windir%\inf\ole2.inf RunDll32 advpack.dll,LaunchINFSection %windir%\inf\ole2.inf,DefaultUninstall
 goto fini
 
@@ -229,7 +233,13 @@ for %%F in (olethk32.dll compobj.dll ole2.dll ole2disp.dll ole2nls.dll storage.d
 goto fini
 
 :delole
-for %%F in (olethk32.dll compobj.dll ole2.dll ole2disp.dll ole2nls.dll storage.dll typelib.dll) do if exist %3\%%I move /y %3\%%I %2\
+for %%F in (olethk32.dll compobj.dll ole2.dll ole2disp.dll ole2nls.dll storage.dll typelib.dll) do if exist %3\%%I (
+  move /y %3\%%I %2\
+  rem If they still remain in backup, it means that the files in the system directory probably were replaced by Windows
+  rem Update (and protected), thus, we delete our backups in this case so that reinstallation doesn't fail
+  if exist %3\%%I del %3\%%I
+)
+
 goto fini
 
 :hardlink
