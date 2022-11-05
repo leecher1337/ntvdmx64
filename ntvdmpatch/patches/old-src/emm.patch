@@ -3,7 +3,7 @@
 970c970
 < #ifndef NTVDM
 ---
-> #if !defined(NTVDM) || defined(CCPU)
+> #if !defined(NTVDM) || !defined(MONITOR)
 1108c1108
 < 	if(EM_page_mapped[physical_page_no] != EMPTY)
 ---
@@ -11,16 +11,16 @@
 1122c1122
 < #ifndef NTVDM
 ---
-> #if !defined(NTVDM) || defined(CCPU)
+> #if !defined(NTVDM) || !defined(MONITOR)
 1153c1153
 < #ifndef NTVDM
 ---
-> #if !defined(NTVDM) || defined(CCPU)
+> #if !defined(NTVDM) || !defined(MONITOR)
 1242c1242
 < #ifndef NTVDM
 ---
-> #if  !defined(NTVDM) || defined(CCPU)
+> #if  !defined(NTVDM) || !defined(MONITOR)
 1883c1883
 < #ifndef NTVDM
 ---
-> #if !defined(NTVDM) || defined(CCPU)
+> #if !defined(NTVDM) || !defined(MONITOR)
