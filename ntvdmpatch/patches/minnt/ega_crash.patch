@@ -144,11 +144,10 @@
 
 --- NT4\private\mvdm\softpc.new\host\src\nt_graph.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_graph.c
-786a787,788
+779a780,781
 > #elif defined(V7VGA)
 > 	if(!video_copy) video_copy = (byte *) host_malloc(0x80000);
-1952c1954
+1945c1947
 <                     (get_256_colour_mode() ? 2 : 1);
 ---
 >                     ((get_256_colour_mode() && !get_seq_chain4_mode()) ? 2 : 1);
-
