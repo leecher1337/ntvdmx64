@@ -82,6 +82,10 @@ monitor.patch       - In a lot of #ifdefs, i386 is assumed to include V86
                       -DMONITOR should be added to some makefiles for the V86
                       build then as a consequence to be able to do both builds
                       lateron, when crude makefiles.patch gets cleaned up.
+mouse.patch         - Some DOS-applications define a mouse window above video
+                      resolution via INT 33h/7,8 functions leading to wrong mouse
+                      coordinates, as the grid is not scaled properly. This patch
+                      tries to account for this.
 ntvdmctl.patch      - Removes NtVdmControl calls not working on x64 Windows
 ntmem.patch         - Prevent crash on access of DOS application to uncommitted 
                       memory

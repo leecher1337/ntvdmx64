@@ -1,0 +1,25 @@
+--- NT4\private\mvdm\softpc.new\host\src\nt_mouse.c
++++ nt\private\mvdm\softpc.new\host\src\nt_mouse.c
+282c282,284
+<    } confine = {0,0,639,199,FALSE,FALSE};
+---
+>    word xscale;
+>    word yscale;
+>    } confine = {0,0,639,199,FALSE,FALSE,1,1};
+1776,1778c1778,1779
+< 
+< *oX = iX;
+< *oY = iY;
+---
+> *oX = iX * confine.xscale;
+> *oY = iY * confine.yscale;
+2577a2579,2582
+> if ((confine.xmax - confine.xmin) > VirtualX) 
+> 	confine.xscale = (word)(((double)confine.xmax - (double)confine.xmin) / (double)VirtualX + 0.5);
+> else
+> 	confine.xscale = 1;
+2596a2602,2605
+> if ((confine.ymax - confine.ymin) > VirtualY) 
+> 	confine.yscale = (word)(((double)confine.ymax - (double)confine.ymin) / (double)VirtualY + 0.5);
+> else
+> 	confine.yscale = 1;
