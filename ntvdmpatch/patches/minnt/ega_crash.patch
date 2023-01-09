@@ -76,3 +76,79 @@
 <     } while(--local_height);
 ---
 >     } while((--local_height)>0);
+--- NT4\private\mvdm\softpc.new\host\src\nt_vga.c
++++ nt\private\mvdm\softpc.new\host\src\nt_vga.c
+1331a1332,1333
+> 	int max_width = sc.PC_W_Width,
+> 		max_height = sc.PC_W_Height;
+1350,1352c1352,1355
+<     if( height>400 || width>640 ){
+<         assert2( NO, "VDM: nt_v7vga_hi_graph_std() w=%d h=%d", width, height );
+<         return;
+---
+>     if (((screen_x + width) >= max_width) || ((screen_y + height) >= max_height)){
+>         sub_note_trace2(EGA_HOST_VERBOSE,
+> 			"VDM: nt_v7vga_hi_graph_std() w=%d h=%d", 
+> 			screen_x, screen_y);
+1353a1357,1360
+>     if (screen_x + width > max_width)
+>         width = max_width - screen_x;
+>     if (screen_y + height > max_height)
+>         height = max_height - screen_y;
+1376c1383
+<     while( --local_height );
+---
+>     while( (--local_height)>0 );
+1412a1420,1421
+> 	int max_width = UNSCALE(sc.PC_W_Width),
+> 		max_height = UNSCALE(sc.PC_W_Height);
+1431,1433c1440,1443
+<     if( height>400 || width>640 ){
+<         assert2( NO, "VDM: nt_v7vga_hi_graph_big() w=%d h=%d", width, height );
+<         return;
+---
+>     if (((screen_x + width) >= max_width) || ((screen_y + height) >= max_height)){
+>         sub_note_trace2(EGA_HOST_VERBOSE,
+> 			"VDM: nt_v7vga_hi_graph_big() w=%d h=%d", 
+> 			screen_x, screen_y);
+1434a1445,1448
+>     if (screen_x + width > max_width)
+>         width = max_width - screen_x;
+>     if (screen_y + height > max_height)
+>         height = max_height - screen_y;
+1501c1515
+<     while(--height);
+---
+>     while((--height)>0);
+1533a1548,1549
+> 	int max_width = UNSCALE(sc.PC_W_Width),
+> 		max_height = UNSCALE(sc.PC_W_Height);
+1552,1554c1568,1571
+<     if( height>400 || width>640 ){
+<         assert2( NO, "VDM: nt_v7vga_hi_graph_huge() w=%d h=%d", width, height );
+<         return;
+---
+>     if (((screen_x + width) >= max_width) || ((screen_y + height) >= max_height)){
+>         sub_note_trace2(EGA_HOST_VERBOSE,
+> 			"VDM: nt_v7vga_hi_graph_huge() w=%d h=%d", 
+> 			screen_x, screen_y);
+1555a1573,1576
+>     if (screen_x + width > max_width)
+>         width = max_width - screen_x;
+>     if (screen_y + height > max_height)
+>         height = max_height - screen_y;
+1582c1603
+<     while(--local_height);
+---
+>     while((--local_height)>0);
+
+--- NT4\private\mvdm\softpc.new\host\src\nt_graph.c
++++ nt\private\mvdm\softpc.new\host\src\nt_graph.c
+786a787,788
+> #elif defined(V7VGA)
+> 	if(!video_copy) video_copy = (byte *) host_malloc(0x80000);
+1952c1954
+<                     (get_256_colour_mode() ? 2 : 1);
+---
+>                     ((get_256_colour_mode() && !get_seq_chain4_mode()) ? 2 : 1);
+

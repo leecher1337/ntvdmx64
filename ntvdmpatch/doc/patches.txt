@@ -47,6 +47,7 @@ ega_crash.patch     - Console graphics is required, as newer Windows display
                       try to paint outside the screen boundaries which causes
                       crashes when not properly checked, so added checks for 
                       this.
+                      Additionally fixes Video7 support.
 emm.patch           - Fixes a little problem in the EMM-Manager
 eyestrain.patch     - Commandline parameters like the hotkey to change video
                       size can't get passed to NTVDM in newer windows versions,
