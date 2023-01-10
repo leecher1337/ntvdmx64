@@ -11,12 +11,16 @@ rem
 rem   PREREQ    Directory, where prerequired files are found. Default is current dir
 rem   SRCDIR    Directory, where current ntvdmpatch source folder can be found.
 rem             Not useful for end-users, just for automated testing on dev machine
+rem   KEEPPAT   Internal use, does not demand refresh of ntvdmpatch
 rem   WKDIR     Working directory for build process, default is %CD%\w
 rem   HAXBLD    If set to -haxm then HAXM build is built, otherwise normal build
 rem   DBGSTP    If set, pause is issued after every step, useful for testing build
 rem   SIZ_NTBLD [chk, fre] Checked of free build, default is checked (debug)
 rem   NOWIN7    Ignore missing Windows 7 ISO (i.e. build only for Win < 8 or no OLE2)
+rem   NOPAUSE   Do not pause before cleanup
 rem   LANG      Only build this language (for a complete list, see documentation)
+rem   KEEPWD    Keep working directory so that subsequent builds will run through 
+rem             faster when run with KEEPPAT
 rem
 
 echo ----------------------------------------------------
@@ -98,22 +102,37 @@ endlocal & set "WORKDRV=%WORKDRV%" & set BLDDIR=%BLDDIR%
 
 pushd %BLDDIR%
 set BLDDIR=
-call :setupbe
-call :buildit
+if "%KEEPPAT%"=="" (
+  call :setupbe
+  call :buildit
+) else (
+  call :dlntvdmx64
+  rmdir /s /q minnt 2>nul
+  call :unpack MinNT-20170416-85fac4faadc77203db8ddc66af280a75c1b717b0.zip
+  ren MinNT-master minnt
+  pushd ntvdmpatch\minnt
+  if "%DBGSTP%"=="" (call patch batch) else call patch
+  popd
+  call :buildthis
+)
 popd
 rmdir /s /q releases 2>nul
 move /y %WKDIR%\ntvdmpatch\releases .
 if not "%WORKDRV%"=="" subst %WORKDRV%: /d
 set WORKDRV=
 set ABPATH=
-echo Cleaning up...
+set CCPU=
+set HAXM=
+set HAXBLD=
 if not exist releases\nul (
   echo Was unable to move releases directory, please go to %WKDIR%\ntvdmpatch\releases manually and get it from there.
+  pause
 ) else (
-  rmdir /s /q %WKDIR%
+  if "%NOPAUSE%"=="" pause
+  echo Cleaning up...
+  if "%KEEPWD%"=="" (rmdir /s /q %WKDIR%) else rmdir /s /q %WKDIR%\ntvdmpatch\minnt\work 2>nul
   echo Autobuild completed, check releases-directory
 )
-pause
 exit /b
 
 :buildit
@@ -124,6 +143,7 @@ call patch %BATCH%
 set BATCH=
 call mktools
 popd
+:buildthis
 cd NTOSBE-master
 call sizzle_minnt.cmd cmdwindow
 call buildrepoidw -y 
@@ -133,7 +153,6 @@ if not "%DBGSTP%"=="" pause
 call bld-minnt%HAXBLD%.cmd
 if not "%DBGSTP%"=="" pause
 call mkrelease-minnt%HAXBLD%.bat %LANG%
-pause
 exit /B
 
 :fetchprq
@@ -181,24 +200,31 @@ if "%DBGSTP%"=="" (
   type NTOSBE-master\buildlocaltools.cmd | findstr /V pause >buildlocaltools.cmd
   move /y buildlocaltools.cmd NTOSBE-master\buildlocaltools.cmd
 )
+rmdir /s /q minnt 2>nul
 call :unpack MinNT-20170416-85fac4faadc77203db8ddc66af280a75c1b717b0.zip
 ren MinNT-master minnt
-if "%SRCDIR%"=="" (
-  del %PREREQ%\ntvdmx64.zip 2>nul
-  call :dlprq ntvdmx64.zip https://github.com/leecher1337/ntvdmx64/archive/master.zip
-  7z x %PREREQ%\ntvdmx64.zip
-  del %PREREQ%\ntvdmx64.zip
-  move /y ntvdmx64-master\ntvdmpatch .
-  rmdir /s /q ntvdmx64-master
-) else (
-  xcopy /s %SRCDIR% ntvdmpatch\
-)
+call :dlntvdmx64
 call :cpyprq GRMSDK_EN_DVD.iso 
 call :cpyprq GRMWDK_EN_7600_1.ISO 
 call :cpyprq old-src.trunk.r687.20150728.7z 
 copy /y %PREREQ%\de_windows_7_professional_with_sp1*.iso ntvdmpatch\minnt\work\
 echo Build environment ready
 exit /b
+
+:dlntvdmx64
+if not "%KEEPPAT%"=="" exit /B
+if "%SRCDIR%"=="" (
+  del %PREREQ%\ntvdmx64.zip 2>nul
+  rmdir /s /q ntvdmpatch 2>nul
+  call :dlprq ntvdmx64.zip https://github.com/leecher1337/ntvdmx64/archive/master.zip
+  7z x -y  %PREREQ%\ntvdmx64.zip
+  del %PREREQ%\ntvdmx64.zip
+  move /y ntvdmx64-master\ntvdmpatch .
+  rmdir /s /q ntvdmx64-master
+) else (
+  xcopy /s /Y %SRCDIR% ntvdmpatch\
+)
+exit /B
 
 :dlprq
 if not exist %PREREQ%\%1 (
