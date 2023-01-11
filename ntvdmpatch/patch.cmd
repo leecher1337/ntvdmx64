@@ -39,5 +39,10 @@ echo Installing ADLIB-sound...
 pushd experimental\adlib
 call patch.cmd
 popd
+echo Installing VESA-update...
+pushd experimental\vesa
+call patch.cmd
+popd
+
 echo Done patching.
 :fini

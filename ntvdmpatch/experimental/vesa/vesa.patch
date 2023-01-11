@@ -1,0 +1,141 @@
+--- NT4\private\mvdm\softpc.new\base\video\v7_ports.c
++++ nt\private\mvdm\softpc.new\base\video\v7_ports.c
+29a30
+> #include "config.h"
+100c101,137
+< #endif  //NEC_98
+---
+> #endif  //NEC_98
+> }
+> 
+> GLOBAL VOID
+> v7_set_write_bank( bank )
+> half_word bank;
+> 
+> {
+> #ifndef NEC_98
+> 	do_outb(EGA_SEQ_INDEX, 0xf9, bank & 1);
+> 	// page_bit_odd_even -> When in Odd/Even modes Select High 64k bank if set
+> 	outb(EGA_MISC_REG, miscellaneous_output_register.as.abyte & 0xDF | ((bank & 2) << 4));
+> 	do_outb(EGA_SEQ_INDEX, 0xf6, (extensions_controller.ram_bank_select.as.abyte & 0xFC) | ((bank & 0xC) >> 2));
+> #endif
+> }
+> 
+> GLOBAL VOID
+> update_crt_banking IFN0()
+> {
+> #ifndef NEC_98
+> 	unsigned int bank_offset = 0, start_address;
+> 	
+> 	if (video_adapter == VGA && 
+> 		extensions_controller.interface_control.as_bfld.bank_enable)
+> 	{
+> 		if (extensions_controller.ram_bank_select.as_bfld.crtc_read_bank_select >= 2)
+> 			extensions_controller.ram_bank_select.as_bfld.crtc_read_bank_select &= 1;
+> 		bank_offset = extensions_controller.ram_bank_select.as_bfld.crtc_read_bank_select;
+> 	}
+> 	start_address = (crt_controller.start_address_high << 8) + crt_controller.start_address_low;
+> 	if (extensions_controller.compatibility_control.as_bfld.sequential_chain4)
+> 		start_address *= 4;
+> 	else
+> 		bank_offset /= 4;
+> 	set_screen_start(bank_offset + start_address);
+> 	screen_refresh_required();
+> #endif
+378a416
+> 			old_value=(half_word)extensions_controller.ram_bank_select.as.abyte;
+380a419,420
+> 			if ((value & 0x30) != (old_value & 0x30))
+> 				update_crt_banking();
+409a450
+> 				old_value = extensions_controller.compatibility_control.as_bfld.extended_256_color_enable;
+420a462,464
+> 				if (old_value !=
+> 					extensions_controller.compatibility_control.as_bfld.extended_256_color_enable)
+> 					update_crt_banking();
+441a486
+> 			old_value = extensions_controller.interface_control.as.abyte;
+442a488
+> 			if ((old_value)&0x10 != (value&0x10)) update_crt_banking();
+--- NT4\private\mvdm\softpc.new\base\video\v7_video.c
++++ nt\private\mvdm\softpc.new\base\video\v7_video.c
+55a56,60
+> #ifdef REAL_VGA
+> #define sas_fillsw sas_fillsw_16
+> #endif
+> 
+> 
+297a303,304
+> 	if (video_mode == 0x63 || video_mode == 0x64) video_mode = 0x63;
+> 
+454,460c461,486
+< #ifdef REAL_VGA
+<    		sas_fillsw_16(video_pc_low_regen, clr_char,
+< 				 	(video_pc_high_regen - video_pc_low_regen)/ 2 + 1);
+< #else
+<     	sas_fillsw(video_pc_low_regen, clr_char,
+< 				 (video_pc_high_regen - video_pc_low_regen)/ 2 + 1);
+< #endif
+---
+> 
+> 		if (video_mode >= 0x61 && video_mode <= 0x69)
+> 		{
+> 			byte bank;
+> 
+> 			// extension control enable
+> 			do_outb(EGA_SEQ_INDEX, 6, 0xea);
+> 			// set bank_enable
+> 			do_outb(EGA_SEQ_INDEX, 0xff, extensions_controller.interface_control.as.abyte | 0x10 );
+> 			for (bank = 0; bank < 8; bank++)
+> 			{
+> 				v7_set_write_bank(bank);
+>     			sas_fillsw(video_pc_low_regen, clr_char,
+> 						 (video_pc_high_regen - video_pc_low_regen)/ 2 + 1);
+> 			}
+> 			v7_set_write_bank(0);
+> 			// reset bank_enable
+> 			do_outb(EGA_SEQ_INDEX, 0xff, extensions_controller.interface_control.as.abyte);
+> 			// extension control disable
+> 			do_outb(EGA_SEQ_INDEX, 6, 0xae);
+> 		}
+> 		else
+> 		{
+>     		sas_fillsw(video_pc_low_regen, clr_char,
+> 					 (video_pc_high_regen - video_pc_low_regen)/ 2 + 1);
+> 		}
+--- NT4\private\mvdm\softpc.new\base\video\ega_vide.c
++++ nt\private\mvdm\softpc.new\base\video\ega_vide.c
+211a212,216
+> #ifdef V7VGA
+> IMPORT void (*vesa_video_func[]) ();
+> IMPORT GLOBAL boolean vbe2_rom();
+> #endif
+> 
+424c429
+< static void do_outb IFN3(int, index,int, ega_reg, byte, value)
+---
+> GLOBAL void do_outb IFN3(int, index,int, ega_reg, byte, value)
+2342c2347
+<             #define check_video_func(AH)    (AH < EGA_FUNC_SIZE || (AH == 0x6f && video_adapter == VGA))
+---
+>             #define check_video_func(AH)    (AH < EGA_FUNC_SIZE || ((AH == 0x6f || AH == 0x4f) && video_adapter == VGA))
+2354a2360,2366
+> 		else if (getAH() == 0x4f)
+> 		{
+> 			if (getAL() >= 0 && getAL() < 0xb && vbe2_rom())
+> 				(*vesa_video_func[getAL()])();
+> 			else
+> 				setAX(0x0100);
+> 		}
+--- NT4\private\mvdm\softpc.new\base\video\vga_prts.c
++++ nt\private\mvdm\softpc.new\base\video\vga_prts.c
+1552a1553
+> 						update_crt_banking();
+1587a1589,1591
+> #ifdef V7VGA
+> 					update_crt_banking();
+> #endif /* V7VGA */
+--- NT4\private\mvdm\softpc.new\base\video\sources.inc
++++ nt\private\mvdm\softpc.new\base\video\sources.inc
+55a56
+>     ..\vesa_video.c    \
