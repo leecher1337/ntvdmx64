@@ -151,3 +151,10 @@
 <                     (get_256_colour_mode() ? 2 : 1);
 ---
 >                     ((get_256_colour_mode() && !get_seq_chain4_mode()) ? 2 : 1);
+2690a2693,2698
+> 		/* Some applications start us with hidden console, but expect us
+> 		 * to pop up in fullscreen, once we initialize graphics,
+> 		 * therefore ensure that we get visible
+> 		 */
+> 		if(sc.ModeType == GRAPHICS && !ShowWindow(hWndConsole, SW_SHOWNORMAL))
+> 			ShowWindow(hWndConsole, SW_SHOWNORMAL);
