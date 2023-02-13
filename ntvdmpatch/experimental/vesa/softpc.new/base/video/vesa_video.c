@@ -148,7 +148,7 @@ vbe2_rom()
 
 	if ( vbe2_rom_present == -1 )
 	{
-		sas_loads(effective_addr(getCS(), VESA_BIOS_OEM_NAME_OFFS), oem_name, 35);
+		sas_loads(effective_addr(EGA_SEG, VESA_BIOS_OEM_NAME_OFFS), oem_name, 35);
 		oem_name[35] = 0;
 		vbe2_rom_present = strstr(oem_name, "VBE2") != 0;
 	}
@@ -202,9 +202,9 @@ vesa_controller_info()
 		vesa_is_vbe2 = FALSE;
 
 		sas_storew((IU32)&cinfo->OEMNameOffset, VESA_BIOS_OEM_NAME_OFFS);
-		sas_storew((IU32)&cinfo->OEMNameSegment, getCS());
+		sas_storew((IU32)&cinfo->OEMNameSegment, EGA_SEG);
 		sas_storew((IU32)&cinfo->SupportedModesOffset, VESA_BIOS_SUPP_MODES_OFFS);
-		sas_storew((IU32)&cinfo->SupportedModesSegment, getCS());
+		sas_storew((IU32)&cinfo->SupportedModesSegment, EGA_SEG);
 
 	} else {
 		vesa_is_vbe2 = TRUE;
@@ -297,7 +297,7 @@ vesa_mode_info()
 	sas_storew ((IU32)&modeinfo->info.StartSegmentWindowA, modedata->StartSegmentWindowA);
 	sas_storew ((IU32)&modeinfo->info.StartSegmentWindowB, modedata->StartSegmentWindowB);
 	sas_storew ((IU32)&modeinfo->info.BankSwitchFunctionOffset, VESA_BIOS_BANK_SW_FUNC_OFFS);
-	sas_storew ((IU32)&modeinfo->info.BankSwitchFunctionSegment, getCS());
+	sas_storew ((IU32)&modeinfo->info.BankSwitchFunctionSegment, EGA_SEG);
 	sas_storew ((IU32)&modeinfo->info.BytesPerScanLine, modedata->BytesPerScanLine);
 	sas_storew ((IU32)&modeinfo->info.PixelWidth, modedata->PixelWidth);
 	sas_storew ((IU32)&modeinfo->info.PixelHeight, modedata->PixelHeight);
@@ -847,7 +847,7 @@ vesa_return_prot_mode_interface()
 	}
 	else
 	{
-		setES(getCS());
+		setES(EGA_SEG);
 		setDI(VESA_BIOS_PROT_M_TBL_OFFS);
 		setCX(VESA_BIOS_PROT_M_TBL_LEN);
 		setAX(0x004F);
