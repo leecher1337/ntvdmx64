@@ -43,7 +43,7 @@ CD /D "%~dp0"
 echo ---------------------------------------------
 echo Checking machine, please wait...
 echo ---------------------------------------------
-reg query HKLM\Hardware\Description\System\CentralProcessor\0 | Find /i "x86" >nul
+reg query HKLM\Hardware\Description\System\CentralProcessor\0 | Find /i "Identifier" | Find /i "x86" >nul
 if not errorlevel 1 (
   echo You appear to be running this installation on a 32bit machine.
   echo This NTVDMx64 is only meant to be used on an x64 machine, please use 
