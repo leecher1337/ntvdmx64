@@ -1,0 +1,42 @@
+--- base\mvdm\vdmredir\vrnetapi.c
++++ base\mvdm\vdmredir\vrnetapi.c
+513c513
+<             NetpCopyWStrToStrDBCS(LPSTR_FROM_WORDS(getES(), getDI()),
+---
+>             NetpCopyWStrToStrDBCS(LPSTR_FROM_WORDS(getES(), getDI()), len,
+516c516
+<             NetpCopyWStrToStr(LPSTR_FROM_WORDS(getES(), getDI()), (LPWSTR)pInfo->wkui0_username);
+---
+>             NetpCopyWStrToStr(LPSTR_FROM_WORDS(getES(), getDI()), len, (LPWSTR)pInfo->wkui0_username);
+2484c2484
+<                 NetpCopyWStrToStrDBCS(username, str);
+---
+>                 NetpCopyWStrToStrDBCS(username, sizeof(username), str);
+2486c2486
+<                 NetpCopyWStrToStr(username, str);
+---
+>                 NetpCopyWStrToStr(username, sizeof(username), str);
+2544c2544
+<                     NetpCopyWStrToStrDBCS(&logonServer[offset], str);
+---
+>                     NetpCopyWStrToStrDBCS(&logonServer[offset], len, str);
+2546c2546
+<                     NetpCopyWStrToStr(&logonServer[offset], str);
+---
+>                     NetpCopyWStrToStr(&logonServer[offset], len, str);
+2572c2572
+<                     NetpCopyWStrToStrDBCS(logonDomain, str);
+---
+>                     NetpCopyWStrToStrDBCS(logonDomain, len, str);
+2574c2574
+<                     NetpCopyWStrToStr(logonDomain, str);
+---
+>                     NetpCopyWStrToStr(logonDomain, len, str);
+2594c2594
+<                     NetpCopyWStrToStrDBCS(otherDomains, str);
+---
+>                     NetpCopyWStrToStrDBCS(otherDomains, len, str);
+2596c2596
+<                     NetpCopyWStrToStr(otherDomains, str);
+---
+>                     NetpCopyWStrToStr(otherDomains, len, str);

@@ -1,0 +1,91 @@
+!IF 0
+
+Copyright (c) 1989-92  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=net
+MINORCOMP=xactsrv
+
+TARGETNAME=xactsrv
+TARGETPATH=$(SDK_LIB_DEST)
+TARGETTYPE=DYNLINK
+
+TARGETLIBS=$(SDK_LIB_PATH)\netlibw7.lib          \
+           $(SDK_LIB_PATH)\netlibold.lib       \
+           $(SDK_LIB_PATH)\dosprint.lib        \
+           $(SDK_LIB_PATH)\netapi32.lib        \
+           $(SDK_LIB_PATH)\kernel32.lib        \
+           $(SDK_LIB_PATH)\netrap.lib          \
+           $(SDK_LIB_PATH)\samlib.lib          \
+           $(SDK_LIB_PATH)\samlibold.lib          \
+           $(SDK_LIB_PATH)\advapi32.lib        \
+           $(SDK_LIB_PATH)\winspool.lib        \
+           $(SDK_LIB_PATH)\rxapi.lib           \
+           $(SDK_LIB_PATH)\rxcommon.lib        \
+           $(SDK_LIB_PATH)\safecrtnt.lib        \
+           $(SDK_LIB_PATH)\kernl32p.lib        \
+           $(SDK_LIB_PATH)\rpcrt4w7.lib        \
+           $(SDK_LIB_PATH)\rpcutil.lib        \
+           $(SDK_LIB_PATH)\netutils.lib        \
+           $(SDK_LIB_PATH)\BufferOverflowU.lib \
+           $(SDK_LIB_PATH)\bowser.lib         \
+           $(SDK_LIB_PATH)\srvsvcold.lib
+
+INCLUDES=..\api;..\inc;$(NET_INC_PATH);$(BASE_INC_PATH);$(DS_INC_PATH);$(PRINTSCAN_INC_PATH);$(COM_INC_PATH);..\svcdlls\browser2
+
+!IFNDEF DISABLE_NET_UNICODE
+UNICODE=1
+
+NET_C_DEFINES=-DUNICODE
+!ENDIF
+MSC_WARNING_LEVEL=/W3 /WX
+
+USE_MSVCRT=1 
+NO_SAFESEH=1
+
+SOURCES= \
+        ApiAcces.c \
+        ApiAcct.c  \
+        ApiChDev.c \
+        ApiConn.c  \
+        ApiFile.c  \
+        ApiGroup.c \
+        ApiLogon.c \
+        ApiMsg.c   \
+        ApiPath.c  \
+        ApiPrint.c \
+        ApiSess.c  \
+        ApiShare.c \
+        ApiSrv.c   \
+        ApiStats.c \
+        ApiStubs.c \
+        ApiSvc.c   \
+        ApiTime.c  \
+        ApiUse.c   \
+        ApiUser.c  \
+        ApiWksta.c \
+        ChangePw.c \
+        xactsrv.rc \
+        XsData.c   \
+        XsSubs.c   \
+        XsUnicod.c \
+        enum.c             

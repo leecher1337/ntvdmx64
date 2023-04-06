@@ -1,0 +1,154 @@
+--- ds\netapi\rap\convert.c
++++ ds\netapi\rap\convert.c
+410a411
+> 								inLength,
+420a422
+> 								outLength,
+796a799
+> 							stringSize / sizeof(TCHAR),
+801a805
+> 							stringSize,
+1183a1188
+> 								STRING_SPACE_REQD( stringSize ),
+1210a1216
+> 								stringSize,
+1453a1460
+> 								STRING_SPACE_REQD( stringLength ),
+1470a1478
+> 								stringLength,
+--- ds\netapi\dosprint\dosprtw.c
++++ ds\netapi\dosprint\dosprtw.c
+150a151,152
+>    DWORD len;
+> 
+156c158
+<          pEnd-=(strlen(*pSource) + 1);
+---
+>          pEnd-=(len = strlen(*pSource) + 1);
+159c161
+<          NetpCopyStrToWStr(pEnd, *pSource);
+---
+>          NetpCopyStrToWStr(pEnd, len, *pSource);
+--- ds\netapi\dosprint\convprt.c
++++ ds\netapi\dosprint\convprt.c
+138a139
+> 					sizeof(structW->fieldName)/sizeof(structW->fieldName[0]), \
+168c169
+<                 NetpCopyStrToWStr( Dest, Src ); \
+---
+>                 NetpCopyStrToWStr( Dest, (DestSize/sizeof(WCHAR)), Src ); \
+183c184
+<                 NetpCopyWStrToStrDBCS( Dest, Src ); \
+---
+>                 NetpCopyWStrToStrDBCS( Dest, DestSize, Src ); \
+206c207
+<             NetpCopyStrToWStr( Dest, Src ); \
+---
+>             NetpCopyStrToWStr( Dest, (DestSize/sizeof(WCHAR)), Src ); \
+220c221
+<             NetpCopyWStrToStrDBCS( Dest, Src ); \
+---
+>             NetpCopyWStrToStrDBCS( Dest, DestSize, Src ); \
+227c228
+<             NetpCopyStrToWStr( ToInfo, FromInfo ); \
+---
+>             NetpCopyStrToWStr( ToInfo, (USHORT)((USHORT) (strlen(FromInfo)+1)) * (USHORT) sizeof(wchar_t), FromInfo ); \
+229c230
+<             NetpCopyWStrToStrDBCS( ToInfo, FromInfo ); \
+---
+>             NetpCopyWStrToStrDBCS( ToInfo, NetpUnicodeToDBCSLen( FromInfo )+1, FromInfo ); \
+236c237
+<             NetpCopyStrToWStr( ToInfo, FromInfo ); \
+---
+>             NetpCopyStrToWStr( ToInfo, (USHORT)((USHORT) (strlen(FromInfo)+1)) * (USHORT) sizeof(wchar_t), FromInfo ); \
+238c239
+<             NetpCopyWStrToStrDBCS( ToInfo, FromInfo ); \
+---
+>             NetpCopyWStrToStrDBCS( ToInfo, NetpUnicodeToDBCSLen( FromInfo )+1, FromInfo ); \
+--- ds\netapi\rpcxlate\rxcommon\convargs.c
++++ ds\netapi\rpcxlate\rxcommon\convargs.c
+448a449
+>                                     ArgumentSize,
+452a454
+>                                 ArgumentSize,
+971c973
+<                 NetpCopyWStrToStrDBCS( ptr, (LPTSTR)SendDataPtrNative );
+---
+>                 NetpCopyWStrToStrDBCS( ptr, SendDataSizeNative, (LPTSTR)SendDataPtrNative );
+973c975
+<                 NetpCopyTStrToStr(ptr, SendDataPtrNative);
+---
+>                 NetpCopyTStrToStr(ptr, SendDataSizeNative, SendDataPtrNative);
+--- ds\netapi\rpcxlate\rxcommon\setfield.c
++++ ds\netapi\rpcxlate\rxcommon\setfield.c
+278a279
+>                 SendDataBufferSize,
+282a284
+>                 SendDataBufferSize,
+--- ds\netapi\rpcxlate\rxcommon\transact.c
++++ ds\netapi\rpcxlate\rxcommon\transact.c
+87a88,103
+> #ifdef W10
+> NET_API_STATUS
+> NetpRdrFsControlTreeEx(
+>     IN LPTSTR TreeName,
+>     IN LPTSTR TransportName OPTIONAL,
+>     IN LPTSTR SmbProtocolName OPTIONAL,
+>     IN DWORD ConnectionType,
+>     IN DWORD FsControlCode,
+>     IN LPVOID SecurityDescriptor OPTIONAL,
+>     IN LPVOID InputBuffer OPTIONAL,
+>     IN DWORD InputBufferSize,
+>     OUT LPVOID OutputBuffer OPTIONAL,
+>     IN DWORD OutputBufferSize,
+>     IN BOOL NoPermissionRequired
+>     );
+> #endif
+316a333,335
+> #ifdef W10
+>     Status = NetpRdrFsControlTreeEx(
+> #else
+317a337
+> #endif
+319a340,342
+> #ifdef W10
+> 				NULL,
+> #endif
+327a351,367
+> 
+> #ifdef W10
+> 	if (Status != ERROR_SUCCESS) {
+> 		Status = NetpRdrFsControlTreeEx(
+>                 TreeConnName,                      // tree connect name
+>                 TransportName,                     // Transport name.
+> 				TEXT("SMB1"),
+>                 USE_IPC,                           // Connection type
+>                 FSCTL_LMR_TRANSACT,                // fsctl function code
+>                 NULL,                              // security descriptor
+>                 FsctlParms,                        // input buffer
+>                 FsctlParmSize,                     // input buffer length
+>                 FsctlParms,                        // output buffer
+>                 FsctlParmSize,                     // output buffer length
+>                 NoPermissionRequired);
+> 	}
+> #endif
+--- ds\netapi\rpcxlate\rxapi\audcpvar.c
++++ ds\netapi\rpcxlate\rxapi\audcpvar.c
+228a229
+>                     OldStringLen+1, \
+--- ds\netapi\rpcxlate\rxapi\confget.c
++++ ds\netapi\rpcxlate\rxapi\confget.c
+156a157
+> 				SrcByteCount,
+--- ds\netapi\rpcxlate\rxapi\errconv.c
++++ ds\netapi\rpcxlate\rxapi\errconv.c
+227a228
+> 				*OutputByteCountPtr - OutputEntrySizeSoFar,
+268a270
+> 							*OutputByteCountPtr - OutputEntrySizeSoFar,
+--- ds\netapi\rpcxlate\rxapi\svcinst.c
++++ ds\netapi\rpcxlate\rxapi\svcinst.c
+121a122
+> 				CmdArgsLen - CmdArgsIndex,
+126a128
+> 				CmdArgsLen - CmdArgsIndex,

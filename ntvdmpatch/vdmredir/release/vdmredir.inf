@@ -1,0 +1,36 @@
+[Version]
+Signature=$Windows NT$
+AdvancedINF= 2.5,"advpack.dll" 
+
+[SourceDisksNames.amd64]
+1="DOS",,,"\dos"
+
+[SourceDisksFiles.amd64]
+NetRap.dll=1
+xactsrv.dll=1
+vdmredir.dll=1
+
+[Ntvdmx64.amd64.System.Files]
+NetRap.dll,,,0x4006
+xactsrv.dll,,,0x4006
+vdmredir.dll,,,0x4006
+
+[Ntvdmx64.amd64.Inf.Files.Add]
+vdmredir.inf
+
+[Ntvdmx64.amd64.Inf.Files.Del]
+vdmredir.inf
+vdmredir.PNF
+
+[DestinationDirs]
+Ntvdmx64.amd64.System.Files  = 16425
+Ntvdmx64.amd64.Inf.Files.Add = 17
+Ntvdmx64.amd64.Inf.Files.Del = 17
+
+[DefaultInstall.ntamd64]
+SmartReboot = N
+CopyFiles   = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Inf.Files.Add
+
+[DefaultUninstall.ntamd64]
+CleanUp = 1
+DelFiles    = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Inf.Files.Del

@@ -39,6 +39,12 @@ set LANGX=%LANG%
 set LANG=
 :nospeclang
 
+if exist ..\public\internal\net\inc\icanon.h (
+  pushd ..\..\ntvdmpatch\vdmredir
+  call bld.cmd
+  popd
+)
+
 chcp 437
 build -e
 
@@ -46,3 +52,4 @@ if not "%LANGX%"=="" set LANG=%LANGX%
 if not "%LANG%"=="" for %%I in (!LNGDIRS!) do if exist %%I\dirs.lng move /y %%I\dirs.lng %%I\dirs
 
 popd
+

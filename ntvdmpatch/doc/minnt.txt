@@ -35,6 +35,8 @@ Requirements
    https://winfuture.de/downloadvorschalt,3291.html
  * An installed version of 7-zip file manager
    https://www.7-zip.de
+ * Recommended: Windows Server 2003 Sourcecode
+   nt5src.7z
 
 
 Setup MINNT build environment
@@ -75,6 +77,8 @@ You now have:
  * https://www.microsoft.com/en-us/download/details.aspx?id=8442
  * https://winfuture.de/downloadvorschalt,3291.html
  * Google old-src.trunk.r687.20150728.7z or old-src-sr687.7z
+ * Google nt5src.7z
+   This one is optional. If not present, standard vdmredir.dll is used.
 
 You now have in ntvdmpatch\minnt\work:
 
@@ -82,6 +86,7 @@ You now have in ntvdmpatch\minnt\work:
   GRMWDK_EN_7600_1.ISO
   de_windows_7_professional_with_sp1_x86_dvd_u_677093.iso
   old-src.trunk.r687.20150728.7z
+  nt5src.7z   (optional)
 
 3) Run ntvdmpatch\minnt\prepare.cmd
    minntfix directory will now be prepared with the missing files that need to be 

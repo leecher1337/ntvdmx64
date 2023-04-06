@@ -1,0 +1,26 @@
+--- public\internal\ds\inc\tstring.h
++++ public\internal\ds\inc\tstring.h
+94a95
+> 	IN  ULONG  cchMaxDest,
+107a109
+> 	IN  ULONG  cchMaxDest,
+120a123
+> 	IN  ULONG  cchMaxDest,
+138,139c141,142
+< #define NetpCopyStrToTStr(Dest,Src)  NetpCopyStrToWStr((Dest),(Src))
+< #define NetpCopyTStrToStr(Dest,Src)  NetpCopyWStrToStr((LPSTR)(Dest),(LPWSTR)(Src))
+---
+> #define NetpCopyStrToTStr(Dest,cchMaxDest,Src)  NetpCopyStrToWStr((Dest),(cchMaxDest),(Src))
+> #define NetpCopyTStrToStr(Dest,cchMaxDest,Src)  NetpCopyWStrToStr((LPSTR)(Dest),(cchMaxDest),(LPWSTR)(Src))
+153,154c156,157
+< #define NetpCopyStrToTStr(Dest,Src)  (void) strcpy((Dest),(Src))
+< #define NetpCopyTStrToStr(Dest,Src)  (void) strcpy((Dest),(Src))
+---
+> #define NetpCopyStrToTStr(Dest,cchMaxDest,Src)  (void) strncpy((Dest),(Src),(cchMaxDest))
+> #define NetpCopyTStrToStr(Dest,cchMaxDest,Src)  (void) strncpy((Dest),(Src),(cchMaxDest))
+--- public\internal\net\inc\rxp.h
++++ public\internal\net\inc\rxp.h
+363c363
+<                 NetpCopyWStrToStrDBCS( *((StrPtrPtr)), (Input) );        \
+---
+>                 NetpCopyWStrToStrDBCS( *((StrPtrPtr)), size, (Input) );        \

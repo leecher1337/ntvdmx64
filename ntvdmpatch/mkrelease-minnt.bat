@@ -41,6 +41,8 @@ for %%L in (!LANG!) do (
       xcopy /Y !BINDIR!\%%I releases\%%L\dos\
     )
   )
+  for %%I in (NetRap.dll xactsrv.dll) do if exist !BINDIR!\%%I xcopy /Y !BINDIR!\%%I releases\%%L\dos\
+  if exist !BINDIR!\xactsrv.dll xcopy /Y vdmredir\release\*.* releases\%%L\
   for %%I in ($disp.sys $ias.sys $prnescp.sys adddrv.exe config.us deldrv.exe disp_win.sys font_win.sys jp.bat key02.sys keyax.sys kkcfunc.sys msime.dic msime.sys msimed.sys msimei.sys msimek.sys msimekey.exe msimelst.exe msimer.dic msimergn.exe msimeset.exe ntfont.sys us.bat edit.exe edit2.hlp hbios.sys hfont.sys qbasic.com qbasic2.exe qbasic2.hlp) do if exist !LANGDIR!\%%I xcopy /Y !LANGDIR!\%%I releases\%%L\dos\
   if exist !LANGDIR!\system32\msherc.com (
     xcopy /Y !LANGDIR!\system32\msherc.com releases\%%L\dos\

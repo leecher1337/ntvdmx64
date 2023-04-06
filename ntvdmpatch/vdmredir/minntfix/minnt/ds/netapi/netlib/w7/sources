@@ -1,0 +1,72 @@
+!IF 0
+
+Copyright (c) 1989-1993  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    JR (John Rogers, JohnRo@Microsoft) 02-Apr-1991
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=Net
+MINORCOMP=Lib
+
+NTPROFILEINPUT=YES
+
+
+TARGETNAME=NetLibOld
+TARGETPATH=$(SDK_LIB_DEST)
+TARGETTYPE=LIBRARY
+
+TARGETLIBS= $(SDK_LIB_PATH)\kernel32.lib
+
+# nbf is here temporarily, until status codes get moved from nbf/nbftdi.h
+# to somewhere else.
+
+INCLUDES=$(NET_INC_PATH);..\..\inc;..\..\netapi\inc;$(DS_INC_PATH);
+
+USE_MSVCRT=1
+
+!IFNDEF DISABLE_NET_UNICODE
+UNICODE=1
+NET_C_DEFINES=-DUNICODE
+!ENDIF
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES= \
+        ..\Names.c    \
+        ..\Xlatesvc.c    \
+        ..\svcinfo.c    \
+        ..\prtinfo.c    \
+        ..\accessp.c    \
+        ..\packstr.c    \
+        Canonapi.c \
+        crtstub.c
+
+UMTEST=bindtest*confbld
+UMTYPE=console
+
+UMLIBS= \
+    $(SDK_LIB_PATH)\netapi32w7.lib \
+    $(SDK_LIB_PATH)\netlibw7.lib   \
+    $(SDK_LIB_PATH)\advapi32.lib \
+    $(SDK_LIB_PATH)\netutils.lib \
+
+C_DEFINES=-DRPC_NO_WINDOWS_H -DWIN31_TITLE_INDEX=0
+
+NO_SAFESEH=1

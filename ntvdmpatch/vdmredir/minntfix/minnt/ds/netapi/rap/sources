@@ -1,0 +1,66 @@
+!IF 0
+
+Copyright (c) 1989-1992  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    John Rogers (JohnRo) 21-Mar-1991
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+Revision History:
+
+!ENDIF
+
+MAJORCOMP=Net
+MINORCOMP=Rap
+
+TARGETNAME=NetRap
+TARGETPATH=$(SDK_LIB_DEST)
+TARGETTYPE=DYNLINK
+
+TARGETLIBS= \
+    $(SDK_LIB_PATH)\kernel32.lib \
+    $(SDK_LIB_PATH)\netapi32.lib \
+    $(SDK_LIB_PATH)\safecrtnt.lib  \
+    $(SDK_LIB_PATH)\netlibw7.lib \
+    $(SDK_LIB_PATH)\netlibold.lib \
+    $(SDK_LIB_PATH)\BufferOverflowU.lib 
+
+INCLUDES=..\inc;$(DS_INC_PATH);$(BASE_INC_PATH);$(NET_INC_PATH)
+
+!IFNDEF DISABLE_NET_UNICODE
+UNICODE=1
+NET_C_DEFINES=-DUNICODE
+!ENDIF
+
+USE_MSVCRT=1
+NO_SAFESEH=1
+
+SOURCES=                \
+        ArrayLen.c      \
+        AuxData.c       \
+        Ascii.c         \
+        Convert.c       \
+        Data.c          \
+        Examine.c       \
+        FieldSiz.c      \
+        netrap.rc       \
+        ParmNum.c       \
+        Pointer.c       \
+        StrucAlg.c      \
+        StrucSiz.c      \
+        TotalSiz.c      \
+        ValidSmb.c      

@@ -119,10 +119,11 @@ call :expandiso GRMSDK_EN_DVD.iso Setup\WinSDKDebuggingTools\dbg_x86.msi
 goto redosdk
 
 :sdkok
+set WOW16=old-src\nt\private\mvdm\wow16
 rem In case that WinXP/2k3 src is present, this would use original WOW16 code instead of our 
 rem reconstruction. However, orignal WOW16 code is incompatible with CCPU, therefore this 
 rem code branch will never become active. It's just here for experimental purposes, ignore it.
-set WOW16=old-src\nt\private\mvdm\wow16
+goto winxpok
 if exist %minntfix%\minnt\base\mvdm\wow16\makefile.inc goto winxpok
 if exist "%workdir%\XPSP1.7z" 7z x -y %workdir%\XPSP1.7z xpsrc1.cab -o%workdir%
 if exist %workdir%\xpsrc1.cab 7z x -y %workdir%\xpsrc1.cab base\mvdm\wow16 -o%workdir%\
@@ -137,6 +138,18 @@ if exist %workdir%\base\mvdm\wow16 (
 )
 
 :winxpok
+set W2K3SRC=
+if exist %workdir%\nt5src.7z set W2K3SRC=1
+if exist %workdir%\Win2K3.7z set W2K3SRC=1
+if exist %workdir%\3790src2.cab (
+  if exist %workdir%\3790src4.cab set W2K3SRC=1
+)
+if "%W2K3SRC%"=="1" (
+  pushd ..\vdmredir
+  call prepare.cmd %1
+  popd
+)
+
 for %%a in (gdispool.h splapip.h) do if not exist "%minntfix%\minnt\public\internal\base\inc\%%~a" goto dooldsrc
 goto oldsrcok
 :dooldsrc

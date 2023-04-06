@@ -1,0 +1,81 @@
+--- ds\netapi\xactsrv\apilogon.c
++++ ds\netapi\xactsrv\apilogon.c
+126c126
+<             NetpCopyWStrToStrDBCS( (LPSTR)XsSmbGetPointer( &parameters->Buffer ), dcName );
+---
+>             NetpCopyWStrToStrDBCS( (LPSTR)XsSmbGetPointer( &parameters->Buffer ), (DWORD)SmbGetUshort( &parameters-> BufLen ), dcName );
+--- ds\netapi\xactsrv\xsprocsp.h
++++ ds\netapi\xactsrv\xsprocsp.h
+53c53
+<     NetpCopyWStrToStrDBCS((StringLocation), (String));                 \
+---
+>     NetpCopyWStrToStrDBCS((StringLocation), NetpUnicodeToDBCSLen( String )+1, (String));                 \
+--- ds\netapi\xactsrv\apisrv.c
++++ ds\netapi\xactsrv\apisrv.c
+149a150
+>             USHORT l, BufLen = SmbGetUshort( &parameters-> BufLen );
+153,154c154,157
+<                 NetpCopyWStrToStrDBCS( entryOut, entryIn );
+<                 entryOut += ( strlen( entryOut ) + 1 );
+---
+>                 NetpCopyWStrToStrDBCS( entryOut, BufLen, entryIn );
+>                 l = ( strlen( entryOut ) + 1 );
+>                 entryOut += l;
+>                 BufLen -= l;
+960c963
+<             NetpCopyTStrToStr( returnStruct->sv3_guestacct, DEF16_sv_guestacct );
+---
+>             NetpCopyTStrToStr( returnStruct->sv3_guestacct, sizeof(returnStruct->sv3_guestacct), DEF16_sv_guestacct );
+--- ds\netapi\xactsrv\xsunicod.c
++++ ds\netapi\xactsrv\xsunicod.c
+51a52
+>     ULONG len = sizeof(WCHAR) * ( strlen( Src ) + 1 );
+53c54
+<     if (( dest = NetpMemoryAllocate(sizeof(WCHAR) * ( strlen( Src ) + 1 )))
+---
+>     if (( dest = NetpMemoryAllocate(len))
+60c61
+<     NetpCopyStrToWStr( dest, Src );
+---
+>     NetpCopyStrToWStr( dest, len, Src );
+91a93
+>     ULONG len = NetpUnicodeToDBCSLen( Src ) + 1;
+93c95
+<     if (( dest = NetpMemoryAllocate( NetpUnicodeToDBCSLen( Src ) + 1 )) == NULL ) {
+---
+>     if (( dest = NetpMemoryAllocate( len )) == NULL ) {
+98c100
+<     NetpCopyWStrToStrDBCS( dest, Src );
+---
+>     NetpCopyWStrToStrDBCS( dest, len, Src );
+--- ds\netapi\xactsrv\apipath.c
++++ ds\netapi\xactsrv\apipath.c
+121c121
+<     NetpCopyTStrToStr( (LPSTR)XsSmbGetPointer( &parameters->Outbuf ), outBuffer );
+---
+>     NetpCopyTStrToStr( (LPSTR)XsSmbGetPointer( &parameters->Outbuf ), outBufLen, outBuffer );
+395c395
+<     NetpCopyTStrToStr( (LPSTR)XsSmbGetPointer( &parameters->Outbuf ), outBuffer );
+---
+>     NetpCopyTStrToStr( (LPSTR)XsSmbGetPointer( &parameters->Outbuf ), outBufLen, outBuffer );
+--- ds\netapi\xactsrv\apisvc.c
++++ ds\netapi\xactsrv\apisvc.c
+906c906
+<             NetpCopyStrToTStr( destBuffer, srcBuffer );
+---
+>             NetpCopyStrToTStr( destBuffer, bufSize - (destBuffer - nativeRcvBuffer), srcBuffer );
+--- ds\netapi\xactsrv\changepw.c
++++ ds\netapi\xactsrv\changepw.c
+468a469,476
+> SamiOemChangePasswordUser2W10(
+>     PSTRING ServerName,
+>     PSTRING UserName,
+>     PSAMPR_ENCRYPTED_USER_PASSWORD NewPasswordEncryptedWithOldLm,
+>     PENCRYPTED_LM_OWF_PASSWORD OldLmOwfPasswordEncryptedWithNewLm
+>     );
+> 
+> NTSTATUS
+520c528
+<         ntstatus = SamiOemChangePasswordUser2(
+---
+>         ntstatus = SamiOemChangePasswordUser2W10(

@@ -157,6 +157,7 @@ powershell -noprofile -command Add-MpPreference -Force -ExclusionPath "$env:DefE
 :nodefender
 echo [*] Installing components
 rundll32.exe advpack.dll,LaunchINFSection %CD%\ntvdmx64.inf
+if exist vdmredir.inf rundll32.exe advpack.dll,LaunchINFSection %CD%\vdmredir.inf
 goto fini
 
 :addappinit
@@ -201,6 +202,7 @@ if not "%VERSION%"=="11.0" (
 if exist %windir%\inf\wow32.inf RunDll32 advpack.dll,LaunchINFSection %windir%\inf\wow32.inf,DefaultUninstall
 if exist %windir%\inf\ntvdmdbg.inf RunDll32 advpack.dll,LaunchINFSection %windir%\inf\ntvdmdbg.inf,DefaultUninstall
 if exist %windir%\inf\ntvdmx64-haxm.inf RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultUninstall 132 %windir%\inf\ntvdmx64-haxm.inf
+if exist %windir%\inf\vdmredir.inf RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultUninstall 132 %windir%\inf\vdmredir.inf
 goto fini
 
 :instwow

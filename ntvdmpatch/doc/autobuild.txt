@@ -58,7 +58,7 @@ i.e. C:\NTVDMBLD
 
 3) Depending on your OS version and TLS-capabilities, either put supplied
 
-   dldr.exe
+   dwnl.exe
 
    also there, or, if your system is old (like old Win7 version or
    Win XP, download

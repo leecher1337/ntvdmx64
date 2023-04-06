@@ -17,6 +17,7 @@ rem   HAXBLD    If set to -haxm then HAXM build is built, otherwise normal build
 rem   DBGSTP    If set, pause is issued after every step, useful for testing build
 rem   SIZ_NTBLD [chk, fre] Checked of free build, default is checked (debug)
 rem   NOWIN7    Ignore missing Windows 7 ISO (i.e. build only for Win < 8 or no OLE2)
+rem   NOW2K3    Ignore missing Windows Server 2003 sourcecode (use std. vdmredir.dll)
 rem   NOPAUSE   Do not pause before cleanup
 rem   LANG      Only build this language (for a complete list, see documentation)
 rem   KEEPWD    Keep working directory so that subsequent builds will run through 
@@ -191,6 +192,38 @@ if not exist %PREREQ%\de_windows_7_professional_with_sp1_x86_dvd_u_677093.iso (
   )
 )
 
+if not "%NOW2K3%"=="" goto w2k3chkd
+:chkw2k3
+set W2K3SRC=
+if exist %PREREQ%\nt5src.7z set W2K3SRC=1
+if exist %PREREQ%\Win2K3.7z set W2K3SRC=1
+if exist %PREREQ%\3790src2.cab (
+  if exist %PREREQ%\3790src4.cab set W2K3SRC=1
+)
+if not "%W2K3SRC%"=="1" (
+  if not "%W2K3SRCMSG%"=="1" (
+    echo Windows 7 and above only ship with a crippled VDMREDIR.DLL that i.e. doesn't
+    echo support mounting network shares via MS-DOS calls.
+    echo This repository contains code that is able to partly restore Windows XP
+    echo Networking functions of VDMREDIR.DLL, however the leaked Windows Server 2003
+    echo is needed for that.
+    echo So it is recommended to place the leaked sourceode as a prerequisite here too.
+    echo It can have one of these names:
+    echo * nt5src.7z
+    echo * Win2K3.7z
+    echo * 3790src2.cab, 3790srv4.cab
+    echo.
+    echo Now please either download them and put it here and afterwards continue
+    echo or continue now to go without it (you will get the limited vdmredir.dll)
+    pause
+    set W2K3SRCMSG=1
+    goto chkw2k3
+  ) else (
+    echo OK, Continuing without enhanced VDMREDIR.DLL then
+  )
+)
+:w2k3chkd
+
 if exist old-src-sr687.7z ren old-src-sr687.7z old-src.trunk.r687.20150728.7z
 exit /b
 
@@ -208,6 +241,7 @@ call :cpyprq GRMSDK_EN_DVD.iso
 call :cpyprq GRMWDK_EN_7600_1.ISO 
 call :cpyprq old-src.trunk.r687.20150728.7z 
 copy /y %PREREQ%\de_windows_7_professional_with_sp1*.iso ntvdmpatch\minnt\work\
+for %%I in (nt5src.7z Win2K3.7z 3790src2.cab 3790src4.cab) do if exist %PREREQ%\%%I call :cpyprq %%I
 echo Build environment ready
 exit /b
 

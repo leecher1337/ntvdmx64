@@ -15,16 +15,27 @@ if not exist %PATCHROOT%\util\sed.exe (
 )
 
 set minntfix=minntfix
+if not "%1"=="vdmredir" (
 if not exist %minntfix%\minnt\public\internal\base\inc\splapip.h (
   echo It seems you have not prepared %minntfix% directory yet.
   echo Please run prepare.cmd first.
   pause
   goto fini
 )
+)
 
+if exist ..\vdmredir\minntfix\minnt\public\internal\net\inc\icanon.h (
+  pushd ..\vdmredir
+  call patch.cmd batch
+  popd
+)
 
 echo Copying fixed files to minnt repository
 xcopy /E /R /Y %minntfix% %BASEPATH%\..\..\
+if "%1"=="vdmredir" (
+  pushd %BASEPATH%\..\
+  goto noxpsrc
+)
 echo #include "winddi_xp.h" >>%BASEPATH%\..\..\minnt\public\oak\inc\winddi.h
 move %BASEPATH%\..\..\minnt\public\sdk\inc\commctrl.h %BASEPATH%\..\..\minnt\public\sdk\inc\commctrl.h_
 rem Prepend include of sal.h to new header file from SDK
@@ -92,6 +103,8 @@ popd
 echo Done, now your MINNT build environment should be in a working condition.
 echo Run sizzle_minnt.cmd in Build environment directory next and do 
 echo buildrepoidw.cmd 
+
+if "%1"=="vdmredir" goto fini
 if not "%1"=="batch" pause
 
 :fini
