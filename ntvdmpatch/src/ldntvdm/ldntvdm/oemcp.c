@@ -26,6 +26,7 @@
 #include "Winternl.h"
 #include "ntpeb.h"
 #include "symcache.h"
+#include "reg.h"
 
 #define NLS_TABLE_KEY \
         L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\CodePage"
@@ -57,7 +58,7 @@ BOOL GetNlsTablePath(
 	if (NT_SUCCESS(NtStatus))
 	{
 		WCHAR ResultBuffer[MAX_PATH + (sizeof(KEY_VALUE_FULL_INFORMATION) / sizeof(WCHAR) + 1)];
-		ULONG ValueReturnedLength, BufferSize = sizeof(ResultBuffer);
+		ULONG BufferSize = sizeof(ResultBuffer);
 		WCHAR CodePageStringBuffer[20];
 		__swprintf(CodePageStringBuffer, L"%d", CodePage);
 
@@ -98,9 +99,15 @@ BOOL GetNlsTablePath(
 BOOL OEMCP_FixNLSTable(void)
 {
 	WCHAR wszPath[MAX_PATH];
-	PPEB_ARCH Peb = NtCurrentPeb();
+	PPEB_ARCH Peb = (PPEB_ARCH)NtCurrentPeb();
 
-	if (!Peb->OemCodePageData && GetNlsTablePath(GetOEMCP(), wszPath))
+	TRACE("OEMCP_FixNLSTable enter\n");
+	if (Peb->OemCodePageData)
+	{
+		TRACE("No need for fixup, Peb->OemCodePageData=%X\n", Peb->OemCodePageData);
+		return FALSE;
+	}
+	if (GetNlsTablePath(GetOEMCP(), wszPath))
 	{
 		HANDLE hFile;
 		BOOL bRet = FALSE;
@@ -115,6 +122,7 @@ BOOL OEMCP_FixNLSTable(void)
 			{
 				if (Peb->OemCodePageData = (PBYTE)MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0))
 				{
+					TRACE("Peb->OemCodePageData set to %X", Peb->OemCodePageData);
 					return TRUE;
 				}
 				CloseHandle(hMap);
@@ -122,6 +130,10 @@ BOOL OEMCP_FixNLSTable(void)
 			}
 			CloseHandle(hFile);
 			TRACE("Codepage CreateFileW failed: %d\n", GetLastError());
+		}
+		else
+		{
+			TRACE("Cannot open NLS file %S: gle=%d\n", wszPath, GetLastError());
 		}
 	}
 	return FALSE;
@@ -137,6 +149,7 @@ BOOL OEMCP_CallInitializeCustomCP()
 	NTSTATUS Status;
 	HKEY hKey;
 
+	TRACE("OEMCP_CallInitializeCustomCP\n");
 	if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ | KEY_WRITE, &hKey)))
 	{
 		if (SymCache_GetDLLKey(hKey, L"conhostV1.dll", FALSE) &&
@@ -146,6 +159,10 @@ BOOL OEMCP_CallInitializeCustomCP()
 			fnInitializeCustomCP = (pInitializeCustomCP)dwAddress;
 		}
 		REG_CloseKey(hKey);
+	}
+	else
+	{
+		TRACE("REG_OpenLDNTVDM failed: %08X\n", Status);
 	}
 #else
 	DWORD64 dwBase;
@@ -167,7 +184,11 @@ BOOL OEMCP_CallInitializeCustomCP()
 		SymEng_UnloadModule(dwBase);
 	}
 #endif
-	if (!nt || !fnInitializeCustomCP) return FALSE;
+	if (!nt || !fnInitializeCustomCP)
+	{
+		TRACE("failed: nt=%X, fnInitializeCustomCP=%X\n", nt, fnInitializeCustomCP);
+		return FALSE;
+	}
 	return fnInitializeCustomCP();
 }
 #endif

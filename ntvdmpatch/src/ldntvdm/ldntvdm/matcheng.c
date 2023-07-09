@@ -66,7 +66,7 @@ ULONG64 MatchEng_FindSig(MATCHENG_INST *pInst, BYTE *lpSig, DWORD cbSig, DWORD s
 			return lpOffset - pInst->lpMem;
 		}
 	}
-	return NULL;
+	return 0;
 }
 
 

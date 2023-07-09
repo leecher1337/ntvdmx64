@@ -584,7 +584,7 @@ ULONGLONG  GetRemoteModuleHandle64(HANDLE ProcessHandle, LPWSTR lpDllName)
 		sizeof(BasicInformation), NULL)) ||
 		/* get the address of the PE Loader data */
 		!ReadProcessMemory(ProcessHandle, (LPCVOID)&(BasicInformation.PebBaseAddress->Ldr), &LoaderData, sizeof(LoaderData), NULL))
-		return NULL;
+		return 0;
 
 	/* head of the module list: the last element in the list will point to this */
 	pStart = pMod = (PEB_LDR_DATA64*)LoaderData.InLoadOrderModuleList.Flink;
@@ -596,9 +596,9 @@ ULONGLONG  GetRemoteModuleHandle64(HANDLE ProcessHandle, LPWSTR lpDllName)
 		{
 			dllName[ldrMod.BaseDllName.Length / sizeof(WCHAR)] = 0;
 			if (!__wcsicmp(dllName, lpDllName))
-				return (HANDLE)ldrMod.DllBase;
+				return (ULONGLONG)ldrMod.DllBase;
 		}
 		pMod = (PEB_LDR_DATA64*)ldrMod.InLoadOrderLinks.Flink;
 	} while (pMod != pStart);
-	return NULL;
+	return 0;
 }

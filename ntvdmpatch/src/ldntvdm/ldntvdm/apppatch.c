@@ -39,7 +39,7 @@ typedef DWORD_PTR (*fpSHGetFileInfoW)(_In_ LPCWSTR pszPath, DWORD dwFileAttribut
 	DWORD_PTR ret;
 
 	// Avoid dependency to shell32.dll
-	if (!pSHGetFileInfoW && !(pSHGetFileInfoW = GetProcAddress(GetModuleHandle("shell32.dll"), "SHGetFileInfoW")))
+	if (!pSHGetFileInfoW && !(pSHGetFileInfoW = (fpSHGetFileInfoW)GetProcAddress(GetModuleHandleA("shell32.dll"), "SHGetFileInfoW")))
 		return 'ZM'; // We are doomed!
 	ret = pSHGetFileInfoW(pszPath, dwFileAttributes, psfi, cbFileInfo, uFlags);
 	if (LOWORD(ret) == 'EN') return 'ZM'; else return ret;
@@ -62,7 +62,7 @@ void TotalCmd64_Hook(void)
 /*--------------------------------------------------------------------------*
  * Dispacher
  *--------------------------------------------------------------------------*/
-void AppPatch_Check(TCHAR *pszProcess)
+void AppPatch_Check(WCHAR *pszProcess)
 {
 #ifdef _WIN64	// Currently only 64bit apps in list
 	struct stProcDisp aDispTbl[] = {

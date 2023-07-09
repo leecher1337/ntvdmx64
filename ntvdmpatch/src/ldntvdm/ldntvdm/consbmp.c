@@ -19,6 +19,18 @@
 #include "Winternl.h"
 #include "consbmp.h"
 #include "reg.h"
+#include "ntmmapi.h"
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtCreateMutant(
+	OUT PHANDLE MutantHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN BOOLEAN InitialOwner
+	);
+
 
 #define DPFLTR_USERGDI_ID 112
 #define MAKE_TAG( t ) (RTL_HEAP_MAKE_TAG( *pdwConBaseTag, t ))
@@ -81,30 +93,6 @@ CreateConsoleBitmap(
 	IN OUT PSCREEN_INFORMATION ScreenInfo,
 	OUT PVOID *lpBitmap,
 	OUT HANDLE *hMutex
-	);
-
-typedef enum _SECTION_INHERIT { ViewShare = 1, ViewUnmap = 2 } SECTION_INHERIT;
-NTSTATUS NTAPI NtMapViewOfSection(
-	_In_        HANDLE          SectionHandle,
-	_In_        HANDLE          ProcessHandle,
-	_Inout_     PVOID           *BaseAddress,
-	_In_        ULONG_PTR       ZeroBits,
-	_In_        SIZE_T          CommitSize,
-	_Inout_opt_ PLARGE_INTEGER  SectionOffset,
-	_Inout_     PSIZE_T         ViewSize,
-	_In_        SECTION_INHERIT InheritDisposition,
-	_In_        ULONG           AllocationType,
-	_In_        ULONG           Win32Protect
-	);
-
-NTSTATUS NTAPI NtCreateSection(
-	_Out_    PHANDLE            SectionHandle,
-	_In_     ACCESS_MASK        DesiredAccess,
-	_In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
-	_In_opt_ PLARGE_INTEGER     MaximumSize,
-	_In_     ULONG              SectionPageProtection,
-	_In_     ULONG              AllocationAttributes,
-	_In_opt_ HANDLE             FileHandle
 	);
 
 static DWORD dwConBaseTag = 0;
@@ -182,12 +170,12 @@ CreateConsoleBitmap(
 {
     NTSTATUS Status;
     LARGE_INTEGER MaximumSize;
-	PSIZE_T ViewSize;
-	HANDLE hClientProc = -1;
+	SIZE_T ViewSize;
+	HANDLE hClientProc = INVALID_HANDLE_VALUE;
 	ULONG_PTR phProcessEntry;
 
 	// First we need to get client process handle, extract from supplied address
-	if (phProcessEntry = FindProcessInList(*(HANDLE*)((PBYTE)GraphicsInfo - 72)))
+	if (phProcessEntry = (ULONG_PTR)FindProcessInList(*(HANDLE*)((PBYTE)GraphicsInfo - 72)))
 		hClientProc = *(HANDLE*)(phProcessEntry + 16);
 
     //

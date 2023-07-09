@@ -88,7 +88,11 @@ typedef BOOL(KRNL32_CALL *fpBaseCreateVDMEnvironment)(
 	);
 typedef BOOL (KRNL32_CALL *fpBaseGetVdmConfigInfo)(
 #ifndef TARGET_WIN80
+#ifdef TARGET_WINXP
 	IN  LPCWSTR CommandLine,
+#else
+	BASE_API_MSG *m,
+#endif
 #endif
 	IN  ULONG  DosSeqId,
 	IN  ULONG  BinaryType,
@@ -546,11 +550,11 @@ BOOL FixNTDLL(void)
 }
 #endif	// _WIN32
 
-TCHAR *GetProcessName(void)
+WCHAR *GetProcessName(void)
 {
-	static TCHAR szProcess[MAX_PATH], *p;
+	static WCHAR szProcess[MAX_PATH], *p;
 
-	p = szProcess + GetModuleFileName(NULL, szProcess, sizeof(szProcess) / sizeof(TCHAR));
+	p = szProcess + GetModuleFileNameW(NULL, szProcess, sizeof(szProcess) / sizeof(WCHAR));
 	while (*p != '\\') p--;
 	return ++p;
 }
@@ -634,13 +638,13 @@ void EnsureWin7Symbols(HMODULE hKrnl32)
 		if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ, &hKey)))
 		{
 #ifndef NEED_BASEVDM
-			if (dwAddress = SymCache_GetProcAddress(hKey, REGKEY_BasepProcessInvalidImage))
+			if (dwAddress = SymCache_GetProcAddress(hKey, L"BasepProcessInvalidImage"))
 			{
 				lpProcII = (LPBYTE)((DWORD64)hKrnl32 + dwAddress);
 				BasepProcessInvalidImageReal = (fpBasepProcessInvalidImage)Hook_Inline(GetCurrentProcess(), hKrnl32, lpProcII, BasepProcessInvalidImage);
 			}
 #endif /* !NEED_BASEVDM */
-			if (dwAddress = SymCache_GetProcAddress(hKey, REGKEY_BaseIsDosApplication))
+			if (dwAddress = SymCache_GetProcAddress(hKey, L"BaseIsDosApplication"))
 				BaseIsDosApplication = (fpBaseIsDosApplication)((DWORD64)hKrnl32 + dwAddress);
 			REG_CloseKey(hKey);
 		}
@@ -676,11 +680,11 @@ BOOL WINAPI _DllMainCRTStartup(
 #endif
 		HMODULE hKrnl32, hNTDLL = GetModuleHandle(_T("ntdll.dll"));
 		LPBYTE lpProcII = NULL;
-		TCHAR *pszProcess;
+		WCHAR *pszProcess;
 
 		DisableThreadLibraryCalls(hDllHandle);
 		// Prevent from unloadiung DLL
-		GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN, (LPCSTR)&_DllMainCRTStartup, &hKrnl32);
+		GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN, (LPCWSTR)&_DllMainCRTStartup, &hKrnl32);
 		g_hInst = hDllHandle;
 		hKrnl32 = GetModuleHandle(_T("kernel32.dll"));
 #ifndef TARGET_WINXP

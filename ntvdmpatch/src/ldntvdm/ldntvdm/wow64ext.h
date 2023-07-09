@@ -2,6 +2,7 @@ ULONG __stdcall BaseSetLastNTError(NTSTATUS NtStatus);
 ULONGLONG getNTDLL64();
 ULONGLONG __cdecl X64Call(ULONGLONG func, int argC, ...);
 ULONGLONG  GetModuleHandle64(wchar_t* lpModuleName);
+ULONGLONG  GetRemoteModuleHandle64(HANDLE ProcessHandle, LPWSTR lpDllName);
 ULONGLONG  GetProcAddress64(ULONGLONG hModule, char* funcName);
 ULONGLONG  VirtualAllocEx64(HANDLE hProcess, ULONGLONG lpAddress, DWORD dwSize, DWORD flAllocationType, DWORD flProtect);
 BOOL  VirtualFreeEx64(HANDLE hProcess, ULONGLONG lpAddress, DWORD dwSize, DWORD dwFreeType);

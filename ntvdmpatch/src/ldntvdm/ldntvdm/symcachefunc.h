@@ -10,12 +10,14 @@
 
 static REGKEY_PAIR m_aSymsKERNEL32[] =
 {
+#ifndef NEED_BASEVDM
 	_E("BaseCreateVDMEnvironment"),
 	_E("BaseGetVdmConfigInfo"),
 	_E("BaseCheckVDM"),
+#endif
 #if defined(TARGET_WIN7)
-{ "BasepProcessInvalidImage", REGKEY_BasepProcessInvalidImage },
-{ "BaseIsDosApplication", REGKEY_BaseIsDosApplication },
+_E("BasepProcessInvalidImage"),
+_E("BaseIsDosApplication"),
 #endif // TARGET_WIN7
 #if defined(TARGET_WINXP)
 _E("NtVdm64CreateProcess"),

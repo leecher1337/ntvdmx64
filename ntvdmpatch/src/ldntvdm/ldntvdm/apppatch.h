@@ -1,2 +1,2 @@
 #pragma once
-void AppPatch_Check(TCHAR *pszProcess);
+void AppPatch_Check(WCHAR *pszProcess);
