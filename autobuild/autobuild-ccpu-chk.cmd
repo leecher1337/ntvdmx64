@@ -214,7 +214,7 @@ if not "%W2K3SRC%"=="1" (
     echo * 3790src2.cab, 3790srv4.cab
     echo.
     echo Now please either download them and put it here and afterwards continue
-    echo or continue now to go without it (you will get the limited vdmredir.dll)
+    echo or continue now to go without it ^(you will get the limited vdmredir.dll^)
     pause
     set W2K3SRCMSG=1
     goto chkw2k3
