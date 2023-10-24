@@ -245,6 +245,11 @@ that allows downloads from the Microsoft Symbol Server.
 You can verify if the missing symbosl are the problem by checking the
 loader output via DebugView.
 
+Additionally, it's a good idea to execute reg\reloadsym.reg in order to
+delete the symbol cache of the NTVDM loader, as it sometimes becomes
+out of sync and starts acting weird, so this will ensure that it reloads
+all the symbols.
+
 I want to have a proper soundcard emulation
 ---------------------------------------------------------------------------
 MINNT build supports AdLib soundcard emulation by incorporating code parts
@@ -369,6 +374,11 @@ See:
 https://github.com/leecher1337/ntvdmx64/issues/161
 https://docs.microsoft.com/en-us/windows-server/storage/file-server/troubleshoot/detect-enable-and-disable-smbv1-v2-v3
 I still suggest you use DOSPR.ZIP
+
+Printing to a printer attached to the LPT port doesn't work on Win11
+---------------------------------------------------------------------------
+Enable plug&play, see:
+https://github.com/leecher1337/ntvdmx64/issues/245
 
 
 I want to completely disable error messages regarding direct disk access etc.
