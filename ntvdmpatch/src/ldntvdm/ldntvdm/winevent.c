@@ -14,6 +14,7 @@
 #include "injector32.h"
 #include "iathook.h"
 #include "detour.h"
+#include "wow64ext.h"
 
 #if !defined(CREATEPROCESS_HOOK) && defined(_WIN64)
 

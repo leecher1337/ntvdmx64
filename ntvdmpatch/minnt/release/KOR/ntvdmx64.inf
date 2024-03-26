@@ -31,6 +31,7 @@ HKLM,SYSTEM\CurrentControlSet\Control\WOW,LPT_timeout,,"15"
 HKLM,SYSTEM\CurrentControlSet\Control\WOW,SharedWowTimeout,0x00010001,0x00000e10
 HKLM,SYSTEM\CurrentControlSet\Control\WOW,DisallowedPolicyDefault,0x00010001,0
 HKLM,SYSTEM\CurrentControlSet\Control\WOW,NTVDMInstalled,0x00010001,1
+HKLM,SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management,EnableLowVaAccess,0x00010001,1
 
 [Ntvdmx64.amd64.AddRegConfig]
 HKLM,SOFTWARE\ldntvdm

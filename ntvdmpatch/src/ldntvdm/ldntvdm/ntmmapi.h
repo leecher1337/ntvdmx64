@@ -1,3 +1,5 @@
+#pragma once
+
 typedef enum _SECTION_INFORMATION_CLASS {
 	SectionBasicInformation,
 	SectionImageInformation

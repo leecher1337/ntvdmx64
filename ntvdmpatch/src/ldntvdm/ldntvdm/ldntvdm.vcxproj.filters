@@ -102,6 +102,9 @@
     <ClCompile Include="matcheng.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="createuserproc.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="basemsg64.h">
@@ -228,6 +231,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="matcheng.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="createuserproc.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

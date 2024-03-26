@@ -28,6 +28,7 @@
 #include "symcache.h"
 #include "detour.h"
 #include "createproc.h"
+#include "createuserproc.h"
 #include "consbmpbug.h"
 #include "consbmpxpbug.h"
 #include "conspal.h"
@@ -37,6 +38,7 @@
 #include "extracticon.h"
 #include "xpcreateproc.h"
 #include "ntregapi.h"
+#include "ntpsapi.h"
 #include "apppatch.h"
 #include "appinfo.h"
 #include "injector32.h"
@@ -138,7 +140,9 @@ void Trace(char *pszLine)
 	
 #if defined(WOW16_SUPPORT) || (defined(USE_SYMCACHE) && !defined(CREATEPROCESS_HOOK)) || defined(CREATEPROCESS_HOOKNTCREATE)
 NTSTATUS LastCreateUserProcessError = STATUS_SUCCESS;
+BOOL fStartingNtvdm = FALSE;
 #ifndef TARGET_WINXP
+
 typedef NTSTATUS (NTAPI *fpNtCreateUserProcess)(
 	PHANDLE ProcessHandle,
 	PHANDLE ThreadHandle,
@@ -149,8 +153,8 @@ typedef NTSTATUS (NTAPI *fpNtCreateUserProcess)(
 	ULONG ProcessFlags,
 	ULONG ThreadFlags,
 	PRTL_USER_PROCESS_PARAMETERS ProcessParameters,
-	PVOID CreateInfo,
-	PVOID AttributeList
+	PPS_CREATE_INFO CreateInfo,
+	PPS_ATTRIBUTE_LIST AttributeList
 	);
 fpNtCreateUserProcess NtCreateUserProcessReal;
 NTSTATUS NTAPI NtCreateUserProcessHook(
@@ -163,12 +167,69 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 	ULONG ProcessFlags,
 	ULONG ThreadFlags,
 	PRTL_USER_PROCESS_PARAMETERS ProcessParameters,
-	PVOID CreateInfo,
-	PVOID AttributeList
+	PPS_CREATE_INFO CreateInfo,
+	PPS_ATTRIBUTE_LIST AttributeList
 	)
 {
 #if defined (USE_SYMCACHE) && (!defined(CREATEPROCESS_HOOK) || defined(CREATEPROCESS_HOOKNTCREATE))
 	UpdateSymbolCache(TRUE);
+#endif
+#if defined(WOW16_SUPPORT) && defined(TARGET_WIN7)
+	if (fStartingNtvdm)
+	{
+		int i, cnt;
+		UNICODE_STRING NtImagePathName = { 0 };
+		RTL_USER_PROCESS_INFORMATION ProcessInformation;
+
+		((xpPRTL_USER_PROCESS_PARAMETERS)ProcessParameters)->Flags |= RTL_USER_PROC_RESERVE_16MB;
+		cnt = (int)((AttributeList->TotalLength - sizeof(AttributeList->TotalLength)) / sizeof(PS_ATTRIBUTE));
+		for (i = 0; i < cnt; i++)
+		{
+			if (AttributeList->Attributes[i].Attribute == PS_ATTRIBUTE_IMAGE_NAME)
+			{
+				RtlInitUnicodeString(&NtImagePathName, AttributeList->Attributes[i].ValuePtr);
+				break;
+			}
+		}
+
+		fStartingNtvdm = FALSE;
+		LastCreateUserProcessError =
+			RtlCreateUserProcessEx(&NtImagePathName,
+				OBJ_CASE_INSENSITIVE,
+				(xpPRTL_USER_PROCESS_PARAMETERS)ProcessParameters,
+				NULL,
+				NULL,
+				NULL,
+				ProcessFlags & PROCESS_CREATE_FLAGS_INHERIT_HANDLES,
+				NULL,
+				NULL,
+				&ProcessInformation,
+				CreateInfo
+		);
+		if (NT_SUCCESS(LastCreateUserProcessError))
+		{
+			*ProcessHandle = ProcessInformation.Process;
+			*ThreadHandle = ProcessInformation.Thread;
+			for (i = 0; i < cnt; i++)
+			{
+				switch (AttributeList->Attributes[i].Attribute)
+				{
+					case PS_ATTRIBUTE_IMAGE_INFO:
+						RtlMoveMemory(AttributeList->Attributes[i].ValuePtr, &ProcessInformation.ImageInformation, AttributeList->Attributes[i].Size);
+						break;
+					case PS_ATTRIBUTE_CLIENT_ID:
+						RtlMoveMemory(AttributeList->Attributes[i].ValuePtr, &ProcessInformation.ClientId, AttributeList->Attributes[i].Size);
+						break;
+				}
+			}
+			
+			return LastCreateUserProcessError;
+		}
+		else
+		{
+			((xpPRTL_USER_PROCESS_PARAMETERS)ProcessParameters)->Flags &= ~RTL_USER_PROC_RESERVE_16MB;
+		}
+	}
 #endif
 	LastCreateUserProcessError = 
 		NtCreateUserProcessReal(ProcessHandle,
@@ -483,6 +544,9 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 				*lppEnvironment = pUnicodeStringEnv->Buffer;
 			}
 			TRACE("LDNTVDM: Launch DOS!\n");
+#ifdef WOW16_SUPPORT
+			fStartingNtvdm = TRUE;
+#endif
 			return TRUE;
 		}
 	} else if (Error == STATUS_INVALID_IMAGE_WIN_16) {

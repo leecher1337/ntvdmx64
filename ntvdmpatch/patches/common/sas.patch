@@ -1,5 +1,5 @@
-Index: nt/private/mvdm/softpc.new/base/ccpu386/ccpusas4.c
-===================================================================
+--- NT4\private\mvdm\softpc.new\base\ccpu386\ccpusas4.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\ccpusas4.c
 63a64
 > #include <emm.h>
 76a78

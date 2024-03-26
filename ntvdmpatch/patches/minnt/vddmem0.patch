@@ -1,0 +1,143 @@
+--- NT4\private\mvdm\softpc.new\host\src\nt_mem.c
++++ nt\private\mvdm\softpc.new\host\src\nt_mem.c
+44a45
+> extern void sas_overwrite_memory IPT2(sys_addr, addr, int, type);
+149a151,210
+> #if defined(i386) && defined(W10) && !defined(MONITOR)
+> #define VDM_BASE_ADDRESS      0x00000001L
+> 
+> LOCAL
+> IU8*
+> x86_sas_init(
+>     IN sys_addr Size
+>     )
+> {
+> /*
+> We could do the same as sas_init in MONITOR build and let 
+> the loader just reserve the memory block, but there are problems with it:
+> 
+>   1) Section object can be created, but A20 wrap area cannot be mapped, 
+>      as NtMapViewOfSection doesn't support DOS Pages flag MEM_DOS_LIM
+> 	 on x64 build
+>   2) The low 64KB cannot be mapped to memory here, because it is simply 
+>      disallowed on x64, so we rely on reserving the memory area in the
+> 	 loader.
+> 
+> This also leads to the consequence of no init of backfill memory here. 
+> This is, because we cannot use x86_emm.c on x64, as there is no possibility 
+> to alloc 4k pages due to allocation granularity constraints (MEM_DOS_LIM), 
+> so EMS still needs to be managed  by nt_emm.c with custom memory manager 
+> mapping.
+> So badly written VDDs still won't work when accessing memory above conv.
+> memory.
+> 
+> So, we simply rely on the loader for the low 1MB memory reservation and
+> just return the base address here without doing anything:
+> */
+> #ifdef HAXM
+> 	/* Citing HAXM docs for HAX_VM_IOCTL_SET_RAM:
+> 	 *   (Input) va: The start address of the user buffer. 
+> 	 *   Must be page-aligned (i.e. a multiple of 4KB), and must not be 0. 
+> 	 * Therefore we cannot use VA 0 with HAXM currently. Remapping section also 
+> 	 * isn't possible, as mapping section objects with addr 0 is not allowed
+> 	 * Therefore no HAXM support for this, sorry.
+> 	 */
+> 	return NULL;
+> #endif
+> 	if (IsBadWritePtr((LPVOID)VDM_BASE_ADDRESS, 64 * 1024))
+> 	{
+> 		/* Mapping to address 0 seems to have failed in the loader, 
+> 		 * what a pity. This only works on Win 7 due to some "security"
+> 		 * bullshit introduced in later Windows versions so that
+> 		 * EnableLowVaAccess registry key doesn't work there anymore.
+> 		 * We could try to map the rest of the memory to >64k, if
+> 		 * loader was kind enough to reserve this space for us,
+> 		 * but most buggy VDDs are interested in low memory area,
+> 		 * unforutnately, so it won't help us.
+> 		 */
+> 
+> 		return NULL; // Failed, use normal allocation
+> 	}
+> 
+>     return (IU8*)VDM_BASE_ADDRESS; /* Mapped to address 0 */
+> }
+> #endif
+> 
+171a233
+>     IU8 *ret = NULL;
+211a274,288
+> #if defined(i386) && defined(W10) && !defined(MONITOR)
+>     /* We mimic x86/MONITOR behaviour and map to address 0.
+>      * This may allow badly programmed VDDs like TAME to work with NTVDMx64 
+>      * Currently no HAXM support yet
+>      */
+>     if ((ret = x86_sas_init(MaxIntelMemorySize)))
+>     {
+>         initialCommitSize = (ONE_MEG + A20_WRAP_SIZE + PAGE_MASK) &
+>                             (IU32) ~PAGE_MASK;
+>         sas_connect_memory(0, initialCommitSize - 1, SAS_RAM);
+>         intelMem = (IU8*)((ULONG)ret&(~1));
+>     }
+>     else
+> #endif
+>     {
+238a316,317
+>     ret = intelMem;
+>     }
+269c348
+<     return(intelMem);
+---
+>     return(ret);
+1199a1279
+>     return(TRUE);
+
+--- NT4\private\mvdm\softpc.new\base\ccpu386\ccpusas4.c
++++ nt\private\mvdm\softpc.new\base\ccpu386\ccpusas4.c
+402a403
+> 	Start_of_M_area = (IU8*)((ULONG)Start_of_M_area & ~1);
+805a807
+> 			if (Start_of_M_area == 0) memcpy(getPtrToPhysAddrByte(dest), src, length);
+1002a1005
+> 			if (Start_of_M_area == 0) (*(IU8 *) c_GetPhyAdd(addr)) = val;
+1060a1064
+> 			if (Start_of_M_area == 0) write_word(addr, val);
+1115a1120
+> 			if (Start_of_M_area == 0) (*(IU32 *) getPtrToPhysAddrByte(addr)) = val;
+1281,1283c1286,1292
+< 					/* There seems to be a bug in move_byte_fwd_ev_glue */
+< 					src = (src - gvi_pc_low_regen)*2 + gvi_pc_low_regen;
+< 					(*temp_func)(dest, src, len, 0);
+---
+> 					/* There seems to be a bug in move_byte_fwd_ev_glue, adjust src */
+> 					(*temp_func)(dest, (src - gvi_pc_low_regen)*2 + gvi_pc_low_regen, len, 0);
+> 					if (Start_of_M_area == 0) 
+> 					{
+> 						temp_func = read_pointers.str_read;
+> 						(*temp_func) (getPtrToPhysAddrByte(dest), src, len);
+> 					}
+1358a1368,1372
+> 					if (Start_of_M_area == 0) 
+> 					{
+> 						temp_func = read_pointers.str_read;
+> 						(*temp_func) (getPtrToPhysAddrByte(dest), src, len);
+> 					}
+1432a1447,1451
+> 					if (Start_of_M_area == 0) 
+> 					{
+> 						temp_func = read_pointers.str_read;
+> 						(*temp_func) (getPtrToPhysAddrByte(dest), src, len);
+> 					}
+1515a1535
+> 			if (Start_of_M_area == 0) memset(getPtrToPhysAddrByte(dest), val, len);
+1578a1599,1603
+> 			if (Start_of_M_area == 0) 
+> 			{
+> 				for (i=0, dst=(IU16*)getPtrToPhysAddrByte(dest); i<len; i++)
+> 					dst[i] = val;
+> 			}
+1652a1678,1682
+> 			if (Start_of_M_area == 0) 
+> 			{
+> 				for (i=0, dst=(IU32*)getPtrToPhysAddrByte(dest); i<len; i++)
+> 					dst[i] = val;
+> 			}

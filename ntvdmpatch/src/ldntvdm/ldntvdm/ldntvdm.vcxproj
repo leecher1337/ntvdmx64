@@ -544,6 +544,7 @@
     <ClCompile Include="consbmpxpbug.c" />
     <ClCompile Include="conspal.c" />
     <ClCompile Include="createproc.c" />
+    <ClCompile Include="createuserproc.c" />
     <ClCompile Include="csrsswrap.c" />
     <ClCompile Include="detour.c" />
     <ClCompile Include="extract.c" />
@@ -576,6 +577,7 @@
     <ClInclude Include="conhostproc.h" />
     <ClInclude Include="conspal.h" />
     <ClInclude Include="createproc.h" />
+    <ClInclude Include="createuserproc.h" />
     <ClInclude Include="csrsswrap.h" />
     <ClInclude Include="detour.h" />
     <ClInclude Include="extract.h" />
