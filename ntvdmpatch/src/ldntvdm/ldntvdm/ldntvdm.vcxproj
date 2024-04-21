@@ -555,6 +555,7 @@
     <ClCompile Include="ldntvdm.c" />
     <ClCompile Include="matcheng.c" />
     <ClCompile Include="oemcp.c" />
+    <ClCompile Include="pifprop.c" />
     <ClCompile Include="reg.c" />
     <ClCompile Include="symcache.c" />
     <ClCompile Include="symcachefunc32.c" />
@@ -596,6 +597,7 @@
     <ClInclude Include="ntregapi.h" />
     <ClInclude Include="ntrtl.h" />
     <ClInclude Include="oemcp.h" />
+    <ClInclude Include="pifprop.h" />
     <ClInclude Include="reg.h" />
     <ClInclude Include="symcache.h" />
     <ClInclude Include="symcachefunc.h" />

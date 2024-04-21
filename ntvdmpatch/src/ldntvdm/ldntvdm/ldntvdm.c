@@ -43,6 +43,7 @@
 #include "appinfo.h"
 #include "injector32.h"
 #include "oemcp.h"
+#include "pifprop.h"
 
 #pragma comment(lib, "ntdll.lib")
 
@@ -943,7 +944,7 @@ BOOL WINAPI _DllMainCRTStartup(
 #ifdef NEED_APPINFO
 		AppInfo_InstallHook();
 #endif
-
+		PifProp_Install();
 
 		TRACE("ldntvdm Init done (https://github.com/leecher1337/ntvdmx64)\n");
 		break;

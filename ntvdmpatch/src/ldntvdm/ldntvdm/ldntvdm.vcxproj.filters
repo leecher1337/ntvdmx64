@@ -105,6 +105,9 @@
     <ClCompile Include="createuserproc.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="pifprop.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="basemsg64.h">
@@ -234,6 +237,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="createuserproc.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="pifprop.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

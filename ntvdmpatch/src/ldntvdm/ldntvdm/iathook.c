@@ -173,7 +173,7 @@ BOOL Hook_IAT_x64(LPBYTE hMod, char *LibDelayImpName, char *FunName, LPVOID NewF
 	PCImgDelayDescr pDelayDesc;
 
 	TRACE("Hook_IAT_x64(%08X, %s, %s, %08X)\n", hMod, LibDelayImpName, FunName, NewFun);
-	// Look up where the delay imports section is (normally in the .didat
+	// Look up where the delay imports section is (normally in the .idata
 	/// section) but not necessarily so.
 	delayImportStartRVA = GetImgDirEntryRVA(NtHeaders, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT);
 	delayImportSize = GetImgDirEntrySize(NtHeaders, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT);

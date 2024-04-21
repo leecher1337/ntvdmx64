@@ -2,8 +2,10 @@ LIBRARY         pifprop
 
 EXPORTS
     DllGetClassObject	PRIVATE
-    DllCanUnloadNow		PRIVATE
-	DllRegisterServer	PRIVATE
-	DllUnregisterServer	PRIVATE
-
-
+    DllCanUnloadNow	PRIVATE
+    DllRegisterServer	PRIVATE
+    DllUnregisterServer	PRIVATE
+    PifMgr_OpenProperties=myPifMgr_OpenProperties
+    PifMgr_GetProperties=myPifMgr_GetProperties
+    PifMgr_SetProperties=myPifMgr_SetProperties
+    PifMgr_CloseProperties=myPifMgr_CloseProperties
