@@ -158,3 +158,13 @@
 > 		 */
 > 		if(sc.ModeType == GRAPHICS && !ShowWindow(hWndConsole, SW_SHOWNORMAL))
 > 			ShowWindow(hWndConsole, SW_SHOWNORMAL);
+--- NT4\private\mvdm\softpc.new\base\video\vga_prts.c
++++ nt\private\mvdm\softpc.new\base\video\vga_prts.c
+2125a2126,2130
+> #if 0
+> 				/* leecher1337: Our internal VGA emulator may not be capable of this 
+> 				 * mode, so ignore it, as this may be a problem i.e. with WPS 
+> 				 * application (SPDOS) etc. 
+> 				 */
+2128a2134
+> #endif
