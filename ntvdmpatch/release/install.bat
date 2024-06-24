@@ -251,9 +251,9 @@ fsutil hardlink create %2\%4 %3\%4
 goto fini
 
 :replsysfil
+takeown /f %2\%1
+icacls %2\%1  /grant *S-1-1-0:F /T
 if not exist %3\%1 (
-  takeown /f %2\%1
-  icacls %2\%1  /grant *S-1-1-0:F /T
   move %2\%1 %3\
 )
 exit /B
