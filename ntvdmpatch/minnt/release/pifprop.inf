@@ -12,15 +12,23 @@ HKCR, "comfile\shellex\PropertySheetHandlers\PifProps",,0x0,"{86F19A00-42A0-1069
 HKCR, "exefile\shellex\PropertySheetHandlers\PifProps",,0x0,"{86F19A00-42A0-1069-A2E9-08002B30309D}"
 HKCR, "piffile\shellex\PropertySheetHandlers\PifProps",,0x0,"{86F19A00-42A0-1069-A2E9-08002B30309D}"
 HKLM, "SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","{86F19A00-42A0-1069-A2E9-08002B30309D}",0x0,".PIF file property pages"
+HKCR, "CLSID\{86F19A00-42A0-1069-A2E9-08002B30309D}",,0x4000,".PIF file property pages"
+HKCR, "CLSID\{86F19A00-42A0-1069-A2E9-08002B30309D}\InprocServer32",,0x4000,"pifprop.dll"
+HKCR, "CLSID\{86F19A00-42A0-1069-A2E9-08002B30309D}\InprocServer32","ThreadingModel",0x4000,"Apartment"
+HKLM, "SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","{86F19A00-42A0-1069-A2E9-08002B30309D}",0x4000,".PIF file property pages"
 
 [SourceDisksNames.amd64]
 1="SHELL",,,"\shell"
 
 [SourceDisksFiles.amd64]
-pifprop.dll=1
+pifprop32.dll=1
+pifprop64.dll=1
 
 [Ntvdmx64.amd64.System.Files]
-pifprop.dll,,,0x4006
+pifprop.dll,pifprop64.dll,,0x14006
+
+[Ntvdmx64.amd64.SysWow64.Files]
+pifprop.dll,pifprop32.dll,,0x14006
 
 [Ntvdmx64.amd64.Inf.Files.Add]
 pifprop.inf
@@ -31,15 +39,16 @@ pifprop.PNF
 
 [DestinationDirs]
 Ntvdmx64.amd64.System.Files  = 11
+Ntvdmx64.amd64.SysWow64.Files  = 16425
 Ntvdmx64.amd64.Inf.Files.Add = 17
 Ntvdmx64.amd64.Inf.Files.Del = 17
 
 [DefaultInstall.ntamd64]
 SmartReboot = N
-CopyFiles   = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Inf.Files.Add
+CopyFiles   = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.SysWow64.Files, Ntvdmx64.amd64.Inf.Files.Add
 AddReg      = Ntvdmx64.amd64.AddReg
 
 [DefaultUninstall.ntamd64]
 CleanUp = 1
-DelFiles    = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Inf.Files.Del
+DelFiles    = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.SysWow64.Files, Ntvdmx64.amd64.Inf.Files.Del
 Delreg      = Ntvdmx64.amd64.AddReg

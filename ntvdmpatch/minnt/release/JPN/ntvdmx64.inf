@@ -159,10 +159,12 @@ RunDll32 advpack.dll,LaunchINFSection %01%\ntvdmx64-32.Inf
 %10%\Symbols\instntvdmx64.bat link "%11%" "%16425%" us.bat
 RunDll32 advpack.dll,LaunchINFSection %01%\wow32.Inf
 RunDll32 advpack.dll,LaunchINFSection %01%\pifprop.Inf
+RunDll32 advpack.dll,LaunchINFSection %01%\pificon.Inf
 %10%\Symbols\instntvdmx64.bat install
 
 [UninstallCmds]
 RunDll32 advpack.dll,LaunchINFSection %01%\ntvdmx64-32.Inf,DefaultUninstall
+RunDll32 advpack.dll,LaunchINFSection %01%\pificon.Inf,DefaultUninstall
 RunDll32 advpack.dll,LaunchINFSection %01%\pifprop.Inf,DefaultUninstall
 %10%\Symbols\instntvdmx64.bat uninstall
 

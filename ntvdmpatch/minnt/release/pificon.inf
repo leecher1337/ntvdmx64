@@ -1,0 +1,68 @@
+[Version]
+Signature=$Windows NT$
+AdvancedINF= 2.5,"advpack.dll" 
+
+[Ntvdmx64.amd64.AddReg]
+HKCR, "CLSID\{D4C4511B-A392-498F-806E-02312ED07CC8}",,0x0,"PIF shortcut"
+HKCR, "CLSID\{D4C4511B-A392-498F-806E-02312ED07CC8}\InprocServer32",,0x0,"pificon.dll"
+HKCR, "CLSID\{D4C4511B-A392-498F-806E-02312ED07CC8}\InprocServer32","ThreadingModel",0x0,"Apartment"
+HKLM, "SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","{D4C4511B-A392-498F-806E-02312ED07CC8}",0x0,".PIF file property pages"
+HKCR, "CLSID\{D4C4511B-A392-498F-806E-02312ED07CC8}",,0x4000,"PIF shortcut"
+HKCR, "CLSID\{D4C4511B-A392-498F-806E-02312ED07CC8}\InprocServer32",,0x4000,"pificon.dll"
+HKCR, "CLSID\{D4C4511B-A392-498F-806E-02312ED07CC8}\InprocServer32","ThreadingModel",0x4000,"Apartment"
+HKLM, "SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","{D4C4511B-A392-498F-806E-02312ED07CC8}",0x4000,".PIF file property pages"
+
+[Ntvdmx64.amd64.AddHandler]
+HKCR, "piffile\shellex\IconHandler",,0x0,"{D4C4511B-A392-498F-806E-02312ED07CC8}"
+
+[Ntvdmx64.amd64.DelHandler]
+HKCR, "piffile\shellex\IconHandler",,0x0,"{00021401-0000-0000-C000-000000000046}"
+
+[InstallCmds]
+regsvr32 /s %11%\pificon.dll
+regsvr32 /s %16425%\pificon.dll
+
+[UninstallCmds]
+regsvr32 /s /u %11%\pificon.dll
+regsvr32 /s /u %16425%\pificon.dll
+
+[SourceDisksNames.amd64]
+1="SHELL",,,"\shell"
+
+[SourceDisksFiles.amd64]
+pificon32.dll=1
+pificon64.dll=1
+
+[Ntvdmx64.amd64.System.Files]
+pificon.dll,pificon64.dll,,0x14006
+
+[Ntvdmx64.amd64.SysWow64.Files]
+pificon.dll, pificon32.dll,,0x14006
+
+[Ntvdmx64.amd64.Inf.Files.Add]
+pificon.inf
+
+[Ntvdmx64.amd64.Inf.Files.Del]
+pificon.inf
+pificon.PNF
+
+[DestinationDirs]
+Ntvdmx64.amd64.System.Files  = 11
+Ntvdmx64.amd64.SysWow64.Files  = 16425
+Ntvdmx64.amd64.Inf.Files.Add = 17
+Ntvdmx64.amd64.Inf.Files.Del = 17
+
+[DefaultInstall.ntamd64]
+SmartReboot = N
+CopyFiles   = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.SysWow64.Files, Ntvdmx64.amd64.Inf.Files.Add
+; If regsvr32 doesn't work, you can use this fallback:
+; AddReg      = Ntvdmx64.amd64.AddReg, Ntvdmx64.amd64.AddHandler
+RunPostSetupCommands = InstallCmds:1
+
+[DefaultUninstall.ntamd64]
+CleanUp = 1
+DelFiles    = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.SysWow64.Files, Ntvdmx64.amd64.Inf.Files.Del
+; If regsvr32 doesn't work, you can use this fallback:
+;Delreg      = Ntvdmx64.amd64.AddReg
+;AddReg      = Ntvdmx64.amd64.DelHandler
+RunPreSetupCommands = UninstallCmds

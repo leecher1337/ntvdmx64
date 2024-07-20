@@ -182,7 +182,7 @@ STDAPI DllRegisterServer(void)
 		}
 		
 		if (RegCreateKeyW(hKey,lpOleStr,&hKey2) != ERROR_SUCCESS ||
-			RegSetValueW(hKey2,NULL,REG_SZ ,pcls->pszDesc, wcslen(pcls->pszDesc) * sizeof(WCHAR)) != ERROR_SUCCESS ||
+			RegSetValueW(hKey2,NULL,REG_SZ ,pcls->pszDesc, (DWORD)wcslen(pcls->pszDesc) * sizeof(WCHAR)) != ERROR_SUCCESS ||
 			RegCreateKeyW(hKey2, L"InprocServer32",&hKey3) != ERROR_SUCCESS ||
 			RegSetValueW(hKey3,NULL,REG_SZ, L"pifprop.dll", 
 				sizeof(L"pifprop.dll") - sizeof(WCHAR)) != ERROR_SUCCESS ||
@@ -204,7 +204,7 @@ STDAPI DllRegisterServer(void)
 		}
 		if (hRes == S_OK && (RegOpenKeyW(HKEY_LOCAL_MACHINE, 
 				L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved", &hKey2) != ERROR_SUCCESS ||
-			RegSetValueExW(hKey2, lpOleStr, 0, REG_SZ, pcls->pszDesc, wcslen(pcls->pszDesc) * sizeof(WCHAR)) != ERROR_SUCCESS))
+			RegSetValueExW(hKey2, lpOleStr, 0, REG_SZ, (LPBYTE)pcls->pszDesc, (DWORD)wcslen(pcls->pszDesc) * sizeof(WCHAR)) != ERROR_SUCCESS))
 		{
 			hRes = E_ACCESSDENIED;
 		}
@@ -225,7 +225,7 @@ STDAPI DllRegisterServer(void)
 			return E_ACCESSDENIED;
 		//StringFromCLSID(c_clsmap[0].rclsid, &lpOleStr);
 		if (RegCreateKeyW(hKey, L"PifProps",&hKey2) != ERROR_SUCCESS ||
-			RegSetValueW(hKey2,NULL,REG_SZ ,lpOleStr, wcslen(lpOleStr) * sizeof(WCHAR)) != ERROR_SUCCESS)
+			RegSetValueW(hKey2,NULL,REG_SZ ,lpOleStr, (DWORD)wcslen(lpOleStr) * sizeof(WCHAR)) != ERROR_SUCCESS)
 		{
 			hRes = E_ACCESSDENIED;
 		}

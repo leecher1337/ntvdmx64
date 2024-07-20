@@ -4,9 +4,9 @@ if not exist %1\SetEnv.cmd goto usage
 
 del /Q Release\*.*
 call %1\setenv /XP64 /RETAIL
-nmake -f pifprop.mak
+nmake -f pificon.mak
 mkdir Release64 2>nul
-move /y Release\pifprop.dll Release64\
+move /y Release\pificon.dll Release64\
 
 goto fini
 :usage
