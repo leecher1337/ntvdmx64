@@ -92,7 +92,7 @@ void WINAPI NotifyWinEventHook(DWORD event, HWND  hwnd, LONG  idObject, LONG  id
 			IsWow64Process(hProcess, &bIsWow64);
 
 			/* Check, if we are already loaded into target process */
-			hModLdntvdm = bIsWow64 ? GetRemoteModuleHandle32(hProcess, LDNTVDM_NAME) : GetRemoteModuleHandle64(hProcess, LDNTVDM_NAME);
+			hModLdntvdm = bIsWow64 ? GetRemoteModuleHandle32(hProcess, LDNTVDM_NAME) : (HMODULE)GetRemoteModuleHandle64(hProcess, LDNTVDM_NAME);
 			if (!hModLdntvdm)
 			{
 				if (!NT_SUCCESS(Status = NtGetNextThread(hProcess, NULL, THREAD_GET_CONTEXT | THREAD_SET_CONTEXT | THREAD_SUSPEND_RESUME | THREAD_QUERY_INFORMATION | THREAD_SET_INFORMATION, 0, 0, &hThread)))
@@ -147,7 +147,7 @@ void WinEventHook_Install(HMODULE hModule)
 
 	if (hModule) Hook_IAT_x64_IAT((LPBYTE)hModule, "user32.dll", "NotifyWinEvent", NotifyWinEventHook, (PULONG_PTR)&NotifyWinEventReal);
 	else if ((hUser32 = GetModuleHandle(_T("user32.dll"))) || (hUser32 = LoadLibrary(_T("user32.dll")))) 
-		NotifyWinEventReal = Hook_Inline_Func(GetCurrentProcess(), hUser32, GetProcAddress(hUser32, "NotifyWinEvent"), (PULONG_PTR)&NotifyWinEventHook, sizeof(ULONG_PTR), "NotifyWinEvent");
+		NotifyWinEventReal = (fpNotifyWinEvent)Hook_Inline_Func(GetCurrentProcess(), hUser32, GetProcAddress(hUser32, "NotifyWinEvent"), (PULONG_PTR)&NotifyWinEventHook, sizeof(ULONG_PTR), "NotifyWinEvent");
 #endif
 }
 

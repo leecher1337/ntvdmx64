@@ -262,7 +262,7 @@ HMODULE GetRemoteModuleHandle32(HANDLE ProcessHandle, LPWSTR lpDllName)
 	return NULL;
 }
 
-HMODULE LoadLibraryWindir32(LPWSTR lpDllName)
+HANDLE LoadLibraryWindir32(LPWSTR lpDllName)
 {
 	WCHAR dllName[MAX_PATH + 1];
 
@@ -529,7 +529,8 @@ BOOL injectLdrLoadDLLWow64(HANDLE hProcess, HANDLE hThread, WCHAR *szDLL, UCHAR 
 	BOOL bRet = TRUE;
 	ULONG ulSizeOfCode;
 	NTSTATUS Status;
-	HMODULE ntLocal, ntRemote;
+	HMODULE ntRemote;
+	HANDLE ntLocal;
 	WOW64_CONTEXT ctx, *RemoteCtx;
 	static ULONG fnLdrpInitializeProcess = NULL;
 

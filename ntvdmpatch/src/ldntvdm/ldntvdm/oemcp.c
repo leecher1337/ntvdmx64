@@ -120,7 +120,7 @@ BOOL OEMCP_FixNLSTable(void)
 
 			if (hMap = CreateFileMapping(hFile, NULL, PAGE_READONLY, 0, 0, NULL))
 			{
-				if (Peb->OemCodePageData = (PBYTE)MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0))
+				if (Peb->OemCodePageData = (ULONG_PTR)MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0))
 				{
 					TRACE("Peb->OemCodePageData set to %X", Peb->OemCodePageData);
 					return TRUE;

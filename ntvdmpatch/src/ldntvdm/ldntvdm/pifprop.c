@@ -14,6 +14,8 @@
 #include "iathook.h"
 #include "pifprop.h"
 
+static BOOL PifProp_LoadDLL(void);
+
 typedef HANDLE (STDAPICALLTYPE *fpSHELL32_PifMgr_OpenProperties)(LPCTSTR lpszApp, LPCTSTR lpszPIF, UINT hInf, UINT flOpt);
 typedef int (STDAPICALLTYPE  *fpSHELL32_PifMgr_GetProperties)(HANDLE hProps, LPCSTR lpszGroup, void *lpProps, int cbProps, UINT flOpt);
 typedef int (STDAPICALLTYPE *fpSHELL32_PifMgr_SetProperties)(HANDLE hProps, LPCSTR lpszGroup, void *lpProps, int cbProps, UINT flOpt);
@@ -65,10 +67,10 @@ static BOOL PifProp_LoadDLL(void)
 		TRACE("LDNTVDM: PifProp.dll not present\n");
 		return FALSE;
 	}
-	fRet = (SHELL32_PifMgr_OpenProperties = GetProcAddress(hPifProp, "PifMgr_OpenProperties")) &&
-		(SHELL32_PifMgr_GetProperties = GetProcAddress(hPifProp, "PifMgr_GetProperties")) &&
-		(SHELL32_PifMgr_SetProperties = GetProcAddress(hPifProp, "PifMgr_SetProperties")) &&
-		(SHELL32_PifMgr_CloseProperties = GetProcAddress(hPifProp, "PifMgr_CloseProperties"));
+	fRet = (SHELL32_PifMgr_OpenProperties = (fpSHELL32_PifMgr_OpenProperties)GetProcAddress(hPifProp, "PifMgr_OpenProperties")) &&
+		(SHELL32_PifMgr_GetProperties = (fpSHELL32_PifMgr_GetProperties)GetProcAddress(hPifProp, "PifMgr_GetProperties")) &&
+		(SHELL32_PifMgr_SetProperties = (fpSHELL32_PifMgr_SetProperties)GetProcAddress(hPifProp, "PifMgr_SetProperties")) &&
+		(SHELL32_PifMgr_CloseProperties = (fpSHELL32_PifMgr_CloseProperties)GetProcAddress(hPifProp, "PifMgr_CloseProperties"));
 	if (!fRet)
 	{
 		TRACE("LDNTVDM: Pifprop doesn't export Pifmgr functions, maybe better update DLL?\n");
@@ -95,7 +97,7 @@ BOOL PifProp_Install(void)
 	/* On Windows 10, unlike on earlier Windows Versions, the calls to PifProp are still
 	 * present, so all we need to do is patch IAT in order to use them
 	 */
-	HMODULE hModule, hPifProp;
+	HMODULE hModule;
 	BOOL fRet = FALSE;
 
 	/* We could also hook DelayLoadFailureHook in kernelbase.dll to redirect potential
