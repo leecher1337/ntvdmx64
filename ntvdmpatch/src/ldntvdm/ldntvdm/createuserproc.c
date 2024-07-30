@@ -15,8 +15,11 @@
 #include "createuserproc.h"
 #include "ntpsapi.h"
 #include "ntpeb.h"
+#include "injector64.h"
+#include "mappage0.h"
+#include "xpwrap.h"
 
-#ifdef TARGET_WIN7
+#if defined(USE_OWN_RTLCREATEUSERPROCESSEX) && !defined(TARGET_WINXP)
 
 #define NtCurrentProcess() ( (HANDLE)(LONG_PTR) -1 )
 #define IsConsoleHandle(h) (((ULONG_PTR)(h) & 0x10000003) == 0x3)
@@ -192,6 +195,10 @@ typedef struct _RTL_USER_PROCESS_PARAMETERS32 {
 	ULONG EnvironmentSize;
 	ULONG EnvironmentVersion;
 #endif
+#ifndef TARGET_WIN7
+	TYPE32(PVOID) PackageDependencyData;
+	ULONG ProcessGroupId;
+#endif
 } xpRTL_USER_PROCESS_PARAMETERS32, *xpPRTL_USER_PROCESS_PARAMETERS32;
 
 #ifndef TARGET_WINXP
@@ -318,7 +325,7 @@ Wow64pThunkProcessParameters(
 	Params32Target = (xpPRTL_USER_PROCESS_PARAMETERS32)Base;
 	Peb32->ProcessParameters = (TYPE32(PRTL_USER_PROCESS_PARAMETERS))PtrToUlong(Params32Target);
 	//p = (PCHAR)Params32 + sizeof(xpRTL_USER_PROCESS_PARAMETERS32);
-	p = sizeof(xpRTL_USER_PROCESS_PARAMETERS) - sizeof(xpRTL_USER_PROCESS_PARAMETERS32);
+	p = (PCHAR)(sizeof(xpRTL_USER_PROCESS_PARAMETERS) - sizeof(xpRTL_USER_PROCESS_PARAMETERS32));
 
 	Params32->MaximumLength = Params32->Length = (ULONG)AllocSize;
 	Params32->Flags = Params64->Flags;
@@ -363,7 +370,7 @@ Wow64pThunkProcessParameters(
 		UINT UNALIGNED *posfhnd32;
 		int i;
 
-		p = Params64->RuntimeData.Buffer;
+		p = (PCHAR)Params64->RuntimeData.Buffer;
 		cfi_len = *(int UNALIGNED *)Params64->RuntimeData.Buffer;
 
 		Params32->RuntimeData.Length = Params64->RuntimeData.Length - cfi_len * sizeof(ULONG);
@@ -402,11 +409,14 @@ Wow64pThunkProcessParameters(
 	//Params32->Environment = (ULONG)Base + StructSize;
 	Params32->EnvironmentSize = Params64->EnvironmentSize;
 	Params32->EnvironmentVersion = Params64->EnvironmentVersion;
+#ifndef TARGET_WIN7
+	Params32->ProcessGroupId = Params64->ProcessGroupId;
+#endif
 
 	NtReadVirtualMemory(Process,
-		Peb64Address + sizeof(xpRTL_USER_PROCESS_PARAMETERS),
-		(ULONG_PTR)Params32 + sizeof(xpRTL_USER_PROCESS_PARAMETERS32),
-		StructSize - sizeof(xpRTL_USER_PROCESS_PARAMETERS32),
+		(PVOID)(Peb64Address + sizeof(xpRTL_USER_PROCESS_PARAMETERS)),
+		(PVOID)((ULONG_PTR)Params32 + sizeof(xpRTL_USER_PROCESS_PARAMETERS32)),
+		(ULONG)StructSize - sizeof(xpRTL_USER_PROCESS_PARAMETERS32),
 		NULL
 		);
 
@@ -426,10 +436,46 @@ Wow64pThunkProcessParameters(
 
 	return STATUS_SUCCESS;
 }
+/* ULONG_PTR starting with 1703, otherwise ULONG 
+typedef struct _PS_MITIGATION_OPTIONS_MAP
+{
+	ULONG_PTR Map[3]; // 2 < 20H1
+} PS_MITIGATION_OPTIONS_MAP, *PPS_MITIGATION_OPTIONS_MAP;
+
+// private
+typedef struct _PS_MITIGATION_AUDIT_OPTIONS_MAP
+{
+	ULONG_PTR Map[3]; // 2 < 20H1
+} PS_MITIGATION_AUDIT_OPTIONS_MAP, *PPS_MITIGATION_AUDIT_OPTIONS_MAP;
+
+typedef struct _PS_SYSTEM_DLL_INIT_BLOCK
+{
+	ULONG Size;
+	ULONG_PTR SystemDllWowRelocation;
+	ULONG_PTR SystemDllNativeRelocation;
+	ULONG_PTR Wow64SharedInformation[16]; // use WOW64_SHARED_INFORMATION as index
+	ULONG RngData;
+	union
+	{
+		ULONG Flags;
+		struct
+		{
+			ULONG CfgOverride : 1;
+			ULONG Reserved : 31;
+		};
+	};
+	PS_MITIGATION_OPTIONS_MAP MitigationOptionsMap;
+	ULONG_PTR CfgBitMap;
+	ULONG_PTR CfgBitMapSize;
+	ULONG_PTR Wow64CfgBitMap;
+	ULONG_PTR Wow64CfgBitMapSize;
+	PS_MITIGATION_AUDIT_OPTIONS_MAP MitigationAuditOptionsMap; // REDSTONE3
+} PS_SYSTEM_DLL_INIT_BLOCK, *PPS_SYSTEM_DLL_INIT_BLOCK;
+*/
 
 ULONG_PTR PspNtdll32SystemDllInitBlock = 0, PspSystemDllInitBlock = 0;
+// PS_SYSTEM_DLL_INIT_BLOCK structure:
 PBYTE PsWow64SharedInformation = NULL;
-#define CB_PsWow64SharedInformation 0x50
 //BYTE PsWow64SharedInformation[0x50];
 
 BOOL PspPrepareSystemDllInitBlock(HANDLE hProcess)
@@ -437,11 +483,14 @@ BOOL PspPrepareSystemDllInitBlock(HANDLE hProcess)
 	WCHAR exeName[MAX_PATH + 1];
 	BOOL bRet = FALSE;
 	SIZE_T dwWritten;
+	ULONG CB_PsWow64SharedInformation;
+	static OSVERSIONINFOW ver = { 0 };
 
 	if (!PsWow64SharedInformation)
 	{
 #ifdef _WIN64
-		HMODULE ntLocal, ntRemote;
+		HMODULE ntRemote;
+		HANDLE ntLocal;
 
 		if (!(ntRemote = GetRemoteModuleHandle32(hProcess, L"ntdll.dll")))
 		{
@@ -453,10 +502,10 @@ BOOL PspPrepareSystemDllInitBlock(HANDLE hProcess)
 		}
 		else
 		{
-			if ((PspNtdll32SystemDllInitBlock = GetRemoteProcAddressX32(ntRemote, ntLocal, "LdrSystemDllInitBlock")) &&
-				(PspSystemDllInitBlock = GetProcAddress(GetModuleHandle(_T("ntdll.dll")), "LdrSystemDllInitBlock")))
+			if ((PspNtdll32SystemDllInitBlock = (ULONG_PTR)GetRemoteProcAddressX32(ntRemote, ntLocal, "LdrSystemDllInitBlock")) &&
+				(PspSystemDllInitBlock = (ULONG_PTR)GetProcAddress(GetModuleHandle(_T("ntdll.dll")), "LdrSystemDllInitBlock")))
 			{
-				PsWow64SharedInformation = PspSystemDllInitBlock;
+				PsWow64SharedInformation = (PBYTE)PspSystemDllInitBlock;
 			}
 			FreeLibrary32(ntLocal);
 		}
@@ -472,9 +521,25 @@ BOOL PspPrepareSystemDllInitBlock(HANDLE hProcess)
 	}
 
 	if (!PsWow64SharedInformation || !PspNtdll32SystemDllInitBlock || !PspSystemDllInitBlock) return FALSE;
+	CB_PsWow64SharedInformation = *((PULONG)PsWow64SharedInformation);
 
-	return WriteProcessMemory(hProcess, (LPVOID)PspNtdll32SystemDllInitBlock, PsWow64SharedInformation, CB_PsWow64SharedInformation, &dwWritten) &&
+	bRet = WriteProcessMemory(hProcess, (LPVOID)PspNtdll32SystemDllInitBlock, PsWow64SharedInformation, CB_PsWow64SharedInformation, &dwWritten) &&
 		WriteProcessMemory(hProcess, (LPVOID)PspSystemDllInitBlock, PsWow64SharedInformation, CB_PsWow64SharedInformation, &dwWritten);
+#ifndef TARGET_WIN7
+	if (!ver.dwOSVersionInfoSize)
+	{
+		NTSYSAPI ULONG RtlRandomEx(PULONG Seed);
+
+		ULONG Seed = 1, RngData = RtlRandomEx(&Seed), offs;
+		ver.dwOSVersionInfoSize = sizeof(ver);
+		GetVersionExW(&ver);
+		offs = ver.dwBuildNumber >= 1703 ? 0x98 : 0x50;
+		WriteProcessMemory(hProcess, (LPVOID)(PspNtdll32SystemDllInitBlock + offs), &RngData, sizeof(RngData), &dwWritten);
+		RngData = RtlRandomEx(&Seed);
+		WriteProcessMemory(hProcess, (LPVOID)(PspSystemDllInitBlock + offs), &RngData, sizeof(RngData), &dwWritten);
+	}
+#endif
+	return bRet;
 }
 #endif
 
@@ -666,7 +731,7 @@ RtlCreateUserProcessEx(
 		return(Status);
 	}
 
-	Peb = ProcessInfo.PebBaseAddress;
+	Peb = (PPEB_ARCH)ProcessInfo.PebBaseAddress;
 
 	//
 	// Duplicate Native handles into new process if any specified.
@@ -754,20 +819,20 @@ RtlCreateUserProcessEx(
 				{
 					if (ApiSetMapNew = (ULONG_PTR)VirtualAllocEx(ProcessInformation->Process, (LPVOID)(RegionSize + 0x10000), mbi.RegionSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE))
 					{
-						ULONG_PTR LocalBuffer = VirtualAlloc(NULL, mbi.RegionSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+						ULONG_PTR LocalBuffer = (ULONG_PTR)VirtualAlloc(NULL, mbi.RegionSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
 						if (LocalBuffer)
 						{
 							if (NT_SUCCESS(Status = NtReadVirtualMemory(ProcessInformation->Process,
 								(LPVOID)ApiSetMap,
-								LocalBuffer,
-								mbi.RegionSize,
+								(LPVOID)LocalBuffer,
+								(ULONG)mbi.RegionSize,
 								NULL
 								)))
 							{
 								if (NT_SUCCESS(Status = NtWriteVirtualMemory(ProcessInformation->Process,
 									(LPVOID)ApiSetMapNew,
-									LocalBuffer,
+									(LPVOID)LocalBuffer,
 									mbi.RegionSize,
 									NULL
 									)))
@@ -781,14 +846,14 @@ RtlCreateUserProcessEx(
 										)))
 									{
 										// Now we can unmap old section
-										if (!NT_SUCCESS((Status = NtUnmapViewOfSection(ProcessInformation->Process, ApiSetMap))))
+										if (!NT_SUCCESS((Status = NtUnmapViewOfSection(ProcessInformation->Process, (LPVOID)ApiSetMap))))
 										{
 											TRACE("LDNTVDM: Cannot unmap apisetschema: %08x\n", Status);
 										}
 									}
 								}
 							}
-							VirtualFree(LocalBuffer, mbi.RegionSize, MEM_RELEASE);
+							VirtualFree((LPVOID)LocalBuffer, mbi.RegionSize, MEM_RELEASE);
 						}
 					}
 				}
@@ -799,14 +864,21 @@ RtlCreateUserProcessEx(
 				(PVOID *)&Environment,
 				0,
 				&RegionSize,
-				MEM_RESERVE | MEM_COMMIT,
+				MEM_RESERVE,
 				PAGE_EXECUTE_READWRITE
 				);
 			if (!NT_SUCCESS(Status)) {
-				TRACE("LDNTVDM: Reserving low 64k for NTVDM failed: %08x. Did you set EnableLowVaAccess?\n", Status);
-				NtClose(ProcessInformation->Process);
-				NtClose(Section);
-				return(Status);
+#ifdef USE_MAP0DRV
+				// Fallback: We can try our Map0 driver to accomplish the task from Kernel mode
+				if (!Map0Page((HANDLE)GetProcessId(ProcessInformation->Process)))
+#endif
+				{
+					TRACE("LDNTVDM: Reserving low 64k for NTVDM failed: %08x. Did you set EnableLowVaAccess?\n", Status);
+					NtClose(ProcessInformation->Process);
+					NtClose(Section);
+					return(Status);
+				}
+				else Status = STATUS_SUCCESS;
 			}
 
 			Environment = (PVOID)0x10000;
@@ -815,7 +887,7 @@ RtlCreateUserProcessEx(
 				(PVOID *)&Environment,
 				0,
 				&RegionSize,
-				MEM_RESERVE | MEM_COMMIT,
+				MEM_RESERVE,
 				PAGE_EXECUTE_READWRITE
 				);
 			if (!NT_SUCCESS(Status)) {
@@ -831,7 +903,7 @@ RtlCreateUserProcessEx(
 				(PVOID *)&Environment,
 				0,
 				&RegionSize,
-				MEM_RESERVE | MEM_COMMIT,
+				MEM_RESERVE,
 				PAGE_READWRITE
 				);
 			if (!NT_SUCCESS(Status)) {
@@ -843,7 +915,7 @@ RtlCreateUserProcessEx(
 
 
 			Environment = (PVOID)(1024 * 1024);
-			RegionSize = (1024 * 1024) * 15L;
+			RegionSize = (1024 * 1024) * (RESERVE_MB_INITIAL - 1);
 			if (NT_SUCCESS(Status)) Status = NtAllocateVirtualMemory(ProcessInformation->Process,
 				(PVOID *)&Environment,
 				0,
@@ -858,21 +930,6 @@ RtlCreateUserProcessEx(
 				return(Status);
 			}
 
-			Environment = (PVOID)(1024 * 1024);
-			RegionSize = (64 * 1024);
-			if (NT_SUCCESS(Status)) Status = NtAllocateVirtualMemory(ProcessInformation->Process,
-				(PVOID *)&Environment,
-				0,
-				&RegionSize,
-				MEM_COMMIT,
-				PAGE_EXECUTE_READWRITE
-				);
-			if (!NT_SUCCESS(Status)) {
-				TRACE("LDNTVDM: Reserving A20 wrap for NTVDM failed: %08x\n", Status);
-				NtClose(ProcessInformation->Process);
-				NtClose(Section);
-				return(Status);
-			}
 
 		}
 		else
@@ -965,7 +1022,7 @@ RtlCreateUserProcessEx(
 
 	// leecher1337: Need to do this to get valid pointers in target process
 	// NB: Not present in original RtlCreateUserProcess
-	RtlDeNormalizeProcessParams(ProcessParameters);
+	RtlDeNormalizeProcessParams((PRTL_USER_PROCESS_PARAMETERS)ProcessParameters);
 
 	Status = NtWriteVirtualMemory(ProcessInformation->Process,
 		Parameters,
@@ -981,7 +1038,7 @@ RtlCreateUserProcessEx(
 
 	// leecher1337: Need to do this to get valid pointers in target process
 	// NB: Not present in original RtlCreateUserProcess
-	RtlNormalizeProcessParams(ProcessParameters);
+	RtlNormalizeProcessParams((PRTL_USER_PROCESS_PARAMETERS)ProcessParameters);
 
 
 	Status = NtWriteVirtualMemory(ProcessInformation->Process,
@@ -1022,6 +1079,73 @@ RtlCreateUserProcessEx(
 		return(Status);
 	}
 
+#ifndef TARGET_WIN7
+	{
+		// Initial thread gets marked in TEB in Windows 8+
+		// This is usually done by setting Flag 0x40 (it is set to 0x60, so this includes 0x40)
+		// to the pointer in Arg 9 of PspAllocateThread() call within NtCreateUserProcess
+		// Unfortunately, NtCreateThreadEx Flags-Parameter doesn't allow to set Flag 0x40
+		// on call, that's why we set it here.
+		// I don't know if this is necessary, it doesn't really improve the situation
+		union
+		{
+			USHORT SameTebFlags;                                                //0x17ee
+			struct
+			{
+				USHORT SafeThunkCall : 1;                                         //0x17ee
+				USHORT InDebugPrint : 1;                                          //0x17ee
+				USHORT HasFiberData : 1;                                          //0x17ee
+				USHORT SkipThreadAttach : 1;                                      //0x17ee
+				USHORT WerInShipAssertCode : 1;                                   //0x17ee
+				USHORT RanProcessInit : 1;                                        //0x17ee
+				USHORT ClonedThread : 1;                                          //0x17ee
+				USHORT SuppressDebugMsg : 1;                                      //0x17ee
+				USHORT DisableUserStackWalk : 1;                                  //0x17ee
+				USHORT RtlExceptionAttached : 1;                                  //0x17ee
+				USHORT InitialThread : 1;                                         //0x17ee
+				USHORT SessionAware : 1;                                          //0x17ee
+				USHORT SpareSameTebBits : 4;                                      //0x17ee
+			};
+		} uFlags;
+		THREAD_BASIC_INFORMATION tbi;
+
+		if (NT_SUCCESS((Status = NtQueryInformationThread(ProcessInformation->Thread, ThreadBasicInformation, &tbi, sizeof(tbi), NULL))))
+		{
+			Status = NtReadVirtualMemory(ProcessInformation->Process,
+				(LPVOID)((ULONG_PTR)tbi.TebBaseAddress + 0x17ee),
+				&uFlags.SameTebFlags,
+				sizeof(uFlags.SameTebFlags),
+				NULL
+				);
+			if (NT_SUCCESS(Status))
+			{
+				uFlags.InitialThread = 1;
+				// TEB:
+				Status = NtWriteVirtualMemory(ProcessInformation->Process,
+					(LPVOID)((ULONG_PTR)tbi.TebBaseAddress + 0x17ee),
+					&uFlags.SameTebFlags,
+					sizeof(uFlags.SameTebFlags),
+					NULL
+					);
+				// TEB32:
+				Status = NtWriteVirtualMemory(ProcessInformation->Process,
+					(LPVOID)((ULONG_PTR)tbi.TebBaseAddress + 0x2fca),
+					&uFlags.SameTebFlags,
+					sizeof(uFlags.SameTebFlags),
+					NULL
+					);
+
+			}
+		}
+		
+		if (!NT_SUCCESS(Status))
+		{
+			TRACE("Cannot get ThreadBasicInformation for hThread %X\n", ProcessInformation->Thread);
+			// Not critical
+		}
+	}
+#endif
+
 	//
 	// Now close the section and file handles.  The objects they represent
 	// will not actually go away until the process is destroyed.
@@ -1038,7 +1162,7 @@ RtlCreateUserProcessEx(
 	CreateInfo->SuccessState.FileHandle = File;
 	CreateInfo->SuccessState.SectionHandle = Section;
 	CreateInfo->SuccessState.CurrentParameterFlags = ProcessParameters->Flags;
-	CreateInfo->SuccessState.PebAddressNative = Peb;
+	CreateInfo->SuccessState.PebAddressNative = (ULONGLONG)Peb;
 	TRACE("CreateInfo->SuccessState.FileHandle = %X", CreateInfo->SuccessState.FileHandle);
 
 	// PspSetupUserProcessAddressSpace:
@@ -1054,10 +1178,9 @@ RtlCreateUserProcessEx(
 	{
 		PEB32 Peb32;
 		xpRTL_USER_PROCESS_PARAMETERS Peb64;
-		PBYTE pEnvironment;
 
 		Status = NtReadVirtualMemory(ProcessInformation->Process,
-			CreateInfo->SuccessState.PebAddressWow64,
+			(LPVOID)CreateInfo->SuccessState.PebAddressWow64,
 			&Peb32,
 			sizeof(Peb32),
 			NULL
@@ -1065,7 +1188,7 @@ RtlCreateUserProcessEx(
 		if (NT_SUCCESS(Status))
 		{
 			Status = NtReadVirtualMemory(ProcessInformation->Process,
-				CreateInfo->SuccessState.UserProcessParametersNative,
+				(LPVOID)CreateInfo->SuccessState.UserProcessParametersNative,
 				&Peb64,
 				sizeof(xpRTL_USER_PROCESS_PARAMETERS),
 				NULL
@@ -1089,9 +1212,9 @@ RtlCreateUserProcessEx(
 #endif
 				Wow64pThunkProcessParameters(ProcessInformation->Process, CreateInfo->SuccessState.UserProcessParametersNative, &Peb32, &Peb64);
 				CreateInfo->SuccessState.UserProcessParametersWow64 = Peb32.ProcessParameters;
-				Peb32.ApiSetMap = ApiSetMapNew;
+				Peb32.ApiSetMap = (ULONG)ApiSetMapNew;
 				Status = NtWriteVirtualMemory(ProcessInformation->Process,
-					CreateInfo->SuccessState.PebAddressWow64,
+					(LPVOID)CreateInfo->SuccessState.PebAddressWow64,
 					&Peb32,
 					sizeof(Peb32),
 					NULL

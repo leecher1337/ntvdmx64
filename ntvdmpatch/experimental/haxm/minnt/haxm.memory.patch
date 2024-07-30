@@ -1,15 +1,15 @@
 --- NT4\private\mvdm\softpc.new\host\src\nt_mem.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_mem.c
-317a318
+379a380
 > #ifndef HAXM
-318a320,321
+380a382,383
 > #endif
 > 
-602a606
+664a668
 > #ifndef HAXM	// BUGBUG: Decommitting memory leads to wrong memory references on next use, need to fix this!
-611a616
+673a678
 > #endif
-689a695
+751a757
 > #ifndef HAXM	// BUGBUG: Decommitting memory leads to wrong memory references on next use, need to fix this!
-700a707
+762a769
 > #endif

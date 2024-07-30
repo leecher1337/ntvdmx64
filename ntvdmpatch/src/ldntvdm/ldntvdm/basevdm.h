@@ -134,6 +134,14 @@ typedef struct _xpRTL_USER_PROCESS_PARAMETERS {
 	UNICODE_STRING ShellInfo;       // ProcessParameters
 	UNICODE_STRING RuntimeData;     // ProcessParameters
 	RTL_DRIVE_LETTER_CURDIR CurrentDirectores[RTL_MAX_DRIVE_LETTERS];
+#ifndef TARGET_WINXP
+	ULONG_PTR EnvironmentSize;
+	ULONG_PTR EnvironmentVersion;
+#ifndef TARGET_WIN7
+	VOID* PackageDependencyData;                                            //0x400
+	ULONG ProcessGroupId;                                                   //0x408
+#endif
+#endif
 } xpRTL_USER_PROCESS_PARAMETERS, *xpPRTL_USER_PROCESS_PARAMETERS;
 
 

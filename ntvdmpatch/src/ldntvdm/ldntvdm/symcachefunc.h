@@ -70,6 +70,16 @@ static REGKEY_PAIR m_aSymsAPPINFO[] =
 	{ NULL, NULL }
 };
 #endif
+#ifdef USE_MAP0DRV
+static REGKEY_PAIR m_aSymsNTOSKRNL[] =
+{
+	_E("MiAllocateVad"),
+	_E("MiInsertVadCharges"),
+	_E("MiInsertVad"),
+	_E("MiInsertPrivateVad"),
+	{ NULL, NULL }
+};
+#endif
 #ifdef METHOD_HOOKLDR
 static REGKEY_PAIR m_aSymsNTDLL[] =
 {
@@ -84,18 +94,22 @@ REGKEY_SYMS g_aSyms64[] = {
 #else
 REGKEY_SYMS g_aSyms32[] = {
 #endif
-{ "kernel32.dll", L"kernel32.dll", m_aSymsKERNEL32 },
+{ "kernel32.dll", L"kernel32.dll", m_aSymsKERNEL32, FALSE },
 #if defined(_WIN64) && !defined(TARGET_WINXP) && (defined(TARGET_WIN7) || defined(HOOK_CONHOSTV2)) // consbmp.c fix
-{ "conhost.exe", L"conhost.exe", m_aSymsCONHOST },
+{ "conhost.exe", L"conhost.exe", m_aSymsCONHOST, FALSE },
 #endif
 #if defined(TARGET_WIN11) && defined(_WIN64)
-{ "conhostV1.dll", L"conhostV1.dll", m_aSymsCONHOSTV1 },
+{ "conhostV1.dll", L"conhostV1.dll", m_aSymsCONHOSTV1, FALSE },
 #endif
 #ifdef NEED_APPINFO
-{ "appinfo.dll", L"appinfo.dll", m_aSymsAPPINFO },
+{ "appinfo.dll", L"appinfo.dll", m_aSymsAPPINFO, FALSE },
+#endif
+#ifdef USE_MAP0DRV
+// NB: Assume that we are on Win 8 or above where there aren't any different kernels anymore, just ntoskrnl.exe, otherwise, this won't work!
+{ "ntoskrnl.exe", L"ntoskrnl.exe", m_aSymsNTOSKRNL, TRUE },
 #endif
 #ifdef METHOD_HOOKLDR
-{ "ntdll.dll", L"ntdll.dll", m_aSymsNTDLL },
+{ "ntdll.dll", L"ntdll.dll", m_aSymsNTDLL, FALSE },
 #endif
 };
 

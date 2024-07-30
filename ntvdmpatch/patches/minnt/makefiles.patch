@@ -98,6 +98,10 @@
 > !endif
 115a131
 >         ..\fmstubs.c \
+137a154,156
+> 
+> # Ensure that newer linkers are compatible and do not set ASLR flag to obey UMBASE
+> LINKER_FLAGS=$(LINKER_FLAGS) /DYNAMICBASE:NO
 --- NT4\private\mvdm\xms.486\sources.inc
 +++ nt\private\mvdm\xms.486\sources.inc
 45c45,46

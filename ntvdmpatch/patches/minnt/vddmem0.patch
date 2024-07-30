@@ -2,7 +2,7 @@
 +++ nt\private\mvdm\softpc.new\host\src\nt_mem.c
 44a45
 > extern void sas_overwrite_memory IPT2(sys_addr, addr, int, type);
-149a151,210
+149a151,272
 > #if defined(i386) && defined(W10) && !defined(MONITOR)
 > #define VDM_BASE_ADDRESS      0x00000001L
 > 
@@ -32,7 +32,7 @@
 > memory.
 > 
 > So, we simply rely on the loader for the low 1MB memory reservation and
-> just return the base address here without doing anything:
+> just Commit the memory and return the base address here:
 > */
 > #ifdef HAXM
 > 	/* Citing HAXM docs for HAX_VM_IOCTL_SET_RAM:
@@ -43,8 +43,69 @@
 > 	 * Therefore no HAXM support for this, sorry.
 > 	 */
 > 	return NULL;
+> #else
+> 	MEMORY_BASIC_INFORMATION mbi;
+> 	struct {
+> 		ULONG_PTR Base;
+> 		SIZE_T Size;
+> 	} Areas[] = {
+> 		{ 1, (64 * 1024) - 1 },				// Conventional
+> 		{ (64 * 1024), (640 * 1024) - (64 * 1024) },// Conventional
+> 		{ (640 * 1024), (384 * 1024) },		// HMA
+> 		{ (1024 * 1024), (64 * 1024) }		// A20 wrap
+> 	};
+> 
+> 	if (VirtualQuery((LPCVOID)1, &mbi, sizeof(mbi)) && (DWORD)mbi.BaseAddress <= 4 &&
+> 		(mbi.State & MEM_RESERVE))
+> 	{
+> 		int i;
+> 		SIZE_T offs;
+> 
+> 		// Find highest address reserved by loader
+> 		while(mbi.State == MEM_RESERVE)
+> 		{
+> 			offs = (SIZE_T)mbi.BaseAddress + mbi.RegionSize;
+> 			if (!VirtualQuery((LPCVOID)offs, &mbi, sizeof(mbi)))
+> 				break;
+> 		}
+> 
+> 		// Loader reserved memory for us, let's commit it!
+> 		for (i = 0; i < sizeof(Areas) / sizeof(Areas[0]); i++)
+> 		{
+> 			// VirtualAlloc checks for address <0x1000 on Win 8 or above
+> 			if (!NT_SUCCESS(NtAllocateVirtualMemory(GetCurrentProcess(),
+> 				(PVOID *)&Areas[i].Base,
+> 				0,
+> 				&Areas[i].Size,
+> 				MEM_COMMIT,
+> 				PAGE_READWRITE
+> 				)))
+> 			{
+> 				printf("Cannot commit %d bytes @%X\n", Areas[i].Size, Areas[i].Base);
+> 				return NULL;
+> 			}
+> 		}
+> 
+> 		// Try to reserve the rest, if needed. This will most likely fail if loader 
+> 		// didn't reserve enough mem as heap etc. may be placed in area following
+> 		if (offs < Size)
+> 		{
+> 			if (!VirtualAlloc((LPVOID) offs,(DWORD) Size-offs,
+> 											(DWORD) MEM_RESERVE,
+> 											(DWORD) PAGE_READWRITE))
+> 			{
+> 				printf("Cannot reserve %d bytes @%X\n", Size-offs, offs);
+> 				return NULL;
+> 			}
+> #ifdef DEBUG_MEM
+> 			else
+> 			{
+> 				printf("Reserved %d bytes @%X\n", Size-offs, offs);
+> 			}
 > #endif
-> 	if (IsBadWritePtr((LPVOID)VDM_BASE_ADDRESS, 64 * 1024))
+> 		}
+> 	}
+> 	else
 > 	{
 > 		/* Mapping to address 0 seems to have failed in the loader, 
 > 		 * what a pity. This only works on Win 7 due to some "security"
@@ -60,12 +121,13 @@
 > 	}
 > 
 >     return (IU8*)VDM_BASE_ADDRESS; /* Mapped to address 0 */
+> #endif
 > }
 > #endif
 > 
-171a233
+171a295
 >     IU8 *ret = NULL;
-211a274,288
+211a336,350
 > #if defined(i386) && defined(W10) && !defined(MONITOR)
 >     /* We mimic x86/MONITOR behaviour and map to address 0.
 >      * This may allow badly programmed VDDs like TAME to work with NTVDMx64 
@@ -81,14 +143,14 @@
 >     else
 > #endif
 >     {
-238a316,317
+238a378,379
 >     ret = intelMem;
 >     }
-269c348
+269c410
 <     return(intelMem);
 ---
 >     return(ret);
-1199a1279
+1199a1341
 >     return(TRUE);
 
 --- NT4\private\mvdm\softpc.new\base\ccpu386\ccpusas4.c

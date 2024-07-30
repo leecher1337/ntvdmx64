@@ -553,6 +553,7 @@
     <ClCompile Include="injector32.c" />
     <ClCompile Include="injector64.c" />
     <ClCompile Include="ldntvdm.c" />
+    <ClCompile Include="mappage0.c" />
     <ClCompile Include="matcheng.c" />
     <ClCompile Include="oemcp.c" />
     <ClCompile Include="pifprop.c" />
@@ -588,6 +589,7 @@
     <ClInclude Include="injector32.h" />
     <ClInclude Include="injector64.h" />
     <ClInclude Include="ldntvdm.h" />
+    <ClInclude Include="mappage0.h" />
     <ClInclude Include="matcheng.h" />
     <ClInclude Include="newexe.h" />
     <ClInclude Include="newres.h" />

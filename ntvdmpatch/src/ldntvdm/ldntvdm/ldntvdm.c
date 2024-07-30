@@ -44,6 +44,7 @@
 #include "injector32.h"
 #include "oemcp.h"
 #include "pifprop.h"
+#include "mappage0.h"
 
 #pragma comment(lib, "ntdll.lib")
 
@@ -157,6 +158,7 @@ typedef NTSTATUS (NTAPI *fpNtCreateUserProcess)(
 	PPS_CREATE_INFO CreateInfo,
 	PPS_ATTRIBUTE_LIST AttributeList
 	);
+
 fpNtCreateUserProcess NtCreateUserProcessReal;
 NTSTATUS NTAPI NtCreateUserProcessHook(
 	PHANDLE ProcessHandle,
@@ -175,14 +177,17 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 #if defined (USE_SYMCACHE) && (!defined(CREATEPROCESS_HOOK) || defined(CREATEPROCESS_HOOKNTCREATE))
 	UpdateSymbolCache(TRUE);
 #endif
-#if defined(WOW16_SUPPORT) && defined(TARGET_WIN7)
+#if defined(WOW16_SUPPORT) && (defined(TARGET_WIN7) || defined(USE_MAP0DRV))
 	if (fStartingNtvdm)
 	{
+#if defined(USE_OWN_RTLCREATEUSERPROCESSEX) && !defined(TARGET_WINXP)
 		int i, cnt;
 		UNICODE_STRING NtImagePathName = { 0 };
 		RTL_USER_PROCESS_INFORMATION ProcessInformation;
 
 		((xpPRTL_USER_PROCESS_PARAMETERS)ProcessParameters)->Flags |= RTL_USER_PROC_RESERVE_16MB;
+		fStartingNtvdm = FALSE;
+
 		cnt = (int)((AttributeList->TotalLength - sizeof(AttributeList->TotalLength)) / sizeof(PS_ATTRIBUTE));
 		for (i = 0; i < cnt; i++)
 		{
@@ -193,7 +198,7 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 			}
 		}
 
-		fStartingNtvdm = FALSE;
+		
 		LastCreateUserProcessError =
 			RtlCreateUserProcessEx(&NtImagePathName,
 				OBJ_CASE_INSENSITIVE,
@@ -230,8 +235,101 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 		{
 			((xpPRTL_USER_PROCESS_PARAMETERS)ProcessParameters)->Flags &= ~RTL_USER_PROC_RESERVE_16MB;
 		}
-	}
+#else // USE_OWN_RTLCREATEUSERPROCESSEX
+		struct {
+			ULONG_PTR Base;
+			SIZE_T Size;
+		} Areas[] = {
+#ifdef TARGET_WIN7
+			{ 1, (640 * 1024) -1 },
+#else
+			{ (64 * 1024), (640 * 1024) - (64 * 1024) },
+#endif // TARGET_WIN7
+			{ (640 * 1024), (384 * 1024) },
+			{ (1024 * 1024), (1024 * 1024) * (RESERVE_MB_INITIAL-1) }
+		};
+		PPS_ATTRIBUTE_LIST MyAttributeList = NULL, PtrAttributeList = NULL;
+#if defined(TARGET_WIN7) && RESERVE_MB_INITIAL<=16
+		((xpPRTL_USER_PROCESS_PARAMETERS)ProcessParameters)->Flags |= RTL_USER_PROC_RESERVE_16MB;
+		PtrAttributeList = AttributeList;
+#else
+		int cnt;
+
+		if ((MyAttributeList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, AttributeList->TotalLength + sizeof(PS_ATTRIBUTE))))
+		{
+
+			cnt = (int)((AttributeList->TotalLength - sizeof(AttributeList->TotalLength)) / sizeof(PS_ATTRIBUTE));
+			RtlMoveMemory(MyAttributeList, AttributeList, AttributeList->TotalLength);
+			MyAttributeList->TotalLength += sizeof(PS_ATTRIBUTE);
+			MyAttributeList->Attributes[cnt].Attribute = PS_ATTRIBUTE_MEMORY_RESERVE;
+			MyAttributeList->Attributes[cnt].Size = sizeof(Areas);
+			MyAttributeList->Attributes[cnt].ValuePtr = Areas;
+			PtrAttributeList = MyAttributeList;
+		}
+		fStartingNtvdm = FALSE;
+
+#endif // TARGET_WIN7 && RESERVE_MB_INITIAL<=16
+		if (PtrAttributeList)
+		{
+			PS_CREATE_INFO CreateInfoBak;
+
+			RtlMoveMemory(&CreateInfoBak, CreateInfo, sizeof(CreateInfoBak));
+			LastCreateUserProcessError =
+				NtCreateUserProcessReal(ProcessHandle,
+					ThreadHandle,
+					ProcessDesiredAccess,
+					ThreadDesiredAccess,
+					ProcessObjectAttributes,
+					ThreadObjectAttributes,
+#ifndef TARGET_WIN7
+					ProcessFlags | PROCESS_CREATE_FLAGS_SUSPENDED,
+#else
+					ProcessFlags,
 #endif
+					ThreadFlags,
+					ProcessParameters,
+					CreateInfo,
+					PtrAttributeList);
+
+			if (NT_SUCCESS(LastCreateUserProcessError))
+			{
+				int i;
+				NTSTATUS Status;
+				BOOL fOk = TRUE;
+#if !defined(TARGET_WIN7)
+				if (fOk)
+				{
+					ULONG_PTR Base = 1;
+					SIZE_T Size = (64 * 1024) - 1;
+
+					if (!NT_SUCCESS(NtAllocateVirtualMemory(*ProcessHandle,
+						(PVOID *)&Base,
+						0,
+						&Size,
+						MEM_RESERVE, // Do not commit yet, committing it at this stage will crash DLL initialization
+						PAGE_READWRITE
+						)))
+					{
+						Map0Page((HANDLE)GetProcessId(*ProcessHandle));
+					}
+				}
+				// If it fails, NTVDM.exe will automatically fallback to its own memory management routines,
+				// so no error check needed.
+				if (!(ProcessFlags | PROCESS_CREATE_FLAGS_SUSPENDED)) ResumeThread(*ThreadHandle);
+#endif
+			}
+			if (MyAttributeList) HeapFree(GetProcessHeap(), 0, MyAttributeList);
+			if (NT_SUCCESS(LastCreateUserProcessError)) return LastCreateUserProcessError;
+			else
+			{
+				TRACE("NTVDM.EXE NtCreateUserProcess returned %08X, falling back to default\n", LastCreateUserProcessError);
+				RtlMoveMemory(CreateInfo, &CreateInfoBak, sizeof(CreateInfoBak));
+			}
+		}
+
+#endif // USE_OWN_RTLCREATEUSERPROCESSEX
+	}
+#endif // defined(WOW16_SUPPORT) && (defined(TARGET_WIN7) || defined(USE_MAP0DRV))
 	LastCreateUserProcessError = 
 		NtCreateUserProcessReal(ProcessHandle,
 		ThreadHandle,
@@ -778,6 +876,7 @@ BOOL WINAPI _DllMainCRTStartup(
 #endif
 
 		 pszProcess = GetProcessName();
+		 //Sleep(10000);
 		 TRACE("LDNTVDM is running inside %S\n", pszProcess)
 #if defined(TARGET_WINXP) && defined(_WIN64)
 		 if (__wcsicmp(pszProcess, _T("csrss.exe")) == 0)
@@ -956,6 +1055,9 @@ BOOL WINAPI _DllMainCRTStartup(
 			CloseHandle(g_hLog);
 			g_hLog = INVALID_HANDLE_VALUE;
 		}
+#endif
+#ifdef USE_MAP0DRV
+		Map0Page_CloseDriver();
 #endif
 		break;
 	}

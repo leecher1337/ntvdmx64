@@ -57,3 +57,21 @@ NTSYSAPI NTSTATUS NTAPI RtlAcquirePrivilege(PULONG Privilege, ULONG NumPriv, ULO
      (_ucStr)->MaximumLength = (USHORT)(_bufSize))
 
 #define BaseSetLastNTError(status) SetLastError(RtlNtStatusToDosError(status))
+
+typedef NTSTATUS(*PUSER_THREAD_START_ROUTINE)(
+	PVOID ThreadParameter
+	);
+
+//
+// Possible bit values for Flags field.
+//
+
+#define RTL_USER_PROC_PARAMS_NORMALIZED     0x00000001
+#define RTL_USER_PROC_PROFILE_USER          0x00000002
+#define RTL_USER_PROC_PROFILE_KERNEL        0x00000004
+#define RTL_USER_PROC_PROFILE_SERVER        0x00000008
+#define RTL_USER_PROC_RESERVE_1MB           0x00000020
+#define RTL_USER_PROC_RESERVE_16MB          0x00000040
+#define RTL_USER_PROC_CASE_SENSITIVE        0x00000080
+#define RTL_USER_PROC_DISABLE_HEAP_DECOMMIT 0x00000100
+

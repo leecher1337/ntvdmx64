@@ -78,12 +78,60 @@ Default is TARGET_WIN10, which is set when none of these are set
 * Would need to patch condrv.sys in order to add -ForceV1 parameter, but it's
 * kernel mode and therefore not possible.
 */
-#define HOOK_CONHOSTV2
+//#define HOOK_CONHOSTV2
 
 /* On Windows >=7, appinfo.dll needs to get patched inside svchost.exe netsvcs */
 #if !defined(TARGET_WINXP) && defined(_WIN64) 
 #define NEED_APPINFO
 #endif
+
+
+/* In Windows 8 and above, Mapping a page to address 0 in a process is not possible
+ * anymore, unfortunately. In Win 7, this was possible through a registry key, but
+ * for unknown reasons, this important function was removed.
+ * Therefore we have a unsigned Ring0 driver that creates the missing VAD entry for
+ * us. Unfortunately, this would require running Windows in test signing mode, so
+ * it's unlikely that ppl will have this driver installed and running, but when this
+ * parameter is set, at least we try.
+ * The purpose of this is to support faulty NTVDM VDDs like TAME, that are making the
+ * wrong assumption that VDM memory always starts at address 0 which is only the
+ * case for NTVDM on x86
+ */
+#if !defined(TARGET_WINXP) && !defined(TARGET_WIN7)
+/* Currently, we have it disabled. Even though the driver works as intended, Windows
+ * seems to completely run havoc, if page 0 is allocated in virtual memory of a
+ * usermode process. For instance, it randomly doesn't resolve the gs segment register
+ * sometimes and lets it point to address 0, which in turn returns wrong memory and 
+ * this causes weird crashes in the application.
+ * I spent weeks in trying to find the reason for this, but to no avail.
+ * If you have any clue why this is and how to prevent this from happening, please 
+ * contact me. For the time being, I consider it absolutely impossible to have this
+ * working on Windows 8 and above.
+ */
+//#define USE_MAP0DRV
+#endif
+
+/* Use our own implementation of RtlCreateUserProcess for starting NTVDM.
+ * Should not be needed, as we already have PS_ATTRIBUTE_MEMORY_RESERVE.
+ * This is a fallback should for some reason both mechanisms start failing.
+ * The mechanism generally works and can serve as a documentation for other
+ * projects and for research.
+ */
+#ifdef WOW16_SUPPORT
+ // #define USE_OWN_RTLCREATEUSERPROCESSEX
+#endif
+
+/* Amount of memory to initially reserve in NTVDM in the loader.
+ * In original V86 monitor build, 16MB would be initially reserved. However,
+ * in our builds, we are using the CCPU-allocator which wants a consecutive
+ * memory block that consists of conventional mem + ems + xms + dpmi mem.
+ * Therefore, we think big here and reserve 240 MB initially to ensure that we
+ * have enough memory reserved in the low memory space.
+ * Please note that we cannot go above 240MB, as UMBASE of the ntvdm.exe
+ * constrains us to that limit as ntvdm.exe gets loaded there.
+ */
+#define RESERVE_MB_INITIAL		240
+
 
 /* In Windows XP And Windows 7, all the stuff is internal in kernel32.dll :(
 * Windows XP has its own xpcreateproc.c module, therefore doesn't have to lookup
@@ -99,7 +147,7 @@ Default is TARGET_WIN10, which is set when none of these are set
 * If CreateProcess hook is needed, the hooking is preferably done with METHOD_HOOKLDR,
 * which also needs a symbol lookup, so symcache is also benificial there.
 */
-#if defined(TARGET_WIN7) || defined(TARGET_WINXP) || defined(NEED_APPINFO) || defined(CREATEPROCESS_HOOK)
+#if defined(TARGET_WIN7) || defined(TARGET_WINXP) || defined(NEED_APPINFO) || defined(CREATEPROCESS_HOOK) || defined(USE_MAP0DRV)
 #define USE_SYMCACHE
 #endif
 

@@ -113,7 +113,7 @@ appinfo_load:
 
 			for (i = 0; keys[i].lpKeyName; i++)
 			{
-				if (keys[i].pszFunction == "AiOpenWOWStubs" && (dwAddress = MatchEng_FindSig(&hMatchEng, "\x48\x89\x5C\x24\x10\x4C\x89", 7, 2)))
+				if (keys[i].pszFunction == "AiOpenWOWStubs" && (dwAddress = (DWORD)MatchEng_FindSig(&hMatchEng, "\x48\x89\x5C\x24\x10\x4C\x89", 7, 2)))
 					REG_SetDWORD(hKey, keys[i].lpKeyName, dwAddress);
 				else tm.dwLowDateTime = 0;
 			}
@@ -194,6 +194,9 @@ BOOL UpdateSymbolCache(BOOL fUpdate)
 	if (NT_SUCCESS(Status = REG_OpenLDNTVDM(KEY_READ | KEY_WRITE, &hKey)))
 	{
 		for (i = 0, fUpdated = TRUE; i < sizeof(m_aSyms) / sizeof(m_aSyms[0]); i++)
+#ifndef _WIN64
+			if (!m_aSyms[i].fx64Only)
+#endif
 			fUpdated &= UpdateSymsForModule(hKey, m_aSyms[i].pszDLL, m_aSyms[i].lpDLLKey, m_aSyms[i].keys, fUpdate, FALSE);
 		REG_CloseKey(hKey);
 
@@ -201,7 +204,7 @@ BOOL UpdateSymbolCache(BOOL fUpdate)
 		if (NT_SUCCESS(Status = REG_OpenLDNTVDMWOW64(KEY_READ | KEY_WRITE, &hKey)))
 		{
 			for (i = 0; i < g_aSyms32Size; i++)
-				fUpdated &= UpdateSymsForModule(hKey, g_aSyms32[i].pszDLL, g_aSyms32[i].lpDLLKey, g_aSyms32[i].keys, fUpdate, TRUE);
+				if (!g_aSyms32[i].fx64Only) fUpdated &= UpdateSymsForModule(hKey, g_aSyms32[i].pszDLL, g_aSyms32[i].lpDLLKey, g_aSyms32[i].keys, fUpdate, TRUE);
 			REG_CloseKey(hKey);
 		}
 #endif

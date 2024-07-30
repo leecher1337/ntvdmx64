@@ -8,4 +8,5 @@ typedef struct {
 	char *pszDLL;
 	LPWSTR lpDLLKey;
 	REGKEY_PAIR *keys;
+	BOOL fx64Only;
 } REGKEY_SYMS;
