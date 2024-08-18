@@ -251,7 +251,18 @@ LPBYTE Hook_Inline_Func(HANDLE hProcess, HANDLE hModule, PVOID src, PVOID tgt, S
 		}
 		else
 		{
-			VirtualProtectEx(hProcess, context, cbContext, PAGE_EXECUTE_READWRITE, &OldProt);
+			if (!VirtualProtectEx(hProcess, context, cbContext, PAGE_EXECUTE_READWRITE, &OldProt))
+			{
+				// Seems, that stupid new "security" BS like "Aribitrary code guard" prevents a change of 
+				// protection of the execute-page with ERROR_DYNAMIC_CODE_BLOCKED
+				// Therefore we have to fall back to allocating our own memory block in this case:
+				TRACE("Cannot reserve %d bytes @%"PRIxPTR", Error = %d\n", cbContext, context, GetLastError());
+				if (!(context = Hook_FindAddr(hProcess, (ULONG_PTR)src, cbContext)))
+				{
+					TRACE("Hook_FindAddr failed.\n");
+					return NULL;
+				}
+			}
 		}
 	}
 
