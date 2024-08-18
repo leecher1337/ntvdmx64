@@ -362,6 +362,30 @@ You can just execute reg\conhost.reg from the release-folder of NTVDMx64
 as the correct user to fix that key.
 
 
+I want to use WSL (Windows Services for Linux), but it doesn't work due to
+the requirement for ConhostV2, however NTVDMx64 enforces ConhostV1.
+How can I use WSL and still use NTVDMx64?
+--------------------------------------------------------------------------
+If you can live with the shortcoming that you cannot directly launch a 
+DOS application on the new console (i.e. from cmd.exe shell), but let it 
+open up in a new console, you can revert the default console host setting 
+by  executing reg\conhostv2.reg from the release-folder of NTVDMx64
+to revert that key to Windows default (ConhostV2).
+It is also possible to switch between consoles with conhost.reg for
+classic console (NTVDMx64 compatible) and new console with conhostv2.reg
+So i.e. to execute WSL, execute conhostv2.reg prior to starting WSL
+and afterwards, revert it with conhost.reg.
+It seems that there are currently no plans to implement conhostv1 
+functionality into conhostv2 by Microsoft, unfortunately, leaving us with
+this workaround as the only option.
+
+
+Even after uninstalling NTVDMx64, I cannot use WSL anymore due to classic
+console being enforced. What can I do?
+--------------------------------------------------------------------------
+See question above.
+
+
 I want to print to my windows GDI printer or a network printer
 ---------------------------------------------------------------------------
 Use DOSPR.ZIP, see here: https://github.com/leecher1337/ntvdmx64/issues/161
