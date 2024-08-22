@@ -454,6 +454,7 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 #endif
 
 	if (Error == STATUS_INVALID_IMAGE_PROTECT ||
+		Error == STATUS_INVALID_IMAGE_NE_FORMAT ||
 		(Error == STATUS_INVALID_IMAGE_NOT_MZ && BaseIsDosApplication &&
 			(BinarySubType = BaseIsDosApplication(PathName, Error))))
 	{
