@@ -43,6 +43,8 @@ CD /D "%~dp0"
 echo ---------------------------------------------
 echo Checking machine, please wait...
 echo ---------------------------------------------
+reg query HKLM\Hardware\Description\System\CentralProcessor\0 | Find /i "Identifier" | Find /i "x86-64" >nul
+if errorlevel 1 (
 reg query HKLM\Hardware\Description\System\CentralProcessor\0 | Find /i "Identifier" | Find /i "x86" >nul
 if not errorlevel 1 (
   echo You appear to be running this installation on a 32bit machine.
@@ -51,6 +53,7 @@ if not errorlevel 1 (
   echo Installation aborted
   pause
   goto fini
+)
 )
 
 if not "%VERSION%"=="11.0" (
