@@ -211,7 +211,7 @@ if not "%W2K3SRC%"=="1" (
     echo It can have one of these names:
     echo * nt5src.7z
     echo * Win2K3.7z
-    echo * 3790src2.cab, 3790srv4.cab
+    echo * 3790src2.cab, 3790src4.cab
     echo.
     echo Now please either download them and put it here and afterwards continue
     echo or continue now to go without it ^(you will get the limited vdmredir.dll^)
