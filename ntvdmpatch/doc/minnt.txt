@@ -37,6 +37,8 @@ Requirements
    https://www.7-zip.de
  * Recommended: Windows Server 2003 Sourcecode
    nt5src.7z
+ * Recommended: Windows 11 23H2 core_en-us.esd from 
+   https://uupdump.net/getfile.php?id=64aa3acc-d2d2-4f80-af12-80820c44c14b&file=core_en-us.esd
 
 
 Setup MINNT build environment
@@ -79,6 +81,8 @@ You now have:
  * Google old-src.trunk.r687.20150728.7z or old-src-sr687.7z
  * Google nt5src.7z
    This one is optional. If not present, standard vdmredir.dll is used.
+ * https://uupdump.net/getfile.php?id=64aa3acc-d2d2-4f80-af12-80820c44c14b&file=core_en-us.esd
+   This one is only needed for Windows 11 24H3 support and (possibly) above
 
 You now have in ntvdmpatch\minnt\work:
 
