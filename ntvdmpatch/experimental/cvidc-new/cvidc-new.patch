@@ -1,205 +1,261 @@
 --- NT4\private\mvdm\softpc.new\base\cvidcnew\ev_glue.c
 +++ nt\private\mvdm\softpc.new\base\cvidcnew\ev_glue.c
-36d35
+30a31,32
+> #include "trace.h"
+> #include "debug.h"
+36d37
 < #include "j_c_lang.h"   /* jcode to ccode register definition header */
-64,65d58
+64,65d64
 < IHPE EvidPortFuncs;	/* CEvid extern */
 < IHPE AdapCOutb;		/* CEvid extern */
-67d59
+67d65
 < IHPE EvidWriteFuncs, EvidReadFuncs, EvidMarkFuncs;	/* CEvid refs */
-75,80d59
+75,80d72
 < IHPE j_modeLookup	= (IHPE) &modeLookup ;
 < IHPE j_EvidPortFuncs	= (IHPE) &EvidPortFuncs ;
 < IHPE j_AdapCOutb	= (IHPE) &AdapCOutb;
 < IHPE j_EvidWriteFuncs	= (IHPE) &EvidWriteFuncs; 
 < IHPE j_EvidReadFuncs	= (IHPE) &EvidReadFuncs;
 < IHPE j_EvidMarkFuncs	= (IHPE) &EvidMarkFuncs;
-82d59
+82d73
 < IHP j_Gdp;	/*	=  Gdp ;  SPECIAL CASE Gdp is the correct address  see below for init */
-93,97d60
+93,97d83
 < GLOBAL void
 < CrulesRuntimeError IFN1( char * , message ) 
 < {
 < 	printf("cevid runtime error: %s\r\n", message);
 < }
-113,115c74
+112a99,100
+> 	sub_note_trace2( GLUE_VERBOSE,
+> 			"glue_b_write: eaOff=%x, val=%x", eaOff, eaVal );
+113,115c102
 < 	jccc_parm1 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_parm2 = (IUH)eaVal;
 < 	jccc_gdp = (IUH)Gdp;
 ---
-> 	eaOff = (IUH)eaOff - gvi_pc_low_regen;
-134,136c93
+> 	eaOff = (IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF;
+133a121,122
+> 	sub_note_trace2( GLUE_VERBOSE,
+> 			"glue_w_write: eaOff=%x, val=%x", eaOff, eaVal );
+134,136c124
 < 	jccc_parm1 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_parm2 = (IUH)eaVal;
 < 	jccc_gdp = (IUH)Gdp;
 ---
-> 	eaOff = (IUH)eaOff - gvi_pc_low_regen;
-155,157c112
+> 	eaOff = (IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF;
+154a143,144
+> 	sub_note_trace2( GLUE_VERBOSE,
+> 			"glue_dw_write: eaOff=%x, val=%x", eaOff, eaVal );
+155,157c146
 < 	jccc_parm1 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_parm2 = (IUH)eaVal;
 < 	jccc_gdp = (IUH)Gdp;
 ---
-> 	eaOff = (IUH)eaOff - gvi_pc_low_regen;
-176,179c131
+> 	eaOff = (IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF;
+175a165,166
+> 	sub_note_trace3( GLUE_VERBOSE,
+> 		"glue_b_fill: eaOff=%x  val=%x  count=%d", eaOff, eaVal, count );
+176,179c168
 < 	jccc_parm1 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_parm2 = (IUH)eaVal;
 < 	jccc_parm3 = (IUH)count;
 < 	jccc_gdp = (IUH)Gdp;
 ---
-> 	eaOff = (IUH)eaOff - gvi_pc_low_regen;
-198,201c150
+> 	eaOff = (IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF;
+197a187,188
+> 	sub_note_trace3( GLUE_VERBOSE,
+> 		"glue_w_fill: eaOff=%x  val=%x  count=%d", eaOff, eaVal, count );
+198,201c190
 < 	jccc_parm1 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_parm2 = (IUH)eaVal;
 < 	jccc_parm3 = (IUH)count;
 < 	jccc_gdp = (IUH)Gdp;
 ---
-> 	eaOff = (IUH)eaOff - gvi_pc_low_regen;
-220,223c169
+> 	eaOff = (IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF;
+219a209,210
+> 	sub_note_trace3( GLUE_VERBOSE,
+> 		"glue_dw_fill: eaOff=%x  val=%x  count=%d", eaOff, eaVal, count );
+220,223c212
 < 	jccc_parm1 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_parm2 = (IUH)eaVal;
 < 	jccc_parm3 = (IUH)count;
 < 	jccc_gdp = (IUH)Gdp;
 ---
-> 	eaOff = (IUH)eaOff - gvi_pc_low_regen;
-242,243c188
+> 	eaOff = (IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF;
+241a231,232
+> 	sub_note_trace4( GLUE_VERBOSE,
+> 		"glue_b_fwd_move: eaOff=%x, fromOff=%x, count=%d, srcInRAM=%d", eaOff, fromOff, count, srcInRAM );
+242,243c234
 < 	jccc_parm1 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_parm2 = (IUH)fromOff;
 ---
-> 	eaOff = (IUH)eaOff - gvi_pc_low_regen;
-245,248c190
+> 	eaOff = (IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF;
+245,248c236
 < 		jccc_parm2 -= gvi_pc_low_regen;
 < 	jccc_parm3 = (IUH)count;
 < 	jccc_parm4 = (IUH)srcInRAM;
 < 	jccc_gdp = (IUH)Gdp;
 ---
 > 		fromOff -= gvi_pc_low_regen;
-267,268c209
+266a255,256
+> 	sub_note_trace4( GLUE_VERBOSE,
+> 		"glue_b_bwd_move: eaOff=%x, fromOff=%x, count=%d, srcInRAM=%d", eaOff, fromOff, count, srcInRAM );
+267,268c258
 < 	jccc_parm1 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_parm2 = (IUH)fromOff;
 ---
-> 	eaOff = (IUH)eaOff - gvi_pc_low_regen;
-270,273c211
+> 	eaOff = (IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF;
+270,273c260
 < 		jccc_parm2 -= gvi_pc_low_regen;
 < 	jccc_parm3 = (IUH)count;
 < 	jccc_parm4 = (IUH)srcInRAM;
 < 	jccc_gdp = (IUH)Gdp;
 ---
 > 		fromOff -= gvi_pc_low_regen;
-292,293c230
+291a279,280
+> 	sub_note_trace4( GLUE_VERBOSE,
+> 		"glue_w_fwd_move: eaOff=%x, fromOff=%x, count=%d, srcInRAM=%d", eaOff, fromOff, count, srcInRAM );
+292,293c282
 < 	jccc_parm1 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_parm2 = (IUH)fromOff;
 ---
-> 	eaOff = (IUH)eaOff - gvi_pc_low_regen;
-295,298c232
+> 	eaOff = (IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF;
+295,298c284
 < 		jccc_parm2 -= gvi_pc_low_regen;
 < 	jccc_parm3 = (IUH)count;
 < 	jccc_parm4 = (IUH)srcInRAM;
 < 	jccc_gdp = (IUH)Gdp;
 ---
 > 		fromOff -= gvi_pc_low_regen;
-317,318c251
+316a303,304
+> 	sub_note_trace4( GLUE_VERBOSE,
+> 		"glue_w_bwd_move: eaOff=%x, fromOff=%x, count=%d, srcInRAM=%d", eaOff, fromOff, count, srcInRAM );
+317,318c306
 < 	jccc_parm1 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_parm2 = (IUH)fromOff;
 ---
-> 	eaOff = (IUH)eaOff - gvi_pc_low_regen;
-320,323c253
+> 	eaOff = (IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF;
+320,323c308
 < 		jccc_parm2 -= gvi_pc_low_regen;
 < 	jccc_parm3 = (IUH)count;
 < 	jccc_parm4 = (IUH)srcInRAM;
 < 	jccc_gdp = (IUH)Gdp;
 ---
 > 		fromOff -= gvi_pc_low_regen;
-342,343c272
+341a327,328
+> 	sub_note_trace4( GLUE_VERBOSE,
+> 		"glue_dw_fwd_move: eaOff=%x, fromOff=%x, count=%d, srcInRAM=%d", eaOff, fromOff, count, srcInRAM );
+342,343c330
 < 	jccc_parm1 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_parm2 = (IUH)fromOff;
 ---
-> 	eaOff = (IUH)eaOff - gvi_pc_low_regen;
-345,348c274
+> 	eaOff = (IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF;
+345,348c332
 < 		jccc_parm2 -= gvi_pc_low_regen;
 < 	jccc_parm3 = (IUH)count;
 < 	jccc_parm4 = (IUH)srcInRAM;
 < 	jccc_gdp = (IUH)Gdp;
 ---
 > 		fromOff -= gvi_pc_low_regen;
-367,368c293
+366a351,352
+> 	sub_note_trace4( GLUE_VERBOSE,
+> 		"glue_dw_bwd_move: eaOff=%x, fromOff=%x, count=%d, srcInRAM=%d", eaOff, fromOff, count, srcInRAM );
+367,368c354
 < 	jccc_parm1 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_parm2 = (IUH)fromOff;
 ---
-> 	eaOff = (IUH)eaOff - gvi_pc_low_regen;
-370,373c295
+> 	eaOff = (IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF;
+370,373c356
 < 		jccc_parm2 -= gvi_pc_low_regen;
 < 	jccc_parm3 = (IUH)count;
 < 	jccc_parm4 = (IUH)srcInRAM;
 < 	jccc_gdp = (IUH)Gdp;
 ---
 > 		fromOff -= gvi_pc_low_regen;
-392,393d313
+392,393c375,378
 < 	jccc_parm2 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_gdp = (IUH)Gdp;
-395c314
+---
+> 	IU32 ret = (*c_ev_read_ptr.b_read)((IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF);
+> 	
+> 	sub_note_trace2( GLUE_VERBOSE,
+> 		"glue_b_read: eaOff=%x => %x", eaOff, ret );
+395c380
 < 	(*c_ev_read_ptr.b_read)(eaOff);
 ---
-> 	return (*c_ev_read_ptr.b_read)((IUH)eaOff - gvi_pc_low_regen);
-397d314
+> 	return ret;
+397d381
 < 	return((IU32)jccc_parm1);
-414,415d330
+414,415c398
 < 	jccc_parm2 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_gdp = (IUH)Gdp;
-417c331
+---
+> 	IU32 ret = (*c_ev_read_ptr.w_read)((IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF);
+417c400,401
 < 	(*c_ev_read_ptr.w_read)(eaOff);
 ---
-> 	return (*c_ev_read_ptr.w_read)((IUH)eaOff - gvi_pc_low_regen);
-419d331
+> 	sub_note_trace2( GLUE_VERBOSE,
+> 		"glue_w_read: eaOff=%x => %x", eaOff, ret );
+419c403
 < 	return((IU32)jccc_parm1);
-436,437d347
+---
+> 	return ret;
+436,437c420,423
 < 	jccc_parm2 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_gdp = (IUH)Gdp;
-439c348
+---
+> 	IU32 ret = (*c_ev_read_ptr.d_read)((IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF);
+> 
+> 	sub_note_trace1( GLUE_VERBOSE,
+> 		"glue_dw_read: eaOff=%x => %x", eaOff, ret );
+439c425
 < 	(*c_ev_read_ptr.d_read)(eaOff);
 ---
-> 	return (*c_ev_read_ptr.d_read)((IUH)eaOff - gvi_pc_low_regen);
-441d348
+> 	return ret;
+441d426
 < 	return((IU32)jccc_parm1);
-458,466c365
+458c443,445
 < 	jccc_parm1 = (IUH)dest;
+---
+> 	sub_note_trace3( GLUE_VERBOSE,
+> 		"glue_str_fwd_read: dest=%x, eaOff=%x, count=%d",
+> 						dest, eaOff, count );
+459,462c447
 < 	jccc_parm2 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_parm3 = (IUH)count;
-< #ifdef BACK_M
-< 	jccc_parm4 = (IUH)1;	/* direction backwards */
-< #else
-< 	jccc_parm4 = (IUH)0;
-< #endif
+< 	jccc_parm4 = (IUH)1;	/* destination in RAM */
 < 	jccc_gdp = (IUH)Gdp;
 ---
-> 	eaOff = (IUH)eaOff - gvi_pc_low_regen;
-468c367
+> 	eaOff = (IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF;
+464c449
 < 	(*c_ev_read_ptr.str_fwd_read)(dest, eaOff, count);
 ---
 > 	(*c_ev_read_ptr.str_fwd_read)(dest, eaOff, count, 1);
-485,493c384
+481c466,468
 < 	jccc_parm1 = (IUH)dest;
+---
+> 	sub_note_trace3( GLUE_VERBOSE,
+> 		"glue_str_bwd_read: dest=%x, eaOff=%x, count=%d",
+> 						dest, eaOff, count );
+482,485c470
 < 	jccc_parm2 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_parm3 = (IUH)count;
-< #ifdef BACK_M
-< 	jccc_parm4 = (IUH)1;	/* direction backwards */
-< #else
-< 	jccc_parm4 = (IUH)0;
-< #endif
+< 	jccc_parm4 = (IUH)1;	/* destination in RAM */
 < 	jccc_gdp = (IUH)Gdp;
 ---
-> 	eaOff = (IUH)eaOff - gvi_pc_low_regen;
-495c386
+> 	eaOff = (IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF;
+487c472
 < 	(*c_ev_read_ptr.str_bwd_read)(dest, eaOff, count);
 ---
 > 	(*c_ev_read_ptr.str_bwd_read)(dest, eaOff, count, 1);
-558a450,451
+550a536,537
 > 	setVideofwd_str_read_addr(c_ev_read_ptr.str_fwd_read);
 > 	setVideobwd_str_read_addr(c_ev_read_ptr.str_bwd_read);
-577c470
+569c556
 < 	IU8 modelookup[] =
 ---
 > 	static IU8 modelookup[] =
-600,601c493,496
+592,593c579,582
 < 				if (cevid_verbose) printf("SetWritePointers Generic Override for Chain %d, Mode %d\n", chain, getVideowrmode());	/*STF*/
 < 				if (cevid_verbose) printf("Rotates set to %d\n", getVideorotate());/*STF*/
 ---
@@ -207,15 +263,15 @@
 > 				{	printf("SetWritePointers Generic Override for Chain %d, Mode %d\n", chain, getVideowrmode());	/*STF*/
 > 					printf("Rotates set to %d\n", getVideorotate());/*STF*/
 > 				}
-727,729d621
+719,721d707
 < 	jccc_parm1 = (IUH)eaOff;
 < 	jccc_parm2 = (IUH)eaVal;
 < 	jccc_gdp = (IUH)Gdp;
-737,739d627
+729,731d714
 < 	jccc_parm1 = (IUH)eaOff;
 < 	jccc_parm2 = (IUH)eaVal;
 < 	jccc_gdp = (IUH)Gdp;
-812d698
+804d786
 < 	j_Gdp = Gdp ;
 --- NT4\private\mvdm\softpc.new\base\cvidcnew\evid_c.h
 +++ nt\private\mvdm\softpc.new\base\cvidcnew\evid_c.h
