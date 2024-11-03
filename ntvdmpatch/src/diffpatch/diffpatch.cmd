@@ -61,8 +61,13 @@ set n=0
 for %%I IN (%PATCHROOT%\patches\common\*.patch %PATCHROOT%\patches\minnt\*.patch %PATCHROOT%\experimental\haxm\minnt\*.patch %PATCHROOT%\experimental\haxm\haxm-dpmi.patch %PATCHROOT%\experimental\adlib\*.patch %PATCHROOT%\experimental\vesa\*.patch) do (
 for /r %%f in (*) do (
   set B=%%f
+  set "B=!B:%CD%\=!"
   if not "%LASTFILE%"=="%%I" (
-    find /i "!B:%CD%\=!" %%I >nul
+    find /i "!B!" %%I >nul
+    if errorlevel 1 (
+       set "B=!B:\=/%!"
+       find /i "!B!" %%I >nul
+    )
     if not errorlevel 1 (
       set /A n+=1
       set patfiles[!n!]=%%I
