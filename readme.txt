@@ -242,13 +242,13 @@ symbols appear. The loader should start working again automatically, after
 the symbols become available and you have an Internet connection available
 that allows downloads from the Microsoft Symbol Server.
 
-You can verify if the missing symbosl are the problem by checking the
+You can verify if the missing symbols are the problem by checking the
 loader output via DebugView.
 
-Additionally, it's a good idea to execute reg\reloadsym.reg in order to
-delete the symbol cache of the NTVDM loader, as it sometimes becomes
-out of sync and starts acting weird, so this will ensure that it reloads
-all the symbols.
+Additionally, it's a good idea to execute reload-symcache.cmd from the 
+release-directory in order to delete the symbol cache of the NTVDM loader, 
+as it sometimes becomes out of sync and starts acting weird, so this will 
+ensure that it reloads all the symbols.
 
 I want to have a proper soundcard emulation
 ---------------------------------------------------------------------------
