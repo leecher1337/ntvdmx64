@@ -821,6 +821,13 @@ void EnsureWin7Symbols(HMODULE hKrnl32)
 #endif
 
 
+__declspec(dllexport) void CALLBACK RebuildSymbolCache(HWND hwnd, HINSTANCE hinst, LPSTR lpszCmdLine, int nCmdShow)
+{
+#ifdef USE_SYMCACHE
+	UpdateSymbolCache(2);
+#endif
+}
+
 
 #ifdef CRYPT_LDR
 BOOL WINAPI real_DllMainCRTStartup(

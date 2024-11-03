@@ -47,7 +47,7 @@ static BOOL UpdateSymsForModule(HKEY hKey, char *pszDLL, LPWSTR lpDLLKey, REGKEY
 	{
 		ULONGLONG tmr;
 
-		if (GetFileTime(hFile, NULL, NULL, &tm) &&
+		if (GetFileTime(hFile, NULL, NULL, &tm) && fUpdate != 2 &&
 			NT_SUCCESS(REG_QueryQWORD(hKey, lpDLLKey, &tmr)) && *((PULONGLONG)&tm) == tmr)
 		{
 			// So far, it seems unchanged, now check if exports are present
@@ -59,10 +59,19 @@ static BOOL UpdateSymsForModule(HKEY hKey, char *pszDLL, LPWSTR lpDLLKey, REGKEY
 			{
 				// No update needed, everything fine
 				CloseHandle(hFile);
-				return TRUE; 
+				return TRUE;
 			}
 		}
 		CloseHandle(hFile);
+	}
+	if (fUpdate == 2)
+	{
+		// Be sure to delete symbol file on forced refresh
+		char szPDB[MAX_PATH];
+
+		SymEng_LoadModule(NULL, NULL);
+		if (SymEng_GetPDBFile(NULL, szKernel32, szPDB))
+			DeleteFileA(szPDB);
 	}
 
 	// Update needed

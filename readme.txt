@@ -362,6 +362,14 @@ You can just execute reg\conhost.reg from the release-folder of NTVDMx64
 as the correct user to fix that key.
 
 
+It seems that my applications crash randomly i.e. on launching NTVDM and
+I see weird behaviour (possibly after a Windows update). I suspect bad 
+offsets in the Symbol Cache, how can I refresh the NTVDM symbol cache?
+--------------------------------------------------------------------------
+Run reload-symcache.cmd from the release-directory to tell the loader to
+reload all required symbols.
+
+
 I want to use WSL (Windows Services for Linux), but it doesn't work due to
 the requirement for ConhostV2, however NTVDMx64 enforces ConhostV1.
 How can I use WSL and still use NTVDMx64?

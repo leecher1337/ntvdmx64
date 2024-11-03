@@ -9,3 +9,4 @@
 int SymEng_LoadModule(char  *pszFile, DWORD64 *pdwBase);
 DWORD SymEng_GetAddr(DWORD64 dwBase, char *pszSymbol);
 void SymEng_UnloadModule(DWORD64 dwBase);
+BOOL SymEng_GetPDBFile(char *pszSymPath, char *pszFile, char *pszPathPDB);

@@ -250,6 +250,8 @@ int SymEng_LoadModule(char *pszFile, DWORD64 *pdwBase)
 		if (iStatus < 0) return iStatus;
 	}
 
+	if (!pszFile) return -1;
+
 	SymEng_Delete0ByteSyms(pszFile);
 
 	if (!(*pdwBase = SymLoadModule64(GetCurrentProcess(), 0, pszFile, 0, 0, 0)))
