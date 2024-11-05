@@ -254,24 +254,6 @@ if not exist %workdir%\1\Windows\%W7SYSDIR%\olethk32.dll (
     pause
   )
 )
-
-rem Extract old ConhostV1 to facilitate installation for poor users of Windows 11 24H2+
-if not exist %workdir%\conhostv1.dll (
-  if exist %workdir%\core_en-us.esd (
-    7z e %workdir%\core_en-us.esd 3\Windows\system32\conhostv1.dll -o%workdir%
-   copy /y %workdir%\conhostv1.dll ..\release\ldntvdm\system32\11.0\
-  ) else (
-    if exist %workdir%\*23h2*.iso (
-      del %workdir%\sources\install.wim
-      7z x -y *23h2*.iso sources\install.wim -o%workdir%
-      if exist %workdir%\sources\install.wim (
-        7z x -y %workdir%\sources\install.wim 3\Windows\system32\conhostv1.dll  -o%workdir%
-        copy /y %workdir%\3\Windows\system32\conhostv1.dll ..\release\ldntvdm\system32\11.0\
-      )
-    )
-  )
-)
-
 :prepared
 
 

@@ -117,18 +117,7 @@ set VERSION=10.0
 
 if  "%VERSION%"=="11.0" (
   if not exist %SystemRoot%\system32\conhostv1.dll (
-    if exist ldntvdm\system32\%VERSION%\conhostv1.dll (
-      copy /y ldntvdm\system32\%VERSION%\conhostv1.dll %SystemRoot%\system32\
-    ) else (
-      echo It seems that your Windows 11 Installation is missing ConhostV1.dll 
-      echo Therefore, please see this link on how to download and install the missing 
-      echo component:
-      echo https://github.com/leecher1337/ntvdmx64/issues/281#issuecomment-2451016211
-      echo After installing ConhostV1, rerun installation.
-      start https://github.com/leecher1337/ntvdmx64/issues/281#issuecomment-2451016211
-      pause
-      goto fini
-    )
+    powershell Add-WindowsCapability -Online -Name "Microsoft.Windows.Console.Legacy~~~~"
   )
 )
 

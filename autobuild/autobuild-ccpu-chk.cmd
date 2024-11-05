@@ -195,29 +195,6 @@ if not exist %PREREQ%\de_windows_7_professional_with_sp1_x86_dvd_u_677093.iso (
   )
 )
 
-if not exist %PREREQ%\core_en-us.esd (
-  setlocal enableDelayedExpansion
-  call :dlprq 23h2url.txt "https://uupdump.net/getfile.php?id=64aa3acc-d2d2-4f80-af12-80820c44c14b&file=core_en-us.esd&aria2=2"
-  for /F "usebackq delims=" %%b in ("%PREREQ%\23h2url.txt") do (
-    set "DLURL=%%b"
-    goto urlparsed
-  )
-:urlparsed
-  del %PREREQ%\23h2url.txt
-  set "DLURL=!DLURL:%%=%%%%!"
-  call :dlprq core_en-us.esd "!DLURL!"
-  endlocal
-)
-if not exist %PREREQ%\core_en-us.esd (
-  echo If you plan to use NTVDMx64 on Windows 11 version 24H3 or above, a basic 
-  echo requirement for NTVDMx64 is missing in the OS installation: ConhostV1.dll
-  echo Without the proper V1 console, NTVDMx64 won't work.
-  echo Fetching the prereq failed. You can still continue without it, then the 
-  echo user will be asked on installation to download and unpack the missing file 
-  echo himself.
-  pause
-)
-
 if not "%NOW2K3%"=="" goto w2k3chkd
 :chkw2k3
 set W2K3SRC=
@@ -267,7 +244,7 @@ call :cpyprq GRMSDK_EN_DVD.iso
 call :cpyprq GRMWDK_EN_7600_1.ISO 
 call :cpyprq old-src.trunk.r687.20150728.7z 
 copy /y %PREREQ%\de_windows_7_professional_with_sp1*.iso ntvdmpatch\minnt\work\
-for %%I in (nt5src.7z Win2K3.7z 3790src2.cab 3790src4.cab core_en-us.esd) do if exist %PREREQ%\%%I call :cpyprq %%I
+for %%I in (nt5src.7z Win2K3.7z 3790src2.cab 3790src4.cab) do if exist %PREREQ%\%%I call :cpyprq %%I
 echo Build environment ready
 exit /b
 
