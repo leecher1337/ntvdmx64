@@ -220,42 +220,50 @@
 > 	sub_note_trace3( GLUE_VERBOSE,
 > 		"glue_str_fwd_read: dest=%x, eaOff=%x, count=%d",
 > 						dest, eaOff, count );
-459,462c447
+459,466c447
 < 	jccc_parm2 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_parm3 = (IUH)count;
-< 	jccc_parm4 = (IUH)1;	/* destination in RAM */
+< #ifdef BACK_M
+< 	jccc_parm4 = (IUH)1;	/* direction backwards */
+< #else
+< 	jccc_parm4 = (IUH)0;
+< #endif
 < 	jccc_gdp = (IUH)Gdp;
 ---
 > 	eaOff = (IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF;
-464c449
+468c449
 < 	(*c_ev_read_ptr.str_fwd_read)(dest, eaOff, count);
 ---
 > 	(*c_ev_read_ptr.str_fwd_read)(dest, eaOff, count, 1);
-481c466,468
+485c466,468
 < 	jccc_parm1 = (IUH)dest;
 ---
 > 	sub_note_trace3( GLUE_VERBOSE,
 > 		"glue_str_bwd_read: dest=%x, eaOff=%x, count=%d",
 > 						dest, eaOff, count );
-482,485c470
+486,493c470
 < 	jccc_parm2 = (IUH)eaOff - gvi_pc_low_regen;
 < 	jccc_parm3 = (IUH)count;
-< 	jccc_parm4 = (IUH)1;	/* destination in RAM */
+< #ifdef BACK_M
+< 	jccc_parm4 = (IUH)1;	/* direction backwards */
+< #else
+< 	jccc_parm4 = (IUH)0;
+< #endif
 < 	jccc_gdp = (IUH)Gdp;
 ---
 > 	eaOff = (IUH)(eaOff - gvi_pc_low_regen) & 0xFFFF;
-487c472
+495c472
 < 	(*c_ev_read_ptr.str_bwd_read)(dest, eaOff, count);
 ---
 > 	(*c_ev_read_ptr.str_bwd_read)(dest, eaOff, count, 1);
-550a536,537
+558a536,537
 > 	setVideofwd_str_read_addr(c_ev_read_ptr.str_fwd_read);
 > 	setVideobwd_str_read_addr(c_ev_read_ptr.str_bwd_read);
-569c556
+577c556
 < 	IU8 modelookup[] =
 ---
 > 	static IU8 modelookup[] =
-592,593c579,582
+600,601c579,582
 < 				if (cevid_verbose) printf("SetWritePointers Generic Override for Chain %d, Mode %d\n", chain, getVideowrmode());	/*STF*/
 < 				if (cevid_verbose) printf("Rotates set to %d\n", getVideorotate());/*STF*/
 ---
@@ -263,15 +271,15 @@
 > 				{	printf("SetWritePointers Generic Override for Chain %d, Mode %d\n", chain, getVideowrmode());	/*STF*/
 > 					printf("Rotates set to %d\n", getVideorotate());/*STF*/
 > 				}
-719,721d707
+727,729d707
 < 	jccc_parm1 = (IUH)eaOff;
 < 	jccc_parm2 = (IUH)eaVal;
 < 	jccc_gdp = (IUH)Gdp;
-729,731d714
+737,739d714
 < 	jccc_parm1 = (IUH)eaOff;
 < 	jccc_parm2 = (IUH)eaVal;
 < 	jccc_gdp = (IUH)Gdp;
-804d786
+812d786
 < 	j_Gdp = Gdp ;
 --- NT4\private\mvdm\softpc.new\base\cvidcnew\evid_c.h
 +++ nt\private\mvdm\softpc.new\base\cvidcnew\evid_c.h
