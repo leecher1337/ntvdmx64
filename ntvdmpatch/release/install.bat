@@ -91,8 +91,12 @@ if exist %SYSTEMROOT%\syswow64\ntvdm.exe (
   echo It seems that you have ntvdm.exe already on your system.
   echo I assume that it's NTVDMx64. Before reinstalling ntvdmx64, you should 
   echo uninstall the old version via control panel first.
-  pause
-  goto fini
+  echo.
+  echo If you are absolutely sure that you don't have a control panel entry
+  echo for removal, you can go ahead and force installation. If unsure, answer
+  echo N here and try to uninstall it via control panel first.
+  CHOICE /C YN /M "Do you want to force installation?"
+  if errorlevel 2 goto fini
 )
 
 if "%version%"=="5.1" goto ossupp
