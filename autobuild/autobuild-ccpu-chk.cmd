@@ -85,16 +85,30 @@ rem -- Path is too long, bad, do subst
 setlocal enableDelayedExpansion
 if not [%WKDIR:~0,-30%]==[] SET NEEDSUBST=1
 if not "%NEEDSUBST%"=="" (
-  set "drives=WDEFGHIJKLMNOPQRSTUVXYZABC"
-  for /f "delims=:" %%A in ('wmic logicaldisk get caption') do set "drives=!drives:%%A=!"
-  set "WORKDRV=!drives:~0,1!"
-
-  if "!WORKDRV!"=="" (
-    echo No free drive letter found, aborting, sorry...
-    pause
-    exit /b
+  set WORKDRV=
+  for /f "tokens=1* delims=:" %%A in ('subst') do (
+    for /f "tokens=2 delims=>" %%C in ("%%B") do (
+      for /f "tokens=* delims= " %%D in ("%%C") do (
+        set "MappedPath=%%D"
+        if /i "!MappedPath!"=="%WKDIR%" (
+          set "WORKDRV=%%A"
+        )
+      )
+    )
   )
-  subst !WORKDRV!: %WKDIR%
+
+  if "!WORKDRV!"=="" (  
+    set "drives=WDEFGHIJKLMNOPQRSTUVXYZABC"
+    for /f "delims=:" %%A in ('wmic logicaldisk get caption') do set "drives=!drives:%%A=!"
+    set "WORKDRV=!drives:~0,1!"
+
+    if "!WORKDRV!"=="" (
+      echo No free drive letter found, aborting, sorry...
+      pause
+      exit /b
+    )
+    subst !WORKDRV!: %WKDIR%
+  )
   set BLDDIR=!WORKDRV!:
 ) else (
   set BLDDIR=%WKDIR%
@@ -281,6 +295,7 @@ if not exist %PREREQ%\%1 (
 if not exist %PREREQ%\%1 (
   echo Prerequisite %1 not found in %PREREQ%, FAILED!
   pause
+  if not "%WORKDRV%"=="" subst %WORKDRV%: /d
   exit
 )
 exit /b
@@ -289,6 +304,7 @@ exit /b
 if not exist %PREREQ%\%1 (
   echo Prerequisite %1 not found in %PREREQ%, FAILED!
   pause
+  if not "%WORKDRV%"=="" subst %WORKDRV%: /d
   exit
 )
 copy /y %PREREQ%\%1 ntvdmpatch\minnt\work\
@@ -298,6 +314,7 @@ exit /B
 if not exist %PREREQ%\%1 (
   echo Prerequisite %1 not found in %PREREQ%, FAILED!
   pause
+  if not "%WORKDRV%"=="" subst %WORKDRV%: /d
   exit
 )
 7z x -y %PREREQ%\%1
