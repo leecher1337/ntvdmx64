@@ -1,6 +1,18 @@
 For the impatient ones, who don't want to read:
 ntvdmpatch\doc\autobuild.txt should be the fastest way to get NTVDMx64 compiled.
 
+Known defects
+=============
+Please be aware that starting with Windows 11 22H2, support for 16bit 
+Windows applications (i.e. Windows 3.11 applications) is no longer possible
+due to removal of crucial functions (UserRegisterWowHandlers) from USER32.DLL
+and the whole Win16 support relies on this.
+You can still run DOS applications without issues, but for Win16, please use
+WineVDM instead.
+You may want to upvote issue  https://aka.ms/AAl858b in MS Feedback hub to
+convince Microsoft to put back these functions.
+
+
 What is it?
 ===========
 NTVDMx64 is a port of the well-known Windows NTVDM, which is used by windows 
