@@ -55,6 +55,9 @@ SOURCES= \
         ..\prtinfo.c    \
         ..\accessp.c    \
         ..\packstr.c    \
+        ..\data.c \
+        ..\hexdump.c \
+        debug.c \
         Canonapi.c \
         crtstub.c
 
