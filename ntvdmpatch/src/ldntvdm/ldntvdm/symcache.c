@@ -148,10 +148,8 @@ HANDLE SymCache_GetDLLKey(HKEY hKey, LPWSTR lpDLLKey, BOOL fUpdate)
 	for (i = 0; i < sizeof(m_aSyms) / sizeof(m_aSyms[0]); i++)
 		if (m_aSyms[i].lpDLLKey == lpDLLKey)
 		{
-			if (UpdateSymsForModule(hKey, m_aSyms[i].pszDLL, m_aSyms[i].lpDLLKey, m_aSyms[i].keys, fUpdate, FALSE))
-				return (HANDLE)&m_aSyms[i];
-			TRACE("SymCache_GetDLLKey(%S) found, but update failed\n", lpDLLKey);
-			return NULL;
+			UpdateSymsForModule(hKey, m_aSyms[i].pszDLL, m_aSyms[i].lpDLLKey, m_aSyms[i].keys, fUpdate, FALSE);
+			return (HANDLE)&m_aSyms[i];
 		}
 	TRACE("SymCache_GetDLLKey(%S) not found\n", lpDLLKey);
 	return NULL;
@@ -165,9 +163,8 @@ HANDLE SymCache_GetDLLKeyWOW64(HKEY hKey, LPWSTR lpDLLKey, BOOL fUpdate)
 	for (i = 0; i < g_aSyms32Size; i++)
 		if (g_aSyms32[i].lpDLLKey == lpDLLKey)
 		{
-			if (UpdateSymsForModule(hKey, g_aSyms32[i].pszDLL, g_aSyms32[i].lpDLLKey, g_aSyms32[i].keys, fUpdate, TRUE))
-				return (HANDLE)&g_aSyms32[i];
-			return NULL;
+			UpdateSymsForModule(hKey, g_aSyms32[i].pszDLL, g_aSyms32[i].lpDLLKey, g_aSyms32[i].keys, fUpdate, TRUE);
+			return (HANDLE)&g_aSyms32[i];
 		}
 	return NULL;
 }
