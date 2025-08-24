@@ -395,6 +395,30 @@ fnBangCommandExceptionFilter(
 }
 
 static
+BOOL LoadVdmDBG(void)
+{
+    if ( !fVDMInitDone ) {
+        HANDLE  hmodVDM;
+
+        hmodVDM = LoadLibrary("VDMDBG.DLL");
+
+        if ( hmodVDM != (HANDLE)NULL ) {
+            pfnVDMProcessException = (BOOL (WINAPI *)(LPDEBUG_EVENT))
+                GetProcAddress( hmodVDM, "VDMProcessException" );
+            pfnVDMGetSelectorModule = (BOOL (WINAPI *)(HANDLE,HANDLE,WORD,PUINT,LPSTR,UINT,LPSTR,UINT))
+                GetProcAddress( hmodVDM, "VDMGetSelectorModule" );
+            
+            fVDMActive = pfnVDMProcessException && pfnVDMGetSelectorModule;
+
+        } else {
+            dprintf("LoadLibrary(VDMDBG.DLL) failed\n");
+			return FALSE;
+        }
+    }
+	return TRUE;
+}
+
+static
 BOOL VDMEvent(DEBUG_EVENT* pDebugEvent) 
 {
     LPSTR           Str;
@@ -419,24 +443,8 @@ BOOL VDMEvent(DEBUG_EVENT* pDebugEvent)
     IMAGE_NOTE      im;
     WORD            EventFlags;
 
-    if ( !fVDMInitDone ) {
-        HANDLE  hmodVDM;
-
-        hmodVDM = LoadLibrary("VDMDBG.DLL");
-
-        if ( hmodVDM != (HANDLE)NULL ) {
-            pfnVDMProcessException = (BOOL (WINAPI *)(LPDEBUG_EVENT))
-                GetProcAddress( hmodVDM, "VDMProcessException" );
-            pfnVDMGetSelectorModule = (BOOL (WINAPI *)(HANDLE,HANDLE,WORD,PUINT,LPSTR,UINT,LPSTR,UINT))
-                GetProcAddress( hmodVDM, "VDMGetSelectorModule" );
-            
-            fVDMActive = pfnVDMProcessException && pfnVDMGetSelectorModule;
-
-        } else {
-            dprintf("LoadLibrary(VDMDBG.DLL) failed\n");
-        }
-        fVDMInitDone = TRUE;
-    }
+	LoadVdmDBG();
+	fVDMInitDone = TRUE;
     if ( !fVDMActive ) {
         return( TRUE );
     } else {
@@ -858,6 +866,8 @@ BOOL VdmExtCommand(char *pname, char *args)
             return FALSE;
         }
     }
+
+	LoadVdmDBG();
 
     __try {
         (ExtensionRoutine)(
