@@ -3,6 +3,10 @@ call basepath.cmd
 SETLOCAL EnableDelayedExpansion
 pushd %BASEPATH%
 set BUILD_ALLOW_ALL_WARNINGS=1
+rem Multithreaded build caused problems on some machines so disabling multithreaded build:
+set BUILD_MULTIPROCESSOR=
+set BUILD_CONCURRENT_PROCESSORS=
+set NUMBER_OF_PROCESSORS=1
 if "%HAXM%"=="" set CCPU=1
 
 rem
