@@ -226,6 +226,34 @@ Setting empty REG_SZ named TRACE to CpuEnv you must.
 After running vdmdebug.exe, you will be enlighted by running vdmdebug.
 Do not call Yoda, Yoda will call you.
 
+Tracing DOS applications
+------------------------
+Prereq:
+1) You need to have installed the checked build
+2) You may want install the debug symbols by running inst-sym.cmd 
+   from installation directory.
+3) Do not run multiple NTVDM-instances, that will not work, you only
+   have one NTVDM with one debug-connection to vdmdebug.exe
+
+When you first break into YODA, you may want to enable symbolic 
+debugging to get at least a hint where in the code you are.
+For that, run:
+
+.sxe cd
+.r
+
+Without .sxe cd, there is not DOS task creation hook and thus no
+symbol lookup possible.
+.r uses VDMEXT's tracing routine which supports symbol lookup.
+
+If you want to trace through a DOS application and log it to a file, 
+after entering above commands, you may want to:
+
+tf c:\trace.txt
+t
+luke
+c
+
 Known bugs
 ==========
 Currently there are crashes with some DPMI programs like i.e
@@ -463,7 +491,7 @@ Are there any documents that describe the inner workings of the NTVDM
 subsystem?
 ---------------------------------------------------------------------------
 Not much documentation available, but this slide may be interesting to you:
-https://documents.pub/document/2013-syscan360-wang-yuntvdm.html
+https://web.archive.org/web/20230822011131/https://documents.pub/document/2013-syscan360-wang-yuntvdm.html?page=11
 
 
 For other questions, I recommend looking at the Issue tracker:

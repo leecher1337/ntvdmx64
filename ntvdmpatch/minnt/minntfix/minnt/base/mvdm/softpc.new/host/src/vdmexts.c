@@ -867,7 +867,7 @@ BOOL VdmExtCommand(char *pname, char *args)
         }
     }
 
-	LoadVdmDBG();
+	if (!fVDMActive) LoadVdmDBG();
 
     __try {
         (ExtensionRoutine)(
