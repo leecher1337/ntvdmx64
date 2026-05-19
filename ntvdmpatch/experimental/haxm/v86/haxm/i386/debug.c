@@ -85,15 +85,15 @@ BOOL GetCpuCmdLine(char *buff,int size,FILE *stream, char *who)
 		{
 			for (i=0; i<GLOBAL_InsideDebugger; i++)
 			{
-				strcat(prompt, p);
-				strcat(prompt, outerPrompts[i]);
+				strcat_s(prompt, sizeof(prompt), p);
+				strcat_s(prompt, sizeof(prompt), outerPrompts[i]);
 				p=":";
 			}
 		}
 		if (*who)
 		{
-			strcat(prompt,p);
-			strcat(prompt,who);
+			strcat_s(prompt, sizeof(prompt), p);
+			strcat_s(prompt, sizeof(prompt), who);
 		}
 		if (p = strrchr(who, '?'))
 		{
@@ -101,7 +101,7 @@ BOOL GetCpuCmdLine(char *buff,int size,FILE *stream, char *who)
 			while (*p && *p<=' ') p++;
 		}
 		if (!p || *p)
-			strcat(prompt, "> ");
+			strcat_s(prompt, sizeof(prompt), "> ");
 		fprintf(stdout, prompt);
 		fflush(stdout);
 #ifdef YODA
