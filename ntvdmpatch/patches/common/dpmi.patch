@@ -264,18 +264,40 @@
 > ENDIF
 --- NT4\private\mvdm\dpmi\486\dxstrt.asm
 +++ nt\private\mvdm\dpmi\486\dxstrt.asm
-118a119
+97a98,99
+>         extrn   selLowHeapStart:WORD    ; low-heap reset on client teardown (cth05)
+>         extrn   selHiHeapStart:WORD
+118a121
 >         extrn   HungAppExit:FAR
-128a130,133
+128a132,135
 > if DEBUG
 >         extrn   PMDebugInt:NEAR
 >         extrn	fTraceBug:WORD
 > endif
-804a810,812
+804a812,814
 >         push    offset DXPMCODE:HungAppExit
 > 
 >         push    SEL_DXPMCODE OR STD_RING
-1260a1269,1276
+1247c1257,1272
+<         
+---
+> 
+> ;
+> ; The low heap (selLowHeapStart, dxmmgr.asm) is a chain of MEMHDR block
+> ; headers, each its own selector, used for real-mode-addressable DOS-call
+> ; buffers.  FreeMemByOwner above only frees blocks owned by the terminating
+> ; client; a non-client head/sentinel block survives -- but ReInitGdt below
+> ; frees ALL selectors above HighestDxSel, including that surviving block's.
+> ; selLowHeapStart is then a dangling pointer to a freed selector.  The next
+> ; DPMI client inserts a low  block, does MOV ES,selLowHeapStart -> #GP 
+> ; Zero the heads here (matching the selEHStack reset just above) so
+> ; the next client rebuilds the low heap from empty.  (InitLowHeap is a stub;
+> ; the heap is built lazily, so an empty chain is the correct fresh state.)
+> ;
+>         mov     selLowHeapStart,0
+>         mov     selHiHeapStart,0
+> 
+1260a1286,1293
 > 	; HACKHACK - Seems to fix DPMI applications running after termination,
 > 	; but is this the correct way to do..??
 > .386
@@ -284,6 +306,69 @@
 > 	mov	gs, ax
 > .286p
 > 
+1642a1676
+>         push    bx
+1646a1681
+>         mov     es,selGDT
+1651a1687,1691
+> ;
+> ; Step 1: forcibly free the terminated client's selectors -- zero every
+> ; descriptor strictly above the first-client high-water HighestDxSel.  (Client
+> ; LDT selectors are reclaimed here, not via individual FreeSelector calls.)
+> ;
+1655,1660c1695,1698
+<         mov     selGDTFree,ax
+<         mov     es,selGDT
+< 
+< rig30:  mov     di,ax
+<         add     ax,8
+<         mov     word ptr es:[di],ax         ; set limit as link to next
+---
+> rigz:   cmp     ax,dx
+>         jnc     rigl                    ; reached end of table
+>         mov     di,ax
+>         mov     word ptr es:[di],0
+1662c1700
+<         mov     word ptr es:[di + 4],0
+---
+>         mov     word ptr es:[di + 4],0  ; access byte -> 0 (free)
+1664,1667c1702,1726
+<         jc      rig40
+<         cmp     ax,dx
+<         jnc     rig40
+<         jmp     rig30
+---
+>         add     ax,8
+>         jmp     rigz
+> ;
+> ; Step 2 (correctness fix): rebuild the free list from ALL free (access==0)
+> ; descriptors starting at SEL_USER -- the same range boot's InitGlobalDscrTable
+> ; uses.  The old code listed only from HighestDxSel+8, which orphaned any free
+> ; "gap" slots below HighestDxSel (descriptors that were free at that point but
+> ; sat in the boot band): their access byte stays 0 yet they are unreachable
+> ; from selGDTFree, so AllocateSelector can never hand them out again (a slow
+> ; selector leak across DPMI client teardowns).  Rebuilding from SEL_USER keeps
+> ; the free list consistent with the boot list.  Walk descending so the list
+> ; comes out ascending (head = lowest free), matching boot; terminate with -1.
+> ;
+> rigl:   mov     bx,0FFFFh               ; link accumulator; -1 = end of list
+>         mov     ax,dx                   ; one past the last descriptor
+> rigl2:  sub     ax,8
+>         cmp     ax,(SEL_USER and SELECTOR_INDEX)
+>         jb      rigl9
+>         mov     di,ax
+>         cmp     word ptr es:[di].arbSegAccess,0
+>         jnz     rigl2                   ; allocated -> not on the free list
+>         mov     es:[di].cbLimit,bx      ; free -> link to current head
+>         mov     bx,di                   ; this is the new (lower) head
+>         jmp     rigl2
+> rigl9:  mov     selGDTFree,bx
+1669c1728
+< rig40:  pop     es
+---
+>         pop     es
+1671a1731
+>         pop     bx
 --- NT4\private\mvdm\dpmi\486\dxintr.asm
 +++ nt\private\mvdm\dpmi\486\dxintr.asm
 313c313
