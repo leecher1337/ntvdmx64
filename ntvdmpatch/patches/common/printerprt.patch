@@ -1,0 +1,25 @@
+--- NT4\private\mvdm\softpc.new\base\comms\printer.c
++++ nt\private\mvdm\softpc.new\base\comms\printer.c
+423a424,445
+>                         /* Toggle ACK (bit 6) on every read while the port
+>                          * is idle.  Without this, the status register
+>                          * returns the same constant byte forever, which
+>                          * hangs guests doing parallel-port presence-detect
+>                          * busy-loops ("wait for ACK pulse" / "wait for any
+>                          * bit of LPT status to change").  Real hardware
+>                          * with no printer attached has a floating ACK
+>                          * line that fluctuates; with a printer attached
+>                          * ACK only pulses during data transfer (handled
+>                          * by STATE_OUT/STATE_OUTA elsewhere in this
+>                          * function).  Either way, presenting an
+>                          * oscillating ACK to idle-state polls matches
+>                          * real-world detection-code expectations and
+>                          * lets the loop exit.  Specifically observed:
+>                          * belle.com's configure dialog hangs on a 14k/sec
+>                          * read loop at port 3BDh waiting for this. */
+>                         {
+>                             static int ack_toggle = 0;
+>                             ack_toggle ^= 1;
+>                             if (ack_toggle)
+>                                 *value ^= 0x40;  /* flip ACK bit */
+>                         }

@@ -101,6 +101,9 @@ ntmem.patch         - Prevent crash on access of DOS application to uncommitted
                       memory
 pcibug.patch        - Some stupid programs try to read PCI BIOS even though 
                       installation check fails. So set CF on PCI INT 1Ah calls.
+printerprt.patch    - Toggle ACK (bit 6) on every read while printer port is idle.
+                      to prevent applications hanging in busy loops polling printer
+                      port
 sb.patch            - Crash fix for the lousy Soundblaster DSP emulation
 sas4gen.patch       - Fix sas4gen CCPU header file
 sas.patch           - Optimize SAS-interface for faster memory access, 
