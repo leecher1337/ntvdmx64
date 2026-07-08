@@ -766,8 +766,9 @@ extern void FmSetEmulationMode(
     pFm->eMode = kModeEmulate;
  #if OPT_FIXED_SAMPLE_RATE
     pFm->dwBufferSize = kOutputBufferSize;
-    pFm->dwBufferLoWater = ((pFm->dwBufferLoMs + pFm->uTimeout) * kBytesPerSample * SAMPLE_RATE( pFm)) / 1000;
-    pFm->dwBufferHiWater = ((pFm->dwBufferHiMs + pFm->uTimeout) * kBytesPerSample * SAMPLE_RATE( pFm)) / 1000;
+    /* Deadband watermarks derived from buffer size -- see note below. */
+    pFm->dwBufferLoWater = pFm->dwBufferSize / 8;   /* ~94ms */
+    pFm->dwBufferHiWater = pFm->dwBufferSize / 2;   /* ~375ms */
  #else
     if ( 2 == wParam)
       {
@@ -792,8 +793,16 @@ extern void FmSetEmulationMode(
     pFm->dwBufferSize = (kBufferMaxMs * kBytesPerSample * pFm->nSamplesPerSec) / 1000;
     pFm->dwBufferSize += (4 * sizeof(DWORD) - 1) & -(long)pFm->dwBufferSize; // Round up to DWORDs
 
-    pFm->dwBufferLoWater = ((pFm->dwBufferLoMs + pFm->uTimeout) * kBytesPerSample * pFm->nSamplesPerSec) / 1000;
-    pFm->dwBufferHiWater = ((pFm->dwBufferHiMs + pFm->uTimeout) * kBytesPerSample * pFm->nSamplesPerSec) / 1000;
+    /* The Lo/Hi watermarks form the output PID's deadband: while the buffer
+     * fill sits between them the synth runs at its natural ~SR rate; it only
+     * speeds up below Lo or slows down above Hi.  The original Ms-based calc is
+     * broken here because FmSetEmulationMode() is called from FmInit() BEFORE
+     * dwBufferLoMs/dwBufferHiMs are initialised (they're still 0) -> Lo==Hi ==
+     * no deadband -> the PID "slowed down" on almost every call and
+     * under-produced ~15% (measured synth output ~6975/s vs SR 8192).
+     * Derive a guaranteed Lo<Hi gap straight from the buffer size instead. */
+    pFm->dwBufferLoWater = pFm->dwBufferSize / 8;   /* ~94ms of a 750ms buffer */
+    pFm->dwBufferHiWater = pFm->dwBufferSize / 2;   /* ~375ms */
  #endif
 #else
     TRACE( 2, ("FmSetEmulationMode() Emulator not enabled, selecting Adlib device\n"));
@@ -1297,12 +1306,18 @@ BOOL EmulatorStart( register SFm* const pFm)
       }
     TRACE( 3, ("EmulatorStart() Created OLP3 emulator thread\n"));
 
-    // Adjust priority
-    ASSERT( SetThreadPriority(
+    // Adjust priority.  NB: this file locally #defines ASSERT(x) to nothing
+    // (line ~6), so the original ASSERT(SetThreadPriority(...)) silently
+    // DROPPED the call -> the synth thread ran at NORMAL priority and got
+    // starved under a heavy VM-exit guest (DOOM), underrunning the OPL audio
+    // buffer = slow/choppy music; a light guest (SKYROADS) never starved it.
+    // Call it directly so the priority actually takes effect.
+    if ( !SetThreadPriority(
       pFm->hOutputThread,
       //THREAD_PRIORITY_ABOVE_NORMAL
       THREAD_PRIORITY_HIGHEST
-    ));
+    ))
+      TRACE( 0, ("!!! EmulatorStart() SetThreadPriority failed %u\n", GetLastError()));
     }
 
   while ( NULL == pFm->pdsBuffer)
