@@ -139,6 +139,10 @@ endings* below).
    CRLF, a Unix/LF checkout produces LF — falling back to `crlf` when the sniff
    is inconclusive).
 
+   If the new patch belongs to an *earlier* tier than what currently sits at
+   HEAD (e.g. you commit a `Repo: minnt` patch after the experimental commits),
+   run `reflow` before `generate` — see the reflow section below.
+
 2. **Regenerate and verify:**
 
    ```bash
@@ -196,6 +200,50 @@ Notes:
 * This is a one-time step per file: once the `.patch` exists and is part of the
   build, a later `bootstrap` picks the file up automatically (it's now referenced
   by a patch). Generate before re-bootstrapping, or the manual commit is lost.
+
+---
+
+## Adding a patch in an *earlier* tier: `reflow`
+
+The order of commits in the git history IS the apply order — `generate` diffs
+each commit against its parent. A commit tagged `Repo: minnt` sitting *after*
+`Repo: haxm/vesa/adlib` commits therefore records a diff computed against the
+experimental state, not the minnt state, and the emitted `.patch` misapplies at
+autobuild time.
+
+That's exactly the situation when you commit a **new** patches/`<repo>` patch on
+top of HEAD after bootstrap: the tail of history is already experimental. The
+`reflow` subcommand fixes it:
+
+```bash
+cd .patchsrc
+# ...you just committed a Repo: minnt patch on top of HEAD...
+cd ..
+bash src/gitpatch/gitpatch.sh reflow          # moves it between the last
+                                              # minnt commit and the first
+                                              # experimental commit
+bash src/gitpatch/gitpatch.sh generate --check
+```
+
+What reflow does:
+
+1. Reads every commit after base, extracts its `Repo:` trailer.
+2. Uses `order()` (the canonical tier list for the current `REPO`/`SCOPE`) as
+   the tier priority. Untagged commits sort to the end.
+3. Stable-sorts: primary key = tier priority, secondary = original position
+   (order within a tier is preserved).
+4. If the sequence differs from the current one, runs `git rebase -i base` with
+   a canned todo — same mechanism `--fixup` / `--autosquash` uses.
+5. On conflict (e.g. a later experimental patch touches the same lines as your
+   new one), it exits with instructions; resolve as with any git rebase and run
+   `git rebase --continue`.
+6. Saves `refs/gitpatch/reflow-pre` before touching history, so you can always
+   `git reset --hard refs/gitpatch/reflow-pre` to abandon.
+
+Reflow is a no-op when history is already in canonical order — safe to run
+routinely after any hand-authored commit. It complements `--fixup` /
+`--autosquash`: use those to fold a change into an *existing* commit, and
+`reflow` when a **new** commit needs to slot into an earlier tier.
 
 ---
 
@@ -304,11 +352,12 @@ bash src/gitpatch/gitpatch.sh files      # every file referenced by the patches
 |---|---|
 | `order` | Print the canonical apply order. |
 | `files` | Print every file referenced by the in-scope patches. |
-| `bootstrap --src DIR [--mode patched\|clean] [--scope all\|core] [--force]` | Build `.patchsrc` from a source tree (default scope `all` = whole patch set). |
+| `bootstrap --src DIR [--mode patched\|clean] [--scope all\|core] [--eol crlf\|lf] [--force]` | Build `.patchsrc` from a source tree (default scope `all` = whole patch set). `--eol` forces a uniform EOL in every committed blob (else sniffed; falls back to `crlf`). |
 | `generate [--dest DIR] [--check]` | Regenerate all `.patch` files from git; `--check` runs `verify`. |
 | `verify [--dest DIR]` | Apply the (regenerated) patches to base, assert result == git HEAD. |
 | `newfiles --src DIR` | List committed files absent from a pristine tree (ship-as-is candidates). |
 | `add-source --src DIR <relpath>…` | Bring not-yet-patched original file(s) into the repo and fold them into the base commit (clean tree required). |
+| `reflow` | Re-order commits to match the canonical tier order (common → repo → experimental). Use after committing a new patch at HEAD whose `Repo:` trailer belongs to an earlier tier. |
 
 Environment overrides: `GP_REPO` (minnt/old-src), `GP_GITREPO` (working repo
 path), `GP_PATCHROOT` (the `ntvdmpatch` dir), `GP_PATCH`/`GP_DIFF` (tool paths;
@@ -337,18 +386,25 @@ introspection commands.
   (recorded per-commit as `Style:`). Override new patches with `GP_STYLE`.
 
 * **Line endings.** The repo's patches are mixed LF/CRLF (the NT source is CRLF).
-  `generate` reproduces each patch's recorded `Eol:`; for a brand-new patch it
-  sniffs the file's blob in git — a Windows/CRLF checkout produces a CRLF patch,
-  a Unix/LF checkout produces an LF patch — falling back to `crlf`. Override
-  with `GP_EOL=lf`, `GP_EOL=crlf`, or `GP_EOL=native` (byte-exact, no
-  normalisation). Whenever `Eol:` is `lf` or `crlf`, `generate` also normalises
-  the parent and current file contents to that EOL *before* diffing, so a
-  commit that changes the EOL of a file (e.g. LF edit against a CRLF base)
-  produces a diff of the real content changes only, not a whole-file rewrite.
-  Keep `core.autocrlf=false` in `.patchsrc` (bootstrap sets it) so byte content
-  is preserved. When applying, structural header lines are CR-stripped (GNU
-  patch needs that) while content lines keep their EOL so they still match the
-  source.
+  `bootstrap` picks one EOL for the whole `.patchsrc` and normalises every
+  file to it *at check-in* — both the base commit and every forward-applied
+  patch commit — so `git show` / `git log -p` / `git diff` between any two
+  commits read as targeted hunks rather than whole-file rewrites. The EOL is
+  picked in this order:
+
+  1. `--eol crlf|lf` on the `bootstrap` command line (or `GP_EOL=…`).
+  2. Sniffed from a sample of the copied pristine files (majority wins;
+     binary files are skipped).
+  3. Default `crlf` (the NT source convention).
+
+  `add-source` uses the same tree EOL for the file it imports; `generate`
+  still reproduces each patch's recorded `Eol:` trailer (or, for a brand-new
+  patch, sniffs the file's blob), so the emitted `.patch` matches the target
+  convention regardless of what the git blob uses internally. When applying
+  patches, structural header lines are always CR-stripped (GNU patch needs
+  that) and content lines are normalised to the tree's EOL so they byte-match
+  the target file. Keep `core.autocrlf=false` in `.patchsrc` (bootstrap sets
+  it) so nothing sneaks around this.
 
 * **Multi-file patch ordering.** Within a patch, files are emitted in the order
   recorded by the `Files:` trailer (captured from the original at bootstrap).

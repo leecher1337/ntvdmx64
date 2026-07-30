@@ -330,6 +330,52 @@ grep -q 'K2X' "$PRj/patches/common/fresh.patch" 2>/dev/null && ok "fresh.patch c
 run_gpj add-source --src "$SRCj" "mvdm/n/old.c" >/dev/null 2>&1 && bad "add-source ran on dirty tree" || ok "add-source refuses dirty tree"
 ( cd "$T/repoj"; git checkout -q -- mvdm/n/fresh.c )
 
+echo; echo "########## TEST J2: add-source normalises EOL to tree convention (CRLF tree) ##########"
+# Real-world case: existing tree is CRLF (NT source). User adds a new source file
+# whose bytes are LF (dropped in from git-clone, dos2unix, etc). Without EOL
+# normalisation in add-source, the base blob is LF, the user's Windows editor
+# saves the edit as CRLF, and generate emits a whole-file rewrite patch.
+PRj2="$T/prj2"; mkdir -p "$PRj2/patches/common" "$PRj2/patches/minnt"
+SRCj2="$T/srcj2/private"; mkdir -p "$SRCj2/mvdm/n"
+# Tree is CRLF (like real NT source):
+printf 'p\r\nq\r\nr\r\n' > "$SRCj2/mvdm/n/old.c"
+# ...but the new file the user is adding is LF:
+printf 'K1\nK2\nK3\nK4\nK5\n' > "$SRCj2/mvdm/n/fresh.c"
+# CRLF patch header + hunk to match the CRLF tree.
+{ printf -- '--- NT4\\private\\mvdm\\n\\old.c\r\n+++ nt\\private\\mvdm\\n\\old.c\r\n1c1\r\n< p\r\n---\r\n> P\r\n'; } > "$PRj2/patches/common/old.patch"
+run_gpj2() { GP_PATCHROOT="$PRj2" GP_GITREPO="$T/repoj2" bash "$GP" "$@"; }
+run_gpj2 bootstrap --src "$SRCj2" --mode clean --force >/dev/null
+# fresh.c is LF in $SRC, but add-source must import it as CRLF (tree convention).
+run_gpj2 add-source --src "$SRCj2" "mvdm/n/fresh.c" >/dev/null 2>&1
+basej2=$(git -C "$T/repoj2" rev-list --max-parents=0 HEAD)
+if git -C "$T/repoj2" show "$basej2:mvdm/n/fresh.c" | grep -q $'\r'; then
+  ok "add-source normalised LF import to CRLF (matching tree)"
+else
+  bad "add-source imported LF file into CRLF tree without normalising"
+fi
+# Now simulate the user editing the file on Windows (CRLF preserved) and
+# generating: only the changed line must appear, not a whole-file rewrite.
+( cd "$T/repoj2"
+  printf 'K1\r\nK2X\r\nK3\r\nK4\r\nK5\r\n' > mvdm/n/fresh.c
+  git add mvdm/n/fresh.c
+  git commit -q -F - <<EOF
+common/fresh
+
+Target: patches/common/fresh.patch
+Repo: common
+Patchset: fresh
+EOF
+)
+run_gpj2 generate --check >/dev/null && ok "CRLF edit on LF-imported add-source round-trips" || bad "generate failed after EOL-normalised add-source"
+# Patch must be a targeted one-line change, NOT delete-all + re-add-all.
+del_cnt=$(grep -c '^< '  "$PRj2/patches/common/fresh.patch" 2>/dev/null || echo 0)
+add_cnt=$(grep -c '^> '  "$PRj2/patches/common/fresh.patch" 2>/dev/null || echo 0)
+if [ "$del_cnt" = 1 ] && [ "$add_cnt" = 1 ]; then
+  ok "fresh.patch has exactly one changed line (no whole-file rewrite)"
+else
+  bad "fresh.patch has $del_cnt deletions + $add_cnt additions (expected 1+1)"
+fi
+
 echo; echo "########## TEST K: scope=all keeps core + experimental consistent on a shared file ##########"
 # A core patch (pc) and an experimental patch (pe) edit the SAME file, pe after
 # pc. With --scope all both are managed, so re-flowing pc (inserting a line)
@@ -382,5 +428,119 @@ git -C "$T/repol" ls-files | grep -q 'nt_vdd.h' && bad "outside-tree file leaked
 run_gpl generate --check >/dev/null && ok "outside.patch round-trips (verify OK)" || bad "outside.patch failed to round-trip"
 grep -q 'nt_vdd.h' "$PRl/patches/minnt/outside.patch" && ok "regenerated patch retains nt_vdd.h hunk" || bad "regenerated patch dropped nt_vdd.h hunk"
 grep -q 'HEADER' "$PRl/patches/minnt/outside.patch" && ok "verbatim hunk content preserved" || bad "verbatim hunk content lost"
+
+echo; echo "########## TEST M: bootstrap enforces uniform EOL across the git history ##########"
+# Real-world case: pristine source is CRLF but util/patch.exe (or GNU patch,
+# depending on tool) writes forward-applied files at a different EOL. Without
+# a check-in-time normalisation, `git show <patch-commit>` shows every line
+# removed as LF and re-added as CRLF -- the git-native diff is unreadable
+# even though the regenerated .patch happens to come out fine.
+PRm="$T/prm"; mkdir -p "$PRm/patches/common" "$PRm/patches/minnt"
+SRCm="$T/srcm/private"; mkdir -p "$SRCm/mvdm/m"
+# Pristine tree: MIXED EOL -- one file CRLF, one file LF. That models the
+# real NT source (nearly all CRLF, but occasional Unix-touched files).
+printf 'A1\r\nA2\r\nA3\r\nA4\r\n' > "$SRCm/mvdm/m/a.c"      # CRLF
+printf 'B1\nB2\nB3\nB4\n'         > "$SRCm/mvdm/m/b.c"      # LF (the troublemaker)
+# CRLF patch that edits one line in each file.
+{
+  printf -- '--- NT4\\private\\mvdm\\m\\a.c\r\n+++ nt\\private\\mvdm\\m\\a.c\r\n2c2\r\n< A2\r\n---\r\n> A2X\r\n'
+  printf -- '--- NT4\\private\\mvdm\\m\\b.c\r\n+++ nt\\private\\mvdm\\m\\b.c\r\n2c2\r\n< B2\r\n---\r\n> B2X\r\n'
+} > "$PRm/patches/common/mixed.patch"
+run_gpm() { GP_PATCHROOT="$PRm" GP_GITREPO="$T/repom" bash "$GP" "$@"; }
+run_gpm bootstrap --src "$SRCm" --mode clean --force >/dev/null
+# Majority (2 files, one CRLF one LF -> tie -> defaults crlf). Both blobs
+# in the base commit must be CRLF -- the LF file was normalised at check-in.
+basem=$(git -C "$T/repom" rev-list --max-parents=0 HEAD)
+a_cr=$(git -C "$T/repom" show "$basem:mvdm/m/a.c" | LC_ALL=C grep -c $'\r' || true)
+b_cr=$(git -C "$T/repom" show "$basem:mvdm/m/b.c" | LC_ALL=C grep -c $'\r' || true)
+[ "$a_cr" -ge 1 ] && [ "$b_cr" -ge 1 ] && ok "base commit stores both files as CRLF" \
+  || bad "base commit EOL not uniform (a_cr=$a_cr b_cr=$b_cr)"
+# The patch commit's diff vs base must be a targeted 1c1 hunk PER FILE,
+# not a whole-file rewrite. That means the number of `-` lines is 1 per file,
+# not the file's total line count.
+head=$(git -C "$T/repom" rev-parse HEAD)
+diff_out=$(git -C "$T/repom" diff "$basem" "$head" -- mvdm/m/b.c)
+dels=$(printf '%s\n' "$diff_out" | LC_ALL=C grep -c '^-[^-]' || true)
+adds=$(printf '%s\n' "$diff_out" | LC_ALL=C grep -c '^+[^+]' || true)
+if [ "$dels" = 1 ] && [ "$adds" = 1 ]; then
+  ok "git diff base..HEAD for LF-pristine file is 1-line change (uniform EOL held)"
+else
+  bad "git diff base..HEAD shows whole-file rewrite for b.c (dels=$dels adds=$adds); check-in EOL normalisation regressed"
+fi
+# And regeneration must still round-trip.
+run_gpm generate --check >/dev/null && ok "mixed-EOL pristine still round-trips" || bad "generate/verify failed"
+
+echo; echo "########## TEST N: reflow re-orders a misplaced new patch into its tier ##########"
+# yoda.c is patched by patches/minnt/pn.patch AND by experimental/vesa/pv.patch.
+# User then adds a new patches/minnt/newn.patch (editing another region of yoda.c)
+# but commits it at HEAD, i.e. AFTER pv. Without reflow, its diff would be
+# against pv's state -- misapplies at autobuild time (pv hasn't run yet at the
+# minnt tier). After reflow the new commit sits between pn and pv, and pv
+# re-generates against the new state so line numbers match.
+PRn="$T/prn"; mkdir -p "$PRn/patches/common" "$PRn/patches/minnt" "$PRn/experimental/vesa"
+PRI8="$T/pri8/private"; mkdir -p "$PRI8/mvdm/y"
+# 12 lines so pn and pv can edit disjoint regions.
+printf 'L01\nL02\nL03\nL04\nL05\nL06\nL07\nL08\nL09\nL10\nL11\nL12\n' > "$PRI8/mvdm/y/yoda.c"
+# pn: edits line 2 (early region).
+{ printf -- '--- NT4\\private\\mvdm\\y\\yoda.c\n+++ nt\\private\\mvdm\\y\\yoda.c\n2c2\n< L02\n---\n> L02_pn\n'; } > "$PRn/patches/minnt/pn.patch"
+# pv: edits line 11 (late region -- doesn't overlap pn's context).
+{ printf -- '--- NT4\\private\\mvdm\\y\\yoda.c\n+++ nt\\private\\mvdm\\y\\yoda.c\n11c11\n< L11\n---\n> L11_pv\n'; } > "$PRn/experimental/vesa/pv.patch"
+run_gpn() { GP_PATCHROOT="$PRn" GP_GITREPO="$T/repon" bash "$GP" "$@"; }
+run_gpn bootstrap --src "$PRI8" --mode clean --force >/dev/null
+# Sanity: history is base -> pn -> pv.
+initial=$(git -C "$T/repon" log --format='%s' | tac | paste -sd'|')
+case "$initial" in *"minnt/pn"*"vesa/pv"*) ok "initial history: pn before pv" ;;
+  *) bad "initial history not as expected: $initial" ;; esac
+# Now the user makes an EDIT (line 5) at HEAD and commits it as a NEW minnt patch.
+( cd "$T/repon"
+  sed -i '5s/L05/L05_new/' mvdm/y/yoda.c
+  git add mvdm/y/yoda.c
+  git commit -q -F - <<EOF
+minnt/newn
+
+Target: patches/minnt/newn.patch
+Repo: minnt
+Patchset: newn
+EOF
+)
+newnsha=$(git -C "$T/repon" rev-parse HEAD)
+# Before reflow: newn is AFTER pv in history -- wrong.
+pre=$(git -C "$T/repon" show -s --format=%B HEAD | sed -n 's/^Repo: //p' | head -1 | tr -d '\r ')
+[ "$pre" = "minnt" ] && ok "new commit landed at HEAD (as expected before reflow)" || bad "unexpected HEAD trailer: $pre"
+# Also: the new .patch would exist but generate now sees newn AFTER pv --
+# add the file first so the generate loop knows about it.
+touch "$PRn/patches/minnt/newn.patch"
+# Reflow: newn is Repo: minnt, should move to sit between pn and pv.
+run_gpn reflow >/dev/null 2>&1 || bad "reflow reported failure (unexpected)"
+after=$(git -C "$T/repon" log --format='%s' | tac | paste -sd'|')
+case "$after" in *"minnt/pn"*"minnt/newn"*"vesa/pv"*)
+  ok "after reflow: pn -> newn -> pv (canonical tier order)" ;;
+  *) bad "reflow did not produce expected order: $after" ;;
+esac
+# Regenerate: pv's regenerated patch must now target line 11 in the state that
+# already has L02_pn and L05_new applied (still line 11, since edits are above).
+# And newn's patch must be a 1-line change at line 5.
+run_gpn generate --check >/dev/null && ok "generate --check succeeds after reflow" || bad "generate failed after reflow"
+newn_hunks=$(grep -c '^[0-9]' "$PRn/patches/minnt/newn.patch" 2>/dev/null || true)
+[ "$newn_hunks" = 1 ] && ok "newn.patch is a single-hunk change" || bad "newn.patch has $newn_hunks hunks (expected 1)"
+
+# Verifying the ordering-mattered aspect: apply the regenerated patch set to a
+# fresh pristine and diff vs the git HEAD.
+run_gpn generate --check >/dev/null && ok "full re-verify OK after reflow" || bad "verify failed after reflow"
+
+# Idempotency: a second reflow is a no-op.
+_out=$(run_gpn reflow 2>&1)
+printf '%s\n' "$_out" | grep -q 'already in canonical' && ok "reflow is idempotent" || bad "reflow was not idempotent: $_out"
+
+# --eol crlf forces CRLF even when the whole pristine tree is LF.
+PRm2="$T/prm2"; mkdir -p "$PRm2/patches/common" "$PRm2/patches/minnt"
+SRCm2="$T/srcm2/private"; mkdir -p "$SRCm2/mvdm/m"
+printf 'X1\nX2\nX3\n' > "$SRCm2/mvdm/m/lf.c"                # ALL-LF pristine
+printf -- '--- NT4\\private\\mvdm\\m\\lf.c\n+++ nt\\private\\mvdm\\m\\lf.c\n1c1\n< X1\n---\n> X1Y\n' > "$PRm2/patches/common/lf.patch"
+GP_PATCHROOT="$PRm2" GP_GITREPO="$T/repom2" bash "$GP" bootstrap --src "$SRCm2" --mode clean --eol crlf --force >/dev/null
+basem2=$(git -C "$T/repom2" rev-list --max-parents=0 HEAD)
+n_cr=$(git -C "$T/repom2" show "$basem2:mvdm/m/lf.c" | LC_ALL=C grep -c $'\r' || true)
+[ "$n_cr" -ge 1 ] && ok "--eol crlf forces CRLF on an all-LF pristine tree" \
+  || bad "--eol crlf did NOT force CRLF (n_cr=$n_cr)"
 
 echo; echo "ALL TESTS PASSED"

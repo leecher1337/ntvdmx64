@@ -15,11 +15,22 @@
 # Subcommands:
 #   order                 Print the canonical patch apply order.
 #   files                 Print every file referenced by the in-scope patches.
-#   bootstrap   --src DIR Build the git working repo from a source tree.
+#   bootstrap   --src DIR [--eol crlf|lf]
+#                         Build the git working repo from a source tree.
+#                         --eol forces a uniform EOL in every committed blob
+#                         (default: sniff from pristine sources, fall back
+#                         to crlf). Equivalent to GP_EOL=... in the env.
 #   generate              Regenerate all .patch files from the git working repo.
 #   verify                Apply the regenerated patches to base and diff vs HEAD.
 #   newfiles    --src DIR List committed files absent from a pristine tree
 #                         (i.e. files that must ship as-is, not as a patch).
+#   add-source  --src DIR PATH...
+#                         Fold a not-yet-patched source file into the base
+#                         commit so it can be edited via a new .patch.
+#   reflow                Re-order commits to match canonical tier order
+#                         (common -> repo -> experimental). Use after
+#                         committing a new patch at HEAD whose Repo: trailer
+#                         belongs to an earlier tier.
 #
 # See README.md for the full workflow.
 
@@ -101,6 +112,73 @@ normalize_patch() {
   ' "$1"
 }
 
+# Same as normalize_patch, but also forces CONTENT lines' EOL to match
+# $TREE_EOL. Used before feeding to the patch tool when we've re-normalised
+# the target files to a specific EOL: GNU patch refuses to apply hunks whose
+# context bytes don't byte-match the file's line endings, so we align them.
+normalize_patch_for_tree() {
+  awk -v eol="${TREE_EOL:-}" '
+    /^--- / || /^\+\+\+ / { gsub(/\\/, "/"); sub(/\r$/, ""); print; next }
+    /^Index: / || /^==/ || /^---\r?$/ || /^[0-9]/ { sub(/\r$/, ""); print; next }
+    {
+      if (eol == "crlf")      { sub(/\r$/, ""); print $0 "\r" }
+      else if (eol == "lf")   { sub(/\r$/, ""); print $0 }
+      else                    { print }
+    }
+  ' "$1"
+}
+
+# Decide the tree's target EOL for git storage.
+#   GP_EOL if set, else sniff from a sample of tree files (majority wins),
+#   else default crlf (the NT source convention).
+# Sets $TREE_EOL globally (crlf|lf).
+decide_tree_eol() { # $1 = tree root
+  if [ -n "${GP_EOL:-}" ]; then
+    TREE_EOL="$GP_EOL"; return
+  fi
+  local n_lf=0 n_crlf=0 f
+  while IFS= read -r f; do
+    [ -f "$f" ] || continue
+    # Skip binary files -- their trailing bytes aren't line-endings.
+    # Binary-file check: bash strips NUL from $'\0', so use od-c and match
+    # the literal '\0' token in its escaped output.
+    head -c 8192 "$f" 2>/dev/null | LC_ALL=C od -An -c 2>/dev/null | LC_ALL=C grep -q '\\0' && continue
+    if head -c 100000 "$f" | LC_ALL=C grep -q $'\r'; then
+      n_crlf=$((n_crlf+1))
+    else
+      n_lf=$((n_lf+1))
+    fi
+    [ $((n_lf + n_crlf)) -ge 20 ] && break
+  done < <(find "$1" -type f ! -path '*/.git/*' ! -name .gitattributes 2>/dev/null | head -60)
+  if [ "$n_crlf" -gt "$n_lf" ]; then
+    TREE_EOL=crlf
+  elif [ "$n_lf" -gt "$n_crlf" ]; then
+    TREE_EOL=lf
+  else
+    TREE_EOL=crlf   # tie or empty: NT convention
+  fi
+}
+
+# Normalise a single file's EOL to $TREE_EOL. Skips binary files (contain NUL).
+# No-op if TREE_EOL is unset/native.
+normalize_file_eol() { # $1 = file
+  [ -f "$1" ] || return 0
+  # See note in decide_tree_eol on why bash's $'\0' can't be used here.
+  head -c 8192 "$1" 2>/dev/null | LC_ALL=C od -An -c 2>/dev/null | LC_ALL=C grep -q '\\0' && return 0
+  case "${TREE_EOL:-}" in
+    crlf) sed -i -e 's/\r$//' -e 's/$/\r/' "$1" 2>/dev/null || true ;;
+    lf)   sed -i -e 's/\r$//'              "$1" 2>/dev/null || true ;;
+  esac
+}
+
+# Normalise every file under a tree root to $TREE_EOL.
+normalize_tree_eol() { # $1 = root
+  local f
+  while IFS= read -r f; do
+    normalize_file_eol "$f"
+  done < <(find "$1" -type f ! -path '*/.git/*' ! -name .gitattributes 2>/dev/null)
+}
+
 # Files referenced (in original order) by a single patch file, as -p2 paths.
 # Handles both header styles; never fails (no grep), so it is set -e safe.
 files_in_patch() {
@@ -152,7 +230,7 @@ apply_forward() {
     fi
   done < <(files_in_patch "$src")
   local rc=0
-  normalize_patch "$src" | "$PATCHBIN" -s -N -p2 -d "$dir" --no-backup-if-mismatch >/dev/null 2>&1 || rc=$?
+  normalize_patch_for_tree "$src" | "$PATCHBIN" -s -N -p2 -d "$dir" --no-backup-if-mismatch >/dev/null 2>&1 || rc=$?
   [ -n "$frozen" ] && rm -f "$src"
   return $rc
 }
@@ -161,8 +239,8 @@ apply_forward() {
 # won't fully invert leaves the tree untouched (no partial/rejected application).
 # Returns 0 if reversed, 1 if it cannot be reversed.
 try_reverse() {  # $1 = fragment file
-  normalize_patch "$1" | "$PATCHBIN" -s -R -p2 -d "$GITREPO" --dry-run >/dev/null 2>&1 || return 1
-  normalize_patch "$1" | "$PATCHBIN" -s -R -p2 -d "$GITREPO" --no-backup-if-mismatch >/dev/null 2>&1
+  normalize_patch_for_tree "$1" | "$PATCHBIN" -s -R -p2 -d "$GITREPO" --dry-run >/dev/null 2>&1 || return 1
+  normalize_patch_for_tree "$1" | "$PATCHBIN" -s -R -p2 -d "$GITREPO" --no-backup-if-mismatch >/dev/null 2>&1
 }
 
 # --- canonical apply order --------------------------------------------------
@@ -248,6 +326,7 @@ cmd_bootstrap() {
       --src) SRC="$2"; shift 2;;
       --mode) MODE="$2"; shift 2;;        # patched (default) | clean
       --scope) SCOPE="$2"; shift 2;;      # all (default) | core
+      --eol) GP_EOL="$2"; export GP_EOL; shift 2;;   # crlf | lf -- force git storage EOL
       --force) FORCE=1; shift;;
       *) die "bootstrap: unknown arg $1";;
     esac
@@ -256,6 +335,7 @@ cmd_bootstrap() {
   [ -d "$SRC" ] || die "bootstrap: source dir not found: $SRC"
   case "$MODE" in patched|clean) ;; *) die "bootstrap: --mode must be patched or clean";; esac
   case "$SCOPE" in core|all) ;; *) die "bootstrap: --scope must be core or all";; esac
+  case "${GP_EOL:-}" in ""|crlf|lf) ;; *) die "bootstrap: --eol / GP_EOL must be crlf or lf";; esac
 
   if [ -e "$GITREPO" ]; then
     [ "$FORCE" = 1 ] || die "bootstrap: $GITREPO exists (use --force to recreate)"
@@ -356,6 +436,15 @@ cmd_bootstrap() {
   local nfrozen; nfrozen=$(wc -l < "$FROZEN" | tr -d ' ')
   log "base recovered; $nfrozen frozen file(s) will be carried verbatim"
 
+  # 2b. Decide and enforce a uniform tree EOL BEFORE the base commit so every
+  #     later commit's git-native diff (git show / git log -p) reads as a
+  #     targeted change instead of a whole-file rewrite. Without this, any
+  #     mismatch between pristine-source EOL and patch-tool output EOL becomes
+  #     visible in git as an "all lines removed + all lines re-added" delta.
+  decide_tree_eol "$GITREPO"
+  log "tree EOL convention = $TREE_EOL (override with GP_EOL=lf|crlf)"
+  normalize_tree_eol "$GITREPO"
+
   # 3. Initialise git and commit the base.
   git_q init -q
   git_q config user.name  "gitpatch" >/dev/null
@@ -410,6 +499,14 @@ cmd_bootstrap() {
     if ! apply_forward "$abs" "$GITREPO" "$FROZEN"; then
       die "forward-apply FAILED for $abs (target $target)"
     fi
+    # Re-normalise the touched files so every patch commit stores blobs in the
+    # same EOL as base. util/patch.exe preserves the patch's EOL (CRLF), GNU
+    # patch silently strips CR -- normalising here isolates the tool's choice
+    # from the git history.
+    while IFS= read -r __rel; do
+      [ -n "$__rel" ] || continue
+      normalize_file_eol "$GITREPO/$__rel"
+    done < <(files_in_patch "$abs")
     git_q add -A
     # If forward-apply produced no diff, the tree is stuck in the built state:
     # nearly always because the reverse-apply of THIS patch silently no-op'd
@@ -668,7 +765,27 @@ cmd_add_source() {
   which requires a clean tree)."
   fi
   local base; base=$(git_q rev-list --max-parents=0 HEAD)
-  local f rel staged=0
+  # Match the tree's EOL convention so the imported blob doesn't diverge from
+  # user edits or from other patch commits' bytes. GP_EOL wins; otherwise
+  # sniff a tracked blob (a CRLF-committed tree gives crlf, LF gives lf).
+  if [ -n "${GP_EOL:-}" ]; then
+    TREE_EOL="$GP_EOL"
+  else
+    TREE_EOL=""
+    local __probe
+    while IFS= read -r __probe; do
+      [ -n "$__probe" ] || continue
+      case "$__probe" in .gitattributes|.gitignore) continue;; esac
+      if git_q show "HEAD:$__probe" 2>/dev/null | head -c 100000 | LC_ALL=C grep -q $'\r'; then
+        TREE_EOL=crlf
+      else
+        TREE_EOL=lf
+      fi
+      break
+    done < <(git_q ls-files)
+    [ -n "$TREE_EOL" ] || TREE_EOL=crlf
+  fi
+  local f rel staged=0 __added=""
   while IFS= read -r f; do
     [ -n "$f" ] || continue
     # forgive Windows-style / prefixed paths -> -p2 relative path
@@ -679,9 +796,28 @@ cmd_add_source() {
     [ -f "$SRC/$rel" ] || die "add-source: not found in source tree: $SRC/$rel"
     mkdir -p "$GITREPO/$(dirname "$rel")"
     cp -p "$SRC/$rel" "$GITREPO/$rel"
+    # Strip DOS EOF marker (bootstrap does this for the initial import).
+    if LC_ALL=C grep -q $'\032' "$GITREPO/$rel" 2>/dev/null; then
+      tr -d '\032' < "$GITREPO/$rel" > "$GITREPO/$rel.__no1a" \
+        && mv "$GITREPO/$rel.__no1a" "$GITREPO/$rel"
+    fi
+    normalize_file_eol "$GITREPO/$rel"
     git_q add -- "$rel"
+    # Sanity check: working-tree bytes must match the staged blob. If they
+    # don't, git has silently re-normalised (autocrlf / global gitattributes /
+    # Git-for-Windows quirk) and the tree copy would drift from the base blob.
+    local __wt __blob
+    __wt=$(git_q hash-object -- "$rel" 2>/dev/null || true)
+    __blob=$(git_q ls-files -s -- "$rel" | awk '{print $2}')
+    if [ -n "$__wt" ] && [ -n "$__blob" ] && [ "$__wt" != "$__blob" ]; then
+      git_q reset -q -- "$rel" >/dev/null 2>&1 || true
+      die "add-source: git normalised $rel on staging (wt=$__wt blob=$__blob).
+  Check: git config --show-origin --get-all core.autocrlf core.eol
+  Make sure the local repo has core.autocrlf=false and .gitattributes '* -text' is committed."
+    fi
     staged=1
-    log "add-source: staged pristine $rel"
+    __added="$__added$rel"$'\n'
+    log "add-source: staged pristine $rel (eol=$TREE_EOL)"
   done <<< "$files"
   [ "$staged" = 1 ] || { log "add-source: nothing new to add"; return 0; }
   git_q commit -q --fixup="$base"
@@ -690,12 +826,117 @@ cmd_add_source() {
     git -C "$GITREPO" rebase --abort >/dev/null 2>&1 || true
     die "add-source: failed to fold into the base commit (rebase aborted; tree unchanged)."
   fi
+  # Post-rebase sanity check: base commit's blob for each added file must
+  # still match the working tree. A rebase can re-normalise if attributes
+  # aren't yet applied at base -- warn loudly if so.
+  local __post
+  while IFS= read -r __post; do
+    [ -n "$__post" ] || continue
+    local __wt2 __blob2
+    __wt2=$(git_q hash-object -- "$__post" 2>/dev/null || true)
+    __blob2=$(git_q rev-parse "HEAD:$__post" 2>/dev/null || true)
+    if [ -n "$__wt2" ] && [ -n "$__blob2" ] && [ "$__wt2" != "$__blob2" ]; then
+      log "WARNING: base commit's blob for $__post differs from working tree."
+      log "         Future edits will diff as whole-file rewrites."
+      log "         Check .gitattributes ('* -text') is committed at base."
+    fi
+  done <<< "$__added"
   log "add-source: folded into base. Now edit the file(s) and commit your change"
   log "  with Target:/Repo:/Patchset: trailers, then run 'generate'."
 }
 
+# --- subcommand: reflow -----------------------------------------------------
+# Re-order git commits so their sequence matches the canonical apply order
+# (common -> repo -> cvidc-new -> haxm -> adlib -> vesa). Use after you commit
+# a new patch that belongs to an earlier tier than what currently sits at HEAD
+# (e.g. a Repo: minnt patch made on top of experimental commits): the diff
+# recorded on that commit was computed against the wrong base, so its emitted
+# .patch would misapply. Reflow rebases the history so each commit's Repo:
+# trailer matches its position, and the later commits' diffs recompute against
+# the newly-inserted state.
+#   gitpatch.sh reflow
+# Bails out on merge conflicts -- the user resolves and runs
+# `git rebase --continue` inside .patchsrc, same as any git rebase.
+cmd_reflow() {
+  [ -d "$GITREPO/.git" ] || die "reflow: no git repo at $GITREPO (run bootstrap first)"
+  if [ -n "$(git_q status --porcelain)" ]; then
+    die "reflow: working tree not clean; commit or stash first."
+  fi
+  local base; base=$(git_q rev-list --max-parents=0 HEAD)
+
+  # Canonical tier order for the current SCOPE/REPO, first-seen preserved.
+  local tier_order; tier_order=$(order | awk -F'\t' '!seen[$2]++ { print $2 }')
+  [ -n "$tier_order" ] || die "reflow: canonical order() emitted no tiers -- check PATCHROOT."
+
+  # Assign each commit a (tier-index, original-position) key.
+  local plan; plan=$(mktemp)
+  local pos=0
+  while IFS= read -r sha; do
+    pos=$((pos+1))
+    local tier
+    tier=$(trailer "$sha" Repo | tr -d '\r ')
+    [ -n "$tier" ] || tier='(untagged)'
+    printf '%s\t%s\t%d\n' "$sha" "$tier" "$pos" >> "$plan"
+  done < <(git_q rev-list --reverse "$base..HEAD")
+
+  if [ ! -s "$plan" ]; then
+    log "reflow: no patch commits after base -- nothing to do."; rm -f "$plan"; return 0
+  fi
+
+  # Build the sorted todo: primary key = tier position in $tier_order (unknown
+  # tiers pushed to the end), secondary = original position (stable within tier).
+  local sorted; sorted=$(mktemp)
+  awk -F'\t' -v to="$tier_order" '
+    BEGIN {
+      n = split(to, arr, "\n"); for (i=1; i<=n; i++) if (arr[i]!="") ti[arr[i]] = i
+    }
+    { sha=$1; tag=$2; pos=$3
+      idx = (tag in ti) ? ti[tag] : 9999
+      printf "%05d\t%08d\t%s\t%s\n", idx, pos, sha, tag
+    }
+  ' "$plan" | sort -k1,1n -k2,2n > "$sorted"
+
+  local orig_seq new_seq
+  orig_seq=$(cut -f1 "$plan")
+  new_seq=$(cut -f3 "$sorted")
+  if [ "$orig_seq" = "$new_seq" ]; then
+    log "reflow: history already in canonical tier order ($(wc -l < "$plan" | tr -d ' ') commits)."
+    rm -f "$plan" "$sorted"
+    return 0
+  fi
+
+  log "reflow: reordering $(wc -l < "$plan" | tr -d ' ') commits to canonical tier order."
+  log "  planned order (tier / original-position / sha):"
+  awk -F'\t' '{ printf "    %-24s pos %s  %s\n", $4, $2+0, substr($3,1,10) }' "$sorted" >&2
+
+  # Compose the rebase todo file and run `rebase -i` with a canned editor.
+  local todo; todo=$(mktemp)
+  while IFS= read -r sha; do
+    printf 'pick %s\n' "$sha" >> "$todo"
+  done < <(cut -f3 "$sorted")
+
+  # Save a rescue ref so the user can always get back if a conflict resolution
+  # goes sideways.
+  git_q update-ref refs/gitpatch/reflow-pre HEAD
+
+  local rc=0
+  GIT_SEQUENCE_EDITOR="cp '$todo'" GIT_EDITOR=true \
+    git -C "$GITREPO" rebase -i "$base" >/dev/null 2>&1 || rc=$?
+  rm -f "$plan" "$sorted" "$todo"
+
+  if [ "$rc" != 0 ]; then
+    log "reflow: rebase stopped with conflicts."
+    log "  resolve them inside $GITREPO, then: git rebase --continue"
+    log "  or roll back with: git reset --hard refs/gitpatch/reflow-pre"
+    exit "$rc"
+  fi
+  log "reflow: done. Regenerate with '$0 generate --check'."
+  log "  (pre-reflow tip saved at refs/gitpatch/reflow-pre; delete when satisfied:"
+  log "   git -C $GITREPO update-ref -d refs/gitpatch/reflow-pre)"
+}
+
 # --- dispatch ---------------------------------------------------------------
-[ $# -ge 1 ] || die "usage: $0 {order|files|bootstrap|generate|verify|newfiles|add-source} [opts]"
+[ $# -ge 1 ] || die "usage: $0 {order|files|bootstrap|generate|verify|newfiles|add-source|reflow} [opts]"
 cmd="$1"; shift
 case "$cmd" in
   order)      order ;;
@@ -705,5 +946,6 @@ case "$cmd" in
   verify)     cmd_verify "$@" ;;
   newfiles)   cmd_newfiles "$@" ;;
   add-source) cmd_add_source "$@" ;;
+  reflow)     cmd_reflow "$@" ;;
   *) die "unknown subcommand: $cmd" ;;
 esac
