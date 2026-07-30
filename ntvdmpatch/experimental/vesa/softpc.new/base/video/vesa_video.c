@@ -219,8 +219,8 @@ vesa_controller_info()
 		SupportedModesOffset = getDI() + offsetof(struct vesa_ctrl_info, Reserved1);
 		sas_storew((IU32)&cinfo->SupportedModesOffset, SupportedModesOffset);
 		sas_storew((IU32)&cinfo->SupportedModesSegment, getES());
-		for (i=0; i<sizeof(vesa_supported_modes); i++)
-			sas_storew(((word*)cinfo->Reserved1)[i], vesa_supported_modes[i]);
+		for (i=0; i<sizeof(vesa_supported_modes)/sizeof(vesa_supported_modes[0]); i++)
+			sas_storew((IU32)&((word*)cinfo->Reserved1)[i], vesa_supported_modes[i]);
 
 		sas_storew((IU32)&cinfo->OemSoftwareRev, vesa_ctrl_config.OemSoftwareRev);
 		
