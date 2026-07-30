@@ -146,6 +146,96 @@
 }
 
 
+/*
+ * Inline mark macros — replace the per-write indirect function-pointer
+ * call through GDP->VGAGlobals.mark_byte/word/string with a switch on
+ * the small ev_mark_type tag (set once at mode-change by setMarkPointers
+ * in ev_glue.c). Bodies mirror S_2126_SimpleMark / S_2127_CGAMarkByte /
+ * S_2128_CGAMarkWord / S_2130_CGAMarkString / S_2131_UnchainedMarkByte /
+ * S_2132_UnchainedMarkWord / S_2134_UnchainedMarkString exactly.
+ * UNCHAINED_MARK and CHAIN_4_MARK share a body (Chain4 originally just
+ * delegated to Unchained — S_2135_Chain4MarkByte calls S_2131_UnchainedMarkByte).
+ *
+ * The mark constants SIMPLE_MARK / CGA_MARK / UNCHAINED_MARK / CHAIN_4_MARK
+ * come from evid_c.h. ev_mark_type lives outside the GDP struct because
+ * the J-code-derived gdpvar.h uses byte-offset macros (not a real C
+ * typedef), making it awkward to add fields cleanly to VGAGlobals.
+ * The cost is identical at runtime: one flat global load vs one
+ * struct-indirection load.
+ */
+IMPORT IU8 ev_mark_type;
+
+#define EVID_MARK_BYTE(off) \
+   do { switch (ev_mark_type) { \
+   case SIMPLE_MARK: \
+      GDP->VGAGlobals.dirty_total++; break; \
+   case CGA_MARK: { \
+      int _o = BANK_OFFSET(off); \
+      if (_o < GDP->VGAGlobals.dirty_low ) GDP->VGAGlobals.dirty_low  = _o; \
+      if (_o > GDP->VGAGlobals.dirty_high) GDP->VGAGlobals.dirty_high = _o; \
+      GDP->VGAGlobals.dirty_total++; break; \
+   } \
+   case UNCHAINED_MARK: \
+   case CHAIN_4_MARK: { \
+      IS32 _o = GDP->VGAGlobals.v7_bank_vid_copy_off + ((IU32)(off) >> 2); \
+      GDP->VGAGlobals.dirty_total++; \
+      if (_o < GDP->VGAGlobals.dirty_low ) GDP->VGAGlobals.dirty_low  = _o; \
+      if (_o > GDP->VGAGlobals.dirty_high) GDP->VGAGlobals.dirty_high = _o; \
+      GDP->VGAGlobals.video_copy[_o] = 1; break; \
+   } \
+   } } while (0)
+
+#define EVID_MARK_WORD(off) \
+   do { switch (ev_mark_type) { \
+   case SIMPLE_MARK: \
+      GDP->VGAGlobals.dirty_total++; break; \
+   case CGA_MARK: { \
+      int _o = BANK_OFFSET(off); \
+      if (_o < GDP->VGAGlobals.dirty_low ) GDP->VGAGlobals.dirty_low  = _o; \
+      if (_o > GDP->VGAGlobals.dirty_high) GDP->VGAGlobals.dirty_high = _o + 1; \
+      GDP->VGAGlobals.dirty_total += 2; break; \
+   } \
+   case UNCHAINED_MARK: \
+   case CHAIN_4_MARK: { \
+      IU32 _off = (off); \
+      IS32 _o = GDP->VGAGlobals.v7_bank_vid_copy_off + (_off >> 2); \
+      GDP->VGAGlobals.dirty_total += 2; \
+      if (_o < GDP->VGAGlobals.dirty_low ) GDP->VGAGlobals.dirty_low  = _o; \
+      GDP->VGAGlobals.video_copy[_o] = 1; \
+      _o = GDP->VGAGlobals.v7_bank_vid_copy_off + ((_off + 1) >> 2); \
+      if (_o > GDP->VGAGlobals.dirty_high) GDP->VGAGlobals.dirty_high = _o; \
+      GDP->VGAGlobals.video_copy[_o] = 1; break; \
+   } \
+   } } while (0)
+
+#define EVID_MARK_STRING(off, count) \
+   do { switch (ev_mark_type) { \
+   case SIMPLE_MARK: \
+      /* matches S_2126_SimpleMark (single bump regardless of count) */ \
+      GDP->VGAGlobals.dirty_total++; break; \
+   case CGA_MARK: { \
+      IU32 _off = (off); \
+      IU32 _c = (count); \
+      int _o = BANK_OFFSET(_off); \
+      if (_o < GDP->VGAGlobals.dirty_low ) GDP->VGAGlobals.dirty_low  = _o; \
+      _o = BANK_OFFSET(_off + _c); \
+      if (_o > GDP->VGAGlobals.dirty_high) GDP->VGAGlobals.dirty_high = _o; \
+      GDP->VGAGlobals.dirty_total += _c; break; \
+   } \
+   case UNCHAINED_MARK: \
+   case CHAIN_4_MARK: { \
+      IU32 _off = (off); \
+      IU32 _c = (count); \
+      IS32 _olo = GDP->VGAGlobals.v7_bank_vid_copy_off + (_off >> 2); \
+      IS32 _ohi = GDP->VGAGlobals.v7_bank_vid_copy_off + ((_off + _c) >> 2); \
+      GDP->VGAGlobals.dirty_total += _c; \
+      if (_olo < GDP->VGAGlobals.dirty_low ) GDP->VGAGlobals.dirty_low  = _olo; \
+      if (_ohi > GDP->VGAGlobals.dirty_high) GDP->VGAGlobals.dirty_high = _ohi; \
+      while (_ohi >= _olo) GDP->VGAGlobals.video_copy[_ohi--] = 1; break; \
+   } \
+   } } while (0)
+
+
 /******************************************************************
  * FILL                                                           *
  ******************************************************************/
@@ -199,7 +289,7 @@
 { \
   IU32 data; \
   ENTER_FUNC(func); \
-  GDP->VGAGlobals.mark_string(eaOff, count); \
+  EVID_MARK_STRING(eaOff, count); \
   data = mask(trans(eaVal)); \
   wrt(4 * eaOff,data,count); \
 }
@@ -208,16 +298,76 @@
 { \
   IU32 datalo, datahi; \
   ENTER_FUNC(func); \
-  GDP->VGAGlobals.mark_string(eaOff, 2 * count); \
+  EVID_MARK_STRING(eaOff, 2 * count); \
   datalo = mask(trans((IU8)eaVal)); \
   datahi = mask(trans((IU8)(eaVal>>8))); \
   wrt(4 * eaOff,datalo,datahi,count); \
 }
 
-#define UCDFLLF(func,wrt) \
+/*
+ * Unchained dword fill dispatch macros -- pick one and pass as `dispatch`
+ * argument to UCDFLLF, mirroring how UCWFLLF picks between the bulk
+ * S_2319_Unchained4PlaneWordFill and the per-plane UCBPLNWFLL1.
+ *
+ * Both variants fill `count` consecutive CPU dwords (= 4 * count bytes)
+ * at wplane offset eaOffx4 (which is 4 * cpu_col).  The four IU32 args
+ * b0..b3 are the plane-broadcast, mask/trans-processed values for the
+ * four byte lanes of the source dword.
+ *
+ * UCDFLL_4P: inlined 4-plane bulk path, used when map_mask == 0xF.
+ *            Writes 4 wplane dwords per iteration directly in the caller.
+ *            Assumes mask() returns a value that already accounts for
+ *            all four planes (as UCBMSK does when plane_mask = 0xFFFFFFFF).
+ * UCDFLL_PLN: per-plane dispatch via S_3069_Unchained1PlaneDwordFill for
+ *             each enabled plane.  Used when only some planes are enabled;
+ *             skipping disabled planes avoids corrupting them with stale
+ *             latch bytes (which mask() would return for those planes).
+ *
+ * Replaces the old UCDFLLF that split a dword fill into two word-fill
+ * calls at eaOff and eaOff + 8, which was wrong on two axes: (1) the
+ * high-word CPU offset should be +2 not +8, and (2) word-fill uses a
+ * 2-byte stride but REP STOSD needs 4-byte stride.  Same fundamental
+ * shape as the C4DFLL bug fixed for Chain-4.  Not on GVFM's path (which
+ * is Chain 4), but any planar-EGA app using REP STOSD (Keen4-style byte
+ * scrolling, some Windows-3.1 VESA planar drivers) would hit it.
+ */
+#define UCDFLL_4P(eaOffx4, b0, b1, b2, b3, count) \
+  do { \
+    IU32 *_d = (IU32*)&GDP->VGAGlobals.VGA_wplane[eaOffx4]; \
+    IU32 _n = (count); \
+    while (_n--) { \
+      _d[0] = (b0); _d[1] = (b1); _d[2] = (b2); _d[3] = (b3); \
+      _d += 4; \
+    } \
+  } while (0)
+
+#define UCDFLL_PLN(eaOffx4, b0, b1, b2, b3, count) \
+  do { \
+    if (GDP->VGAGlobals.plane_enable & 1) \
+      S_3069_Unchained1PlaneDwordFill((eaOffx4) + 0, \
+        (IU8) (b0),        (IU8) (b1),        (IU8) (b2),        (IU8) (b3),        (count)); \
+    if (GDP->VGAGlobals.plane_enable & 2) \
+      S_3069_Unchained1PlaneDwordFill((eaOffx4) + 1, \
+        (IU8)((b0) >>  8), (IU8)((b1) >>  8), (IU8)((b2) >>  8), (IU8)((b3) >>  8), (count)); \
+    if (GDP->VGAGlobals.plane_enable & 4) \
+      S_3069_Unchained1PlaneDwordFill((eaOffx4) + 2, \
+        (IU8)((b0) >> 16), (IU8)((b1) >> 16), (IU8)((b2) >> 16), (IU8)((b3) >> 16), (count)); \
+    if (GDP->VGAGlobals.plane_enable & 8) \
+      S_3069_Unchained1PlaneDwordFill((eaOffx4) + 3, \
+        (IU8)((b0) >> 24), (IU8)((b1) >> 24), (IU8)((b2) >> 24), (IU8)((b3) >> 24), (count)); \
+  } while (0)
+
+#define UCDFLLF(func, mask, trans, dispatch) \
+{ \
+  IU32 _b0, _b1, _b2, _b3; \
   ENTER_FUNC(func); \
-  wrt(eaOff, (IU16)eaVal, count); \
-  wrt(eaOff + 8, (IU16)(eaVal>>16), count);
+  EVID_MARK_STRING(eaOff, 4 * count); \
+  _b0 = mask(trans((IU8)(eaVal      ))); \
+  _b1 = mask(trans((IU8)(eaVal >>  8))); \
+  _b2 = mask(trans((IU8)(eaVal >> 16))); \
+  _b3 = mask(trans((IU8)(eaVal >> 24))); \
+  dispatch(4 * eaOff, _b0, _b1, _b2, _b3, count); \
+}
 
 
 /*-----------------+
@@ -287,7 +437,7 @@
  +-----------------*/
 #define C4BFLL(func, mask, trans) \
   ENTER_FUNC(func); \
-  GDP->VGAGlobals.mark_string(eaOff, count); \
+  EVID_MARK_STRING(eaOff, count); \
   eaVal = mask(trans(eaVal)); \
   if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 0) & 3))) \
     S_2745_Chain41PlaneByteFill(eaOff + 0, (IU8)eaVal, count/4); \
@@ -301,31 +451,92 @@
 
 #define C4BFLL1(func, mask, trans) \
   ENTER_FUNC(func); \
-  GDP->VGAGlobals.mark_string(eaOff, count); \
+  EVID_MARK_STRING(eaOff, count); \
   S_2747_Chain44PlaneByteFill(eaOff, (IU8)mask(trans((IU32)eaVal)), count);
 
+/*
+ * Chain-4 per-plane word fill.  The old form passed count/4 to each of
+ * four S_2745 per-plane byte-fill calls, which is wrong on multiple axes:
+ *   - For REP STOSW count=N words = 2N bytes, each plane should get ~N/2
+ *     bytes (not N/4).  So half of every fill was silently dropped.
+ *   - For N=1 word, count/4 = 0 -> no bytes written at all.
+ *   - For unaligned eaOff, plane assignments rotate and the four fixed
+ *     if-blocks over-count some planes and under-count others.
+ * Fix: iterate `count` words, writing each word's two bytes to their
+ * respective planes (based on (offset & 3)) if that plane is enabled.
+ * Correct for any count, any alignment, any plane_enable pattern.
+ * Not on GVFM's path (GVFM uses C4WFLL1, the 4-plane bulk variant), but
+ * cleans up analogous bug shape to C4DFLL/UCDFLLF.
+ */
 #define C4WFLL(func, mask, trans) \
 { \
+  IU8 _lo, _hi; \
+  IU32 _o, _n; \
   ENTER_FUNC(func); \
-  GDP->VGAGlobals.mark_string(eaOff, count * sizeof(IU16)); \
-  if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 0) & 3))) \
-    S_2745_Chain41PlaneByteFill(eaOff + 0, (IU8)mask(trans((IU8)(eaVal   ))), count/4); \
-  if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 1) & 3))) \
-    S_2745_Chain41PlaneByteFill(eaOff + 1, (IU8)mask(trans((IU8)(eaVal>>8))), count/4); \
-  if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 2) & 3))) \
-    S_2745_Chain41PlaneByteFill(eaOff + 2, (IU8)mask(trans((IU8)(eaVal   ))), count/4); \
-  if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 3) & 3))) \
-    S_2745_Chain41PlaneByteFill(eaOff + 3, (IU8)mask(trans((IU8)(eaVal>>8))), count/4); \
+  EVID_MARK_STRING(eaOff, 2 * count); \
+  _lo = (IU8)mask(trans((IU8)(eaVal   ))); \
+  _hi = (IU8)mask(trans((IU8)(eaVal>>8))); \
+  _o = eaOff; \
+  _n = count; \
+  while (_n--) { \
+    if (GDP->VGAGlobals.plane_enable & (1 << (_o & 3))) \
+      GDP->VGAGlobals.VGA_wplane[_o] = _lo; \
+    if (GDP->VGAGlobals.plane_enable & (1 << ((_o + 1) & 3))) \
+      GDP->VGAGlobals.VGA_wplane[_o + 1] = _hi; \
+    _o += 2; \
+  } \
 }
 
 #define C4WFLL1(func,mask,trans) \
   ENTER_FUNC(func); \
-  GDP->VGAGlobals.mark_string(eaOff, 2 * count); \
+  EVID_MARK_STRING(eaOff, 2 * count); \
   S_2796_Chain44PlaneWordFill(eaOff, (IU8)mask(trans((IU8)(eaVal))), (IU8)mask(trans((IU8)(eaVal>>8))), count);
 
-#define C4DFLL(func,wrt) \
-  wrt(eaOff, (IU16)eaVal, count); \
-  wrt(eaOff + 2, (IU16)(eaVal>>16), count);
+/*
+ * Chain-4 dword fill.  The old shape "call word-fill twice at +0 and +2"
+ * was correct only for count == 1: for count > 1 the two word-fills
+ * overlap (word-fill uses 2-byte stride but REP STOSD needs 4-byte
+ * stride), so bytes at [X+2, X+3] get overwritten with the high word
+ * value from the second call, [X+4, X+5] wrongly get (b2, b3) instead
+ * of (b0, b1), and the tail bytes [X + 4*count - 2, X + 4*count - 1]
+ * are never written at all.
+ *
+ * Fix: mirror C4BFLL's per-plane-byte-fill dispatch, but with a distinct
+ * byte value per plane (the four byte lanes of the source dword).  Each
+ * of the four planes gets `count` bytes at stride 4 via the existing
+ * S_2745_Chain41PlaneByteFill primitive.  Total bytes written per plane
+ * = count, total across all four planes = 4 * count = matches REP STOSD.
+ *
+ * Signature changed from (func, wrt) to (func, mask, trans) so mask/trans
+ * are supplied directly at the call site, matching UCBFLLF / UCWFLLF /
+ * C4BFLL / C4WFLL / C4WFLL1 style.  The `wrt` word-fill helper is no
+ * longer needed.
+ *
+ * Regression this fixed: GVFM (Turbo-Vision-style DPMI app in VESA
+ * 800x600x256 packed, i.e. Chain 4) rendered with blank / shifted /
+ * duplicated regions because its REP STOSD-based rectangle clears hit
+ * the buggy C4DFLL path.
+ */
+#define C4DFLL(func, mask, trans) \
+{ \
+  IU32 _v; \
+  IU8  _b0, _b1, _b2, _b3; \
+  ENTER_FUNC(func); \
+  EVID_MARK_STRING(eaOff, 4 * count); \
+  _v  = eaVal; \
+  _b0 = (IU8)mask(trans((IU8)(_v      ))); \
+  _b1 = (IU8)mask(trans((IU8)(_v >>  8))); \
+  _b2 = (IU8)mask(trans((IU8)(_v >> 16))); \
+  _b3 = (IU8)mask(trans((IU8)(_v >> 24))); \
+  if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 0) & 3))) \
+    S_2745_Chain41PlaneByteFill(eaOff + 0, _b0, count); \
+  if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 1) & 3))) \
+    S_2745_Chain41PlaneByteFill(eaOff + 1, _b1, count); \
+  if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 2) & 3))) \
+    S_2745_Chain41PlaneByteFill(eaOff + 2, _b2, count); \
+  if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 3) & 3))) \
+    S_2745_Chain41PlaneByteFill(eaOff + 3, _b3, count); \
+}
 
 
 
@@ -484,7 +695,7 @@
  +-----------------*/
 #define UCMOVFW(fact,dir,func,cpf) \
   ENTER_FUNC(func) \
-  GDP->VGAGlobals.mark_string(eaOff + dir - count * dir, count * fact); \
+  EVID_MARK_STRING(eaOff + dir - count * dir, count * fact); \
   if ( srcInRAM ) \
     cpf(4 * eaOff, fromOff, -1, count, srcInRAM); \
   else \
@@ -520,7 +731,7 @@
 // Unchained byte move forward 1
 #define UCMOVFW1(fact,dir,patt,mul,func,fllf,cpf) \
   ENTER_FUNC(func) \
-  GDP->VGAGlobals.mark_string(eaOff + dir - count * dir, count * fact); \
+  EVID_MARK_STRING(eaOff + dir - count * dir, count * fact); \
   if ( srcInRAM ) \
     fllf(eaOff + (dir?1:0) - count * dir, patt, count); \
   else \
@@ -707,7 +918,7 @@
  +-----------------*/
 #define C4MOV(fact,dir,func,cpf,readfunc) \
   ENTER_FUNC(func) \
-  GDP->VGAGlobals.mark_string(eaOff + dir - count * dir, count * fact); \
+  EVID_MARK_STRING(eaOff + dir - count * dir, count * fact); \
   if ( srcInRAM ) \
     cpf(eaOff, fromOff, -1, count, srcInRAM); \
   else \
@@ -742,7 +953,7 @@
 {\
   IU32 data; \
   ENTER_FUNC(func); \
-  GDP->VGAGlobals.mark_byte(eaOff); \
+  EVID_MARK_BYTE(eaOff); \
   data = mask(trans(eaVal)); \
   wrt(4*eaOff,data); \
 }
@@ -751,7 +962,7 @@
 {\
   IU32 data; \
   ENTER_FUNC(func); \
-  GDP->VGAGlobals.mark_word(eaOff); \
+  EVID_MARK_WORD(eaOff); \
   data = mask(trans((IU8)eaVal)); \
   wrt(4 * (eaOff+0),data); \
   data = mask(trans((IU8)(eaVal>>8))); \
@@ -804,7 +1015,7 @@
  +-----------------*/
 #define C4BWRTFC(mask,trans) \
   GDP->VGAGlobals.VGA_wplane[eaOff] = (IU8)mask(trans(eaVal)); \
-  GDP->VGAGlobals.mark_byte(eaOff);
+  EVID_MARK_BYTE(eaOff);
 
 #define C4BWRTF(func,mask,trans) \
   ENTER_FUNC(func); \
@@ -820,7 +1031,7 @@
   ENTER_FUNC(func); \
   GDP->VGAGlobals.VGA_wplane[eaOff + 0] = (IU8)mask(trans((IU8)eaVal)); \
   GDP->VGAGlobals.VGA_wplane[eaOff + 1] = (IU8)mask(trans((IU8)(eaVal>>8))); \
-  GDP->VGAGlobals.mark_word(eaOff);
+  EVID_MARK_WORD(eaOff);
 
 #define C4WWRTF1(func,mask,trans) \
   ENTER_FUNC(func) \
@@ -830,7 +1041,7 @@
   if (GDP->VGAGlobals.plane_enable & (1 << (eaOff & 3))) \
   { \
     GDP->VGAGlobals.VGA_wplane[eaOff] = (IU8)mask(trans((IU8)(eaVal>>8))); \
-    GDP->VGAGlobals.mark_word(eaOff); \
+    EVID_MARK_WORD(eaOff); \
   }
 
 #define C4DWRTF(func,wrt) \

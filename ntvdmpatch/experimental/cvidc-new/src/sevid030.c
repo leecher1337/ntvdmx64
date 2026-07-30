@@ -60,63 +60,70 @@ void S_2842_Chain4DwordWrite_00000000_0000001f (IU32 eaOff, IU32 eaVal)
   C4DWRTF(2842, S_2793_Chain4WordWrite_00000000_0000001f);
 }
 
+/*
+ * Chain-4 dword-fills, write mode 0.  C4DFLL signature changed to
+ * (func, mask, trans); mask/trans copied verbatim from the sibling
+ * Chain4WordFill's C4WFLL/C4WFLL1 call.  The old shape corrupted output
+ * for count > 1 (see the C4DFLL comment in sevid000.h and the GVFM
+ * VESA-8bpp regression).
+ */
 void S_2843_Chain4DwordFill_00000000_00000008 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C4DFLL(2843, S_2794_Chain4WordFill_00000000_00000008);
+  C4DFLL(2843, UCB4MSK, NOTRANS);
 }
 
 void S_2844_Chain4DwordFill_00000000_00000009 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C4DFLL(2844, S_2795_Chain4WordFill_00000000_00000009);
+  C4DFLL(2844, UCB4MSK, NOTRANS);
 }
 
 void S_2845_Chain4DwordFill_00000000_0000000e (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C4DFLL(2845, S_2797_Chain4WordFill_00000000_0000000e);
+  C4DFLL(2845, UCBMSK, NOTRANS);
 }
 
 void S_2846_Chain4DwordFill_00000000_0000000f (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C4DFLL(2846, S_2798_Chain4WordFill_00000000_0000000f);
+  C4DFLL(2846, UCBMSK, NOTRANS);
 }
 
 void S_2847_Chain4DwordFill_00000000_00000010 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C4DFLL(2847, S_2799_Chain4WordFill_00000000_00000010);
+  C4DFLL(2847, UCB5MSKD, NOTRANS);
 }
 
 void S_2848_Chain4DwordFill_00000000_00000011 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C4DFLL(2848, S_2800_Chain4WordFill_00000000_00000011);
+  C4DFLL(2848, UCB5MSKD, NOTRANS);
 }
 
 void S_2849_Chain4DwordFill_00000000_00000016 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C4DFLL(2849, S_2801_Chain4WordFill_00000000_00000016);
+  C4DFLL(2849, UCB5MSK, NOTRANS);
 }
 
 void S_2850_Chain4DwordFill_00000000_00000017 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C4DFLL(2850, S_2802_Chain4WordFill_00000000_00000017);
+  C4DFLL(2850, UCB5MSK, NOTRANS);
 }
 
 void S_2851_Chain4DwordFill_00000000_00000018 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C4DFLL(2851, S_2803_Chain4WordFill_00000000_00000018);
+  C4DFLL(2851, UCB45MSK, NOTRANS);
 }
 
 void S_2852_Chain4DwordFill_00000000_00000019 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C4DFLL(2852, S_2804_Chain4WordFill_00000000_00000019);
+  C4DFLL(2852, UCB45MSK, NOTRANS);
 }
 
 void S_2853_Chain4DwordFill_00000000_0000001e (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C4DFLL(2853, S_2805_Chain4WordFill_00000000_0000001e);
+  C4DFLL(2853, UCB15MSK, NOTRANS);
 }
 
 void S_2854_Chain4DwordFill_00000000_0000001f (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C4DFLL(2854, S_2806_Chain4WordFill_00000000_0000001f);
+  C4DFLL(2854, UCB15MSK, NOTRANS);
 }
 

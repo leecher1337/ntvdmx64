@@ -13,7 +13,7 @@ void S_2868_Chain4ByteFill_00000001_00000000 (IU32 eaOff, IU8 eaVal, IU32 count)
 void S_2869_Chain4ByteMove_00000001_00000000_00000000 (IU32 eaOff, IHPE fromOff, IU32 count, IBOOL srcInRAM)
 {
   ENTER_FUNC(2869);
-  GDP->VGAGlobals.mark_string(eaOff, count);
+  EVID_MARK_STRING(eaOff, count);
   if ( srcInRAM )
     S_2868_Chain4ByteFill_00000001_00000000(eaOff, -1, count);
   else
@@ -52,7 +52,16 @@ void S_2874_Chain4DwordWrite_00000001_00000000 (IU32 eaOff, IU32 eaVal)
 
 void S_2875_Chain4DwordFill_00000001_00000000 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C4DFLL(2875, S_2872_Chain4WordFill_00000001_00000000);
+  /*
+   * Write mode 1 (latch-copy): the sibling S_2872 word-fill is hand-written
+   * and IGNORES eaVal (it overwrites it from latches), so a dword-fill of
+   * `count` dwords (4*count bytes) delegates to word-fill with 2*count
+   * words (4*count bytes) - same byte count, same latch-derived value.
+   * Bypasses the new C4DFLL signature because this write-mode-1 case has
+   * no mask/trans triple like the standard states.
+   */
+  ENTER_FUNC(2875);
+  S_2872_Chain4WordFill_00000001_00000000(eaOff, (IU16)eaVal, 2 * count);
 }
 
 void S_2876_Chain4DwordMove_00000001_00000000_00000000 (IU32 eaOff, IHPE fromOff, IU32 count, IBOOL srcInRAM)

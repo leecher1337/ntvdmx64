@@ -65,64 +65,75 @@ void S_2371_UnchainedDwordWrite_00000000_0000001f_00000000 (IU32 eaOff, IU32 eaV
 }
 
 
+/*
+ * Unchained dword-fills, write mode 0.  New UCDFLLF signature is
+ * (func, mask, trans, dispatch), matching UCBFLLF/UCWFLLF.  mask/trans
+ * are copied verbatim from the sibling S_23XX_UnchainedWordFill (which
+ * uses UCWFLLF); dispatch picks between the inline 4-plane bulk path
+ * (UCDFLL_4P, for odd-numbered states with map_mask=0xF) and the
+ * per-plane path via S_3069_Unchained1PlaneDwordFill (UCDFLL_PLN, for
+ * even-numbered states with partial planes).  Replaces the previous
+ * broken shape that called word-fill twice with an incorrect +8 offset
+ * and mismatched 2-byte stride.
+ */
 void S_2372_UnchainedDwordFill_00000000_00000008_00000000 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  UCDFLLF(2372,S_2317_UnchainedWordFill_00000000_00000008_00000000);
+  UCDFLLF(2372, UCB4MSK, UCB3DATA, UCDFLL_PLN);
 }
 
 void S_2373_UnchainedDwordFill_00000000_00000009_00000000 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  UCDFLLF(2373,S_2318_UnchainedWordFill_00000000_00000009_00000000);
+  UCDFLLF(2373, UCB4MSK, UCB3DATA, UCDFLL_4P);
 }
 
 void S_2374_UnchainedDwordFill_00000000_0000000e_00000000 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  UCDFLLF(2374,S_2320_UnchainedWordFill_00000000_0000000e_00000000);
+  UCDFLLF(2374, UCBMSK, UCB3DATA, UCDFLL_PLN);
 }
 
 void S_2375_UnchainedDwordFill_00000000_0000000f_00000000 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  UCDFLLF(2375,S_2321_UnchainedWordFill_00000000_0000000f_00000000);
+  UCDFLLF(2375, UCBMSK, UCB3DATA, UCDFLL_4P);
 }
 
 void S_2376_UnchainedDwordFill_00000000_00000010_00000000 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  UCDFLLF(2376,S_2322_UnchainedWordFill_00000000_00000010_00000000);
+  UCDFLLF(2376, UCB5MSKD, UCB3DATA, UCDFLL_PLN);
 }
 
 void S_2377_UnchainedDwordFill_00000000_00000011_00000000 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  UCDFLLF(2377,S_2323_UnchainedWordFill_00000000_00000011_00000000);
+  UCDFLLF(2377, UCB5MSKD, UCB3DATA, UCDFLL_4P);
 }
 
 void S_2378_UnchainedDwordFill_00000000_00000016_00000000 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  UCDFLLF(2378,S_2324_UnchainedWordFill_00000000_00000016_00000000);
+  UCDFLLF(2378, UCB5MSK, UCB3DATA, UCDFLL_PLN);
 }
 
 void S_2379_UnchainedDwordFill_00000000_00000017_00000000 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  UCDFLLF(2379,S_2325_UnchainedWordFill_00000000_00000017_00000000);
+  UCDFLLF(2379, UCB5MSK, UCB3DATA, UCDFLL_4P);
 }
 
 void S_2380_UnchainedDwordFill_00000000_00000018_00000000 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  UCDFLLF(2380,S_2326_UnchainedWordFill_00000000_00000018_00000000);
+  UCDFLLF(2380, UCB45MSK, UCB3DATA, UCDFLL_PLN);
 }
 
 void S_2381_UnchainedDwordFill_00000000_00000019_00000000 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  UCDFLLF(2381,S_2327_UnchainedWordFill_00000000_00000019_00000000);
+  UCDFLLF(2381, UCB45MSK, UCB3DATA, UCDFLL_4P);
 }
 
 void S_2382_UnchainedDwordFill_00000000_0000001e_00000000 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  UCDFLLF(2382,S_2328_UnchainedWordFill_00000000_0000001e_00000000);
+  UCDFLLF(2382, UCB15MSK, UCB3DATA, UCDFLL_PLN);
 }
 
 void S_2383_UnchainedDwordFill_00000000_0000001f_00000000 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  UCDFLLF(2383,S_2329_UnchainedWordFill_00000000_0000001f_00000000);
+  UCDFLLF(2383, UCB15MSK, UCB3DATA, UCDFLL_4P);
 }
 
 void S_2384_UnchainedDwordMove_00000000_00000008_00000000_00000000 (IU32 eaOff, IHPE fromOff, IU32 count, IBOOL srcInRAM)

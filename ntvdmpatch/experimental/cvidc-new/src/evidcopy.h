@@ -3,6 +3,7 @@
 void S_2153_Unchained1PlaneByteFill (IU32 eaOff, IU8 eaVal, IU32 count);
 void S_2155_CopyBytePlnByPlnUnchained_00000000_0000000e_00000001_00000000 (IU32 eaOff, IHPE fromOff, IHPE destOff, IU32 count, IBOOL srcInRAM);
 void S_2159_Unchained1PlaneWordFill (IU32 eaOff, IU8 eaValLo, IU8 eaValHi, IU32 count);
+void S_3069_Unchained1PlaneDwordFill(IU32 eaOff, IU8 eaVal0, IU8 eaVal1, IU8 eaVal2, IU8 eaVal3, IU32 count);
 void S_2156_CopyByte1PlaneUnchained_00000000_0000000e_00000001_00000000 (IU32 eaOff, IHPE fromOff, IHPE destOff, IU32 count, IBOOL srcInRAM, IUH shift);
 void S_2161_CopyWordPlnByPlnUnchained_00000000_0000000e_00000001_00000000 (IU32 eaOff, IHPE fromOff, IHPE destOff, IU32 count, IBOOL srcInRAM);
 void S_2162_CopyWord1PlaneUnchained_00000000_0000000e_00000001_00000000 (IU32 eaOff, IHPE fromOff, IHPE destOff, IU32 count, IBOOL srcInRAM, IUH shift);

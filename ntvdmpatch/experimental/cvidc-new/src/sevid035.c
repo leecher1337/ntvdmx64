@@ -20,24 +20,25 @@ void S_2912_Chain4DwordWrite_00000002_0000000f (IU32 eaOff, IU32 eaVal)
   C4DWRTF(2912, S_2896_Chain4WordWrite_00000002_0000000f);
 }
 
+/* Chain-4 dword-fills, write mode 2.  See sevid030.c for rationale. */
 void S_2913_Chain4DwordFill_00000002_00000008 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C4DFLL(2913, S_2897_Chain4WordFill_00000002_00000008);
+  C4DFLL(2913, UCB4MSK, TRANS1);
 }
 
 void S_2914_Chain4DwordFill_00000002_00000009 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C4DFLL(2914, S_2898_Chain4WordFill_00000002_00000009);
+  C4DFLL(2914, UCB4MSK, TRANS1);
 }
 
 void S_2915_Chain4DwordFill_00000002_0000000e (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C4DFLL(2915, S_2899_Chain4WordFill_00000002_0000000e);
+  C4DFLL(2915, UCBMSK, TRANS1);
 }
 
 void S_2916_Chain4DwordFill_00000002_0000000f (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  C4DFLL(2916, S_2900_Chain4WordFill_00000002_0000000f);
+  C4DFLL(2916, UCBMSK, TRANS1);
 }
 
 void S_2917_Chain4DwordMove_00000002_00000008_00000000 (IU32 eaOff, IHPE fromOff, IU32 count, IBOOL srcInRAM)

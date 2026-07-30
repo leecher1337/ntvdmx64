@@ -1069,7 +1069,7 @@ void S_2156_CopyByte1PlaneUnchained_00000000_0000000e_00000001_00000000 (IU32 ea
 void S_2157_UnchainedWordWrite_00000000_0000000e_00000001 (IU32 eaOff, IU16 eaVal)
 {
   ENTER_FUNC(2157);
-  GDP->VGAGlobals.mark_word(eaOff);
+  EVID_MARK_WORD(eaOff);
   UCBWRTWPL(4 * (eaOff+0), UCBMSK(GDP->VGAGlobals.v7_fg_latches));
   UCBWRTWPL(4 * (eaOff+1), UCBMSK(GDP->VGAGlobals.v7_fg_latches));
 }
@@ -1079,7 +1079,7 @@ void S_2158_UnchainedWordFill_00000000_0000000e_00000001 (IU32 eaOff, IU16 eaVal
   IU32 data;
 
   ENTER_FUNC(2158);  
-  GDP->VGAGlobals.mark_string(eaOff, count * 2);
+  EVID_MARK_STRING(eaOff, count * 2);
   data = UCBMSK(GDP->VGAGlobals.v7_fg_latches);
   UCBPLNWFLL(4 * eaOff,data,count);
 }
@@ -1095,6 +1095,36 @@ void S_2159_Unchained1PlaneWordFill (IU32 eaOff, IU8 eaValLo, IU8 eaValHi, IU32 
     *dest = eaValLo;
     *(dest + 4) = eaValHi;
     dest += 8;
+  }
+}
+
+/*
+ * S_3069_Unchained1PlaneDwordFill
+ *
+ * Fill `count` consecutive CPU dwords (4 * count bytes) on ONE plane at
+ * wplane offset eaOff (= 4 * cpu_col + plane_index) with byte values
+ * eaVal0..eaVal3 (one per byte lane of the source dword).  Per iteration
+ * writes 4 plane bytes at CPU cols (X, X+1, X+2, X+3), advancing by 16
+ * wplane bytes = 4 CPU cols = one CPU dword.
+ *
+ * Companion to the existing S_2153_Unchained1PlaneByteFill (byte, stride 4)
+ * and S_2159_Unchained1PlaneWordFill (word, stride 8).  Called from the
+ * UCDFLL_PLN per-plane dispatch macro used by S_XXXX_UnchainedDwordFill_*
+ * for states where only a subset of the four planes is enabled.
+ */
+void S_3069_Unchained1PlaneDwordFill (IU32 eaOff, IU8 eaVal0, IU8 eaVal1, IU8 eaVal2, IU8 eaVal3, IU32 count)
+{
+  IU8 *dest;
+
+  ENTER_FUNC(3069);
+  dest = &GDP->VGAGlobals.VGA_wplane[eaOff];
+  while (count--)
+  {
+    *(dest +  0) = eaVal0;
+    *(dest +  4) = eaVal1;
+    *(dest +  8) = eaVal2;
+    *(dest + 12) = eaVal3;
+    dest += 16;
   }
 }
 
@@ -1122,7 +1152,15 @@ void S_2163_UnchainedDwordWrite_00000000_0000000e_00000001(IU32 eaOff, IU32 eaVa
 
 void S_2164_UnchainedDwordFill_00000000_0000000e_00000001 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  UCDFLLF(2164, S_2158_UnchainedWordFill_00000000_0000000e_00000001);
+  /*
+   * V7 hand-written path (write mode 0, state 0x0E, chain 1).  S_2158
+   * ignores eaVal and pulls its byte from v7_fg_latches, so N-dword fill
+   * = 2N-word fill (same 4N byte count, same latch-derived per-byte
+   * value).  Bypasses the new UCDFLLF signature because the source is
+   * hardware latches, not the CPU dword.
+   */
+  ENTER_FUNC(2164);
+  S_2158_UnchainedWordFill_00000000_0000000e_00000001(eaOff, (IU16)eaVal, 2 * count);
 }
 
 void S_2165_UnchainedDwordMove_00000000_0000000e_00000001_00000000 (IU32 eaOff, IHPE fromOff, IU32 count, IBOOL srcInRAM)
@@ -1172,7 +1210,7 @@ void S_2170_CopyFwdByte1Plane (IU32 eaOff, IHPE fromOff, IU32 count)
 void S_2171_UnchainedWordWrite_00000001_0000000e_00000001 (IU32 eaOff, IU16 eaVal)
 {
   ENTER_FUNC(2171);
-  GDP->VGAGlobals.mark_word(eaOff);
+  EVID_MARK_WORD(eaOff);
   UCBWRTWPL(4 * (eaOff+0),GDP->VGAGlobals.latches);
   UCBWRTWPL(4 * (eaOff+1),GDP->VGAGlobals.latches);
 }
@@ -1182,7 +1220,7 @@ void S_2172_UnchainedWordFill_00000001_0000000e_00000001 (IU32 eaOff, IU16 eaVal
   IU32 data;
 
   ENTER_FUNC(2172);  
-  GDP->VGAGlobals.mark_string(eaOff, count * 2);
+  EVID_MARK_STRING(eaOff, count * 2);
   data = GDP->VGAGlobals.latches;
   UCBPLNWFLL(4 * eaOff,data,count);
 }
@@ -1218,7 +1256,9 @@ void S_2176_UnchainedDwordWrite_00000001_0000000e_00000001(IU32 eaOff, IU32 eaVa
 
 void S_2177_UnchainedDwordFill_00000001_0000000e_00000001 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  UCDFLLF(2177,S_2172_UnchainedWordFill_00000001_0000000e_00000001);
+  /* V7 hand-written path, write mode 1.  See S_2164 for rationale. */
+  ENTER_FUNC(2177);
+  S_2172_UnchainedWordFill_00000001_0000000e_00000001(eaOff, (IU16)eaVal, 2 * count);
 }
 
 void S_2178_UnchainedDwordMove_00000001_0000000e_00000001_00000000 (IU32 eaOff, IHPE fromOff, IU32 count, IBOOL srcInRAM)
@@ -1297,7 +1337,9 @@ void S_2189_UnchainedDwordWrite_00000002_0000000e_00000001(IU32 eaOff, IU32 eaVa
 
 void S_2190_UnchainedDwordFill_00000002_0000000e_00000001 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  UCDFLLF(2190, S_2185_UnchainedWordFill_00000002_0000000e_00000001);
+  /* V7 hand-written path, write mode 2.  See S_2164 for rationale. */
+  ENTER_FUNC(2190);
+  S_2185_UnchainedWordFill_00000002_0000000e_00000001(eaOff, (IU16)eaVal, 2 * count);
 }
 
 void S_2191_UnchainedDwordMove_00000002_0000000e_00000001_00000000 (IU32 eaOff, IHPE fromOff, IU32 count, IBOOL srcInRAM)
@@ -1364,7 +1406,9 @@ void S_2202_UnchainedDwordWrite_00000003_0000000e_00000001(IU32 eaOff, IU32 eaVa
 
 void S_2203_UnchainedDwordFill_00000003_0000000e_00000001 (IU32 eaOff, IU32 eaVal, IU32 count)
 {
-  UCDFLLF(2203, S_2198_UnchainedWordFill_00000003_0000000e_00000001);
+  /* V7 hand-written path, write mode 3.  See S_2164 for rationale. */
+  ENTER_FUNC(2203);
+  S_2198_UnchainedWordFill_00000003_0000000e_00000001(eaOff, (IU16)eaVal, 2 * count);
 }
 
 void S_2204_UnchainedDwordMove_00000003_0000000e_00000001_00000000 (IU32 eaOff, IHPE fromOff, IU32 count, IBOOL srcInRAM)
@@ -1594,7 +1638,7 @@ void S_2238_GenericByteWrite(int eaOff, IU8 eaVal)
 
   if (GDP->VGAGlobals.chain == 0)
   {
-    GDP->VGAGlobals.mark_byte(4 * eaOff);
+    EVID_MARK_BYTE(4 * eaOff);
     UCBWRTWPL(4 * eaOff,pattern);
   }
   else 
@@ -1602,7 +1646,7 @@ void S_2238_GenericByteWrite(int eaOff, IU8 eaVal)
     if (GDP->VGAGlobals.plane_enable & (1 << (eaOff & 3)))
     {
       GDP->VGAGlobals.VGA_wplane[eaOff] = (IU8)pattern;
-      GDP->VGAGlobals.mark_byte(eaOff);
+      EVID_MARK_BYTE(eaOff);
     }
   }
 }
@@ -1727,7 +1771,7 @@ void S_2241_GenericWordWrite(int eaOff, IU16 eaVal)
     UCBWRTWPL(4 * eaOff,pattern);
     eaOff++;
     UCBWRTWPL(4 * eaOff,patternHi);
-    GDP->VGAGlobals.mark_byte(4 * eaOff);
+    EVID_MARK_BYTE(4 * eaOff);
   }
   else 
   {
@@ -1736,7 +1780,7 @@ void S_2241_GenericWordWrite(int eaOff, IU16 eaVal)
     if (GDP->VGAGlobals.plane_enable & (1 << ((eaOff + 1) & 3)))
     {
       GDP->VGAGlobals.VGA_wplane[eaOff+1] = (IU8)patternHi;
-      GDP->VGAGlobals.mark_byte(eaOff+1);
+      EVID_MARK_BYTE(eaOff+1);
     }
   }
 }
