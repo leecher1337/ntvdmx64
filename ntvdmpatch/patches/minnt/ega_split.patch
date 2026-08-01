@@ -1,0 +1,28 @@
+--- NT4\private\mvdm\softpc.new\base\video\gfx_updt.c
++++ nt\private\mvdm\softpc.new\base\video\gfx_updt.c
+2285c2285,2295
+<                                 (*paint_screen)( ht1*opl, 0, ht1, bpl, 1);
+---
+>                                 /* The split line's visible part is entirely
+>                                  * pre-wrap; paint it from its ABSOLUTE address.
+>                                  * Was `ht1*opl` (screen_start-relative) -- that
+>                                  * dropped the screen_start term and fetched the
+>                                  * wrong cells (whatever sprite/off-screen data
+>                                  * lived there), producing the flickering wrong
+>                                  * row at the wrap seam under the >20000-dirty
+>                                  * full-repaint path.  Matches the else branch
+>                                  * below and the incremental path's
+>                                  * EGA_PLANE_DISP_SIZE-left_over. */
+>                                 (*paint_screen)( get_screen_start()+ht1*opl, 0, ht1, bpl, 1);
+2317c2327,2335
+<                         next1 = search_video_copy(ht1,get_screen_height(),wrapped_bytes>>2);
+---
+>                         /* Post-wrap region starts at line ht1+1, NOT ht1: line
+>                          * ht1 is the wrap-split line, force-painted below.
+>                          * Starting the search at ht1 made paint_records re-draw
+>                          * the split line from the wrapped address (and shifted
+>                          * every post-wrap line by one), producing a flickering
+>                          * wrong row at the wrap boundary during byte-scroll
+>                          * (Keen 4).  The full-refresh path above already uses
+>                          * ht1+1 (paint_screen(...,ht1+1,bpl,ht2)); match it. */
+>                         next1 = search_video_copy(ht1+1,get_screen_height(),wrapped_bytes>>2);

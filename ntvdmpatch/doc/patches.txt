@@ -57,6 +57,8 @@ ega_crash.patch     - Console graphics is required, as newer Windows display
                       this.
                       Additionally fixes Video7 support.
 ega_panning.patch   - Adds panning support to the EGA emulation.
+ega_split.patch     - EGA split line graphics had a display bug that caused
+                      a flickering split line.
 emm.patch           - Fixes a little problem in the EMM-Manager
 eyestrain.patch     - Commandline parameters like the hotkey to change video
                       size can't get passed to NTVDM in newer windows versions,
