@@ -119,13 +119,13 @@
 +++ nt\private\mvdm\softpc.new\base\cvidc\ev_glue.c
 18a19
 > #include <stdio.h>
-35a37,43
-> 
+36a38,44
 > #ifdef i386
 > #define STDCALL __stdcall
 > #else
 > #define STDCALL
 > #endif
+> 
 > 
 102c110
 < GLOBAL void
