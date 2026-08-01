@@ -138,3 +138,10 @@ wow16.patch         - Updates the old WOW16 code that we have to a version that
 wow32.patch         - Hack WOW32 to be runnable on x64 Windows Versions without
                       proper scheduler support.
 yoda.patch          - Fixes a few compilation problems of Yoda on i386 with CCPU
+yodaext.patch       - Extends yoda with some new functionality:
+                      1) int_call tracing so that every INT call can be logged
+                      2) Also show values on data breakpoints
+                      3) Data watch points when a specific value gets written 
+                         New Commands: blwdr, blwwr
+                      4) Allow cs:ip addressing in breakpoints instead of only
+                         linear addresses

@@ -1,0 +1,303 @@
+--- NT4\private\mvdm\softpc.new\base\debug\yoda.c
++++ nt\private\mvdm\softpc.new\base\debug\yoda.c
+2752a2753
+> 	 {"int_call",	INT_CALL_VERBOSE,	&sub_io_verbose,	0},
+4650a4652,4654
+> 	IBOOL	hasRange;	/* if TRUE, only break when the written/read */
+> 	IU32	rangeLo;	/* value falls in [rangeLo, rangeHi] (blwdr).  */
+> 	IU32	rangeHi;	/* Lets you watch one slot for a bad value.    */
+4652a4657,4663
+> /* Pending value-range, consumed by the next add_debug_breakpoint().  Set by
+>  * do_blwdr so we don't have to thread extra params through the 6 plain
+>  * blr/blw commands. */
+> static IBOOL	s_dbpHasRange = FALSE;
+> static IU32	s_dbpRangeLo  = 0;
+> static IU32	s_dbpRangeHi  = 0xFFFFFFFF;
+> 
+4667a4679
+> 			IU32 curVal;
+4670,4671c4682,4683
+< 				fprintf (trace_file, "#   Access  LinAddr\n");
+< 				fprintf (trace_file, "-------------------\n");
+---
+> 				fprintf (trace_file, "#   Access  LinAddr     Value\n");
+> 				fprintf (trace_file, "-----------------------------\n");
+4674c4686,4691
+< 			fprintf (trace_file, "%d:  %s %s 0x%08x  %s\n", i,
+---
+> 			curVal = (dataBreakpoint[i].dataSz == 2)
+> 			       ? (IU32)  sas_w_at  (dataBreakpoint[i].linAddr)
+> 			       : (dataBreakpoint[i].dataSz == 1)
+> 			       ? ((IU32) sas_w_at  (dataBreakpoint[i].linAddr) & 0xFF)
+> 			       :         sas_dw_at (dataBreakpoint[i].linAddr);
+> 			fprintf (trace_file, "%d:  %s %s 0x%08x  =0x%08x %s\n", i,
+4677c4694
+< 				dataBreakpoint[i].linAddr,
+---
+> 				dataBreakpoint[i].linAddr, curVal,
+4697c4714,4716
+< 	fprintf (trace_file, "data_debug_exception occurred... debug status reg = 0x%08x\n", getDREG6());
+---
+> 	IU32	dr6 = getDREG6();
+> 	IU32	i;
+> 	IBOOL	doBreak = FALSE;
+4699c4718,4740
+< 	printDataBreakPoints (getDREG6());
+---
+> 	/* Decide whether to actually stop.  A plain data BP always stops; a
+> 	 * value-ranged one (blwdr) stops only when the value now at its address
+> 	 * falls in [rangeLo,rangeHi].  If a triggered BP is ranged and out of
+> 	 * range, we clear its hit bit and keep running -- so you can watch one
+> 	 * slot that's written many times and only break on the bad value. */
+> 	for (i = 0; i < N_DATA_BREAKPOINTS; i++)
+> 	{
+> 		if (!dataBreakpoint[i].active || !(dr6 & (1u << i)))
+> 			continue;
+> 
+> 		if (!dataBreakpoint[i].hasRange)
+> 		{
+> 			doBreak = TRUE;
+> 		}
+> 		else
+> 		{
+> 			IU32 v = (dataBreakpoint[i].dataSz == 2)
+> 			       ? (IU32) sas_w_at  (dataBreakpoint[i].linAddr)
+> 			       :        sas_dw_at (dataBreakpoint[i].linAddr);
+> 			if (v >= dataBreakpoint[i].rangeLo && v <= dataBreakpoint[i].rangeHi)
+> 				doBreak = TRUE;
+> 		}
+> 	}
+4701c4742
+< 	moveToDebugRegister (6, getDREG6()&(~0xF));
+---
+> 	moveToDebugRegister (6, dr6 & (~0xF));	/* ack the hit bits */
+4703c4744,4785
+< 	force_yoda();
+---
+> 	if (doBreak)
+> 	{
+> 		fprintf (trace_file, "data_debug_exception occurred... debug status reg = 0x%08x\n", dr6);
+> 		printDataBreakPoints (dr6);
+> 		force_yoda();
+> 	}
+> 	/* else: filtered out -- silently resume (DR stays armed for next write) */
+> }
+> 
+> /*
+>  * yoda_data_break_pending - TRUE if any of DR6's hit bits (B0..B3) belongs
+>  * to an active data breakpoint slot.  Used by the WHP backend's #DB handler
+>  * to distinguish a blwd/blrd data watchpoint from its own DR0 (IDT trap) /
+>  * DR1 / DR2 (software single-step) usage before calling data_debug_exception.
+>  */
+> IBOOL
+> yoda_data_break_pending IFN1 (
+> 	IU32,	dr6
+> )
+> {
+> 	IU32	i;
+> 
+> 	for (i=0; i<N_DATA_BREAKPOINTS; i++)
+> 		if (dataBreakpoint[i].active && (dr6 & (1u << i)))
+> 			return TRUE;
+> 
+> 	return FALSE;
+> }
+> 
+> /* Resolve a data-BP operand to a LINEAR address.  The DR hardware watches
+>  * linear addresses, and these commands historically took a raw linear address
+>  * in `cs` (e.g. "blwd 50000").  But users naturally type seg:off (e.g.
+>  * "blwd 23f:a42") -- the parser then puts the segment in `cs` and the offset
+>  * in `ip`, and the old code used `cs` (=0x23f) directly as the linear address,
+>  * watching the wrong memory.  When an offset was supplied (ip != 0) resolve
+>  * seg:off the same way dd/dw/db do (eff_addr -> descriptor/real-mode base);
+>  * ip == 0 means a bare number was given, so `cs` is already linear. */
+> LOCAL IU32 dbp_linaddr IFN2 (IS32, cs, LIN_ADDR, ip)
+> {
+> 	if (ip != 0)
+> 		return (IU32) eff_addr ((IU16)cs, ip);
+> 	return (IU32) cs;
+4715c4797,4802
+< 	for (i=0; i<N_DATA_BREAKPOINTS; i++)
+---
+> 	/* Allocate data-BP slots from the top (DR3 first).  On the WHP backend
+> 	 * YODA's software single-step uses DR0 (IDT trap) and DR1/DR2 (step
+> 	 * breakpoints); DR3 is the slot left untouched by that machinery, so a
+> 	 * data watchpoint placed there survives single-stepping.  (Slot order
+> 	 * is irrelevant to the CCPU/EDL software path.) */
+> 	for (i = N_DATA_BREAKPOINTS; i-- > 0; )
+4722a4810,4813
+> 			dataBreakpoint[i].hasRange = s_dbpHasRange;
+> 			dataBreakpoint[i].rangeLo  = s_dbpRangeLo;
+> 			dataBreakpoint[i].rangeHi  = s_dbpRangeHi;
+> 			s_dbpHasRange = FALSE;   /* consume (one-shot per add) */
+4733a4825,4831
+> 			/* DR7.LE|GE (bits 8,9) = exact-match enable.  Data
+> 			 * breakpoints need this to trap reliably -- without it the
+> 			 * #DB is inexact and may not fire (that's why blwd only
+> 			 * "stuck" on a 2nd arm).  Execute BPs (the step machinery)
+> 			 * don't need it, which is why those always worked. */
+> 			debugControl |= 0x300;
+> 
+4740a4839
+> 	s_dbpHasRange = FALSE;   /* consume even if no slot was free */
+4774c4873
+< 	UNUSED(com); UNUSED(str); UNUSED(ip); UNUSED(len); UNUSED(stop);
+---
+> 	UNUSED(com); UNUSED(str); UNUSED(len); UNUSED(stop);
+4776c4875
+< 	add_debug_breakpoint (FALSE, 1, cs);
+---
+> 	add_debug_breakpoint (FALSE, 1, dbp_linaddr(cs, ip));
+4783c4882
+< 	UNUSED(com); UNUSED(str); UNUSED(ip); UNUSED(len); UNUSED(stop);
+---
+> 	UNUSED(com); UNUSED(str); UNUSED(len); UNUSED(stop);
+4785c4884
+< 	add_debug_breakpoint (FALSE, 2, cs);
+---
+> 	add_debug_breakpoint (FALSE, 2, dbp_linaddr(cs, ip));
+4792c4891
+< 	UNUSED(com); UNUSED(str); UNUSED(ip); UNUSED(len); UNUSED(stop);
+---
+> 	UNUSED(com); UNUSED(str); UNUSED(len); UNUSED(stop);
+4794c4893
+< 	add_debug_breakpoint (FALSE, 4, cs);
+---
+> 	add_debug_breakpoint (FALSE, 4, dbp_linaddr(cs, ip));
+4801c4900
+< 	UNUSED(com); UNUSED(str); UNUSED(ip); UNUSED(len); UNUSED(stop);
+---
+> 	UNUSED(com); UNUSED(str); UNUSED(len); UNUSED(stop);
+4803c4902
+< 	add_debug_breakpoint (TRUE, 1, cs);
+---
+> 	add_debug_breakpoint (TRUE, 1, dbp_linaddr(cs, ip));
+4810c4909
+< 	UNUSED(com); UNUSED(str); UNUSED(ip); UNUSED(len); UNUSED(stop);
+---
+> 	UNUSED(com); UNUSED(str); UNUSED(len); UNUSED(stop);
+4812c4911
+< 	add_debug_breakpoint (TRUE, 2, cs);
+---
+> 	add_debug_breakpoint (TRUE, 2, dbp_linaddr(cs, ip));
+4819c4918,4959
+< 	UNUSED(com); UNUSED(str); UNUSED(ip); UNUSED(len); UNUSED(stop);
+---
+> 	UNUSED(com); UNUSED(str); UNUSED(len); UNUSED(stop);
+> 
+> 	add_debug_breakpoint (TRUE, 4, dbp_linaddr(cs, ip));
+> 
+> 	return(YODA_LOOP);
+> }
+> 
+> /* blwdr <addr> <lo> <hi> : like blwd, but only break when the dword written
+>  * to <addr> is in [lo,hi].  <addr> is resolved into cs by the parser (same
+>  * as blwd); <lo>/<hi> are parsed from the command line here.  Lets you watch
+>  * a slot written many times and stop only on the bad value, e.g.
+>  *   blwdr 23f:a42 10000 ffffffff   (catch the context-ptr corruption). */
+> LOCAL YODA_COMMAND(do_blwdr)
+> {
+> 	char	*tok;
+> 	IU32	lo = 0, hi = 0xFFFFFFFF;
+> 
+> 	UNUSED(com); UNUSED(len); UNUSED(stop);
+> 
+> 	/* `str` arrives with the command keyword already stripped, so its first
+> 	 * token is <addr> (already decoded into cs:ip) -- skip exactly that one,
+> 	 * then <lo> and <hi> follow.  (Skipping two tokens here mis-read lo=<hi>
+> 	 * and left hi at its default, which is why the range filter misbehaved.) */
+> 	strtok (str, " \t");		/* skip <addr> (already in cs:ip) */
+> 	tok = strtok (NULL, " \t"); if (tok) lo = (IU32) strtoul (tok, NULL, 16);
+> 	tok = strtok (NULL, " \t"); if (tok) hi = (IU32) strtoul (tok, NULL, 16);
+> 
+> 	s_dbpHasRange = TRUE;
+> 	s_dbpRangeLo  = lo;
+> 	s_dbpRangeHi  = hi;
+> 	add_debug_breakpoint (TRUE, 4, dbp_linaddr(cs, ip));
+> 
+> 	return(YODA_LOOP);
+> }
+> 
+> /* blwwr <addr> <lo> <hi> : word-sized value-ranged write watchpoint.  Use
+>  * this when <addr> is word- but not dword-aligned (a 4-byte DR needs a
+>  * 4-aligned address), e.g. the reflector context-stack pointer at 23f:a42. */
+> LOCAL YODA_COMMAND(do_blwwr)
+> {
+> 	char	*tok;
+> 	IU32	lo = 0, hi = 0xFFFFFFFF;
+4821c4961,4973
+< 	add_debug_breakpoint (TRUE, 4, cs);
+---
+> 	UNUSED(com); UNUSED(len); UNUSED(stop);
+> 
+> 	/* `str` arrives with the command keyword already stripped: first token is
+> 	 * <addr> (already decoded into cs:ip).  Skip exactly that one; <lo>/<hi>
+> 	 * follow. */
+> 	strtok (str, " \t");		/* skip <addr> (already in cs:ip) */
+> 	tok = strtok (NULL, " \t"); if (tok) lo = (IU32) strtoul (tok, NULL, 16);
+> 	tok = strtok (NULL, " \t"); if (tok) hi = (IU32) strtoul (tok, NULL, 16);
+> 
+> 	s_dbpHasRange = TRUE;
+> 	s_dbpRangeLo  = lo;
+> 	s_dbpRangeHi  = hi;
+> 	add_debug_breakpoint (TRUE, 2, dbp_linaddr(cs, ip));
+5065a5218,5219
+> { "blwdr", 	do_blwdr,		FALSE, "<addr> <lo> <hi>", "Break on lin write dword in value range" },
+> { "blwwr", 	do_blwwr,		FALSE, "<addr> <lo> <hi>", "Break on lin write word in value range (use when addr not dword-aligned)" },
+7671a7826,7873
+> 	}
+>     }
+> 
+>     /*
+>     ** Non-interactive INT call log. Enable with: trace int_call
+>     ** Logs both INT entry (0xCC/INT3, 0xCD/INT imm8) and the matching IRET
+>     ** (0xCF) return state. The IRET line shows AX (API result), CF (success
+>     ** flag for most DOS/DPMI/VBE calls) and other relevant flags.
+>     **
+>     ** A small depth counter is maintained so hardware IRQs (which enter
+>     ** the CPU without a 0xCC/0xCD opcode but end with 0xCF) are not logged
+>     ** as IRETs -- they would otherwise flood the trace at the timer/keyboard
+>     ** tick rate. Counter increments on software INT entry, decrements on
+>     ** IRET when > 0; IRETs while depth == 0 are silently skipped.
+>     **
+>     ** Lives in check_I so it works for any CPU backend (CCPU, HAXM).
+>     */
+>     if (sub_io_verbose & INT_CALL_VERBOSE) {
+> 	static int int_call_depth = 0;
+> 
+> 	if (temp_opcode == 0xCC || temp_opcode == 0xCD) {
+> 		char ts[200];
+> 		IU8 int_num = (temp_opcode == 0xCC) ? 3 : sas_hw_at(addr+1);
+> 		int_call_depth++;
+> 		sprintf(ts,
+> 		        "INT %02xh  AX=%04x BX=%04x CX=%04x DX=%04x "
+> 		        "SI=%04x DI=%04x CS:IP=%04x:%04lx",
+> 		        (unsigned)int_num,
+> 		        (unsigned)getAX(), (unsigned)getBX(),
+> 		        (unsigned)getCX(), (unsigned)getDX(),
+> 		        (unsigned)getSI(), (unsigned)getDI(),
+> 		        (unsigned)check_I_cs, (unsigned long)check_I_ip);
+> 		trace(ts, 0);
+> 	}
+> 	else if (temp_opcode == 0xCF && int_call_depth > 0) {
+> 		/* IRET paired with a software INT we logged earlier. */
+> 		char ts[200];
+> 		int_call_depth--;
+> 		sprintf(ts,
+> 		        "IRET     AX=%04x BX=%04x CX=%04x DX=%04x "
+> 		        "SI=%04x DI=%04x CF=%d ZF=%d SF=%d",
+> 		        (unsigned)getAX(), (unsigned)getBX(),
+> 		        (unsigned)getCX(), (unsigned)getDX(),
+> 		        (unsigned)getSI(), (unsigned)getDI(),
+> 		        (int)(getCF() ? 1 : 0),
+> 		        (int)(getZF() ? 1 : 0),
+> 		        (int)(getSF() ? 1 : 0));
+> 		trace(ts, 0);
+--- NT4\private\mvdm\softpc.new\base\inc\trace.h
++++ nt\private\mvdm\softpc.new\base\inc\trace.h
+99a100,104
+> #define INT_CALL_VERBOSE	0x80000L	/* log every guest INT instruction
+> 						   (non-interactive — fires inside
+> 						   INTx() and continues execution,
+> 						   unlike bintx which breaks).
+> 						   Enable with: trace int_call */
