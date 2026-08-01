@@ -864,56 +864,74 @@ cmd_reflow() {
   fi
   local base; base=$(git_q rev-list --max-parents=0 HEAD)
 
-  # Canonical tier order for the current SCOPE/REPO, first-seen preserved.
-  local tier_order; tier_order=$(order | awk -F'\t' '!seen[$2]++ { print $2 }')
-  [ -n "$tier_order" ] || die "reflow: canonical order() emitted no tiers -- check PATCHROOT."
+  # Canonical order from order(): "TARGET\tTAG\tNAME\tABS". We give every
+  # Target a rank based on its position in this list -- sorting commits by
+  # Target-rank (rather than only Tier-rank) puts all commits sharing a
+  # Target contiguously in the exact position the .patch file is meant to
+  # apply. That in turn is what makes generate emit one file per Target
+  # (no last-write-wins overwrite when two commits share a Target).
+  local target_order; target_order=$(order | cut -f1)
+  [ -n "$target_order" ] || die "reflow: canonical order() emitted nothing -- check PATCHROOT."
 
-  # Assign each commit a (tier-index, original-position) key.
+  # Assign each commit its (target-rank, tier-rank, original-position) key.
+  # target-rank: from $target_order (unknown Targets -> 9999).
+  # tier-rank:   from the tier's first appearance in order() (fallback for
+  #              commits whose Target file isn't listed yet -- e.g. a brand-
+  #              new patch whose .patch hasn't been created).
+  local tier_order; tier_order=$(order | awk -F'\t' '!seen[$2]++ { print $2 }')
   local plan; plan=$(mktemp)
-  local pos=0
+  local pos=0 __untagged=0
   while IFS= read -r sha; do
     pos=$((pos+1))
-    local tier
+    local tier target
     tier=$(trailer "$sha" Repo | tr -d '\r ')
-    [ -n "$tier" ] || tier='(untagged)'
-    printf '%s\t%s\t%d\n' "$sha" "$tier" "$pos" >> "$plan"
+    target=$(trailer "$sha" Target | tr -d '\r ')
+    if [ -z "$tier" ] && [ -z "$target" ]; then
+      __untagged=$((__untagged+1))
+      log "  reflow: WARNING commit ${sha:0:10} has no Repo:/Target: trailer -- treated as untagged (sorts last)"
+      tier='(untagged)'; target='(untagged)'
+    fi
+    printf '%s\t%s\t%s\t%d\n' "$sha" "${tier:-(untagged)}" "${target:-(untagged)}" "$pos" >> "$plan"
   done < <(git_q rev-list --reverse "$base..HEAD")
 
   if [ ! -s "$plan" ]; then
     log "reflow: no patch commits after base -- nothing to do."; rm -f "$plan"; return 0
   fi
 
-  # Build the sorted todo: primary key = tier position in $tier_order (unknown
-  # tiers pushed to the end), secondary = original position (stable within tier).
   local sorted; sorted=$(mktemp)
-  awk -F'\t' -v to="$tier_order" '
+  awk -F'\t' -v tao="$target_order" -v tio="$tier_order" '
     BEGIN {
-      n = split(to, arr, "\n"); for (i=1; i<=n; i++) if (arr[i]!="") ti[arr[i]] = i
+      n = split(tao, ta, "\n"); for (i=1; i<=n; i++) if (ta[i]!="") tar[ta[i]] = i
+      m = split(tio, ti, "\n"); for (i=1; i<=m; i++) if (ti[i]!="") tir[ti[i]] = i
     }
-    { sha=$1; tag=$2; pos=$3
-      idx = (tag in ti) ? ti[tag] : 9999
-      printf "%05d\t%08d\t%s\t%s\n", idx, pos, sha, tag
+    { sha=$1; tier=$2; tgt=$3; pos=$4
+      trank = (tgt  in tar) ? tar[tgt]  : 9999
+      krank = (tier in tir) ? tir[tier] : 9999
+      # Primary: target rank (contiguous same-Target commits).
+      # Secondary: tier rank (fallback for Targets not in order() yet).
+      # Tertiary: original position (stable within group).
+      printf "%05d\t%05d\t%08d\t%s\t%s\t%s\n", trank, krank, pos, sha, tier, tgt
     }
-  ' "$plan" | sort -k1,1n -k2,2n > "$sorted"
+  ' "$plan" | sort -k1,1n -k2,2n -k3,3n > "$sorted"
 
   local orig_seq new_seq
   orig_seq=$(cut -f1 "$plan")
-  new_seq=$(cut -f3 "$sorted")
+  new_seq=$(cut -f4 "$sorted")
   if [ "$orig_seq" = "$new_seq" ]; then
-    log "reflow: history already in canonical tier order ($(wc -l < "$plan" | tr -d ' ') commits)."
+    log "reflow: history already in canonical order ($(wc -l < "$plan" | tr -d ' ') commits)."
     rm -f "$plan" "$sorted"
     return 0
   fi
 
-  log "reflow: reordering $(wc -l < "$plan" | tr -d ' ') commits to canonical tier order."
-  log "  planned order (tier / original-position / sha):"
-  awk -F'\t' '{ printf "    %-24s pos %s  %s\n", $4, $2+0, substr($3,1,10) }' "$sorted" >&2
+  log "reflow: reordering $(wc -l < "$plan" | tr -d ' ') commits to canonical Target order."
+  log "  planned order (Target / original-position / sha):"
+  awk -F'\t' '{ printf "    %-50s pos %s  %s\n", $6, $3+0, substr($4,1,10) }' "$sorted" >&2
 
   # Compose the rebase todo file and run `rebase -i` with a canned editor.
   local todo; todo=$(mktemp)
   while IFS= read -r sha; do
     printf 'pick %s\n' "$sha" >> "$todo"
-  done < <(cut -f3 "$sorted")
+  done < <(cut -f4 "$sorted")
 
   # Save a rescue ref so the user can always get back if a conflict resolution
   # goes sideways.

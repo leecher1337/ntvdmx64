@@ -472,7 +472,7 @@ run_gpm generate --check >/dev/null && ok "mixed-EOL pristine still round-trips"
 
 echo; echo "########## TEST N: reflow re-orders a misplaced new patch into its tier ##########"
 # yoda.c is patched by patches/minnt/pn.patch AND by experimental/vesa/pv.patch.
-# User then adds a new patches/minnt/newn.patch (editing another region of yoda.c)
+# User then adds a new patches/minnt/qnew.patch (editing another region of yoda.c)
 # but commits it at HEAD, i.e. AFTER pv. Without reflow, its diff would be
 # against pv's state -- misapplies at autobuild time (pv hasn't run yet at the
 # minnt tier). After reflow the new commit sits between pn and pv, and pv
@@ -496,33 +496,33 @@ case "$initial" in *"minnt/pn"*"vesa/pv"*) ok "initial history: pn before pv" ;;
   sed -i '5s/L05/L05_new/' mvdm/y/yoda.c
   git add mvdm/y/yoda.c
   git commit -q -F - <<EOF
-minnt/newn
+minnt/qnew
 
-Target: patches/minnt/newn.patch
+Target: patches/minnt/qnew.patch
 Repo: minnt
-Patchset: newn
+Patchset: qnew
 EOF
 )
-newnsha=$(git -C "$T/repon" rev-parse HEAD)
-# Before reflow: newn is AFTER pv in history -- wrong.
+qnewsha=$(git -C "$T/repon" rev-parse HEAD)
+# Before reflow: qnew is AFTER pv in history -- wrong.
 pre=$(git -C "$T/repon" show -s --format=%B HEAD | sed -n 's/^Repo: //p' | head -1 | tr -d '\r ')
 [ "$pre" = "minnt" ] && ok "new commit landed at HEAD (as expected before reflow)" || bad "unexpected HEAD trailer: $pre"
-# Also: the new .patch would exist but generate now sees newn AFTER pv --
+# Also: the new .patch would exist but generate now sees qnew AFTER pv --
 # add the file first so the generate loop knows about it.
-touch "$PRn/patches/minnt/newn.patch"
-# Reflow: newn is Repo: minnt, should move to sit between pn and pv.
+touch "$PRn/patches/minnt/qnew.patch"
+# Reflow: qnew is Repo: minnt, should move to sit between pn and pv.
 run_gpn reflow >/dev/null 2>&1 || bad "reflow reported failure (unexpected)"
 after=$(git -C "$T/repon" log --format='%s' | tac | paste -sd'|')
-case "$after" in *"minnt/pn"*"minnt/newn"*"vesa/pv"*)
-  ok "after reflow: pn -> newn -> pv (canonical tier order)" ;;
+case "$after" in *"minnt/pn"*"minnt/qnew"*"vesa/pv"*)
+  ok "after reflow: pn -> qnew -> pv (canonical tier order)" ;;
   *) bad "reflow did not produce expected order: $after" ;;
 esac
 # Regenerate: pv's regenerated patch must now target line 11 in the state that
 # already has L02_pn and L05_new applied (still line 11, since edits are above).
-# And newn's patch must be a 1-line change at line 5.
+# And qnew's patch must be a 1-line change at line 5.
 run_gpn generate --check >/dev/null && ok "generate --check succeeds after reflow" || bad "generate failed after reflow"
-newn_hunks=$(grep -c '^[0-9]' "$PRn/patches/minnt/newn.patch" 2>/dev/null || true)
-[ "$newn_hunks" = 1 ] && ok "newn.patch is a single-hunk change" || bad "newn.patch has $newn_hunks hunks (expected 1)"
+qnew_hunks=$(grep -c '^[0-9]' "$PRn/patches/minnt/qnew.patch" 2>/dev/null || true)
+[ "$qnew_hunks" = 1 ] && ok "qnew.patch is a single-hunk change" || bad "qnew.patch has $qnew_hunks hunks (expected 1)"
 
 # Verifying the ordering-mattered aspect: apply the regenerated patch set to a
 # fresh pristine and diff vs the git HEAD.
@@ -542,5 +542,59 @@ basem2=$(git -C "$T/repom2" rev-list --max-parents=0 HEAD)
 n_cr=$(git -C "$T/repom2" show "$basem2:mvdm/m/lf.c" | LC_ALL=C grep -c $'\r' || true)
 [ "$n_cr" -ge 1 ] && ok "--eol crlf forces CRLF on an all-LF pristine tree" \
   || bad "--eol crlf did NOT force CRLF (n_cr=$n_cr)"
+
+echo; echo "########## TEST O: reflow groups same-Target commits contiguously ##########"
+# Real-world case: an experimental tier has TWO patch files (foo.patch and
+# bar.patch). User makes a NEW commit that also targets foo.patch, but commits
+# it at HEAD. Without Target-rank sorting, reflow would put it after bar.patch
+# (both are the same tier, N sorts later by position); generate would then
+# flush foo.patch twice, and the SECOND flush would overwrite the first.
+# The regenerated foo.patch would only contain N's diff, not the original.
+PRo="$T/pro"; mkdir -p "$PRo/patches/common" "$PRo/patches/minnt" "$PRo/experimental/exp"
+PRIo="$T/prio/private"; mkdir -p "$PRIo/mvdm/e"
+# 20-line file so foo and bar can edit non-overlapping regions.
+{ for i in $(seq -f '%02g' 1 20); do echo "L$i"; done; } > "$PRIo/mvdm/e/x.c"
+# Two experimental patches, both in "exp" tier: foo edits early, bar edits late.
+{ printf -- '--- NT4\\private\\mvdm\\e\\x.c\n+++ nt\\private\\mvdm\\e\\x.c\n2c2\n< L02\n---\n> L02_foo\n'; } > "$PRo/experimental/exp/foo.patch"
+{ printf -- '--- NT4\\private\\mvdm\\e\\x.c\n+++ nt\\private\\mvdm\\e\\x.c\n18c18\n< L18\n---\n> L18_bar\n'; } > "$PRo/experimental/exp/bar.patch"
+# Register the tier in a monkeypatched order(). Easiest: put both patches under
+# experimental/vesa where order() already handles them.
+mv "$PRo/experimental/exp" "$PRo/experimental/vesa"
+run_gpo() { GP_PATCHROOT="$PRo" GP_GITREPO="$T/repoo" bash "$GP" "$@"; }
+run_gpo bootstrap --src "$PRIo" --mode clean --force >/dev/null
+# order() emits vesa entries alphabetically -> bar.patch (bar), foo.patch (foo).
+# Because bar's edit is at line 18 and foo's at line 2, apply order is bar then foo
+# (matches bootstrap alphabetical). Sanity: two vesa commits exist.
+n_vesa=$(git -C "$T/repoo" log --format=%B | grep -c '^Repo: vesa$' || true)
+[ "$n_vesa" = 2 ] && ok "bootstrap produced 2 vesa commits (bar + foo)" || bad "unexpected vesa commit count: $n_vesa"
+# User now makes a NEW commit that also edits x.c line 4, targeting foo.patch.
+( cd "$T/repoo"
+  sed -i '4s/L04/L04_N/' mvdm/e/x.c
+  git add mvdm/e/x.c
+  git commit -q -F - <<EOF
+vesa/foo (extra edit)
+
+Target: experimental/vesa/foo.patch
+Repo: vesa
+Patchset: foo
+EOF
+)
+# Reflow: should place N adjacent to the original foo commit (same Target).
+run_gpo reflow >/dev/null 2>&1 || bad "reflow returned non-zero"
+# Verify: the two foo-targeted commits are now consecutive in git history.
+targets_seq=$(git -C "$T/repoo" log --format=%B | grep -E '^Target:' | tac)
+consec=$(printf '%s\n' "$targets_seq" | awk '
+  /experimental\/vesa\/foo.patch$/ { c++; if (c==2 && prev==1) { print "OK"; exit } prev=1; next }
+  { prev=0 }
+  END { if (c!=2) print "count="c }
+')
+[ "$consec" = "OK" ] && ok "same-Target commits are now consecutive after reflow" \
+  || bad "same-Target commits not consecutive: sequence was: $targets_seq"
+# generate --check: must produce a foo.patch that contains BOTH the original
+# edit (L02 -> L02_foo) AND the new one (L04 -> L04_N). Without the fix, only
+# the newer one would land in foo.patch (last-write-wins overwrite).
+run_gpo generate --check >/dev/null && ok "generate --check succeeds with two commits sharing a Target" || bad "generate/verify failed"
+grep -q 'L02_foo' "$PRo/experimental/vesa/foo.patch" && ok "foo.patch retained original edit (L02_foo)" || bad "foo.patch LOST original edit (last-write-wins overwrite regressed)"
+grep -q 'L04_N' "$PRo/experimental/vesa/foo.patch" && ok "foo.patch contains new edit (L04_N)" || bad "foo.patch missing new edit"
 
 echo; echo "ALL TESTS PASSED"
