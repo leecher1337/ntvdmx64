@@ -1,0 +1,144 @@
+--- NT4\private\mvdm\softpc.new\base\system\ica.c
++++ nt\private\mvdm\softpc.new\base\system\ica.c
+304a305,413
+> /* 8259 lost-EOI self-heal -- all backends.  Placed in the shared region
+>  * (after the NTVDM #endif) so adapter_state resolves to VirtualIca for
+>  * NTVDM and adapter_state[2] otherwise.
+>  *
+>  * THE WEDGE (backend-independent): an IRQ (typically IRQ0 timer) is acked
+>  * by the guest's PIC intack, its ISR starts, but the ISR never EOIs before
+>  * the guest gets stuck.  isr bit stays set -> that line and every lower-
+>  * priority line is blocked by 8259 in-service nesting -> the guest spins
+>  * forever waiting for a counter that only the wedged ISR would advance.
+>  *
+>  * WHY EACH BACKEND HITS IT:
+>  *   HAXM/WHP: DispatchInterrupts ignores the SoftPC IretHookAddress, so no
+>  *             mechanism ever clears a stale isr bit.  A timer IRQ0 acked at
+>  *             DOOM's real->PM switch gets its ISR run but the EOI is lost
+>  *             across the transition.
+>  *   CCPU:     HOOKED_IRETS clears isr on a hardware IRET, but misses DPMI
+>  *             *callback* return paths (RM handler's IRET returns through
+>  *             DPMI dispatch, not a hardware IRET the hook can observe).
+>  *             So the wedge forms the same way 
+>  *
+>  * FIX: When an in-service bit has been set past a per-line threshold AND
+>  * the guest CS has stayed pinned at the same value the whole time, that
+>  * line's EOI is genuinely lost -> issue a specific EOI to drop it so the
+>  * pending IRR bit can deliver.  Progress-gate on CS prevents force-EOI of
+>  * a legitimately-running handler (which would defeat 8259 nesting and, on
+>  * DOOM exit, overflow DOS/4GW's transfer stack).
+>  *
+>  * Called with host_ica_lock held.  Per-backend call site:
+>  *   HAXM/WHP: monitor.c after each slow-path VMEXIT (fast recovery, ~3 ms)
+>  *   CCPU:     nt_timer.c heartbeat, ~18Hz (~55 ms worst-case latency).
+>  *
+>  * Returns the number of lines healed this call. */
+> GLOBAL int ica_unwedge_stuck(unsigned cur_cs)
+> {
+>     /* General lost-EOI recovery for BOTH 8259s.  Per (adapter,line) we record
+>      * when the in-service bit was first seen set (0 = not in-service).  A real
+>      * ISR clears in-service in microseconds and we reset the timestamp the
+>      * instant the bit clears, so a line still set past the per-line threshold
+>      * is genuinely wedged -- its EOI was lost.  Force a specific EOI on each
+>      * wedged line so it can deliver again.
+>      *
+>      * Covers every line, not just the timer (IRQ0): keyboard, COM, sound,
+>      * mouse (slave IRQ12), etc. can all wedge the same way.  The slave cascades
+>      * through master IRQ2, which is simply another line healed here if it stays
+>      * stuck.  Returns the number of lines healed this call. */
+>     /* High-resolution clock (QueryPerformanceCounter, sub-us) instead of
+>      * GetTickCount (~15 ms granularity) so the recovery latency -- which is the
+>      * IRQ0 delivery JITTER that DOOM's music tempo rides on -- shrinks toward
+>      * inaudible.  Per-line threshold: IRQ0 (master line 0, the timer) is ALWAYS
+>      * a microsecond ISR, so heal it tight (~3 ms); other lines (sound IRQ5/7,
+>      * disk, etc.) can legitimately run longer ISRs, so keep them loose (~30 ms)
+>      * to avoid force-EOIing a genuinely-running handler. */
+>     /* PROGRESS GATE (cur_cs = the guest's current CS, freshly read from the
+>      * backend's register state -- HAXM/WHP: state._cs.selector from GET_REGS,
+>      * CCPU: getCS() reading the emulator's CS selector).  A genuine lost-EOI
+>      * wedge is a TIGHT SINGLE-CS SPIN (e.g. DOOM's tic-wait loop pinned at
+>      * CS=02ff for tens of thousands of instructions).  A line whose in-service
+>      * bit is set while the guest's CS *moves* is a HANDLER THAT IS RUNNING --
+>      * most notably a slow PM<->real-mode interrupt REFLECTION at DOOM exit
+>      * (INT 31h 0302), which legitimately holds IRQ0 in-service >3 ms.
+>      * Force-EOIing THAT defeats the 8259 in-service nesting block -> the next
+>      * timer tick nests onto DOS/4GW's transfer stack -> "transfer stack overflow
+>      * on interrupt" -> exit hang.  So we only count a line as wedged while CS
+>      * stays PINNED at the value seen when the bit first went in-service; any
+>      * CS change restarts the watch. */
+>     static LONGLONG since[2][8];
+>     static unsigned cs_at[2][8];
+>     static LONGLONG th_irq0 = 0, th_other = 0;
+>     LARGE_INTEGER nowq;
+>     LONGLONG now;
+>     int healed = 0;
+>     int a, l;
+> 
+>     if (th_irq0 == 0) {
+>         LARGE_INTEGER f;
+>         QueryPerformanceFrequency(&f);
+>         th_irq0  = f.QuadPart / 333;    /* ~3 ms  */
+>         th_other = f.QuadPart / 33;     /* ~30 ms */
+>     }
+>     QueryPerformanceCounter(&nowq);
+>     now = nowq.QuadPart;
+> 
+>     for (a = 0; a < 2; a++) {
+>         ADAPTER_STATE *asp = &adapter_state[a];
+>         for (l = 0; l < 8; l++) {
+>             if (asp->ica_isr & (1 << l)) {
+>                 LONGLONG th = (a == ICA_MASTER && l == 0) ? th_irq0 : th_other;
+>                 if (since[a][l] == 0) {
+>                     since[a][l] = now ? now : 1;        /* never store 0 */
+>                     cs_at[a][l] = cur_cs;
+>                 } else if (cs_at[a][l] != cur_cs) {
+>                     /* guest CS moved -> a running handler / PM<->RM reflection,
+>                      * not a pinned spin: restart the watch, do NOT force-EOI. */
+>                     since[a][l] = now ? now : 1;
+>                     cs_at[a][l] = cur_cs;
+>                 } else if ((now - since[a][l]) >= th) {
+>                     IS32 line = l;
+>                     ica_eoi((IU32)a, &line, FALSE);     /* drop stale in-service */
+>                     since[a][l] = 0;
+>                     healed++;
+>                 }
+>             } else {
+>                 since[a][l] = 0;
+>             }
+>         }
+>     }
+>     return healed;
+> }
+> 
+--- NT4\private\mvdm\softpc.new\host\src\nt_timer.c
++++ nt\private\mvdm\softpc.new\host\src\nt_timer.c
+728a729,757
+> #ifdef CCPU
+>         /* CCPU-only PIC lost-EOI self-heal (2026-08-02 diagnostic).
+>          * HAXM/WHP invoke ica_unwedge_stuck from monitor.c on every slow-
+>          * path VMEXIT (higher rate, ~3ms recovery); CCPU has HOOKED_IRETS
+>          * as its primary lost-EOI mechanism, but HOOKED_IRETS misses
+>          * DPMI-callback return paths (the RM handler's IRET returns
+>          * through DPMI dispatch, not a hardware IRET the iret-hook would
+>          * observe) -- see [[project_timerstdy_ccpu_lockup]].  Invoking
+>          * from the heartbeat at ~18Hz gives a ~55ms worst-case recovery
+>          * latency, slower than HAXM but sufficient to unstick DOOM's
+>          * tic-wait spinloop after the wedge forms.
+>          *
+>          * Guarded #ifdef CCPU (not !defined(HAXM)) so the V86/MONITOR
+>          * build is excluded -- no reported wedge issues there, and its
+>          * IRQ delivery model is different enough that force-EOI could
+>          * misbehave.
+>          *
+>          * host_ica_lock is already held here (line above the block),
+>          * and the recursive critsect makes re-entry cheap.  getCS()
+>          * reads a 16-bit atomic word from the CCPU state -- a torn
+>          * cross-thread read is worst-case a spurious "CS changed"
+>          * signal that just delays the heal by one heartbeat, never
+>          * force-EOIs a legitimately-running handler. */
+>         {
+>             extern int ica_unwedge_stuck(unsigned cur_cs);
+>             ica_unwedge_stuck((unsigned)getCS());
+>         }
+> #endif
+> 

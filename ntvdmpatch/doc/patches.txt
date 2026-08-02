@@ -103,6 +103,8 @@ ntmem.patch         - Prevent crash on access of DOS application to uncommitted
                       memory
 pcibug.patch        - Some stupid programs try to read PCI BIOS even though 
                       installation check fails. So set CF on PCI INT 1Ah calls.
+picunwedge.patch    - PIC self-heal: force-EOI an 8259 line whose in-service bit
+                      stays set past ~3ms of guest CS pinning (lost-EOI recovery).
 printerprt.patch    - Toggle ACK (bit 6) on every read while printer port is idle.
                       to prevent applications hanging in busy loops polling printer
                       port
