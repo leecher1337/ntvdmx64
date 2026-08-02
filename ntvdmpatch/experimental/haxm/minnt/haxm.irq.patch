@@ -1,0 +1,95 @@
+--- NT4\private\mvdm\softpc.new\base\keymouse\keyba.c
++++ nt\private\mvdm\softpc.new\base\keymouse\keyba.c
+2088a2089,2098
+> #ifdef HAXM
+> /* GATE for the kbd_inb polling deadlock-breaker.  Armed by cmd_to_6805() whenever
+>  * the guest issues a keyboard COMMAND (which queues a 0xFA ACK / data the guest
+>  * then polls port 0x64 for); cleared when that response is consumed.  Self-
+>  * contained and generic -- set only while a command/response is outstanding, so
+>  * the breaker cannot fire during ordinary scancode (keypress) delivery, which is
+>  * all DOOM/BLOOD and other games do. */
+> static BOOL s_kbd_ack_expected = FALSE;
+> #endif
+> 
+2096a2107,2115
+> #ifdef HAXM
+> /* A keyboard command is being processed: it queues an ACK / data byte the guest
+>  * will poll port 0x64 for.  Arm the kbd_inb polling deadlock-breaker so that if
+>  * the kbd-IRQ EOI is stuck the poll can still complete.  Self-gating:
+>  * only set while a command/response is outstanding, so ordinary keypress
+>  * scancode delivery (games) never arms it. */
+> s_kbd_ack_expected = TRUE;
+> #endif
+> 
+3108a3128,3134
+> #ifdef HAXM
+> /* Set when the polling deadlock-breaker in kbd_inb surfaces OBF for a byte whose
+>  * KbdIntDelay() was blocked by a stuck bKbdEoiPending; the port-0x60 read then
+>  * frees output_full so the next byte isn't a stale re-delivery.  */
+> static BOOL s_kbd_polled_pending = FALSE;
+> #endif
+> 
+3142a3169,3214
+> #ifdef HAXM
+>                 /* Polling-guest deadlock breaker :
+>                  * a keyboard-IRQ EOI can stay stuck pending on HAXM (the
+>                  * EOI/IretHook doesn't complete -- same class as the DOOM exit
+>                  * hang).  The byte IS transferred to the output buffer
+>                  * (output_full=1) but KbdIntDelay() bails on bKbdEoiPending before
+>                  * raising OBF (kbd_status bit0), so port 0x64 reads back OBF=0.  A
+>                  * guest that POLLS port 0x64 for that byte with IF=0 (e.g. WPS's
+>                  * 0xED Set-LEDs -> wait 0xFA ACK) then spins forever.  After many
+>                  * consecutive status reads with output_full=1 && OBF=0 (a spin
+>                  * loop, not a transient IRQ window), surface OBF so the poll
+>                  * succeeds, and flag it so the port-0x60 read frees the buffer
+>                  * (else the next poll re-delivers this stale byte -> a phantom
+>                  * 0xFA "keypress" into the menu). */
+>                 {
+>                     static int s_kbd_poll_stuck = 0;
+>                     /* A byte the polling guest is waiting for may be stuck either
+>                      * already in the output buffer (output_full, OBF blocked) or
+>                      * still in the 6805 queue (feeder blocked by bKbdEoiPending). */
+>                     int have_byte = output_full
+>                                   || (free_6805_buff_size < BUFF_6805_VMAX);
+>                     if (s_kbd_ack_expected
+>                         && bKbdEoiPending && have_byte && !(kbd_status & 1)
+>                         && !keyboard_interface_disabled) {
+>                         if (++s_kbd_poll_stuck > 64) {
+>                             s_kbd_poll_stuck = 0;
+>                             /* Pull a queued byte into the output buffer if needed. */
+>                             if (!output_full
+>                                 && free_6805_buff_size < BUFF_6805_VMAX) {
+>                                 char sc = translate_6805_8042();
+>                                 if (!waiting_for_upcode) {
+>                                     output_contents = sc;
+>                                     output_full     = TRUE;
+>                                 }
+>                             }
+>                             if (output_full) {
+>                                 KbdData    = output_contents; /* port-0x60 read source */
+>                                 kbd_status |= 1;              /* OBF: surface to poll */
+>                                 s_kbd_polled_pending = TRUE;
+>                             }
+>                         }
+>                     } else {
+>                         s_kbd_poll_stuck = 0;
+>                     }
+>                 }
+> #endif
+3159a3232,3247
+> #ifdef HAXM
+>         /* If this byte was surfaced by the polling deadlock-breaker (kbd_inb
+>          * port-0x64), the normal EOI-driven consume (KbdEOIHook -> output_full=0
+>          * + continue_output) will never run because the EOI is stuck.  Free the
+>          * output buffer here so the guest's NEXT command/keypress isn't served
+>          * this same stale byte. */
+>         if (s_kbd_polled_pending) {
+>             output_full = FALSE;
+>             s_kbd_polled_pending = FALSE;
+>             /* Command response consumed; disarm the breaker.  A multi-ACK
+>              * sequence (e.g. Set-LEDs: 0xED->ACK then LED-byte->ACK) re-arms it
+>              * because cmd_to_6805() runs again for the next command byte. */
+>             if (free_6805_buff_size >= BUFF_6805_VMAX && !output_full)
+>                 s_kbd_ack_expected = FALSE;
+>         }
+> #endif
