@@ -115,6 +115,8 @@ sas.patch           - Optimize SAS-interface for faster memory access,
 spurint.patch       - Fix crash on spurious Interrupts
 timers.patch        - Fix crash on startup caued by uninitialized timer 
                       defaults.
+timerstdy.patch     - Helps that the timer tick rate is steady and not 
+                      fluctuating.
 quicked.patch       - Disable Quick edit when entering DOS app or graphics mode
                       to prevent conhost-crashes
 vdmredir.patch      - Some LAN Manager APIs for the VDM redirector have been 

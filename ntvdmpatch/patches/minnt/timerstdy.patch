@@ -1,0 +1,30 @@
+--- NT4\private\mvdm\softpc.new\base\system\timer.c
++++ nt\private\mvdm\softpc.new\base\system\timer.c
+2369a2370,2388
+>             /* Remainder-carry so the average IRQ0 rate is EXACT: plain
+>              * 65536/initialCount floors ~0.7-0.9 ticks every call -> the timer
+>              * ran ~9% slow on all backends (DOOM 140Hz -> 126Hz, SKYROADS
+>              * 180Hz -> 164Hz music).  Accumulating the remainder makes the
+>              * average exact (e.g. returns 7,8,7,8.. for DOOM).
+>              *
+>              * THREAD-SAFETY: clocksSinceCounterUpdate runs on BOTH the heartbeat
+>              * thread (time_tick) AND the CPU thread (guest reads PIT port 40h via
+>              * updateCounter -- the real-time model fires elapsed IRQ0s on reads to
+>              * smooth the heartbeat's bursts, which is WHY we keep generating here
+>              * rather than single-threading it).  The accumulator therefore MUST be
+>              * serialized: a prior *unlocked* `static timer0_frac` raced between the
+>              * two threads -> torn wrap count (huge burst / zero) -> random hang
+>              * (Duke3D startup).  host_ica_lock is a recursive critical section the
+>              * heartbeat path already holds, so this just blocks the read path
+>              * against it; the RMW is 3 ops so contention is negligible. */
+>             static unsigned long timer0_frac = 0;
+>             unsigned long wrap0;
+>             host_ica_lock();
+2371c2390,2394
+<             return 65536/pcu->initialCount;
+---
+>             timer0_frac += 65536;
+>             wrap0 = timer0_frac / pcu->initialCount;
+>             timer0_frac %= pcu->initialCount;
+>             host_ica_unlock();
+>             return wrap0;
