@@ -51,6 +51,14 @@ struct hax_set_ram_info {
     uint64_t va;
 };
 
+/* HAX_VM_IOCTL_QUERY_DIRTY input; output (same buffer) is the dirty bitmap
+ * (npages bits, 1/page, LSB-first).  Must match the driver's hax_interface.h. */
+struct hax_dirty_query {
+    uint64_t gpa_start;
+    uint32_t npages;
+    uint32_t pad;
+};
+
 struct hax_alloc_ram_info {
     uint32_t size;
     uint32_t pad;
@@ -243,7 +251,9 @@ typedef enum exit_status {
     HAX_EXIT_PAGEFAULT,
 	HAX_EXIT_DEBUG,
 	HAX_EXIT_NMI,
-	HAX_EXIT_COALESCED_MMIO
+	HAX_EXIT_COALESCED_MMIO,
+	HAX_EXIT_STRING_MMIO,
+	HAX_EXIT_TIMER          /* benign forced exit (async kick); re-iterate */
 } exit_status;
 typedef enum exit_reason {
     VMX_EXIT_INT_EXCEPTION_NMI       =  0, // An SW interrupt, exception or NMI has occurred
@@ -478,6 +488,24 @@ struct hax_coalesced_mmio {
 	struct hax_fastmmio mmio[0x1000];
 };
 
+/* HAX_EXIT_STRING_MMIO: a whole REP MOVS/STOS into a FAULTISMMIO (VRAM) page,
+ * batched by the kernel into one exit.  The kernel has already retired the
+ * instruction (RIP/RDI/RSI advanced, RCX = 0); user space just replays the run
+ * element by element through the device model.  Layout must match the driver's
+ * struct hax_string_mmio in hax_interface.h. */
+#define HAX_STRING_STOS 0
+#define HAX_STRING_MOVS 1
+struct hax_string_mmio {
+	uint8_t  op;        /* HAX_STRING_STOS / HAX_STRING_MOVS */
+	uint8_t  size;      /* element size: 1, 2 or 4 */
+	uint8_t  df;        /* 0 = forward, 1 = backward */
+	uint8_t  pad;
+	uint32_t count;     /* element count (original RCX) */
+	uint64_t dst_gpa;   /* first destination GPA (ES:DI) */
+	uint64_t src_gpa;   /* first source GPA (DS:SI) -- MOVS only */
+	uint64_t value;     /* fill value AL/AX/EAX -- STOS only */
+};
+
 // No access (R/W/X) is allowed
 #define HAX_RAM_PERM_NONE 0x0
 // All accesses (R/W/X) are allowed
@@ -503,6 +531,11 @@ struct hax_capabilityinfo
 #define HAX_CAP_WORKSTATUS_MASK 0x1
 #define HAX_CAP_MEMQUOTA        0x2
 #define HAX_CAP_UG                 0x4
+/* winfo bit (1<<10): driver decodes SET_RAM's HAX_RAM_INFO_FAULTISMMIO flag
+ * correctly.  Older drivers mis-decode it as INVALIDUVA -> NULL block ->
+ * kernel BSOD, so the EGA per-access trap MUST only be used when this is set.
+ * (bit 8 left reserved; 9 = COALESCED.) */
+#define HAX_CAP_RAM_FAULTISMMIO    (1 << 10)
     uint16_t wstatus;
     /*
      * valid when HAXM is not working
@@ -565,6 +598,8 @@ struct hax_mapviewofsection {
         CTL_CODE(HAX_DEVICE_TYPE, 0x913, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define HAX_VM_IOCTL_SET_RAM2 \
         CTL_CODE(HAX_DEVICE_TYPE, 0x914, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define HAX_VM_IOCTL_QUERY_DIRTY \
+        CTL_CODE(HAX_DEVICE_TYPE, 0x912, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define HAX_VM_IOCTL_PROTECT_RAM \
         CTL_CODE(HAX_DEVICE_TYPE, 0x915, METHOD_BUFFERED, FILE_ANY_ACCESS)
 

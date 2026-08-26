@@ -121,6 +121,10 @@ extern ULONG  getPE (VOID);
 extern ULONG  getLDT_BASE (VOID);
 
 extern int    getModeType(VOID);
+extern int    getVramPerPlane(void);   /* ega_prts.c: 1 once a subset Map-Mask (per-plane) was used */
+extern int    getVramPlanarTrap(void); /* ega_prts.c: 1 in a planar EGA/VGA BIOS mode (0Dh..12h) */
+extern volatile int g_vram_backing_stale; /* ega_prts.c: Read-Map-Select changed -> reprime flat-read backing */
+extern BOOL   g_haxm_faultismmio_supported; /* monitor.c: driver has SET_RAM FAULTISMMIO fix */
 extern void haxmvm_init();
 
 extern HANDLE hVM, hVCPU;
@@ -329,21 +333,511 @@ hax_MapViewOfSection(IN HANDLE SectionHandle,
 
 #if VIDEO_STRATEGY == 1
 
+/* Minimum gap between visible host blits (ms); ~15 ms ~= 66 Hz.  Decouples
+ * the expensive host_graphics_tick blit from the per-exit VRAM sync (ported
+ * from the WHP backend). */
+#define VRAM_BLIT_INTERVAL_MS 15
+static DWORD s_vram_last_blit    = 0;
+static BOOL  s_vram_blit_pending = FALSE;
+
+
+/* EPT dirty-bitmap fast path (ported from the WHP backend): ask the driver
+ * (HAX_VM_IOCTL_QUERY_DIRTY via haxm_query_dirty) which VRAM pages the guest
+ * wrote since the last sync, and scan ONLY those -- instead of the full-aperture
+ * 0xFF/shadow compare on every page, every exit.
+ *
+ * DEFAULT 0 (disabled) -- MEASURED NET-NEGATIVE (perf-doomhang21): the tracker
+ * works (scan 263ms->37ms, pages/call 15.6->2.0) BUT the per-query QUERY_DIRTY
+ * ioctl costs ~228ms/s (INVEPT + EPT-tree walk) AND the per-query INVEPT flushes
+ * the whole guest EPT TLB thousands/s -> guest runs at ~half speed (exits
+ * 7400->3819/s) -> net SLOWER.  Re-arming dirty tracking needs INVEPT, which is
+ * whole-context-only, so at DOOM's per-Map-Mask query rate it thrashes the guest
+ * (true for the EPT-A/D path too -- it also INVEPTs per query).  The driver
+ * write-protect tracker (memory.c hax_vm_dirty_log_*) stays correct+dormant for a
+ * lower-query-rate use or a host where INVEPT is cheap; the plain (QWORD) scan
+ * wins here.  Set 1 to re-enable for experiments (e.g. amortised re-arm). */
+#ifndef VRAM_USE_HAXM_DIRTY_BITMAP
+#define VRAM_USE_HAXM_DIRTY_BITMAP 0
+#endif
+/* Force a full scan every Nth sync as a safety net against a missed dirty re-arm
+ * (the query is best-effort -- see ept_tree_query_clear_dirty). */
+#define VRAM_BITMAP_FULLSCAN_EVERY 16
+#if VRAM_USE_HAXM_DIRTY_BITMAP
+extern BOOL haxm_query_dirty(uint64_t gpa, uint64_t size,
+                             uint64_t *bitmap, DWORD qwords);   /* monitor.c */
+static UINT64 *vram_dirty_bitmap        = NULL;
+static DWORD   vram_dirty_bitmap_qwords = 0;
+static BOOL    vram_dirty_primed        = FALSE;
+
+static BOOL vram_resize_bitmap(DWORD vram_size)
+{
+	DWORD pages  = (vram_size + 0xFFF) >> 12;
+	DWORD qwords = (pages + 63) >> 6;
+	if (qwords == vram_dirty_bitmap_qwords && vram_dirty_bitmap)
+		return TRUE;
+	if (vram_dirty_bitmap)
+		free(vram_dirty_bitmap);
+	vram_dirty_bitmap = (UINT64 *)calloc(qwords, sizeof(UINT64));
+	if (!vram_dirty_bitmap) {
+		vram_dirty_bitmap_qwords = 0;
+		return FALSE;
+	}
+	vram_dirty_bitmap_qwords = qwords;
+	return TRUE;
+}
+#endif
+
+#define SP_BLIT()  host_graphics_tick()
+
+/* ---- Fast VRAM scan (find the first changed byte in a page) -----------------
+ * The sync's dominant cost is skipping the all-0xFF (self-heal) / unchanged
+ * (shadow-diff) pages that make up ~99% of the aperture.  SSE2 scans 16 bytes
+ * per compare (PCMPEQB + PMOVMSKB) -- ~4x the 8-byte QWORD path -- then a short
+ * byte loop pinpoints the exact first change.
+ *
+ * SSE2 is guaranteed on every VT-x+EPT (HAXM) host, but the NTVDM SDK (VC7.1)
+ * has no <emmintrin.h>, so the SSE2 ops are emitted as raw opcode bytes via
+ * __asm _emit (loop control uses normal mnemonics).  movdqu is UNALIGNED so the
+ * regen pointer need not be 16-aligned.  Set VRAM_SCAN_SSE2 0 for the portable
+ * QWORD fallback (still 2x the original DWORD scan). */
+#ifndef VRAM_SCAN_SSE2
+#define VRAM_SCAN_SSE2 1
+#endif
+
+/* First offset in [p, p+len) where p[j] != 0xFF, or len if all 0xFF. */
+static DWORD scan_first_nonFF(const BYTE *p, DWORD len)
+{
+#if VRAM_SCAN_SSE2
+	DWORD result;
+	__asm {
+		push    esi
+		mov     esi, p
+		mov     edx, len
+		xor     ecx, ecx              ; ecx = j
+		_emit 0x66                    ; pcmpeqb xmm1, xmm1  (xmm1 = all 0xFF)
+		_emit 0x0F
+		_emit 0x74
+		_emit 0xC9
+	nff_sse:
+		lea     eax, [ecx+16]
+		cmp     eax, edx              ; j+16 > len ?
+		ja      nff_tail
+		_emit 0xF3                    ; movdqu xmm0, [esi+ecx]
+		_emit 0x0F
+		_emit 0x6F
+		_emit 0x04
+		_emit 0x0E
+		_emit 0x66                    ; pcmpeqb xmm0, xmm1
+		_emit 0x0F
+		_emit 0x74
+		_emit 0xC1
+		_emit 0x66                    ; pmovmskb eax, xmm0
+		_emit 0x0F
+		_emit 0xD7
+		_emit 0xC0
+		cmp     eax, 0FFFFh           ; all 16 bytes == 0xFF ?
+		jne     nff_tail
+		add     ecx, 16
+		jmp     nff_sse
+	nff_tail:
+		cmp     ecx, edx
+		jae     nff_none
+	nff_blp:
+		mov     al, [esi+ecx]
+		cmp     al, 0FFh
+		jne     nff_done
+		inc     ecx
+		cmp     ecx, edx
+		jb      nff_blp
+	nff_none:
+		mov     ecx, edx              ; return len (all 0xFF)
+	nff_done:
+		mov     result, ecx
+		pop     esi
+	}
+	return result;
+#else
+	DWORD j = 0;
+	const uint64_t *q = (const uint64_t *)p;
+	for (; j + 8 <= len; j += 8)
+		if (q[j >> 3] != 0xFFFFFFFFFFFFFFFFULL)
+			break;
+	for (; j < len; j++)
+		if (p[j] != 0xFF)
+			return j;
+	return len;
+#endif
+}
+
+/* First offset in [0, len) where a[j] != b[j], or len if equal. */
+static DWORD scan_first_diff(const BYTE *a, const BYTE *b, DWORD len)
+{
+#if VRAM_SCAN_SSE2
+	DWORD result;
+	__asm {
+		push    esi
+		push    edi
+		mov     esi, a
+		mov     edi, b
+		mov     edx, len
+		xor     ecx, ecx              ; ecx = j
+	dif_sse:
+		lea     eax, [ecx+16]
+		cmp     eax, edx
+		ja      dif_tail
+		_emit 0xF3                    ; movdqu xmm0, [esi+ecx]
+		_emit 0x0F
+		_emit 0x6F
+		_emit 0x04
+		_emit 0x0E
+		_emit 0xF3                    ; movdqu xmm1, [edi+ecx]
+		_emit 0x0F
+		_emit 0x6F
+		_emit 0x0C
+		_emit 0x0F
+		_emit 0x66                    ; pcmpeqb xmm0, xmm1
+		_emit 0x0F
+		_emit 0x74
+		_emit 0xC1
+		_emit 0x66                    ; pmovmskb eax, xmm0
+		_emit 0x0F
+		_emit 0xD7
+		_emit 0xC0
+		cmp     eax, 0FFFFh           ; all 16 bytes equal ?
+		jne     dif_tail
+		add     ecx, 16
+		jmp     dif_sse
+	dif_tail:
+		cmp     ecx, edx
+		jae     dif_none
+	dif_blp:
+		mov     al, [esi+ecx]
+		mov     ah, [edi+ecx]         ; avoid 'byte ptr' -- 'byte' is a C typedef
+		cmp     al, ah
+		jne     dif_done
+		inc     ecx
+		cmp     ecx, edx
+		jb      dif_blp
+	dif_none:
+		mov     ecx, edx
+	dif_done:
+		mov     result, ecx
+		pop     edi
+		pop     esi
+	}
+	return result;
+#else
+	DWORD j = 0;
+	const uint64_t *qa = (const uint64_t *)a, *qb = (const uint64_t *)b;
+	for (; j + 8 <= len; j += 8)
+		if (qa[j >> 3] != qb[j >> 3])
+			break;
+	for (; j < len; j++)
+		if (a[j] != b[j])
+			return j;
+	return len;
+#endif
+}
+
+/* ---- A0000 planar-EGA per-access trap (ported from the WHP backend) ------
+ * The flat regen aperture cannot reproduce EGA latched / set-reset / ALU
+ * writes (Commander Keen): a single linear address fans out to four planes.
+ * For planar EGA/VGA BIOS modes (0Dh..12h) we mark A0000 as
+ * HAX_RAM_INFO_FAULTISMMIO so EVERY guest access faults: the HAXM driver's
+ * in-kernel emulator decodes the instruction, hands us the write value (or
+ * round-trips the read), and we route it through CVIDC write_b / read_b -- the
+ * latch state lives there, exactly as on real hardware.  Linear/text modes
+ * (mode 13h chain-4, DOOM, text) keep the fast flat dirty-diff aperture.
+ *
+ * Driver-verified (haxm/core): FAULTISMMIO never installs the EPT entry
+ * (ept2.c) so it traps per-access (no batching); the kernel provides
+ * hft->value for writes and writes the userspace value back for reads
+ * (vcpu.c vcpu_write_memory / vcpu_read_memory_post).  FAULTISMMIO requires a
+ * valid backing va (only INVALID demands va==0), so we pass the same regen va
+ * either way -- the only difference between trapped and flat is ram.flags.
+ *
+ * WHP analog: vram_apply_mapping().  HAXM is simpler -- no decoder, no unmap,
+ * just a flag flip.  Set HAXM_EGA_TRAP 0 to disable (flat-only, Keen garbled). */
+#ifndef HAXM_EGA_TRAP
+#define HAXM_EGA_TRAP 1   /* planar-EGA A0000 per-write trap (needed for Keen4 etc.).  NOTE
+                           * (project_wpsnt_whp_derail): with the trap ON, wpsnt mode 0x12
+                           * shows vertical stripes because write_b faithfully renders the
+                           * guest's mm=F displayed pass -- the good per-plane image is
+                           * composed to the WRONG buffer (off 0 vs displayed off 0xA000) due
+                           * to the accelerated-exec timing divergence in the guest's
+                           * double-buffer selector ([39e4] via [51f2]/[39de]).  A/B-verified:
+                           * HAXM_EGA_TRAP 0 -> flat-only -> garbled-but-not-striped. */
+#endif
+
+/* HAXM_VRAM_FLATREAD: serve guest VRAM *reads* from the flat backing via a
+ * read-only (RX) EPT entry (no VM exit) and trap only *writes* through CVIDC
+ * write_b.  Halves the per-access VM exits for EGA read-modify-write drawing
+ * (Lemmings-class games, where reads:writes are ~1:1) -- the per-access trap is
+ * exit-bound, so this is the main throughput lever in high-exit-cost (nested)
+ * hosts.  REQUIRES the matching driver change (ept2.c routes a write to a
+ * read-only FAULTISMMIO page into MMIO emulation instead of -EACCES-skipping).
+ * The aperture is mapped FAULTISMMIO|ROM; reads no longer fault, so sas_PW8
+ * loads the EGA latch (read_b) before each write and refreshes the flat backing
+ * with the read-map plane byte after, and a Read-Map-Select change re-syncs the
+ * backing.  Default OFF -- opt-in until validated; full FAULTISMMIO stays the
+ * correct path for cross-address latch copies (Commander Keen). */
+#ifndef HAXM_VRAM_FLATREAD
+#define HAXM_VRAM_FLATREAD 0
+#endif
+
+static BOOL     s_vram_trapped  = FALSE;
+static sys_addr s_vram_map_lo   = 0;
+static DWORD    s_vram_map_size = 0;
+
+/* Runtime video strategy: 1 = fast flat aperture + selective trap (default), 3 =
+ * full-CVIDC (FAULTISMMIO-trap the WHOLE aperture, every touch -> CVIDC, like
+ * CCPU).  Switched 1->3 (sticky) by video_strategy_autodetect() only when the
+ * user opts in via the NTVDM_CVIDC env var; normal DOS keeps strategy 1.
+ * Mirrors hyperv/x86/sas.c.  UPDATE57. */
+int             g_video_strategy = 1;
+
+static BOOL vram_is_trapped(void) { return s_vram_trapped; }
+
+/* Issue HAX_VM_IOCTL_SET_RAM for the regen aperture: FAULTISMMIO (per-access
+ * trap) when `trap`, else flat R/W RAM.  Same pa/size/va either way. */
+static void vram_set_ram(sys_addr lo, DWORD size, BOOL trap)
+{
+    struct hax_set_ram_info ram = { 0 };
+    DWORD bytes;
+    ram.pa_start = lo;
+    ram.size     = size;
+    ram.va       = (uint64_t)(ULONG)Start_of_M_area + lo;
+    ram.flags    = trap ? HAX_RAM_INFO_FAULTISMMIO : 0;
+#if HAXM_VRAM_FLATREAD
+    /* Read-only aperture: reads served flat (no exit), writes fault -> MMIO. */
+    if (trap) ram.flags |= HAX_RAM_INFO_ROM;
+#endif
+    if (!DeviceIoControl(hVM, HAX_VM_IOCTL_SET_RAM, &ram, sizeof(ram),
+                         NULL, 0, &bytes, NULL))
+        haxmvm_panic("vram_set_ram SET_RAM (pa=%08X size=%08X trap=%d gle=%d)",
+                     (ULONG)lo, (ULONG)size, trap, GetLastError());
+}
+
+/* Apply the A0000 mapping: flip flat<->FAULTISMMIO per the current BIOS mode.
+ *
+ * `force` MUST be set when this is called right after a SAS_VIDEO connect,
+ * because every EGA mode-set first does sas_disconnect_memory() == a generic
+ * SAS_INACCESSIBLE SET_RAM (va=0) on the same A0000 range.  That disconnect
+ * changes the driver mapping behind our back without touching our cache, so a
+ * purely-idempotent check would no-op the reconnect and leave A0000 UNMAPPED
+ * (va=0) -> all guest writes dropped -> black screen.  Forcing the reconnect
+ * to re-issue SET_RAM restores the mapping.  The per-exit re-eval path passes
+ * force=FALSE so it stays cheap (only re-issues when want_trap changes). */
+static void vram_apply_mapping(sys_addr lo, DWORD size, BOOL force)
+{
+    /* g_haxm_faultismmio_supported (monitor.c) is FALSE on drivers that lack
+     * the SET_RAM FAULTISMMIO fix -- asking those to trap BSODs the machine,
+     * so we stay flat (Keen garbled but safe) and warn during init instead. */
+    BOOL want_trap = HAXM_EGA_TRAP && g_haxm_faultismmio_supported &&
+                     (getVramPlanarTrap() || g_video_strategy == 3);
+
+    if (size == 0) return;
+    if (!force && lo == s_vram_map_lo && size == s_vram_map_size &&
+        want_trap == s_vram_trapped)
+        return;
+
+    /* Split the B-region when trapping the A0000 planar aperture:
+     *   A0000-B7FFF : planar TRAP.  Mode 0x12 with screen_start 0xA000 spans plane
+     *                 offset 0xA000..0x13600 -- it WRAPS past 64K, so the bottom
+     *                 ~172 lines are written to gpa 0xB0000-0xB3600 and must land
+     *                 in CVIDC plane 0-0x3600 (same wrap the interpreter does).
+     *                 Mapping B0000+ flat diverts those writes to backing RAM so
+     *                 the plane buffer never gets them -> bottom of screen renders
+     *                 stale garbage (RENDERPG: CCPU writes plane pages 0-3, WHP was
+     *                 missing 2-3).  project_wpsnt_whp_derail UPDATE35.
+     *   B8000-BFFFF : flat R/W RAM.  The guest uses B8000 as flat text/scratch RAM
+     *                 (WPS's B800 writability probe: write 0x55, read back, branch).
+     *                 FAULTISMMIO-trapping it routes through planar write_b (wrap to
+     *                 plane 0x8000) where the write doesn't round-trip -> guest reads
+     *                 open-bus 0xFF, mis-detects, wrong render path -> garble + hang
+     *                 (correct on CCPU which keeps B8000 flat).  Never the planar
+     *                 display, so flat is safe.  project_wpsnt_whp_derail UPDATE31. */
+    if (want_trap && g_video_strategy == 3) {
+        /* full-CVIDC (auto-detected spdos): FAULTISMMIO-trap the WHOLE aperture
+         * INCLUDING B8000-BFFFF, so the text buffer AND the custom planar Chinese
+         * font both reach CVIDC and SP_BLIT renders them (like WHP strategy 3).
+         * The B800 write-probe round-trips through CVIDC in this all-trapped mode.
+         * project_wpsnt_whp_derail UPDATE52. */
+        vram_set_ram(lo, size, TRUE);
+    } else {
+        sys_addr hi      = lo + size;
+        sys_addr flat_lo = lo;
+        /* In a planar mode the guest addresses the whole 64K-plane WRAP window
+         * A0000-B7FFF (B-region offsets alias plane offset 0..0x7FFF, e.g. spdos's
+         * Chinese glyph render writes gpa 0xB2D41 -> plane 0x2D41).  The BIOS
+         * memory_map can shrink the decode aperture to 64K (A0000-AFFFF), but the
+         * guest still writes the B-region relying on the wrap.  So always manage
+         * the full A0000-B7FFF window: arm traps B0000-B7FFF, disarm restores it
+         * flat.  Without this the 64K-aperture window leaves B0000-B7FFF flat and
+         * the planar glyph writes bypass CVIDC (invisible text).  Mirrors
+         * hyperv/x86/sas.c.  project_wpsnt_whp_derail UPDATE41. */
+        if (lo <= 0xA0000 && hi < 0xB8000 && (want_trap || s_vram_trapped))
+            hi = (sys_addr)0xB8000;
+        if (want_trap && lo < 0xB8000) {
+            flat_lo = (hi < 0xB8000) ? hi : (sys_addr)0xB8000;
+            if (flat_lo > lo)
+                vram_set_ram(lo, (DWORD)(flat_lo - lo), TRUE);   /* A0000..B7FFF: planar trap */
+        }
+        if (hi > flat_lo)
+            vram_set_ram(flat_lo, (DWORD)(hi - flat_lo), FALSE); /* B8000..BFFFF (or all): flat */
+    }
+    s_vram_map_lo   = lo;
+    s_vram_map_size = size;
+    s_vram_trapped  = want_trap;
+    if (want_trap)
+        g_vram_backing_stale = 1;   /* (re)prime the flat-read backing on connect */
+}
+
+/* Re-evaluate the trap for the recorded region (catches vd_video_mode updates
+ * that lag the SAS_VIDEO connect).  No-op until video memory is connected.
+ * force=FALSE -- this runs on every exit, so it must stay idempotent/cheap. */
+static void vram_reeval_trap(void)
+{
+    if (s_vram_map_size)
+        vram_apply_mapping(s_vram_map_lo, s_vram_map_size, FALSE);
+}
+
+/* Enable full-CVIDC (strategy 3) for a planar-font TSR such as spdos/WPS.
+ *
+ * MANUAL opt-in via the host env var NTVDM_CVIDC (`set NTVDM_CVIDC=1` before
+ * launching).  We do NOT auto-detect from video state: spdos's planar-text render
+ * and the BIOS boot-time font load are indistinguishable in the live registers,
+ * so any state heuristic false-positives on every machine's boot font load and
+ * flips innocent apps (DOOM/BLOOD) into strategy-3 trapping (which crashes them).
+ * The flag scopes strategy 3 to opted-in sessions only.  Env var read once and
+ * cached.  On flip: flush flat screen -> CVIDC, then force=TRUE re-map so
+ * vram_apply_mapping FAULTISMMIO-traps the whole aperture.  Mirrors hyperv.
+ * project_wpsnt_whp_derail UPDATE57 (replaces the UPDATE52 auto-detect). */
+extern GLOBAL VOID haxm_sync_vram(VOID);   /* defined below */
+void video_strategy_autodetect(void)
+{
+    static int s_cvidc_opt_in = -1;                /* -1 = not yet read */
+
+    if (g_video_strategy != 1)
+        return;                                    /* already switched */
+
+    if (s_cvidc_opt_in < 0) {
+        char buf[8];
+        DWORD n = GetEnvironmentVariableA("NTVDM_CVIDC", buf, sizeof(buf));
+        s_cvidc_opt_in = (n > 0 && n < sizeof(buf) && buf[0] != '0') ? 1 : 0;
+    }
+    if (!s_cvidc_opt_in)
+        return;                                    /* not opted in -- stay on strategy 1 */
+
+    haxm_sync_vram();                              /* flush current flat screen -> CVIDC (no loss) */
+    g_video_strategy = 3;
+    if (s_vram_map_size)
+        vram_apply_mapping(s_vram_map_lo, s_vram_map_size, TRUE); /* re-trap whole aperture */
+}
+
+#if HAXM_VRAM_FLATREAD
+/* Re-derive the flat backing (what the read-only PTE serves to guest reads)
+ * from CVIDC for the whole connected aperture: backing[i] = read_b(addr) under
+ * the current Read-Map-Select.  Cost = one in-process read_b per byte; only run
+ * on connect/mode-set and on a Read-Map-Select change (both infrequent), NOT per
+ * write -- so it does not reintroduce the per-access exit cost. */
+static void haxm_vram_backing_refresh(void)
+{
+    IU32 base = gvi_pc_low_regen, top = gvi_pc_high_regen, a;
+    if (!s_vram_trapped || top < base) return;
+    for (a = base; a <= top; a++)
+        (*(IU8 *) getPtrToPhysAddrByte(a)) = sas_PR8(a);
+    g_vram_backing_stale = 0;
+}
+#endif
+
 /* Syncs our video RAM copy into the emulated devices.
    See comment in sas_connect_memory for details on why this
    has to be used
+
+   Per-graphics-mode strategy (ported from the WHP backend):
+     - PER-PLANE renderers (DOOM Mode Y, subset Map-Masks) use the destructive
+       0xFF self-heal: adjacent same-colour columns land in different planes so
+       a shadow-diff would skip them and leave a plane stale ("rain").  These
+       games don't read VRAM back, so wiping it to 0xFF is harmless.
+     - ALL-PLANE writers (SKYROADS, Map-Mask 0x0F) use the non-destructive
+       shadow-diff so their VRAM read-back survives (the 0xFF memset would feed
+       them 0xFF -> the magenta progress-bar "bleed").
+   getVramPerPlane() (shared CVIDC detector in ega_prts.c/vga_prts.c) selects.
 */
 GLOBAL VOID haxm_sync_vram(VOID)
 {
-	DWORD dwSize, dwCount, dwModeType, i, j;
+	DWORD dwSize, dwModeType, i, j;
 	PDWORD pdwSrc, pdwDst;
-	BOOL bChanged;
+	BOOL any_changed = FALSE;
+	int  use_selfheal;
+#if VRAM_USE_HAXM_DIRTY_BITMAP
+	BOOL have_bitmap = FALSE;
+#endif
 
 	dwSize = gvi_pc_high_regen-gvi_pc_low_regen;
 	dwModeType = getModeType();
-	bChanged = FALSE;
+	use_selfheal = (dwModeType != TEXT) && getVramPerPlane();
+
+	/* Re-evaluate the A0000 trap for the current BIOS mode.  When trapped
+	 * (planar EGA/VGA) the aperture is FAULTISMMIO -- every guest write already
+	 * went through CVIDC write_b live, so there is nothing to diff-sync; just
+	 * keep the host surface painted (rate-limited).  Linear/text modes fall
+	 * through to the flat dirty-diff below. */
+	vram_reeval_trap();
+	if (vram_is_trapped())
+	{
+		DWORD now = GetTickCount();
+#if HAXM_VRAM_FLATREAD
+		/* Re-derive the flat backing after a Read-Map-Select change (or the
+		 * initial connect) so guest reads from the read-only PTE see real data. */
+		if (g_vram_backing_stale)
+			haxm_vram_backing_refresh();
+#endif
+		if ((now - s_vram_last_blit) >= VRAM_BLIT_INTERVAL_MS)
+		{
+			s_vram_last_blit = now;
+			SP_BLIT();
+		}
+		return;
+	}
+
+#if VRAM_USE_HAXM_DIRTY_BITMAP
+	/* Ask the driver which VRAM pages the guest actually wrote (EPT dirty bits,
+	 * read-and-cleared).  Then scan only those pages below instead of the full
+	 * 0xFF/shadow compare over the whole aperture every exit.  Force a full scan
+	 * on the first sync (baseline not yet primed) and every Nth sync (safety net
+	 * against a missed dirty re-arm); on those rounds we skip the query so the
+	 * dirty bits accumulate and are picked up next time. */
+	{
+		static DWORD vram_sync_count = 0;
+		if (vram_resize_bitmap(dwSize + 1))
+		{
+			BOOL force_full = !vram_dirty_primed ||
+			    (vram_sync_count % VRAM_BITMAP_FULLSCAN_EVERY) == 0;
+			vram_sync_count++;
+			vram_dirty_primed = TRUE;
+			if (!force_full)
+				have_bitmap = haxm_query_dirty((uint64_t)gvi_pc_low_regen,
+				                               (uint64_t)dwSize + 1,
+				                               vram_dirty_bitmap,
+				                               vram_dirty_bitmap_qwords);
+		}
+	}
+#endif
+
 	for (i=0; i<(dwSize+1); i+=0x1000)
 	{
+		BOOL page_changed = FALSE;
+#if VRAM_USE_HAXM_DIRTY_BITMAP
+		/* dirty-bitmap fast path: skip pages the guest didn't write */
+		if (have_bitmap)
+		{
+			DWORD page = i >> 12;
+			if (!((vram_dirty_bitmap[page >> 6] >> (page & 63)) & 1ULL))
+				continue;
+		}
+#endif
 
 		/* We compare our buffer with the last copy and only update changed bytes.
 		 * We are a 32bit process, so first compare DWORDs and if there is a difference, 
@@ -361,50 +855,79 @@ GLOBAL VOID haxm_sync_vram(VOID)
 				if (pdwSrc[j] != pdwDst[j])
 				{
 					PWORD pwSrc=(PWORD)pdwSrc, pwDst=(PWORD)pdwDst;
-					bChanged = TRUE;
+					page_changed = TRUE;
 					for (j*=(sizeof(DWORD)/sizeof(WORD)); j<0x1000/sizeof(WORD); j++)
 					{
 						if (pwSrc[j]!=pwDst[j])
-						{
-							/*
-							char szDbg[256];
-							sprintf(szDbg, "Zeile %d,Spalte %d: (%04X) => '%c' (%04X)\n", j/80, j%80, 
-								pwSrc[j], (char)pwDst[j], pwDst[j]);
-							OutputDebugString(szDbg);*/
 							(*temp_func) ((PBYTE)gvi_pc_low_regen + i + j*sizeof(WORD), pwDst[j]);
-						}
 					}
 					break;
 				}
 		}
-		else /* Graphics mode, most likely planar, better mark what we consumed */
+		else if (use_selfheal) /* per-plane (DOOM): 0xFF consumed-marker self-heal */
 		{
-			temp_func = read_b_write_ptrs(SAS_VIDEO);
-			for (j=0; j<0x1000/sizeof(DWORD); j++)
-				if (0xFFFFFFFF != pdwDst[j])
-				{
-					PBYTE pbSrc=(PBYTE)pdwSrc;
-					PBYTE pbDst = (PBYTE)pdwDst;
-					bChanged = TRUE;
-					for (j*=sizeof(DWORD); j<0x1000; j++)
-					{
-						if (0xFF!=pbDst[j])
-						{
-							(*temp_func) ((PBYTE)gvi_pc_low_regen + i + j, pbDst[j]);
-							// Of course this strategy is plain stupid, if someone writes a 0xFF
-							// to video memory, we won't get it as changed.
-							//pbSrc[j] = pbDst[j]= 0xFF;
-						}
-					}
-					break;
-				}
+			/* Clean (untouched) pages are all 0xFF and dominate the scan (~99%);
+			 * scan_first_nonFF skips them 16 bytes/compare (SSE2) to the first
+			 * change, then the byte loop writes the changed bytes to end-of-page. */
+			PBYTE pbDst = (PBYTE)pdwDst;
+			DWORD start = scan_first_nonFF(pbDst, 0x1000);
+			if (start < 0x1000)
+			{
+				page_changed = TRUE;
+				temp_func = read_b_write_ptrs(SAS_VIDEO);
+				for (j=start; j<0x1000; j++)
+					if (0xFF!=pbDst[j])
+						(*temp_func) ((PBYTE)gvi_pc_low_regen + i + j, pbDst[j]);
+			}
 		}
-		if (bChanged)
+		else /* all-plane (SKYROADS): non-destructive shadow-diff (keep VRAM) */
 		{
-			if (dwModeType == TEXT) memcpy(pdwSrc, pdwDst, 0x1000);
-			else memset(pdwDst, 0xFF, 0x1000);
+			PBYTE pbSrc = (PBYTE)pdwSrc, pbDst = (PBYTE)pdwDst;
+			DWORD start = scan_first_diff(pbSrc, pbDst, 0x1000);
+			if (start < 0x1000)
+			{
+				page_changed = TRUE;
+				temp_func = read_b_write_ptrs(SAS_VIDEO);
+				for (j=start; j<0x1000; j++)
+					if (pbSrc[j]!=pbDst[j])
+						(*temp_func) ((PBYTE)gvi_pc_low_regen + i + j, pbDst[j]);
+			}
+		}
 
-			host_graphics_tick();
+		if (page_changed)
+		{
+			any_changed = TRUE;
+			/* Refresh baseline: self-heal resets VRAM to 0xFF (destructive);
+			 * text & shadow-diff refresh the shadow copy (non-destructive). */
+			if (dwModeType != TEXT && use_selfheal)
+				memset(pdwDst, 0xFF, 0x1000);
+			else
+				memcpy(pdwSrc, pdwDst, 0x1000);
+		}
+	}
+
+	/* Rate-limit the (expensive) host blit to ~display refresh -- the sync
+	 * runs on every exit; calling host_graphics_tick each changed page was a
+	 * big per-exit cost (ported from the WHP backend). */
+	if (any_changed)
+	{
+		DWORD now = GetTickCount();
+		s_vram_blit_pending = TRUE;
+		if ((now - s_vram_last_blit) >= VRAM_BLIT_INTERVAL_MS)
+		{
+			s_vram_last_blit    = now;
+			s_vram_blit_pending = FALSE;
+			SP_BLIT();
+		}
+	}
+	else if (s_vram_blit_pending)
+	{
+		DWORD now = GetTickCount();
+		if ((now - s_vram_last_blit) >= VRAM_BLIT_INTERVAL_MS)
+		{
+			s_vram_last_blit    = now;
+			s_vram_blit_pending = FALSE;
+			SP_BLIT();
 		}
 	}
 }
@@ -562,27 +1085,52 @@ GLOBAL VOID haxm_vram_mmio(struct hax_fastmmio *hft)
 
 GLOBAL VOID haxm_sync_vram(VOID)
 {
-	PDWORD pwDst;
-	DWORD i, j, size;
-	BOOL bChanged;
+	PDWORD pdwPage;
+	PBYTE  pbPage;
+	DWORD  page, d, j, size, npages;
+	BOOL   bChanged;
 
 	if (!bDoVideoSync) return;
 	size = gvi_pc_high_regen - gvi_pc_low_regen + 1;
+	npages = size / 0x1000;
 	bChanged = FALSE;
-	for (i=0; i<size/0x1000; i++)
-	{
-		pwDst = (PDWORD)getPtrToPhysAddrByte(gvi_pc_low_regen + (i * 0x1000));
-		temp_func = read_b_write_ptrs(SAS_VIDEO);
+	temp_func = read_b_write_ptrs(SAS_VIDEO);
 
-		for (j=0; j<128; j++)
-			if (0xFFFFFFFF != pwDst[j])
-			{
-				PBYTE pbDst = (PBYTE)pwDst;
-				bChanged = TRUE;
-				for (j*=sizeof(DWORD); j<0x1000; j++)
-					if (0xFF!=pbDst[j])
-						(*temp_func) ((PBYTE)gvi_pc_low_regen + i + j, pbDst[j]);
+	/* The aperture was memset to 0xFF at the start of this write window
+	 * (haxm_vram_mmio), so any byte != 0xFF is a pixel the guest wrote under
+	 * the CURRENT Sequencer state.  Replay each such byte through the software
+	 * VGA write path so Map-Mask / write-mode / chain semantics are applied to
+	 * the real plane store.  The 0xFF sentinel (rather than a value diff) is
+	 * deliberate: in unchained Mode X four adjacent columns write the SAME
+	 * aperture offset through four planes, and for a solid fill those bytes are
+	 * EQUAL -- a value diff would drop planes 1..3; the clean-slate sentinel
+	 * captures every written byte regardless of value.  (Residual: a pixel of
+	 * index 0xFF is indistinguishable from "unwritten" and is dropped -- a
+	 * minor artifact removed in the Phase 1 trap-and-decode path.) */
+	for (page = 0; page < npages; page++)
+	{
+		pdwPage = (PDWORD)getPtrToPhysAddrByte(gvi_pc_low_regen + page * 0x1000);
+
+		/* Fast skip: a page still entirely 0xFF was untouched this window.
+		 * Scan ALL dwords of the page (the old code sampled only the first
+		 * 128, missing changes past offset 0x200). */
+		for (d = 0; d < 0x1000 / sizeof(DWORD); d++)
+			if (pdwPage[d] != 0xFFFFFFFF)
 				break;
+		if (d == 0x1000 / sizeof(DWORD))
+			continue;
+
+		pbPage = (PBYTE)pdwPage;
+		for (j = 0; j < 0x1000; j++)
+			if (pbPage[j] != 0xFF)
+			{
+				/* Replay at the byte's TRUE aperture address.  The old code
+				 * used (low_regen + page + j), where `page` is the page index
+				 * -- so every page past 0 was replayed ~0x1000 bytes too low,
+				 * corrupting any guest (e.g. BLOOD) that writes across the
+				 * full 64 KB window. */
+				(*temp_func)((PBYTE)gvi_pc_low_regen + page * 0x1000 + j, pbPage[j]);
+				bChanged = TRUE;
 			}
 	}
 	if (bChanged)
@@ -790,9 +1338,16 @@ static void hax_set_ram(
 		 *                                      +--------------+  +--------------------+
 		 */
 #if VIDEO_STRATEGY == 1
-		// Map to normal RAM block, we use it as regen buffer
-		ram.flags = 0;
-		break;
+		/* Dynamic A0000 trap: flat R/W regen buffer for text/linear modes,
+		 * FAULTISMMIO per-access trap for planar EGA/VGA modes so latched/ALU
+		 * writes hit CVIDC write_b.  It issues its own SET_RAM, so return
+		 * instead of falling to the generic ioctl below.  force=TRUE: this
+		 * connect is preceded by sas_disconnect_memory() (a generic INACCESSIBLE
+		 * SET_RAM with va=0 on this same range), so we MUST re-issue SET_RAM to
+		 * restore the mapping even if our cached trap-state is unchanged --
+		 * otherwise A0000 stays unmapped and the screen goes black. */
+		vram_apply_mapping(Low, High - Low + 1, TRUE);
+		return;
 #elif VIDEO_STRATEGY == 3
 		ram.flags = HAX_RAM_INFO_INVALID | HAX_RAM_INFO_COALESCED;
 		ram.va = 0;
@@ -2390,9 +2945,23 @@ IFN2(PHY_ADDR, addr, IU8, val)
 
 		case SAS_VIDEO:
 			temp_func = read_b_write_ptrs(temp_val);
+#if HAXM_VRAM_FLATREAD
+			/* Flat-read aperture: the guest's VRAM read no longer faults (it is
+			 * served from the read-only PTE), so the EGA latch it would have
+			 * loaded must be loaded here before the write applies.  This covers
+			 * the common SAME-address read-modify-write (read di, write di). */
+			(void) sas_PR8(addr);
+#endif
 			(*temp_func) (addr, val);
 #if VIDEO_STRATEGY == 1
+#if HAXM_VRAM_FLATREAD
+			/* Keep the flat backing (what the read-only PTE serves to guest
+			 * reads) equal to the read-map-selected plane byte after the write,
+			 * so latch-discarding reads AND value-using reads see real data. */
+			(*(IU8 *) getPtrToPhysAddrByte(addr)) = sas_PR8(addr);
+#else
 			(*(IU8 *) getPtrToPhysAddrByte(addr)) = val;
+#endif
 			(*(IU8 *) (haxm_videocmp_copy + addr - gvi_pc_low_regen)) = val;
 #endif
 			break;

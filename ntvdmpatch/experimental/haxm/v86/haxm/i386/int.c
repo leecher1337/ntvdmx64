@@ -173,6 +173,19 @@ Notes:
 EarlyExit:
 
     host_ica_unlock();
+
+    /* If a worker thread just queued an IRQ while the VCPU is spinning inside
+     * HAX_VCPU_IOCTL_RUN (exit-less guest loop, e.g. DOOM's tic-wait), force it
+     * out so the next cpu_simulate iteration can inject.  Skip when we're on the
+     * VCPU thread itself -- it isn't inside the run when executing this C code,
+     * so there is nothing to kick.  The kick is deduped and gated on a pending
+     * bit, so this is ~free on a normally-exiting guest. */
+    {
+        extern void  haxm_kick_if_running(void);    /* monitor.c */
+        extern DWORD g_cpu_simulate_tid;            /* monitor.c, 0 until set   */
+        if (GetCurrentThreadId() != g_cpu_simulate_tid)
+            haxm_kick_if_running();
+    }
 }
 
 
@@ -238,6 +251,7 @@ Notes:
 		*pNtVDMState &= ~VDM_INT_HARDWARE;
     }
 
+
     host_ica_unlock();
 }
 
@@ -301,12 +315,12 @@ Return Value:
         }
 
 	/* host_swint_hook() in CCPU -> Software INT hooks --> VdmInstallSoftwareIntHandler(DpmiSwIntHandler); in DPMI32
-	 * Dieser handler ersetzt die normale Interrupbehandlung, wenn ausgeführt!
-	 * Hierzu gibt es kein Äquivalent in MONITOR, in Monitor werden dafür IRET hooks verwendet über
-	 * den Instruction-emulator, u.A. für INT, POPF, STI, ... (-> V86DispatchTable)
+	 * Dieser handler ersetzt die normale Interrupbehandlung, wenn ausgefÃ¼hrt!
+	 * Hierzu gibt es kein Ã„quivalent in MONITOR, in Monitor werden dafÃ¼r IRET hooks verwendet Ã¼ber
+	 * den Instruction-emulator, u.A. fÃ¼r INT, POPF, STI, ... (-> V86DispatchTable)
 	 * Hooks werden generell via SetProtectedModeInterrupt BOP (Handler DpmiSetProtectedmodeInterrupt) gesetzt.
-	 * Dafür wird durch  host_iret_bop_table_addr() in ica_intack ein hook zurückgegeben.
-	 * Diese Funktionen simulieren einen INT, statt einen echten auf der CPU auszuführen. Eventuell sollten wir
+	 * DafÃ¼r wird durch  host_iret_bop_table_addr() in ica_intack ein hook zurÃ¼ckgegeben.
+	 * Diese Funktionen simulieren einen INT, statt einen echten auf der CPU auszufÃ¼hren. Eventuell sollten wir
 	 * das einfach auch so machen. Problem: Im V86 Modus gibt es auch emulierte Instruktionen (PUSHF), welche
 	 * unsere INT-Dispatcher aufrufen, das haben wir in HAXm so nicht.
 	 *

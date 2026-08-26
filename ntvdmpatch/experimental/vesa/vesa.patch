@@ -2,13 +2,7 @@
 +++ nt\private\mvdm\softpc.new\base\video\v7_ports.c
 29a30
 > #include "config.h"
-100c101,137
-< #endif  //NEC_98
----
-> #endif  //NEC_98
-> }
-> 
-> GLOBAL VOID
+103a105,140
 > v7_set_write_bank( bank )
 > half_word bank;
 > 
@@ -42,6 +36,9 @@
 > 	set_screen_start(bank_offset + start_address);
 > 	screen_refresh_required();
 > #endif
+> }
+> 
+> GLOBAL VOID
 378a416
 > 			old_value=(half_word)extensions_controller.ram_bank_select.as.abyte;
 380a419,420
@@ -129,9 +126,9 @@
 > 		}
 --- NT4\private\mvdm\softpc.new\base\video\vga_prts.c
 +++ nt\private\mvdm\softpc.new\base\video\vga_prts.c
-1552a1553
+1564a1565
 > 						update_crt_banking();
-1587a1589,1591
+1599a1601,1603
 > #ifdef V7VGA
 > 					update_crt_banking();
 > #endif /* V7VGA */

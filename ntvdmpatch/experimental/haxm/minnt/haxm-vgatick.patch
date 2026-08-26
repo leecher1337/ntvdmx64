@@ -1,0 +1,353 @@
+--- NT4\private\mvdm\softpc.new\base\video\ega_prts.c
++++ nt\private\mvdm\softpc.new\base\video\ega_prts.c
+340a341
+>         #include        "video.h"        /* vd_video_mode (getVramPlanarTrap) */
+2346a2348,2442
+> /* Per-plane rendering detector for the WHP VRAM sync (sas.c).  Set once the
+>  * guest selects a strict SUBSET of planes via the Map-Mask (e.g. DOOM's Mode-Y
+>  * blit cycling 0x01/0x02/0x04/0x08) -- that is the case where a shadow-diff
+>  * sync misses "same value written to a different plane" and rains, so it needs
+>  * the (destructive) self-heal.  Games that only ever write all planes at once
+>  * (Map-Mask 0x0F, e.g. SKYROADS) never set it and get the non-destructive
+>  * shadow-diff (preserving VRAM read-back).  Reset on a sequencer memory-mode
+>  * change (mode switch). */
+> static int g_vram_perplane = 0;
+> int  getVramPerPlane(void)   { return g_vram_perplane; }
+> void resetVramPerPlane(void) { g_vram_perplane = 0; }
+> 
+> /* HAXM flat-read VRAM aperture: set when Read-Map-Select changes so the HAXM
+>  * backend re-derives its single-plane flat backing (see sas.c).  Defined here in
+>  * the shared video layer so all backends (HAXM/WHP/CCPU) link; only HAXM reads
+>  * it.  Init 1 so the first connect primes the backing. */
+> volatile int g_vram_backing_stale = 1;
+> 
+> /* TRUE when the current BIOS video mode is an EGA/VGA *planar* graphics mode
+>  * (0Dh,0Eh,0Fh,10h,11h,12h) -- the modes whose A0000 stores run through the
+>  * latch / set-reset / ALU / map-mask machinery and therefore CANNOT be
+>  * faithfully represented by a flat linear host buffer mapped at A0000.
+>  *
+>  * Mode 13h (256-colour chained/linear) and unchained Mode-X both leave the
+>  * BIOS mode byte outside this set, so they stay flat-mapped and DOOM is never
+>  * trapped.  Text and CGA modes (B8000) are excluded for free.
+>  *
+>  * The WHP backend keys the A0000 instruction-emulation trap on this: a flat,
+>  * RAM-backed aperture is correct for linear modes (fast, no exits), while
+>  * planar modes must unmap and service every write through the bundled
+>  * instruction emulator so the CVIDC write_b EGA logic runs.  This is a stable
+>  * per-mode property (unlike write_mode, which DOOM also toggles transiently),
+>  * so it does not false-positive linear renderers. */
+> /* VRAM_PLANAR_REGTRUTH: also recognise a planar mode set by DIRECT REGISTER
+>  * programming (bypassing the BIOS INT 10h mode-set, so vd_video_mode stays at
+>  * the old text value).  The Chinese DOS systems (spdos/WPS) hook INT 10h and
+>  * switch into a planar 16-colour mode to render glyphs as bitmaps -- without
+>  * this the A0000 trap never arms, writes fall to the flat-sync replay path
+>  * which cannot reproduce latch/write-mode/set-reset stores, and the screen
+>  * shows vertical stripes.  Set 0 to restore the
+>  * BIOS-byte-only behaviour for A/B. */
+> #ifndef VRAM_PLANAR_REGTRUTH
+> #define VRAM_PLANAR_REGTRUTH 1
+> #endif
+> int getVramPlanarTrap(void)
+> {
+>     half_word mode = sas_hw_at_no_check(vd_video_mode);
+>     int _gvpt_result = 0;
+>     switch (mode) {
+>     case 0x0D: case 0x0E: case 0x0F:
+>     case 0x10: case 0x11: case 0x12:
+>         _gvpt_result = 1;
+>         goto gvpt_done;
+>     default:
+>         break;
+>     }
+> #if VRAM_PLANAR_REGTRUTH
+>     /* Register-truth fallback.  A planar 16-colour EGA/VGA mode active in the
+>      * live CVIDC-tracked registers: graphics mode (same 3-way majority that
+>      * vote_ega_mode uses to flip CVIDC into graphics), NOT 256-colour (so mode
+>      * 13h / Mode-X stay flat -- DOOM/BLOOD unaffected), and the aperture mapped
+>      * at A0000 (memory_map 0/1).  Text and CGA-at-B8000 modes fail the graphics
+>      * or memory_map test and stay untrapped.  get_256_colour_mode() is the
+>      * canonical maintained 256-colour flag (EGA_GRAPH.colour_256), not the raw
+>      * attribute bit, so the 13h exclusion is reliable. */
+>     {
+>         int votes = (sequencer.memory_mode.as_bfld.alpha_mode ? 0 : 1)
+>                   + graphics_controller.miscellaneous.as_bfld.graphics_mode
+>                   + attribute_controller.mode_control.as_bfld.graphics_mode;
+>         int not256 = !get_256_colour_mode();
+>         int a0000  = (graphics_controller.miscellaneous.as_bfld.memory_map <= 1);
+>         /* NOTE: an earlier fix also trapped on alpha_mode==0 (planar CPU
+>          * addressing) to catch spdos's Chinese-glyph render, but that OVER-TRAPPED
+>          * -- alpha_mode==0 is also set transiently during FONT LOADS (glyph bitmaps
+>          * to plane 2) and other planar setup that text-mode GUIs and Keen 4 do, so
+>          * their content got routed to CVIDC while the display still read it flat ->
+>          * broad regression (text GUIs + Keen 4 startup blank).  Reverted to the
+>          * display-graphics vote test; the spdos B-region render needs a narrower
+>          * trigger (TODO). */
+>         if (votes >= 2 && not256 && a0000)
+>             _gvpt_result = 1;
+>     }
+> #endif
+> gvpt_done:
+>     return _gvpt_result;
+> }
+> /* Called from BOTH ega_seq_map_mask and vga_seq_map_mask (the VGA path swaps
+>  * ega_seq_regs[2] to vga_seq_map_mask, so the EGA handler alone misses it). */
+> void noteMapMaskValue(unsigned value)
+> {
+>     unsigned m = value & 0xf;
+>     if (m != 0 && m != 0xf)
+>         g_vram_perplane = 1;
+> }
+> 
+2360a2457,2458
+>     noteMapMaskValue(value);   /* per-plane detector (see noteMapMaskValue) */
+> 
+2407a2506
+>     g_vram_perplane = 0;    /* mode (re)programmed -> re-evaluate plane usage */
+2924a3024,3029
+>     /* HAXM flat-read aperture: the flat backing mirrors a single (read-map)
+>      * plane, so a Read-Map-Select change invalidates it -- the HAXM sync
+>      * re-derives the backing from the newly selected plane.  Harmless no-op for
+>      * the WHP/CCPU backends and when HAXM_VRAM_FLATREAD is off. */
+>     g_vram_backing_stale = 1;
+> 
+2937c3042,3051
+<     if (graphics_controller.mode.as_bfld.write_mode != new_mode.as_bfld.write_mode)
+---
+>     /* Re-sync if EITHER the register OR the fast state (EGA_CPU.write_mode, which
+>      * is what write_b actually uses) disagrees with the requested mode.  The
+>      * register-only guard desyncs on WHP: ega_write_init/ega_write_term reset
+>      * EGA_CPU.write_mode=0 WITHOUT touching graphics_controller.mode, so a guest
+>      * re-issuing its write mode (e.g. wpsnt OUT 3CE,0205 = write mode 2 before
+>      * the 0c11:5a86 glyph loop) found register==2 already and SKIPPED the fast-
+>      * state update -> the loop ran at write mode 0 mm=F -> all planes collapsed
+>      * (vertical stripes). */
+>     if (graphics_controller.mode.as_bfld.write_mode != new_mode.as_bfld.write_mode
+>         || EGA_CPU.write_mode != new_mode.as_bfld.write_mode)
+3451,3472d3564
+< 
+<     /*
+<      * The whole of this routine has been nicked from the cga without modification
+<      * The s_lengths array should probably be altered for the ega timings, and somewhere
+<      * an interrupt should be fired off.
+<      */
+< 
+<     static int ega_state = 0;       /* current ega status state */
+<     static int state_count = 1;     /* position in that state */
+<     static int sub_state = 0;       /* sub state for ega state 2 */
+< 
+<     static unsigned long gmfudge = 17; /* Random number seed for pseudo-random
+<                                           bitstream generator to give the state                                           lengths below that 'genuine' feel to
+<                                           progs that require it! */
+<     register unsigned long h;
+< 
+<     /*
+<      * relative 'lengths' of each state. State 2 is *3 as it has 3 sub states
+<      */
+< 
+<     static int s_lengths[] = { 8, 18, 8, 6};
+< 
+3474,3492c3566
+<      * Status register, simulated adapter has
+<      *
+<      *  bit                     setting
+<      *  ---                     -------
+<      *  Display enable             1/0 Toggling each inb
+<      *  Light Pen                  0
+<      *  Light Pen                  0
+<      *  Vertical Sync              1/0 Toggling each inb
+<      *  4-7 Unused                 0,0,0,0
+<      *
+<      * The upper nibble of the byte is always set.
+<      * Some programs synchronise with the display by waiting for the
+<      * next vertical retrace.
+<      *
+<      * We attempt to follow the following waveform
+<      *
+<      *    --                                                     ----------
+<      * VS  |_____________________________________________________|        |____
+<      *
+---
+>      * Wall-clock-driven VGA Input Status Register 1 (port 3DAh / 3BAh).
+3494,3495c3568,3571
+<      *    -------------  -   -                           ------------------
+<      * DE             |__||__||__ ... about 180         _|
+---
+>      * Bit layout (only the bits we model are listed):
+>      *   bit 0 : DE  -- Display Enable.  '1' during active scan, '0' in blanking.
+>      *   bit 3 : VS  -- Vertical Sync.   '1' during the vertical retrace pulse.
+>      *   bits 4-7   : reserved, always read as 1.
+3497c3573,3580
+<      *State|--- 0 ----|-------------- 1 -----------------|-- 3 --|-- 4 --|
+---
+>      * Real-VGA timings we approximate:
+>      *   - Frame period ~14.3 ms (70 Hz, the original VGA mode-3 / mode-13h rate).
+>      *   - Vertical sync pulse ~64 us (well under a millisecond).
+>      *   - The whole vertical-blank interval is ~1.4 ms, during which DE is low.
+>      *   - DE is high for the rest of the frame, but real hardware toggles it
+>      *     line-by-line at ~31.5 kHz, so guests doing many reads per "line"
+>      *     see a fast oscillation -- we mimic that by toggling DE every read
+>      *     while inside the active-scan portion of the frame.
+3499,3506c3582,3590
+<      * We do this with a 4 state machine. Each state has a count associated
+<      * with it to represent the relative time spent in each state. When this
+<      * count is exhausted the machine moves into the next state. One Inb
+<      * equals 1 count. The states are as follows:
+<      *     0: VS low, DE high.
+<      *     1: VS low, DE toggles. This works via an internal state.
+<      *     3: VS low, DE high.
+<      *     4: VS high,DE high.
+---
+>      * The previous implementation in this file ran the state machine off a
+>      * per-call counter (the same 40-read cycle regardless of wall-clock
+>      * speed).  That worked when the guest's poll rate happened to match
+>      * VGA timings; with the WHP backend (~60 us per IO exit) poll rate
+>      * drops to ~15 kHz, and guests calibrating CPU speed against "IN AL,
+>      * 3DAh between two vsync edges" measure wildly wrong numbers, causing
+>      * every tick-paced animation/timing to run slow.  Driving the state
+>      * off wall clock makes the calibration land on real-hardware values
+>      * regardless of host backend.
+3507a3592,3594
+>      * NOTE: input_status_register_zero.as_bfld.crt_interrupt is the
+>      * SIGNED inverted vsync used by ISR0 (port 3C2h read); keep that
+>      * tracking in sync with what we return here.
+3510c3597,3605
+<         #ifdef PROD
+---
+> #define EGA_VS_FRAME_USEC    14286ul   /* 70 Hz frame period */
+> #define EGA_VS_VBLANK_USEC    1400ul   /* vertical-blank duration */
+> #define EGA_VS_PULSE_USEC      400ul   /* vertical-sync pulse width */
+> 
+>     static int de_toggle = 0;
+>     ULONG tick_ms, t_in_frame;
+>     half_word de_bit, vs_bit;
+> 
+> #ifdef PROD
+3518,3559c3613,3642
+<     state_count --;     /* attempt relative 'timings' */
+<     switch (ega_state)
+<     {
+< 
+<     case 0:
+<         if (state_count == 0)
+<         { /* change to next state ? */
+<             h = gmfudge << 1;
+<             gmfudge = (h&0x80000000) ^ (gmfudge & 0x80000000)? h|1 : h;
+<             state_count = s_lengths[1] + (gmfudge & 3);
+<             ega_state = 1;
+<         }
+<         input_status_register_zero.as_bfld.crt_interrupt = 1;   /* = !VS */
+<         *value = 0xf1;
+<         break;
+< 
+<     case 1:
+<         if (state_count == 0)
+<         { /* change to next state ? */
+<             h = gmfudge << 1;
+<             gmfudge = (h&0x80000000) ^ (gmfudge & 0x80000000)? h|1 : h;
+<             state_count = s_lengths[2] + (gmfudge & 3);
+<             ega_state = 2;
+<             sub_state = 2;
+<         }
+<         switch (sub_state)
+<         {    /* cycle through 0,0,1 sequence */
+<         case 0:         /* to represent DE toggling */
+<             *value = 0xf0;
+<             sub_state = 1;
+<             break;
+<         case 1:
+<             *value = 0xf0;
+<             sub_state = 2;
+<             break;
+<         case 2:
+<             *value = 0xf1;
+<             sub_state = 0;
+<             break;
+<         }
+<         input_status_register_zero.as_bfld.crt_interrupt = 1;   /* = !VS */
+<         break;
+---
+>     /* GetTickCount has 10-16 ms resolution; combine with a per-read
+>      * pseudo-counter so the within-frame phase advances even when the
+>      * tick value hasn't moved yet.  The pseudo-counter advances at a
+>      * rate determined by call frequency, but only matters for sub-ms
+>      * granularity inside the active scan -- which is where DE toggles
+>      * matter for guest detection code anyway. */
+>     tick_ms = GetTickCount();
+>     t_in_frame = (ULONG)(((tick_ms * 1000ul) + (de_toggle * 30ul))
+>                           % EGA_VS_FRAME_USEC);
+>     de_toggle++;
+> 
+>     if (t_in_frame < EGA_VS_PULSE_USEC) {
+>         /* In vsync pulse: VS=1, DE=0 (we're in vertical retrace, no scan). */
+>         vs_bit = 1;
+>         de_bit = 0;
+>     } else if (t_in_frame < EGA_VS_VBLANK_USEC) {
+>         /* Vertical blank but no longer pulsing: VS=0, DE=0. */
+>         vs_bit = 0;
+>         de_bit = 0;
+>     } else {
+>         /* Active scan: VS=0, DE toggles to mimic horizontal-blank cycles
+>          * at ~31.5 kHz.  Most "wait for end of vblank" detection cares
+>          * only about DE=1 being reachable; we just toggle. */
+>         vs_bit = 0;
+>         de_bit = (half_word)(de_toggle & 1);
+>     }
+> 
+>     /* Keep ISR0's inverted-vsync mirror in sync (some code checks ISR0
+>      * instead of ISR1). */
+>     input_status_register_zero.as_bfld.crt_interrupt = vs_bit ? 0 : 1;
+3561,3571c3644,3645
+<     case 2:
+<         if (state_count == 0)
+<         { /* change to next state ? */
+<             h = gmfudge << 1;
+<             gmfudge = (h&0x80000000) ^ (gmfudge & 0x80000000)? h|1 : h;
+<             state_count = s_lengths[3] + (gmfudge & 3);
+<             ega_state = 3;
+<         }
+<         *value = 0xf1;
+<         input_status_register_zero.as_bfld.crt_interrupt = 1;   /* = !VS */
+<         break;
+---
+>     /* Upper nibble reads 1, bit 1 / bit 2 (light pen) = 0. */
+>     *value = (half_word)(0xF0u | (vs_bit ? 0x08u : 0u) | (de_bit ? 0x01u : 0u));
+3573,3585c3647
+<     case 3:
+<         if (state_count == 0)
+<         { /* wrap back to first state */
+<             h = gmfudge << 1;
+<             gmfudge = (h&0x80000000) ^ (gmfudge & 0x80000000)? h|1 : h;
+<             state_count = s_lengths[0] + (gmfudge & 3);
+<             ega_state = 0;
+<         }
+<         input_status_register_zero.as_bfld.crt_interrupt = 0;   /* = !VS */
+<         *value = 0xf9;
+<         break;
+<     }
+<     note_entrance1("returning %x",*value);
+---
+>     note_entrance1("returning %x", *value);
+--- NT4\private\mvdm\softpc.new\base\video\vga_prts.c
++++ nt\private\mvdm\softpc.new\base\video\vga_prts.c
+456a457,458
+> IMPORT void noteMapMaskValue(unsigned value);   /* ega_prts.c: per-plane detector */
+> IMPORT void resetVramPerPlane(void);             /* ega_prts.c: per-plane detector reset */
+1186a1189,1198
+> 		/* Chain4 actually toggled (chained<->unchained): the plane-usage
+> 		 * pattern is about to change, so re-evaluate the per-plane detector
+> 		 * from scratch.  This MUST reset only on a real transition, NOT on
+> 		 * every (often redundant) Memory-Mode write: unchained Mode X
+> 		 * renderers such as BLOOD re-assert this register mid-frame, and the
+> 		 * old unconditional resetVramPerPlane() knocked perplane back to 0
+> 		 * after the Map-Mask writes had set it -> the WHP VRAM sync fell into
+> 		 * the shadow-diff path, which drops equal-valued plane writes and
+> 		 * garbles the tiles. */
+> 		resetVramPerPlane();
+1887c1899,1900
+< 	if (graphics_controller.mode.as_bfld.write_mode != new_mode.as_bfld.write_mode)
+---
+> 	if (graphics_controller.mode.as_bfld.write_mode != new_mode.as_bfld.write_mode
+> 	    || EGA_CPU.write_mode != new_mode.as_bfld.write_mode)
+2391a2405,2406
+> 
+> 	noteMapMaskValue(value);	/* per-plane detector for the WHP VRAM sync */
