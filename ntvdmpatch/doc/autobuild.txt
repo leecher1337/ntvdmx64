@@ -55,6 +55,8 @@ i.e. C:\NTVDMBLD
    autobuild-ccpu-fre.cmd
    autobuild-haxm-chk.cmd
    autobuild-haxm-fre.cmd
+   autobuild-whp-chk.cmd
+   autobuild-whp-fre.cmd
 
 3) Depending on your OS version and TLS-capabilities, either put supplied
 
@@ -71,11 +73,14 @@ Run build
 =========
 Now you need to run the appropriate script depending on the version you
 want to compile.
-There are 2 CPUs available at the moment:
+There are 3 CPUs available at the moment:
 
   CCPU   - The emulated software CPU (default)
   HAXM   - The VT-x hardware accellerated version, needs supplied driver
            Read haxm.txt for details and advantages/disadvantages
+  WHP    - The Windows Hyper-V accellerated version, runs with stock
+           Windows Hyper-V feature, read hyperv.txt for details and 
+           advantages/disadvantages
 
 If unsure, CCPU is recommended.
 There are 2 types of builds available:

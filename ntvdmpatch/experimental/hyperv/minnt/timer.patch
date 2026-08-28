@@ -1,0 +1,91 @@
+--- NT4\private\mvdm\softpc.new\base\system\timer.c
++++ nt\private\mvdm\softpc.new\base\system\timer.c
+2171a2172,2201
+>         /* Original code called
+>          *   host_DelayHwInterrupt(CPU_TIMER_INT, EoiIntsPending, ...)
+>          * to deliver all queued-up "missed" ticks as one batch.  Inside
+>          * host_DelayHwInterrupt (nt_eoi.c:326) a positive CallCount
+>          * triggers an immediate synchronous ica_hw_interrupt for the
+>          * timer line.  Because TimerEoiHook is invoked from inside
+>          * ica_eoi (via host_EOI_hook, ica.c:466) -- BEFORE ica_eoi's
+>          * tail scan_irr (ica.c:472) -- that inline raise re-asserts
+>          * IRR bit 0 with ica_count > 0, pinning the timer at the top
+>          * of the priority order.  The next ica_intack therefore picks
+>          * IRQ0 again instead of the keyboard's IRQ1 (or any other
+>          * lower-priority IRQ) that is already pending in IRR.  Result:
+>          * total keyboard starvation once the timer falls behind even
+>          * by one tick.
+>          *
+>          * Behaviour difference vs HAXM/v86/ccpu:  on those backends
+>          * the cpu_simulate loop is fast enough that EoiPending stays
+>          * at 0/1 and this branch is almost never entered, so the bug
+>          * never surfaced.  On WHP the round-trip overhead of
+>          * WHvRunVirtualProcessor + the worker-thread cancel keeps the
+>          * timer permanently behind, making this branch hot.
+>          *
+>          * Drop the accumulated backlog instead of batch-firing it.
+>          * The BIOS tick counter drifts slightly when the loop falls
+>          * behind (lost ticks), but the keyboard / cascade IRQs in IRR
+>          * can now drain.  The heartbeat thread continues to fire one
+>          * tick per heartbeat naturally, so steady-state behaviour
+>          * matches the other backends.
+>          */
+> #ifndef HAXM
+2178a2209
+> #endif
+--- NT4\private\mvdm\softpc.new\host\src\nt_timer.c
++++ nt\private\mvdm\softpc.new\host\src\nt_timer.c
+441a442,466
+>  *  host_pit_loop_tick
+>  *
+>  *  Drive a single PIT time_tick from the VCPU loop (monitor.c), paced by
+>  *  wall-clock at the guest's programmed timer-0 rate.  The worker thread only
+>  *  calls time_tick() at ~18 Hz; when a game programs timer-0 fast (DOOM
+>  *  140 Hz for sound) updateCount() then returns wrap=8 -> issueIREQ0(8) -> a
+>  *  burst that overflows the EOI backlog and gets dropped, so the effective
+>  *  IRQ0 rate collapses to ~1/7 and drifts with load (slow DOOM sound;
+>  *  SKYROADS music speeding up/down).  Calling time_tick() at the PIT rate
+>  *  keeps wrap~=1 -> single, evenly-spaced IRQ0s.  updateCount() is real-time
+>  *  (host_GetSysTime) based, so the extra calls beyond the worker's 18 Hz just
+>  *  yield smaller wraps -- never extra interrupts.  Serialized with the
+>  *  worker's time_tick() via host_ica_lock; safe to call only from the VCPU
+>  *  thread with no ICA lock held. */
+> GLOBAL VOID host_pit_loop_tick(VOID)
+> {
+>     host_ica_lock();
+>     bDoingTicInterrupt = TRUE;
+>     time_tick();
+>     bDoingTicInterrupt = FALSE;
+>     host_ica_unlock();
+> }
+> 
+> 
+> /*
+767,768c792,815
+<         if (TimerEventUSec.QuadPart <= CurrHeartBeat.QuadPart) {
+<             TimerEventUSec.QuadPart = CurrHeartBeat.QuadPart + SYSTEM_TICK_INTV;
+---
+>         /* WHP heartbeat-rate fix: schedule the next timer event relative
+>          * to the PREVIOUS scheduled time, not the current wake time.
+>          *
+>          * Original code did:
+>          *   TimerEventUSec = CurrHeartBeat + SYSTEM_TICK_INTV;
+>          * which set the next deadline to "55 ms from now".  But
+>          * CurrHeartBeat carries +1..8ms of OS scheduling overshoot
+>          * every iteration, so the next-deadline drifts 1..8ms forward
+>          * per heartbeat, ends up sitting just past CurrHeartBeat on the
+>          * very next iteration, and the gate fails -> a tick is skipped.
+>          * Net delivery rate halves: 18 Hz heartbeat -> 9 Hz BIOS ticks
+>          * -> guest games run at half speed ("slow motion" symptom).
+>          *
+>          * Using TimerEventUSec += SYSTEM_TICK_INTV keeps the schedule on
+>          * a fixed cadence; if scheduling jitter pushes a heartbeat past
+>          * two tick boundaries, the catch-up while-loop fires multiple
+>          * raises in one iteration so no ticks are lost.  cpu_interrupt
+>          * with CPU_TIMER_TICK only sets VDM_INT_TIMER (idempotent flag),
+>          * so multiple back-to-back calls collapse safely into one
+>          * VDM-side housekeeping pass via host_timer_event -- they don't
+>          * over-deliver IRQs (the actual IRQ0 raise is driven separately
+>          * by the PIT-counter wrap in updateCount). */
+>         while (TimerEventUSec.QuadPart <= CurrHeartBeat.QuadPart) {
+>             TimerEventUSec.QuadPart += SYSTEM_TICK_INTV;

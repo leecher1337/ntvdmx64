@@ -134,6 +134,10 @@ if exist haxm\IntelHaxm.sys (
   certutil -f -addstore "TrustedPublisher" haxm\IntelHaxm.cer
   RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultInstall 132 %CD%\ntvdmx64-haxm.inf
 )
+if exist hyperv\WinHvPlatform.dll (
+  RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultInstall 132 %CD%\ntvdmx64-hyperv.inf
+  call hyperv\Setup-HyperV-User.cmd
+)
 
 echo [*] Preparing correct loader
 if not "%version%"=="5.1" (
@@ -215,6 +219,7 @@ if not "%VERSION%"=="11.0" (
 if exist %windir%\inf\wow32.inf RunDll32 advpack.dll,LaunchINFSection %windir%\inf\wow32.inf,DefaultUninstall
 if exist %windir%\inf\ntvdmdbg.inf RunDll32 advpack.dll,LaunchINFSection %windir%\inf\ntvdmdbg.inf,DefaultUninstall
 if exist %windir%\inf\ntvdmx64-haxm.inf RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultUninstall 132 %windir%\inf\ntvdmx64-haxm.inf
+if exist %windir%\inf\ntvdmx64-hyperv.inf RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultUninstall 132 %windir%\inf\ntvdmx64-hyperv.inf
 if exist %windir%\inf\vdmredir.inf RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultUninstall 132 %windir%\inf\vdmredir.inf
 goto fini
 

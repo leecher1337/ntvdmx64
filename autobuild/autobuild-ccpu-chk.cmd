@@ -13,7 +13,8 @@ rem   SRCDIR    Directory, where current ntvdmpatch source folder can be found.
 rem             Not useful for end-users, just for automated testing on dev machine
 rem   KEEPPAT   Internal use, does not demand refresh of ntvdmpatch
 rem   WKDIR     Working directory for build process, default is %CD%\w
-rem   HAXBLD    If set to -haxm then HAXM build is built, otherwise normal build
+rem   HAXBLD    If set to -haxm then HAXM build is built, 
+rem             If set to -whp then Hyper-V (WHP) build it built, otherwise normal build
 rem   DBGSTP    If set, pause is issued after every step, useful for testing build
 rem   SIZ_NTBLD [chk, fre] Checked of free build, default is checked (debug)
 rem   NOWIN7    Ignore missing Windows 7 ISO (i.e. build only for Win < 8 or no OLE2)

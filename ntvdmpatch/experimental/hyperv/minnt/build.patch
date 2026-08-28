@@ -1,0 +1,7 @@
+--- NT4\private\mvdm\v86\dirs
++++ nt\private\mvdm\v86\dirs
+25c25,26
+<       haxm
+---
+>       haxm \
+>       hyperv

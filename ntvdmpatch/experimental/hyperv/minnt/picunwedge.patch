@@ -1,0 +1,77 @@
+--- NT4\private\mvdm\softpc.new\base\system\ica.c
++++ nt\private\mvdm\softpc.new\base\system\ica.c
+223a224,240
+> /* WHP-only side-table: for each adapter, the line that most recently
+>  * *successfully* asserted via ica_interrupt_cpu (escaped the ica_cpu_int
+>  * gate).  Consumed by ica_accept to prefer the temporally-ordered raise
+>  * over scan_irr priority, closing a race window that only matters on WHP
+>  * because of cancel/inject hypercall latency between raise and intack.
+>  * Initialized to -1.  Set ONLY when ica_interrupt_cpu actually called
+>  * host_set_hw_int, NOT when blocked.  Lives outside the public
+>  * VDMVIRTUALICA struct (which is a Windows DDK type and cannot be
+>  * extended).
+>  *
+>  * Guarded #if defined(HAXM) consistently across definition, resets,
+>  * read (ica_accept), and write (ica_interrupt_cpu) so CCPU builds don't
+>  * carry the symbol at all. */
+> #if defined(HAXM)
+> static IS32 g_ica_raised_line[2] = { -1, -1 };
+> #endif
+> 
+677a695,727
+>      * Prefer the line that most recently *successfully* asserted
+>      * (ica_interrupt_cpu got past the gate and called host_set_hw_int).
+>      * This honours temporal order across raise/intack and closes a race
+>      * window where, on WHP, another thread can set a higher-priority IRR
+>      * bit between our raise and the CPU thread's intack -- which would
+>      * otherwise let priority scan pick the racing IRQ and starve the
+>      * one we actually meant to deliver.
+>      *
+>      * Only used if the remembered line is still pending in IRR (i.e.
+>      * the raise hasn't been clobbered by a clear_int) and not masked
+>      * out by IMR and not blocked by a higher-priority bit in ISR.
+>      * Otherwise we fall through to the standard scan -- so command.com
+>      * etc. (no race) get identical behaviour to before.
+>      */
+> #if defined(HAXM)   /* HAXM/WHP builds only (WHP = HAXM && HYPERV); CCPU excluded */
+>     {
+>         IS32 raised = g_ica_raised_line[adapter];
+>         g_ica_raised_line[adapter] = -1;    /* consume the hint */
+>         if (raised >= 0 && raised < 8) {
+>             IU8 rbit = (IU8)(1U << raised);
+>             IU8 isr_higher = (IU8)(asp->ica_isr & (rbit - 1));
+>             if ((asp->ica_irr & rbit)
+>                 && !(asp->ica_imr & rbit)
+>                 && !isr_higher) {
+>                 /* Skip the priority scan -- use the remembered line. */
+>                 line1 = (IU32)(raised | 0x80);
+>                 goto ica_accept_use_raised;
+>             }
+>         }
+>     }
+> #endif
+> 
+>     /*
+705c755,757
+<     else
+---
+> #if defined(HAXM)   /* label only referenced by the HAXM/WHP raised-line goto above */
+> ica_accept_use_raised:
+> #endif
+785a838,845
+>     /* Remember which line just *successfully* escalated to host_set_hw_int.
+>      * ica_accept will prefer this over scan_irr priority to close the
+>      * race-window where another thread sets a higher-priority IRR bit
+>      * between our raise and the CPU's intack.  Set here (success path)
+>      * only; the BLOCKED path above must NOT touch this. */
+> #if defined(HAXM)   /* HAXM/WHP builds only (WHP = HAXM && HYPERV); CCPU excluded */
+>     g_ica_raised_line[adapter] = (IS32)line;
+> #endif
+2219a2280,2282
+> #if defined(HAXM)
+>     g_ica_raised_line[ICA_MASTER] = -1;
+> #endif
+2306a2370,2372
+> #if defined(HAXM)
+>     g_ica_raised_line[ICA_SLAVE] = -1;
+> #endif

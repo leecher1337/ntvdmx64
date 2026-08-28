@@ -1,0 +1,48 @@
+HYPER-V support
+---------------
+
+This is an EXPERIMENTAL patch for NTVDMx64. It tries to speed up the VM by not
+using the emulated CCPU, but instead using the Windows Hyper-V virtualisation 
+features to run code.
+
+Prerequisites
+-------------
+You need a Windows Version that supports the Hyper-V hardware virtualization
+feature that can be installed via the Windows Features dialog.
+Windows 10 and higher normally contain this optional feature. If you are
+using other virtualization drivers like HAXM, you may not be able to install
+Hyper-V at all, as it interferes with the other virtualizer driver.
+The CPU needs to have the ability to run in UG (unrestricted guest) mode,
+some old Intel CPUs may not be capable of this.
+
+Limitations
+-----------
+Graphic output currently is a bit weird, depending on the application
+(but some applications work), so it will only work properly with text mode 
+applications. For the reasoning behind that, see "Limitations" in haxm.txt.
+
+The performance improvements largely depend on the application, but at least
+on some operations, we get better performance than with the slow CCPU (i.e.
+testing datasets in a database, compressing files, etc.), however we still 
+don't reach V86 mode 32bit NTVDM preformance. 
+
+Compilation
+-----------
+The patches are applied automatically on execution of main patch.cmd
+The only difference is that you have to run bld-whp-minnt.cmd on building 
+the NTVDM.
+For creating the release Installation-package, use mkrelease-minnt.bat 
+
+
+Usage/Installation
+------------------
+First, install/enable Hyper-V in Control panel -> Software -> windows 
+components and features, if not enabled yet.
+
+On installation it tries to add your current user to the Hyper-V group
+so that you are allowed to execute Hyper-V. If it didn't work during setup,
+you can execute the hyperv\Setup-HyperV-User.cmd to add the user.
+
+It is not recommended to install the WOW32 support, as it currently doesn't work
+with WHP build anyway.
+

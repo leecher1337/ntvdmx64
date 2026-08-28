@@ -1,0 +1,37 @@
+[Version]
+Signature=$Windows NT$
+AdvancedINF= 2.5,"advpack.dll" 
+
+
+[SourceDisksNames.amd64]
+1="WinHV 32bit wrapper",,,"\hyperv"
+
+[SourceDisksFiles.amd64]
+WinHvPlatform.dll=1
+Load64bitDll.dll=1
+wow64hlp.dll=1
+
+[Ntvdmx64.amd64.SysWow64.Files]
+WinHvPlatform.dll,,,0x14006
+Load64bitDll.dll,,,0x14006
+wow64hlp.dll,,,0x14006
+
+[Ntvdmx64.amd64.Inf.Files.Add]
+ntvdmx64-hyperv.inf
+
+[Ntvdmx64.amd64.Inf.Files.Del]
+ntvdmx64-hyperv.inf
+ntvdmx64-hyperv.PNF
+
+[DestinationDirs]
+Ntvdmx64.amd64.SysWow64.Files  = 16425
+Ntvdmx64.amd64.Inf.Files.Add = 17
+Ntvdmx64.amd64.Inf.Files.Del = 17
+
+[DefaultInstall.ntamd64]
+SmartReboot = N
+CopyFiles   = Ntvdmx64.amd64.SysWow64.Files, Ntvdmx64.amd64.Inf.Files.Add
+
+[DefaultUninstall.ntamd64]
+CleanUp = 1
+DelFiles    = Ntvdmx64.amd64.SysWow64.Files, Ntvdmx64.amd64.Inf.Files.Del

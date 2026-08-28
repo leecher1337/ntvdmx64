@@ -1,0 +1,7 @@
+[submodule "ntvdmpatch/src/Load64bitDLL"]
+	path = ntvdmpatch/src/Load64bitDLL
+	url = https://github.com/leecher1337/Load64bitDLL.git
+[submodule "ntvdmpatch/src/WinHvPlatform32"]
+	path = ntvdmpatch/src/WinHvPlatform32
+	url = https://github.com/leecher1337/WinHvPlatform32.git
+	branch = allfuncts

@@ -35,6 +35,11 @@ echo Installing HAXM-patches to source...
 pushd experimental\haxm
 call patch.cmd
 popd
+echo.
+echo Installing HYPERV-patches to source...
+pushd experimental\hyperv
+call patch.cmd
+popd
 echo Installing ADLIB-sound...
 pushd experimental\adlib
 call patch.cmd
