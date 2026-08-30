@@ -170,7 +170,7 @@ There are various "flavours" of NTVDM that can be built:
    This has been the default repository until Feb/2020 where 
    development has been switched to MINNT tree.
    This build method therefore is DEPRECATED in favour of the 
-   MINNT build systemand will not receive any future updates!
+   MINNT build system and will not receive any future updates!
    This build is left unmaintained and unchecked, so don't complain
    if it doesn't build anymore.
    Please note that you need Windows XP for building.
