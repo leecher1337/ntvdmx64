@@ -31,6 +31,7 @@ for %%L in (!LANG!) do (
   echo.
   md releases\%%L
   xcopy /Y /S release\*.* releases\%%L\
+  if exist ..\readme.txt xcopy /Y ..\readme.txt releases\%%L\
   xcopy /Y minnt\release\*.* releases\%%L\
   if exist minnt\release\%%L\*.*  xcopy /Y minnt\release\%%L\*.* releases\%%L\
   md releases\%%L\dos >nul

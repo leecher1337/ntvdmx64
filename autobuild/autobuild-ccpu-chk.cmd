@@ -272,9 +272,11 @@ if "%SRCDIR%"=="" (
   7z x -y  %PREREQ%\ntvdmx64.zip
   del %PREREQ%\ntvdmx64.zip
   move /y ntvdmx64-master\ntvdmpatch .
+  move /y ntvdmx64-master\readme.txt .
   rmdir /s /q ntvdmx64-master
 ) else (
   xcopy /s /Y %SRCDIR% ntvdmpatch\
+  if exist %SRCDIR%\..\readme.txt xcopy /Y %SRCDIR%\..\readme.txt .
 )
 exit /B
 
