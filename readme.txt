@@ -135,6 +135,10 @@ I/O by the NTVDM. On Windows 10 for instance, a registry entry forces the
 conhost to use Console V2, so this has to be changed to use V1 console so 
 that NTVDM can interact with it, but this fortunately is just a matter of
 setting a registry key.
+The preferred console for NTVDM is Console V1, but as Microsoft thankfully
+opensourced their ConsoleV2, it can be modified to also support NTVDM
+console graphics and startup, that's why you get a console chooser dialog
+on setup on Windows 10+
 
 Some registry keys also need to be set to show that the NTVDM is present and
 can get called. 
@@ -183,6 +187,14 @@ There are various "flavours" of NTVDM that can be built:
    impossible to emulate a real VGA card with sufficient performance on VT-x
    Works with minnt and old-src build.
    Build instructions in: doc\haxm.txt
+ * WHP
+   Instead of using the emulated CCPU, it uses Hyper-V VT-x hardware 
+   accelleration (CPU needs to support it), so it is significally 
+   faster in textmode.
+   But it will probably never support graphics, as it is technically 
+   impossible to emulate a real VGA card with sufficient performance on VT-x
+   Works with minnt build only.
+   Build instructions in: doc\hyperv.txt
  * MINNT
    This is the most recent NTVDM source code, it supports multiple
    languages, but is probably harder to build.
@@ -396,10 +408,13 @@ first launch and on second launch, I get System Error 4001h
 ---------------------------------------------------------------------------
 This is due to the fact that the ForceV2 key of the Windows console is on
 a per-user basis, not systemwide, so it resides in HKEY_CURRENT_USER\Console
-Do you need to set the DWORD ForceV2 key in mentioned path to 0.
+So you need to set the DWORD ForceV2 key in mentioned path to 0 to run 
+Conhost V1.
 
 You can just execute reg\conhost.reg from the release-folder of NTVDMx64
 as the correct user to fix that key.
+The preferred way, however, is to execute console-chooser.cmd from the
+install directory which lets you choose your preferred console variant.
 
 
 It seems that my applications crash randomly i.e. on launching NTVDM and
@@ -414,19 +429,12 @@ I want to use WSL (Windows Services for Linux), but it doesn't work due to
 the requirement for ConhostV2, however NTVDMx64 enforces ConhostV1.
 How can I use WSL and still use NTVDMx64?
 --------------------------------------------------------------------------
-If you can live with the shortcoming that you cannot directly launch a 
-DOS application on the new console (i.e. from cmd.exe shell), but let it 
-open up in a new console, you can revert the default console host setting 
-by  executing reg\conhostv2.reg from the release-folder of NTVDMx64
-to revert that key to Windows default (ConhostV2).
-It is also possible to switch between consoles with conhost.reg for
-classic console (NTVDMx64 compatible) and new console with conhostv2.reg
-So i.e. to execute WSL, execute conhostv2.reg prior to starting WSL
-and afterwards, revert it with conhost.reg.
-It seems that there are currently no plans to implement conhostv1 
-functionality into conhostv2 by Microsoft, unfortunately, leaving us with
-this workaround as the only option.
-
+Use console-chooser.cmd from the install directory to choose your preferred
+console. 
+If you can live with opening DOS applications in a seperate ConhostV1 
+window when you are on ConhostV2 console, you can just revert to the
+Windows V2 console. However for a full conhostV2 integration, choose
+option 3 there. 
 
 Even after uninstalling NTVDMx64, I cannot use WSL anymore due to classic
 console being enforced. What can I do?

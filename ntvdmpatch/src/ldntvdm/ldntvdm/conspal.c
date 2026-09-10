@@ -29,6 +29,7 @@ BOOL WINAPI mySetConsolePalette(IN HANDLE hConsoleOutput, IN HPALETTE hPalette, 
 	* ConsolePublicPalette call isn't implemented anymore in WIN32k, another stupidity by our friends at M$...
 	*/
 	BOOL bRet;
+	static HPALETTE hLastPublished = NULL;
 
 	// Avoid USER32.DLL dependency of loader by manually loading functions
 	if (!pOpenClipboard)
@@ -43,9 +44,13 @@ BOOL WINAPI mySetConsolePalette(IN HANDLE hConsoleOutput, IN HPALETTE hPalette, 
 		pSetClipboardData = (fpSetClipboardData)GetProcAddress(hUser32, "SetClipboardData");
 		pCloseClipboard = (fpCloseClipboard)GetProcAddress(hUser32, "CloseClipboard");
 	}
-	pOpenClipboard(NULL);
-	pSetClipboardData(CF_PALETTE, hPalette);
-	pCloseClipboard();
+	if (hPalette != hLastPublished)
+	{
+		pOpenClipboard(NULL);
+		pSetClipboardData(CF_PALETTE, hPalette);
+		pCloseClipboard();
+		hLastPublished = hPalette;
+	}
 
 	bRet = SetConsolePaletteReal(hConsoleOutput, hPalette, dwUsage);
 	//TRACE("SetConsolePalette = %d\n", bRet);

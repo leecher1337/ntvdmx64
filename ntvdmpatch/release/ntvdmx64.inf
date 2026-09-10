@@ -91,6 +91,7 @@ symsrv.yes,,,0x41
 
 [Ntvdmx64.amd64.Setup.Files]
 instntvdmx64.bat,install.bat,,0x4022
+console-chooser.cmd,,,0x4022
 
 [Ntvdmx64.amd64.Inf.Files.Add]
 ntvdmx64.inf

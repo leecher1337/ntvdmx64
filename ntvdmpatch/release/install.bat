@@ -172,9 +172,11 @@ set "DefExclusion=%SystemRoot%\syswow64\ntvdm.exe"
 powershell -noprofile -command Add-MpPreference -Force -ExclusionPath "$env:DefExclusion" >nul
 
 :nodefender
+if exist console-chooser.cmd call console-chooser.cmd prepare
 echo [*] Installing components
 rundll32.exe advpack.dll,LaunchINFSection %CD%\ntvdmx64.inf
 if exist vdmredir.inf rundll32.exe advpack.dll,LaunchINFSection %CD%\vdmredir.inf
+if exist console-chooser.cmd call console-chooser.cmd apply
 goto fini
 
 :addappinit
@@ -221,6 +223,8 @@ if exist %windir%\inf\ntvdmdbg.inf RunDll32 advpack.dll,LaunchINFSection %windir
 if exist %windir%\inf\ntvdmx64-haxm.inf RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultUninstall 132 %windir%\inf\ntvdmx64-haxm.inf
 if exist %windir%\inf\ntvdmx64-hyperv.inf RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultUninstall 132 %windir%\inf\ntvdmx64-hyperv.inf
 if exist %windir%\inf\vdmredir.inf RUNDLL32 SETUPAPI.DLL,InstallHinfSection DefaultUninstall 132 %windir%\inf\vdmredir.inf
+if exist "%SystemRoot%\Symbols\console-chooser.cmd" call "%SystemRoot%\Symbols\console-chooser.cmd" uninstall
+reg delete "HKCU\SOFTWARE\ldntvdm" /f >nul 2>&1
 goto fini
 
 :instwow

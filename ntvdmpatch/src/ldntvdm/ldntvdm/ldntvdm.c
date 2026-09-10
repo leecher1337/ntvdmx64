@@ -120,6 +120,26 @@ typedef BOOL (BASEP_CALL *fpVDMConsoleOperation)(
 	);
 fpVDMConsoleOperation VDMConsoleOperation = NULL;
 
+// Win7+ signature (BufferSection parameters got dropped vs. the older XP
+// signature - see nt_w10.c's w7WrapRegisterConsoleVDM for both). Used only
+// as a detection probe below, not for any real (un)registration - real
+// registration is still done by NTVDM itself (nt_det.c).
+#define CONSOLE_UNREGISTER_VDM 0
+#define CONSOLE_REGISTER_VDM   1
+#define CONSOLE_REGISTER_VDM_WOW 2
+typedef BOOL(WINAPI *fpRegisterConsoleVDM)(
+	IN BOOL bRegister,
+	IN HANDLE hStartHardwareEvent,
+	IN HANDLE hEndHardwareEvent,
+	IN LPWSTR lpStateSectionName,
+	IN DWORD dwStateSectionNameLength,
+	OUT LPDWORD lpStateLength,
+	OUT PVOID *lpState,
+	IN COORD VDMBufferSize,
+	OUT PVOID *lpVDMBuffer
+	);
+fpRegisterConsoleVDM RegisterConsoleVDMProbe = NULL;
+
 #ifdef TRACE_FILE
 HANDLE g_hLog = INVALID_HANDLE_VALUE;
 
@@ -563,10 +583,27 @@ INT_PTR BASEP_CALL BasepProcessInvalidImage(NTSTATUS Error, HANDLE TokenHandle,
 
 				if (VDMConsoleOperation && !VDMConsoleOperation(VDM_IS_ICONIC, &bIcon) && GetLastError() == ERR_NOT_IMPLEMENTED)
 				{
-					// We are running on a V2 console, so enforce creating a new 
-					// window for NTVDM (which runs on V1 console). It's better than error, at least
-					*pdwCreationFlags |= CREATE_NEW_CONSOLE;
-					TRACE("LDNTVDM: Running on a V2 console, thus opening DOS application in new V1 console window.\n")
+					BOOL bIsOurBuild = FALSE;
+
+					if (RegisterConsoleVDMProbe)
+					{
+						COORD zeroSize = { 0, 0 };
+						PVOID lpVDMBuffer = NULL;
+
+						SetLastError(0);
+						RegisterConsoleVDMProbe(CONSOLE_UNREGISTER_VDM, NULL, NULL, NULL, 0, NULL, NULL, zeroSize, &lpVDMBuffer);
+						bIsOurBuild = (GetLastError() != ERR_NOT_IMPLEMENTED);
+					}
+
+					if (bIsOurBuild)
+					{
+						TRACE("LDNTVDM: Running on a graphics-buffer-capable V2 console - staying on current console.\n")
+					}
+					else
+					{
+						*pdwCreationFlags |= CREATE_NEW_CONSOLE;
+						TRACE("LDNTVDM: Running on a stock V2 console - forcing a new (legacy) console.\n")
+					}
 				}
 			}
 #endif
@@ -912,6 +949,7 @@ BOOL WINAPI _DllMainCRTStartup(
 			 break;
 		 }
 		 VDMConsoleOperation = (fpVDMConsoleOperation)GetProcAddress(hKrnl32, "VDMConsoleOperation");
+		 RegisterConsoleVDMProbe = (fpRegisterConsoleVDM)GetProcAddress(hKrnl32, "RegisterConsoleVDM");
 #endif // !TARGET_WINXP
 		 AppPatch_Check(pszProcess);
 
