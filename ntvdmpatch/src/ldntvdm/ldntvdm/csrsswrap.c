@@ -175,7 +175,7 @@ NTSTATUS CallBaseRegisterWowExec(BASE_API_MSG *m32, CSR_API_NUMBER ApiNumber)
 	b->hwndWowExec = (ULONGLONG)b32->hwndWowExec;
 	b->ConsoleHandle = (ULONGLONG)b32->ConsoleHandle;
 	Status = CsrClientCallServer((struct _CSR_API_MESSAGE*)&m, NULL, ApiNumber, sizeof(*b));
-	TRACE("BaseRegisterWowExex(%d) = %08X\n", ApiNumber, Status);
+	TRACE("BaseRegisterWowExex(%08X): (hwndWowExec=%X, ConsoleHandle=%X)  = %08X\n", ApiNumber, b32->hwndWowExec, b32->ConsoleHandle, Status);
 	m32->ReturnValue = m.ReturnValue;
 
 	return Status;

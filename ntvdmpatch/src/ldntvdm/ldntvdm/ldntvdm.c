@@ -197,7 +197,8 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 #if defined (USE_SYMCACHE) && (!defined(CREATEPROCESS_HOOK) || defined(CREATEPROCESS_HOOKNTCREATE))
 	UpdateSymbolCache(TRUE);
 #endif
-#if defined(WOW16_SUPPORT) && (defined(TARGET_WIN7) || defined(USE_MAP0DRV))
+	LastCreateUserProcessError = STATUS_INVALID_IMAGE_FORMAT;
+#if defined(WOW16_SUPPORT) // && (defined(TARGET_WIN7) || defined(USE_MAP0DRV))
 	if (fStartingNtvdm)
 	{
 #if defined(USE_OWN_RTLCREATEUSERPROCESSEX) && !defined(TARGET_WINXP)
@@ -247,9 +248,7 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 						RtlMoveMemory(AttributeList->Attributes[i].ValuePtr, &ProcessInformation.ClientId, AttributeList->Attributes[i].Size);
 						break;
 				}
-			}
-			
-			return LastCreateUserProcessError;
+			}		
 		}
 		else
 		{
@@ -301,7 +300,7 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 					ThreadDesiredAccess,
 					ProcessObjectAttributes,
 					ThreadObjectAttributes,
-#ifndef TARGET_WIN7
+#if !defined(TARGET_WIN7) &&  defined(USE_MAP0DRV)
 					ProcessFlags | PROCESS_CREATE_FLAGS_SUSPENDED,
 #else
 					ProcessFlags,
@@ -316,7 +315,7 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 				int i;
 				NTSTATUS Status;
 				BOOL fOk = TRUE;
-#if !defined(TARGET_WIN7)
+#if !defined(TARGET_WIN7) &&  defined(USE_MAP0DRV)
 				if (fOk)
 				{
 					ULONG_PTR Base = 1;
@@ -339,8 +338,7 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 #endif
 			}
 			if (MyAttributeList) HeapFree(GetProcessHeap(), 0, MyAttributeList);
-			if (NT_SUCCESS(LastCreateUserProcessError)) return LastCreateUserProcessError;
-			else
+			if (!NT_SUCCESS(LastCreateUserProcessError))
 			{
 				TRACE("NTVDM.EXE NtCreateUserProcess returned %08X, falling back to default\n", LastCreateUserProcessError);
 				RtlMoveMemory(CreateInfo, &CreateInfoBak, sizeof(CreateInfoBak));
@@ -350,18 +348,19 @@ NTSTATUS NTAPI NtCreateUserProcessHook(
 #endif // USE_OWN_RTLCREATEUSERPROCESSEX
 	}
 #endif // defined(WOW16_SUPPORT) && (defined(TARGET_WIN7) || defined(USE_MAP0DRV))
-	LastCreateUserProcessError = 
-		NtCreateUserProcessReal(ProcessHandle,
-		ThreadHandle,
-		ProcessDesiredAccess,
-		ThreadDesiredAccess,
-		ProcessObjectAttributes,
-		ThreadObjectAttributes,
-		ProcessFlags,
-		ThreadFlags,
-		ProcessParameters,
-		CreateInfo,
-		AttributeList);
+	if (!NT_SUCCESS(LastCreateUserProcessError))
+		LastCreateUserProcessError = 
+			NtCreateUserProcessReal(ProcessHandle,
+			ThreadHandle,
+			ProcessDesiredAccess,
+			ThreadDesiredAccess,
+			ProcessObjectAttributes,
+			ThreadObjectAttributes,
+			ProcessFlags,
+			ThreadFlags,
+			ProcessParameters,
+			CreateInfo,
+			AttributeList);
 	if (!NT_SUCCESS(LastCreateUserProcessError) && ProcessParameters)
 	{
 		TRACE("NtCreateUserProcess(ThreadHandle=%X, CommandLine=%wZ) failed with %08X\n", ThreadHandle?*ThreadHandle:-1, &ProcessParameters->CommandLine, LastCreateUserProcessError);
