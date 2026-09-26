@@ -514,7 +514,18 @@ Return Value:
     tunnel = (struct hax_tunnel*)tunnel_info.va;
     iobuf = (PBYTE)tunnel_info.io_va;
 
-    excbmp = (1 << VECTOR_NP) | (1 << VECTOR_UD);
+    //
+    // #GP (VECTOR_GP): trap it too, same as the WHP backend. A protected-mode
+    // DPMI client's sensitive/privileged instruction (or a genuine fault) #GPs;
+    // if we DON'T trap it, HAXM delivers the #GP natively to the guest, DOSX's
+    // fault path reflects vector 13 down to real mode where IVT[0Dh] is the unset
+    // BIOS UNEXP_INT stub (F000:6F00) -> the guest livelocks in unexpected_int
+    // with IF=0 and the timer frozen (Lotus/WOW derail). Trapping it routes the
+    // #GP through the EXCEPTION case below -> host_exint_hook -> DpmiFaultHandler,
+    // which emulates the sensitive instruction / reflects a real fault to the
+    // client's own PM handler, exactly as on CCPU. See the hyperv (WHP) monitor.c.
+    //
+    excbmp = (1 << VECTOR_NP) | (1 << VECTOR_UD) | (1 << VECTOR_GP);
     if (!DeviceIoControl(hVCPU, HAX_VCPU_IOCTL_SET_EXCBMP, &excbmp, sizeof(excbmp), NULL, 0, &bytes, NULL))
     {
         haxmvm_panic("Cannot setup exception bitmap for BOPping, are you sure you are running our custom HAXM-version?");

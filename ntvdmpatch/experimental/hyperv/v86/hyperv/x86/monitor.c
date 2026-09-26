@@ -1916,14 +1916,11 @@ static int s_pmfault_trap_armed = 0;
 
 static void hyperv_sync_pmfault_trap(void)
 {
-    int want = (show_exceptions || trap_exceptions) ? 1 : 0;
-    if (want == s_pmfault_trap_armed)
-        return;
-    if (want)
-        hyperv_set_exception_bitmap(s_exception_exit_bitmap |  ((UINT64)1 << VECTOR_GP));
-    else
-        hyperv_set_exception_bitmap(s_exception_exit_bitmap & ~((UINT64)1 << VECTOR_GP));
-    s_pmfault_trap_armed = want;
+    /* #GP (VECTOR_GP) is now trapped unconditionally in the baseline bitmap
+     * (see cpu_init -- it must route through DpmiFaultHandler for correctness,
+     * not only for debugging), so there is nothing to toggle here.  This flag
+     * only gates the extra bex/vex logging in the Exception exit. */
+    s_pmfault_trap_armed = (show_exceptions || trap_exceptions) ? 1 : 0;
 }
 
 /* Dump a selector's descriptor (within the LDT/GDT? present? base/limit/access)
@@ -2116,7 +2113,19 @@ cpu_init(
      */
     {
         UINT64 mask = ((UINT64)1 << WHvX64ExceptionTypeInvalidOpcodeFault)
-                    | ((UINT64)1 << WHvX64ExceptionTypeSegmentNotPresentFault);
+                    | ((UINT64)1 << WHvX64ExceptionTypeSegmentNotPresentFault)
+                    /* #GP: a protected-mode DPMI client's sensitive/privileged
+                     * instruction (or a genuine fault) #GPs.  CCPU routes every
+                     * PM #GP through host_exint_hook -> DpmiFaultHandler, which
+                     * emulates the sensitive instruction (DpmiEmulateInstruction)
+                     * or reflects a real fault to the client's own PM handler.
+                     * If we DON'T trap it, WHP delivers #GP natively to DOSX's
+                     * fault path, which reflects vector 13 down to real mode where
+                     * IVT[0Dh]'s saved handler is the unset BIOS UNEXP_INT stub
+                     * (F000:6F00) -> the guest livelocks in unexpected_int with
+                     * IF=0 and the timer frozen (Lotus/WOW derail).  Trap it so
+                     * DpmiFaultHandler handles it exactly as on CCPU. */
+                    | ((UINT64)1 << VECTOR_GP);
         hyperv_set_exception_bitmap(mask);
     }
 
