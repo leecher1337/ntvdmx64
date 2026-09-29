@@ -65,7 +65,9 @@ extern GLOBAL VOID haxm_sync_vram(VOID);
 extern BOOL host_hwint_hook IPT1(IS32, int_no);
 extern BOOL host_swint_hook IPT1(IS32, int_no);
 extern BOOL host_exint_hook IPT2(IS32, exp_no, IS32, error_code);
+#ifdef YODA
 extern VOID data_debug_exception(VOID);            /* yoda.c: DR data-BP handler */
+#endif
 extern int  yoda_data_break_pending(unsigned long dr6); /* yoda.c: DR6 hit vs active data BPs (IU32) */
 extern BOOL show_exceptions;                       /* yoda `vex` toggle (c_xcptn.c) */
 extern BOOL trap_exceptions;                       /* yoda `bex` toggle (c_xcptn.c) */
@@ -2447,7 +2449,6 @@ static BOOL hyperv_emulate_vram_access(const WHV_MEMORY_ACCESS_CONTEXT *ma)
         DWORD edi  = a32 ? getEDI() : getDI();
         DWORD data = vram_reg_get(sz, 0);                 /* AL/AX/EAX */
         DWORD cnt  = rep ? (a32 ? getECX() : getCX()) : 1;
-        g_vram_string_elems += cnt;
 
         while (cnt--) {
             vram_write(es + (a32 ? edi : (edi & 0xFFFF)), sz, data);
@@ -2472,7 +2473,6 @@ static BOOL hyperv_emulate_vram_access(const WHV_MEMORY_ACCESS_CONTEXT *ma)
         DWORD esi  = a32 ? getESI() : getSI();
         DWORD edi  = a32 ? getEDI() : getDI();
         DWORD cnt  = rep ? (a32 ? getECX() : getCX()) : 1;
-        g_vram_string_elems += cnt;
 
         while (cnt--) {
             DWORD v = vram_read(ds + (a32 ? esi : (esi & 0xFFFF)), sz);
@@ -2498,7 +2498,6 @@ static BOOL hyperv_emulate_vram_access(const WHV_MEMORY_ACCESS_CONTEXT *ma)
         DWORD cnt  = rep ? (a32 ? getECX() : getCX()) : 1;
         DWORD v    = vram_reg_get(sz, 0);
 
-        g_vram_string_elems += cnt;
         while (cnt--) {
             v = vram_read(ds + (a32 ? esi : (esi & 0xFFFF)), sz);
             esi += step;
@@ -3438,6 +3437,7 @@ cpu_simulate(
                                                       &descr_addr))
                     break;
 
+#ifdef YODA
                 /* check_D: a YODA data breakpoint (blwd/blrd/blww/...) fired.
                  * DR6.B0..B3 is set, it matches an active data-BP slot, and
                  * it is not our IDT-trap (dr_idt_fired) -- the step BPs in
@@ -3451,6 +3451,7 @@ cpu_simulate(
                     data_debug_exception();
                     break;
                 }
+#endif
 
                 check_I();
 

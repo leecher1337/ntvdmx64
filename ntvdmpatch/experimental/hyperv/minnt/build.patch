@@ -3,5 +3,5 @@
 24c24,25
 < DIRS= haxm
 ---
->       haxm \
+> DIRS= haxm \
 >       hyperv
