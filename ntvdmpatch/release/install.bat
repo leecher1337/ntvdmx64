@@ -172,6 +172,45 @@ set "DefExclusion=%SystemRoot%\syswow64\ntvdm.exe"
 powershell -noprofile -command Add-MpPreference -Force -ExclusionPath "$env:DefExclusion" >nul
 
 :nodefender
+rem ---------------------------------------------------------------------------
+rem 16-bit WordPad/Write support (Windows 11 24H2+ removed both)
+rem
+rem Many 16-bit programs (and Program Manager .WRI shortcuts created by their
+rem installers, e.g. Lotus SmartSuite) launch WRITE.EXE. On x64, WRITE.EXE is a
+rem small 32-bit stub that in turn launches WORDPAD.EXE. Windows 11 24H2 removed
+rem both, which makes such shortcuts fail. Provide our bundled WRITE.EXE (from a
+rem Windows 7 ISO, staged into wow32\ by prepare.cmd) in SysWOW64 when it is
+rem missing, and -- because WRITE.EXE is useless without WORDPAD.EXE -- warn the
+rem user and offer to open the WordPad download page when WordPad is absent too.
+rem On systems that still ship WRITE.EXE/WORDPAD.EXE (Windows 7..11 pre-24H2)
+rem both checks are no-ops.
+rem ---------------------------------------------------------------------------
+if not exist %SystemRoot%\syswow64\write.exe (
+  if exist "%CD%\wow32\write.exe" (
+    echo [*] Installing WRITE.EXE into SysWOW64
+    copy /y "%CD%\wow32\write.exe" %SystemRoot%\syswow64\write.exe >nul
+  )
+)
+set "WordpadFound="
+if exist "%ProgramFiles%\Windows NT\Accessories\wordpad.exe" set "WordpadFound=1"
+if exist "%ProgramW6432%\Windows NT\Accessories\wordpad.exe" set "WordpadFound=1"
+if exist "%ProgramFiles%\WordPad\wordpad.exe" set "WordpadFound=1"
+if exist "%ProgramW6432%\WordPad\wordpad.exe" set "WordpadFound=1"
+if exist "%ProgramFiles(x86)%\WordPad\wordpad.exe" set "WordpadFound=1"
+if exist "%SystemRoot%\system32\wordpad.exe" set "WordpadFound=1"
+if not defined WordpadFound (
+  echo.
+  echo ---------------------------------------------------------------------------
+  echo WARNING: WordPad ^(wordpad.exe^) was not found on this machine.
+  echo Windows 11 24H2 and later no longer ship WordPad. 16-bit programs that open
+  echo .WRI / .RTF documents through WRITE.EXE need WordPad to be present, or those
+  echo document shortcuts will not work.
+  echo ---------------------------------------------------------------------------
+  echo.
+  CHOICE /C YN /M "Open the WordPad download page (win7games.com) now?"
+  if not errorlevel 2 start https://win7games.com/#wordpad
+)
+
 if exist console-chooser.cmd call console-chooser.cmd prepare
 echo [*] Installing components
 rundll32.exe advpack.dll,LaunchINFSection %CD%\ntvdmx64.inf

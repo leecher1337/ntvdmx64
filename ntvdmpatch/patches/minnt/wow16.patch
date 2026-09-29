@@ -1589,7 +1589,6 @@
 > CC=cl16
 > RC=rc16 $(INCLUDE)
 > LINK=link16
-diff -r \\10.0.0.245\work\minnt\base\mvdm\wow16.ok\ddeml\ddeml.c F:\Windows.Source.Code.w2k.nt4.wxp\ddeml.c
 --- NT4\private\mvdm\wow16\ddeml\ddeml.c
 +++ nt\private\mvdm\wow16\ddeml\ddeml.c
 34c34,35

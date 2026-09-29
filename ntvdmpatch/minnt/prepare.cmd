@@ -240,6 +240,16 @@ if exist %W7ISO% (
   if exist %workdir%\sources\install.wim (
     7z x -y %workdir%\sources\install.wim 1\Windows\%W7SYSDIR%\olethk32.dll 1\Windows\%W7SYSDIR%\compobj.dll 1\Windows\%W7SYSDIR%\ole2.dll 1\Windows\%W7SYSDIR%\ole2disp.dll 1\Windows\%W7SYSDIR%\ole2nls.dll 1\Windows\%W7SYSDIR%\storage.dll 1\Windows\%W7SYSDIR%\typelib.dll -o%workdir%
     xcopy /e /y %workdir%\1\Windows\%W7SYSDIR% ..\release\ole2\
+    rem WRITE.EXE (Windows 7's 32-bit WordPad stub) -- bundled so install.bat can
+    rem drop it into SysWOW64 on Windows 11 24H2+, which no longer ships it. 16-bit
+    rem programs and Program Manager .WRI shortcuts launch write.exe (which in turn
+    rem launches wordpad.exe). Extracted AFTER the ole2 xcopy above so it does not
+    rem land in the ole2 folder. Staged into a separate wow32 folder in the package.
+    7z x -y %workdir%\sources\install.wim 1\Windows\%W7SYSDIR%\write.exe -o%workdir%
+    if exist %workdir%\1\Windows\%W7SYSDIR%\write.exe (
+      md ..\release\wow32 2>nul
+      copy /y %workdir%\1\Windows\%W7SYSDIR%\write.exe ..\release\wow32\write.exe
+    )
   )
 )
 if not exist %workdir%\1\Windows\%W7SYSDIR%\olethk32.dll (
