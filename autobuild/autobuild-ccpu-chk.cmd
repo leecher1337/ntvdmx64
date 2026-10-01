@@ -23,6 +23,8 @@ rem   NOPAUSE   Do not pause before cleanup
 rem   LANG      Only build this language (for a complete list, see documentation)
 rem   KEEPWD    Keep working directory so that subsequent builds will run through 
 rem             faster when run with KEEPPAT
+rem   PATCH_URL Remote URL used to retrieve the latest ntvdmx64 build.
+rem             Default is https://github.com/leecher1337/ntvdmx64/archive/master.zip
 rem
 
 echo ----------------------------------------------------
@@ -52,18 +54,22 @@ exit /b
 endlocal & set PATH=%PATH%
 
 set ABPATH=%CD%
+if "%PATCH_URL%"=="" set PATCH_URL=https://github.com/leecher1337/ntvdmx64/archive/master.zip
+set PATCH_HOST=%PATCH_URL:https://=%
+set PATCH_HOST=%PATCH_HOST:http://=%
+FOR /F "TOKENS=1 DELIMS=/" %%A IN ("%PATCH_HOST%") DO (SET "PATCH_HOST=%%~A")
 if "%PREREQ%"=="" set PREREQ=%CD%\
 if "%WKDIR%"=="" set WKDIR=%CD%\w
 if exist "%WKDIR%\nul" (
   echo Working directory %WKDIR% exists.
   echo As it gets deleted after build, please remove it prior to executing this script.
   pause
-  exit /B
+  exit /b
 )
 md %WKDIR%
 if not exist "%WKDIR%" (
   pause
-  exit /B
+  exit /b
 )
 
 echo Preparing...
@@ -169,7 +175,7 @@ if not "%DBGSTP%"=="" pause
 call bld-minnt%HAXBLD%.cmd
 if not "%DBGSTP%"=="" pause
 call mkrelease-minnt%HAXBLD%.bat %LANG%
-exit /B
+exit /b
 
 :fetchprq
 call :dlprq GRMWDK_EN_7600_1.ISO https://download.microsoft.com/download/4/A/2/4A25C7D5-EFBE-4182-B6A9-AE6850409A78/GRMWDK_EN_7600_1.ISO
@@ -264,21 +270,43 @@ echo Build environment ready
 exit /b
 
 :dlntvdmx64
-if not "%KEEPPAT%"=="" exit /B
+if not "%KEEPPAT%"=="" exit /b
 if "%SRCDIR%"=="" (
-  del %PREREQ%\ntvdmx64.zip 2>nul
-  rmdir /s /q ntvdmpatch 2>nul
-  call :dlprq ntvdmx64.zip https://github.com/leecher1337/ntvdmx64/archive/master.zip
-  7z x -y  %PREREQ%\ntvdmx64.zip
-  del %PREREQ%\ntvdmx64.zip
-  move /y ntvdmx64-master\ntvdmpatch .
-  move /y ntvdmx64-master\readme.txt .
-  rmdir /s /q ntvdmx64-master
+  echo Checking latest and greatest ntvdmx64 build from %PATCH_URL%.
+  ping -n 3 %PATCH_HOST% >nul
+    if errorlevel 1 (
+      if exist %PREREQ%\ntvdmx64.zip (
+        echo %PATCH_HOST% unreachable, continuing by using existing last used ntvdmx64 build.
+        pause
+      ) else (
+        echo %PATCH_HOST% unreachable, check your internet connection.
+        echo Alternatively set SRCDIR variable before running this script ex:"set SRCDIR=%CD%\ntvdmx64-master\ntvdmpatch"
+        pause
+        echo Cleaning up...
+        cd .. && rmdir /s /q %WKDIR%
+        exit
+      )
+    ) else (
+      echo Downloading latest and greatest ntvdmx64 build from %PATCH_URL%.
+      del %PREREQ%\ntvdmx64.zip 2>nul
+      call :dlprq ntvdmx64.zip %PATCH_URL%
+    )
+    rem rmdir /s /q ntvdmpatch 2>nul
+    for /d %%i in (ntvdm*) do (
+      rmdir /s /q "%%i" 2>nul
+    )
+    7z x -y  %PREREQ%\ntvdmx64.zip
+    for /d %%i in (ntvdmx64-*) do (
+      ren "%%i" "ntvdmx64-master"
+    )
+    move /y ntvdmx64-master\ntvdmpatch .
+    move /y ntvdmx64-master\readme.txt .
+    rmdir /s /q ntvdmx64-master
 ) else (
   xcopy /s /Y %SRCDIR% ntvdmpatch\
   if exist %SRCDIR%\..\readme.txt xcopy /Y %SRCDIR%\..\readme.txt .
 )
-exit /B
+exit /b
 
 :dlprq
 if not exist %PREREQ%\%1 (
@@ -311,7 +339,7 @@ if not exist %PREREQ%\%1 (
   exit
 )
 copy /y %PREREQ%\%1 ntvdmpatch\minnt\work\
-exit /B
+exit /b
 
 :unpack
 if not exist %PREREQ%\%1 (
@@ -321,4 +349,4 @@ if not exist %PREREQ%\%1 (
   exit
 )
 7z x -y %PREREQ%\%1
-exit /B
+exit /b
