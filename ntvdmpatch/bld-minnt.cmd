@@ -7,7 +7,10 @@ rem Multithreaded build caused problems on some machines so disabling multithrea
 set BUILD_MULTIPROCESSOR=
 set BUILD_CONCURRENT_PROCESSORS=
 set NUMBER_OF_PROCESSORS=1
+set V86MON=
 if "%HAXM%"=="" set CCPU=1
+if not "%HAXM%"=="" set V86MON=haxm
+if not "%HYPERV%"=="" set V86MON=hyperv
 
 rem
 rem Prepare directories with language dependent versions. If user specified language,
