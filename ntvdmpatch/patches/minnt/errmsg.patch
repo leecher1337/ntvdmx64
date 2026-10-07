@@ -1,6 +1,6 @@
 --- NT4\private\mvdm\softpc.new\host\src\nt_event.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_event.c
-1838a1839,1865
+1866a1867,1893
 > // leecher1337, Non-standard extension: Default warning level can be defined
 > // in registry
 > static DWORD GetTlsDirectErrorDefault(void)
@@ -28,7 +28,7 @@
 > 	return dwRet;
 > }
 > 
-1896c1923
+1924c1951
 <     TlsSetValue(TlsDirectError, 0);
 ---
 >     TlsSetValue(TlsDirectError, (LPVOID)GetTlsDirectErrorDefault());

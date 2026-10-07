@@ -1,0 +1,124 @@
+--- NT4\private\mvdm\softpc.new\host\inc\nt_event.h
++++ nt\private\mvdm\softpc.new\host\inc\nt_event.h
+38a39,42
+> /* TRUE when our output is redirected, so this console's presentation state
+>  * (buffer size, cursor) belongs to someone else. */
+> BOOL host_console_hands_off(VOID);
+> 
+--- NT4\private\mvdm\softpc.new\host\src\nt_event.c
++++ nt\private\mvdm\softpc.new\host\src\nt_event.c
+106a107,134
+> /*
+> ** Console hands-off.
+> **
+> ** TRUE when we must not touch this console's presentation state - its screen
+> ** buffer size, the cursor position or the cursor shape.  Our own output is
+> ** redirected, so some other process - eg the win32 stage of the same pipeline -
+> ** is what the user is actually looking at, and conditioning the console for a
+> ** guest that is not displaying anything only destroys that process's output.
+> **
+> ** Set NTVDM_BUF_RESIZE=1 to get the old unconditional behaviour back for an A/B.
+> ** (The variable name is historical; it now covers the cursor as well.)
+> */
+> GLOBAL BOOL host_console_hands_off(VOID)
+> {
+>     static BOOL checked = FALSE;
+>     static BOOL enabled = TRUE;
+> 
+>     if (!checked)
+>     {
+>         char *env;
+> 
+>         checked = TRUE;
+>         if ((env = host_getenv("NTVDM_BUF_RESIZE")) != NULL && *env != '0')
+>             enabled = FALSE;
+>     }
+>     return enabled && stdoutRedirected;
+> }
+> 
+--- NT4\private\mvdm\softpc.new\host\src\nt_fulsc.c
++++ nt\private\mvdm\softpc.new\host\src\nt_fulsc.c
+1192,1195c1192,1195
+<         ** Tim, September 92. Put the Console cursor to the same place as the
+<         ** SoftPC cursor. We already do this in full-screen text mode below.
+<         ** Specifcally to fix weird cursor position problem with 16-bit nmake,
+<         ** but seems like a good safety idea anyway.
+---
+>         ** Both of these are presentation state belonging to whoever is actually
+>         ** displaying on this console - leave them alone when that is not us.
+>         ** getVDMCursorPosition() already self-guards on stdoutRedirected; the
+>         ** attribute did not.
+1197c1197,1207
+<         getVDMCursorPosition();
+---
+>         if (!host_console_hands_off())
+>         {
+>             SetConsoleTextAttribute(sc.OutputHandle, sc.PCBackground);
+>             /*
+>             ** Tim, September 92. Put the Console cursor to the same place as
+>             ** the SoftPC cursor. We already do this in full-screen text mode
+>             ** below.  Specifcally to fix weird cursor position problem with
+>             ** 16-bit nmake, but seems like a good safety idea anyway.
+>             */
+>             getVDMCursorPosition();
+>         }
+--- NT4\private\mvdm\softpc.new\host\src\nt_graph.c
++++ nt\private\mvdm\softpc.new\host\src\nt_graph.c
+1352c1352,1361
+<             SetConsoleCursorPosition(sc.OutputHandle,CursorPos);
+---
+>             /*
+>             ** Only if we are the one presenting this console.  cursor_x/y are
+>             ** the emulated cursor in OUR regen, written here as absolute
+>             ** console buffer coordinates.  With our output redirected the guest
+>             ** never draws, so this would drag the real owner's cursor back to
+>             ** the top of the buffer - and its next write then overprints what
+>             ** it already displayed.
+>             */
+>             if (!host_console_hands_off())
+>                 SetConsoleCursorPosition(sc.OutputHandle,CursorPos);
+1427c1436,1437
+<                     SetConsoleCursorInfo(sc.OutputHandle,&CursorInfo);
+---
+>                     if (!host_console_hands_off())
+>                         SetConsoleCursorInfo(sc.OutputHandle,&CursorInfo);
+1438c1448,1449
+<             SetConsoleCursorInfo(sc.OutputHandle,&CursorInfo);
+---
+>             if (!host_console_hands_off())
+>                 SetConsoleCursorInfo(sc.OutputHandle,&CursorInfo);
+2524a2536,2543
+>          *
+>          * If our own output is redirected we are not the console's presenter,
+>          * and if the existing buffer already contains the window we have no
+>          * reason to resize it.  Shrinking it throws away the real owner's
+>          * content and scrollback, and conhost puts the old geometry back when we
+>          * unregister, throwing it away a second time - which is what wipes a
+>          * win32 pipeline stage's output.  Set NTVDM_BUF_RESIZE=1 to force the
+>          * old unconditional behaviour for an A/B.
+2527c2546,2547
+<                 bufferSize( w, h );
+---
+>                 if ( !host_console_hands_off() || oldB.X < w || oldB.Y < h )
+>                         bufferSize( w, h );
+--- NT4\private\mvdm\softpc.new\host\src\nt_hosts.c
++++ nt\private\mvdm\softpc.new\host\src\nt_hosts.c
+151c151,160
+<             SetConsoleCursorPosition(sc.OutputHandle, coord);
+---
+>             /*
+>              * Only when we are the one presenting this console.  With our output
+>              * redirected the guest displays nothing, so homing the cursor and
+>              * blanking everything above it would just destroy the output of
+>              * whoever is really drawing here - eg the win32 stage of the same
+>              * pipeline.  The code page still has to change either way.
+>              */
+>             if (!host_console_hands_off())
+>             {
+>                 SetConsoleCursorPosition(sc.OutputHandle, coord);
+153c162
+<             FillConsoleOutputCharacter(sc.OutputHandle, ' ',
+---
+>                 FillConsoleOutputCharacter(sc.OutputHandle, ' ',
+155a165
+>             }

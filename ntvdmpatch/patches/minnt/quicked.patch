@@ -8,21 +8,21 @@
 > #endif
 --- NT4\private\mvdm\softpc.new\host\src\nt_fulsc.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_fulsc.c
-3332c3332,3333
+3342c3342,3343
 <     mode |= (ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT);
 ---
 >     mode |= (ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
 >     mode &= ~ENABLE_QUICK_EDIT_MODE;
 --- NT4\private\mvdm\softpc.new\host\src\nt_hosts.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_hosts.c
-236a237
+246a247
 >     sc.OrgInConsoleMode |= ENABLE_EXTENDED_FLAGS;
-240a242
+250a252
 >     {
-241a244,245
+251a254,255
 >         mode &= ~ENABLE_QUICK_EDIT_MODE;
 >     }
-244c248
+254c258
 <            ~(ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
 ---
 >            ~(ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_QUICK_EDIT_MODE);

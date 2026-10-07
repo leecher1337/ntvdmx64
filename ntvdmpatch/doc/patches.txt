@@ -22,6 +22,9 @@ ccpu_optim_sas.patch- Optimizes CCPU string operations to plug into
 console.patch       - Fixes console startup bug that would otherwise not init
                       colors of console properly and would therefore cause
                       black chars on black screen.
+conshandsoff.patch  - Fixes a problem where a console that gets initiated
+                      from a batch-file but loads a driver like ANSI.sYS in
+                      config.nt doesn't display console output correctly
 comments.patch      - Adds back the fun to MINNT source where some lamers
                       removed all filthy comments and even the easteregg in 
                       YODA

@@ -82,10 +82,9 @@
 < #ifdef i386
 ---
 > #ifdef MONITOR
-257,258d255
+257,258d256
 < #define DECLARE_LocalVdmContext VDM_TIB * _LocalVdmTib = (VDM_TIB *)(NtCurrentTeb()->Vdm); \
 <                                 CONTEXT * _LocalVdmContext = &(*_LocalVdmTib).VdmContext
-
 --- NT4\private\mvdm\inc\wow.h
 +++ nt\private\mvdm\inc\wow.h
 29c29
@@ -186,17 +185,17 @@
 > #if defined(_X86_) && defined(MONITOR)
 --- NT4\private\mvdm\softpc.new\host\src\nt_fulsc.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_fulsc.c
-2019a2020
+2029a2030
 > 	ResetEvent(hErrorHardwareEvent);
-2030d2030
+2040d2040
 <     ResetEvent(hErrorHardwareEvent);
-2280c2280
+2290c2290
 <     #ifdef i386
 ---
 >     #if defined(i386) && defined(X86GFX)
-3372a3373
+3382a3383
 > #ifdef X86GFX
-3378a3380
+3388a3390
 > #endif
 --- NT4\private\mvdm\softpc.new\host\src\nt_det.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_det.c
@@ -214,7 +213,7 @@
 > #endif
 --- NT4\private\mvdm\softpc.new\host\src\nt_bop.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_bop.c
-779a780
+780a781
 > #ifdef X86GFX
 787a789
 > #endif
@@ -246,7 +245,6 @@
 > #endif
 --- NT4\private\mvdm\softpc.new\host\src\nt_sbfm.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_sbfm.c
-diff -r F:\Windows.Source.Code.w2k.nt4.wxp\minnt\q160765803-minint4-85fac4faadc7\base\mvdm\softpc.new\host\src\nt_sbfm.c Z:\tmp\nt_sbfm.c
 282a283
 > #ifdef MONITOR
 322a324,339
@@ -288,8 +286,7 @@ diff -r F:\Windows.Source.Code.w2k.nt4.wxp\minnt\q160765803-minint4-85fac4faadc7
 > #endif
 --- NT4\private\mvdm\softpc.new\host\src\nt_thred.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_thred.c
-43a44,64
-> 
+44a45,65
 > /*
 >  * leecher1337:
 >  * Hack for x64 kernel that doesn't initialize the TIB struct
@@ -310,6 +307,7 @@ diff -r F:\Windows.Source.Code.w2k.nt4.wxp\minnt\q160765803-minint4-85fac4faadc7
 > }
 > 
 > 		
+> 
 131a153,155
 > #ifdef W10
 >        host_InitializeTib();

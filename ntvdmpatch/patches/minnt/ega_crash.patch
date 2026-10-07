@@ -141,17 +141,16 @@
 <     while(--local_height);
 ---
 >     while((--local_height)>0);
-
 --- NT4\private\mvdm\softpc.new\host\src\nt_graph.c
 +++ nt\private\mvdm\softpc.new\host\src\nt_graph.c
 779a780,781
 > #elif defined(V7VGA)
 > 	if(!video_copy) video_copy = (byte *) host_malloc(0x80000);
-1945c1947
+1956c1958
 <                     (get_256_colour_mode() ? 2 : 1);
 ---
 >                     ((get_256_colour_mode() && !get_seq_chain4_mode()) ? 2 : 1);
-2690a2693,2698
+2710a2713,2718
 > 		/* Some applications start us with hidden console, but expect us
 > 		 * to pop up in fullscreen, once we initialize graphics,
 > 		 * therefore ensure that we get visible
