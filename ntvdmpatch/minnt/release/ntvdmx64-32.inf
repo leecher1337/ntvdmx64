@@ -76,7 +76,6 @@ symsrv.yes=5
 
 [Ntvdmx64.amd64.System.Files]
 ldntvdm.dll,,,0x14022
-_default.pif,,,0x41
 ansi.sys,,,0x41
 append.exe,,,0x41
 autoexec.nt,,,0x10
@@ -131,6 +130,9 @@ vdmdbg.dll,,,0x4022
 vdmredir.dll,,,0x4022
 v7vga.rom,,,0x4022
 
+[Ntvdmx64.amd64.Windows.Files]
+_default.pif,,,0x10
+
 [Ntvdmx64.amd64.Symbol.Files]
 dbghelp.dll,,,0x4022
 symsrv.dll,,,0x4022
@@ -145,6 +147,7 @@ ntvdmx64-32.PNF
 
 [DestinationDirs]
 Ntvdmx64.amd64.System.Files   = 16425
+Ntvdmx64.amd64.Windows.Files  = 10
 Ntvdmx64.amd64.Symbol.Files = 10,Symbols\dbghelp\x86
 Ntvdmx64.amd64.Inf.Files.Add = 17
 Ntvdmx64.amd64.Inf.Files.Del = 17
@@ -152,10 +155,10 @@ Ntvdmx64.amd64.Inf.Files.Del = 17
 [DefaultInstall.ntamd64]
 ;CheckAdminRights = 1
 SmartReboot = N
-CopyFiles   = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Symbol.Files, Ntvdmx64.amd64.Inf.Files.Add
+CopyFiles   = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Windows.Files, Ntvdmx64.amd64.Symbol.Files, Ntvdmx64.amd64.Inf.Files.Add
 AddReg      = Ntvdmx64.amd64.AddReg
 
 [DefaultUninstall.ntamd64]
 CleanUp     = 1
 SmartReboot = N
-DelFiles    = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Symbol.Files, Ntvdmx64.amd64.Inf.Files.Del
+DelFiles    = Ntvdmx64.amd64.System.Files, Ntvdmx64.amd64.Windows.Files, Ntvdmx64.amd64.Symbol.Files, Ntvdmx64.amd64.Inf.Files.Del
