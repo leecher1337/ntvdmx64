@@ -1,0 +1,24 @@
+/********************************************************************/
+/*        TIMER.RCV                                                 */
+/********************************************************************/
+#include <version.h>
+
+#define VER_FILETYPE                    VFT_DRV
+#define VER_FILESUBTYPE                 VFT2_DRV_INSTALLABLE
+#define VER_INTERNALNAME_STR            "timer.drv"
+#define VER_ORIGINALFILENAME_STR        "timer.drv"
+
+/*-------------------------------------------------*/
+/* localized strings and language of this resource */
+/*-------------------------------------------------*/
+#undef VER_FILEDESCRIPTION_STR
+#define VER_FILEDESCRIPTION_STR     "Driver de Timer para PCs e compatíveis\0"
+#undef VER_PRODUCTNAME_STR
+#define VER_PRODUCTNAME_STR         "Sistema operacional Microsoft® Windows(TM)\0"
+#undef VER_LEGALCOPYRIGHT_STR
+#define VER_LEGALCOPYRIGHT_STR      "Copyright © Microsoft Corp. 1981-1996\0"
+#define VER_LANGID                  0x0416
+#define VER_CHARSETID               0x04E4
+#define VER_STRINGFILEINFO_BLOCK    "041604E4"
+
+#include <common.ver>

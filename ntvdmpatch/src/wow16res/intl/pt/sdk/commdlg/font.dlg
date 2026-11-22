@@ -1,0 +1,39 @@
+//---------------------------------------------------------------------------
+// font.dlg : reconstructed pt resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+
+FORMATDLGORD31 DIALOG 13, 54, 278, 147
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Tipo de letra"
+FONT 8, "Helv"
+BEGIN
+    LTEXT           "&Tipo de letra:", stc1, 6, 3, 49, 9
+    COMBOBOX        cmb1, 6, 13, 94, 54, CBS_SIMPLE | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_DISABLENOSCROLL
+
+    LTEXT           "&Estilo do tipo de letra:", stc2, 108, 3, 70, 8
+    COMBOBOX        cmb2, 108, 13, 71, 54, CBS_SIMPLE | WS_VSCROLL | CBS_DISABLENOSCROLL | WS_TABSTOP
+
+    LTEXT           "Ta&manho:", stc3, 191, 3, 33, 9
+    COMBOBOX        cmb3, 191, 13, 32, 54, CBS_SIMPLE | WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_SORT | CBS_DISABLENOSCROLL
+
+    DEFPUSHBUTTON   "OK", IDOK, 230, 6, 41, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "Cancelar", IDCANCEL, 230, 23, 41, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "Apl&icar", psh3, 230, 40, 41, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Ajuda", pshHelp, 230, 57, 41, 14, WS_GROUP | WS_TABSTOP
+
+    GROUPBOX        "Efeitos", grp1, 6, 72, 84, 40, WS_GROUP
+    CONTROL         "&Rasurado", chx1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 12, 83, 51, 10
+    CONTROL         "&Sublinhado", chx2, "Button", BS_AUTOCHECKBOX, 12, 97, 51, 10
+
+    LTEXT           "&Cor:", stc4, 6, 115, 30, 8
+    COMBOBOX        cmb4, 6, 126, 84, 100, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+
+    GROUPBOX        "Exemplo", grp2, 98, 72, 173, 49, WS_GROUP
+    CTEXT           "", stc6, 104, 125, 159, 20,  SS_NOPREFIX | NOT WS_GROUP
+    CTEXT           "AaBbYyZz", stc5, 104, 84, 159, 31, SS_NOPREFIX | NOT WS_VISIBLE
+END
+

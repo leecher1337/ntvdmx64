@@ -1,0 +1,15 @@
+//---------------------------------------------------------------------------
+// timer.rc : reconstructed it resources
+//
+// Recovered from the shipped localized timer.drv with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#include <windows.h>
+#include "timer.rcv"
+
+STRINGTABLE LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+	1,		"Driver del timer"
+	2,		"Impossibile trovare il file VTDAPI.386. I timer multimedia non sono disponibili.\nAssicurarsi che VTDAPI.386 sia nella directory SYSTEM di Windows e che la riga\ndevice=VTDAPI.386 sia inclusa nella sezione [386Enh] del file SYSTEM.INI."
+END

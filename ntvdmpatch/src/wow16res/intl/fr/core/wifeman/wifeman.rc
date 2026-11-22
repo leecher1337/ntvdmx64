@@ -1,0 +1,32 @@
+//---------------------------------------------------------------------------
+// wifeman.rc : reconstructed fr resources
+//
+// Recovered from the shipped localized wifeman.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+/****************************** Module Header ******************************\
+* Module Name: WIFEMAN.RC
+*
+* Copyright (c) 1991, Microsoft Corporation
+*
+* Resources
+*
+* History:
+* 20-05-01  leecher1337  Created
+\***************************************************************************/
+
+#define OEMRESOURCE
+
+#include "windows.h"
+#include "wifeman.h"
+
+/* Version Stamping */
+#include "wifeman.rcv"
+
+STRINGTABLE PRELOAD
+BEGIN
+    IDS_FUNCNOTSUPP,        "Une fonction de police WIFE non prise en charge par Windows 2000 a été appelée.\nCe programme risque de ne pas fonctionner correctement. Voulez-vous continuer ?"
+    IDS_APPTITLE,           "Gestionnaire de polices WIFE"
+END
+

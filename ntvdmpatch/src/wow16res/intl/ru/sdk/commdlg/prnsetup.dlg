@@ -1,0 +1,73 @@
+//---------------------------------------------------------------------------
+// prnsetup.dlg : reconstructed ru resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+
+PRINTDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 
+36, 52,  245, 130
+CAPTION "Печать"
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME
+FONT 8, "Helv"
+BEGIN
+  LTEXT "Принтер:"  stc6, 4,    4,  33,   8
+  LTEXT "Текущий принтер"  stc1, 44,   4, 122,  18
+  GROUPBOX "Диапазон печати", grp1, 4,   27,  132,  67
+  RADIOBUTTON "&Все" rad1, 10,  39,  88,  12,  WS_TABSTOP | WS_GROUP
+  RADIOBUTTON "В&ыделенный фрагмент" rad2, 10,  52,  105,  12
+  RADIOBUTTON "С&траницы" rad3, 10,  65,  77,  12
+  RTEXT "&с:"  stc2, 24,  80,  23,   9,  WS_GROUP
+  EDITTEXT edt1, 52,  78,  26,  12,  WS_TABSTOP | ES_RIGHT
+  RTEXT "&по:"  stc3, 84,  80,  14,   9
+  EDITTEXT edt2, 102,  78,  26,  12,  WS_TABSTOP | ES_RIGHT
+
+  LTEXT "Ка&чество:"  stc4, 4,  100,  47,   9
+  COMBOBOX      cmb1, 55,  98,  81,  36,
+              WS_TABSTOP | CBS_DROPDOWNLIST | WS_GROUP | WS_BORDER | WS_VSCROLL
+
+  LTEXT "&Копии:", stc5, 150, 100,  27,   9
+  EDITTEXT, edt3, 180,  98,  26,  12,  WS_TABSTOP | ES_RIGHT
+
+  CHECKBOX "П&ечать в файл"   chx1,
+          4,  113, 120,  12,  BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+  CHECKBOX "&Разобрать по копиям"  chx2,
+         150, 113,  88,  12,  BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+
+  DEFPUSHBUTTON  "ОК"  IDOK,     175,   4,  60,  14,  WS_GROUP
+  PUSHBUTTON "Отмена"  IDCANCEL, 175,  21,  60,  14,  WS_GROUP
+
+  PUSHBUTTON "&Настройка..."  psh1,  175,  41,  60,  14,  WS_GROUP
+  PUSHBUTTON "Спр&авка"   pshHelp,  175,  70,  60,  14,  WS_GROUP
+END
+
+
+PRNSETUPDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 30, 23, 300, 125
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Настройка печати"
+FONT 8, "Helv"
+BEGIN
+  GROUPBOX      "Принтер", grp3, 4, 6, 230, 67
+  LTEXT         "(Принтер не выбран)", stc1, 18, 30, 208, 9
+  RADIOBUTTON   "Прин&тер по умолчанию", rad3, 8, 16, 218, 12, WS_GROUP | WS_TABSTOP
+  RADIOBUTTON   "&Другой принтер:", rad4, 8, 42, 218, 12
+  COMBOBOX      cmb1, 18, 56, 208, 80, CBS_DROPDOWNLIST | WS_GROUP |
+                WS_BORDER | WS_VSCROLL
+  GROUPBOX      "Ориентация", grp1, 4, 74, 92, 46
+  ICON          "", ico1, 12, 92, 18, 20
+  RADIOBUTTON   "&Книжная", rad1, 40, 86, 53, 12, WS_GROUP | WS_TABSTOP
+  RADIOBUTTON   "&Альбомная", rad2, 40, 102, 53, 12
+  GROUPBOX      "Бумага", grp2, 101, 74, 133, 46, WS_GROUP
+  LTEXT         "&Размер:", stc2, 106, 88, 29, 9
+  COMBOBOX      cmb2, 137, 86, 92, 80, CBS_DROPDOWNLIST | WS_BORDER | 
+                WS_VSCROLL | WS_TABSTOP
+  LTEXT         "&Подача:", stc3, 106, 104, 28, 9
+  COMBOBOX      cmb3, 137, 102, 92, 80, CBS_DROPDOWNLIST | WS_BORDER | 
+                WS_VSCROLL | WS_TABSTOP
+  DEFPUSHBUTTON "ОК", IDOK, 240, 4, 55, 14, WS_GROUP
+  PUSHBUTTON    "Отмена", IDCANCEL, 240, 20, 55, 14, WS_GROUP
+  PUSHBUTTON    "Пара&метры...", psh1, 240, 40, 55, 14, WS_GROUP
+  PUSHBUTTON    "&Справка", pshHelp, 240, 56, 55, 14, WS_GROUP
+END
+

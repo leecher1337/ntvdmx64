@@ -1,0 +1,242 @@
+//---------------------------------------------------------------------------
+// drwatson.rc : reconstructed hu resources
+//
+// Recovered from the shipped localized drwatson.exe with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#define NOGDICAPMASKS
+#define NOWINMESSAGES
+#define NOSYSMETRICS
+#define NOICON
+#define NOKEYSTATE
+#define NOSYSCOMMANDS
+#define NOSHOWWINDOW
+#define NOATOM
+#define NOGDI
+#define NOFONT
+#define NOBRUSH
+#define NOCLIPBOARD
+#define NOCOLOR
+#define NOCREATESTRUCT
+#define NODRAWTEXT
+#define NOMB
+#define NOMEMMGR
+#define NOMETAFILE
+#define NOMINMAX
+#define NOOPENFILE
+#define NOPEN
+#define NOREGION
+#define NOSCROLL
+#define NOSOUND
+#define NOTEXTMETRIC
+#define NOWH
+#define NOWINOFFSETS
+#define NOWNDCLASS
+#define NOCOMM
+#include <windows.h>
+
+#include "drwatson.rcv"
+
+#include "str.h"
+
+drwatsonIcon ICON doctor.ico
+
+#define DS_3DLOOK           0x0004
+
+SHERDIAG DIALOG DISCARDABLE LOADONCALL PURE MOVEABLE 59, 42, 179, 124
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_3DLOOK
+CAPTION "Dr. Watson nyomravezetése"
+BEGIN
+  CONTROL "Segíthet a probléma megoldásában, ha megpróbálja leírni, hogy mit csinált a hiba bekövetkezése elõtt." 101, "STATIC", WS_CHILD | WS_VISIBLE | 0x1L, 26, 5, 128, 26
+  CONTROL "" 102, "EDIT", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | 0x44L, 13, 33, 151, 62
+  CONTROL "OK" 1, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 32, 101, 32, 14
+  CONTROL "Mégse" 2, "BUTTON", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 110, 101, 36, 14
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+
+/* Note all strings below must be <= CCH_MAX_STRING_RESOURCE chars! */
+
+/* drwatson.c */
+
+IDSTRNoFault                           "A program egy hibát sem talált.\n\nCopyright 1991-1995, Microsoft Corp."
+IDSTRFaulty                            "%d új Dr. Watson féle hibajelentés található a fájlban (%s).\n\nCopyright 1991-1995, Microsoft Corp."
+IDSTRGPText                            "Hiba történt az alkalmazásban.\nHa a Tovább gombot választja, mentse el egy új fájlba azt, amin éppen\ndolgozott.\nHa a Bezárást választja, az alkalmazás leáll."
+IDSTRErrMsg                            "A rendszerben már fut a ""Dr. Watson"" egy példánya."
+IDSTRVers                              "A ""Dr. Watson"" nem telepíthetõ; valószínûleg a TOOLHELP.DLL fájl verziója hibás."
+IDSTRClassMsg                          "A ""Dr. Watson"" nem telepíthetõ; nem lehet az ablakosztályt regisztrálni."
+IDSTRCoprocessor                       "Matematikai koprocesszor"
+IDSTR8086                              "8086"
+IDSTR80186                             "80186 vagy 80188"
+IDSTR80286                             "80286"
+IDSTR80386                             "80386 vagy 80386 SX"
+IDSTR80486                             "80486"
+IDSTREnhancedMode                      "Kiterjesztett mód"
+IDSTRProtectMode                       "Védett mód"
+IDSTRStandardMode                      "Normál üzemmód"
+IDSTRWindowsNT                         "Windows NT"
+
+/* drwatson.c SegFlags */
+
+IDSTRNullPtr                           "Null Ptr"
+IDSTRInvalid                           "Érvénytelen"
+IDSTRNotPresent                        "!Present"
+IDSTRCode                              "Kód "
+IDSTRExR                               "Ex/R"
+IDSTRExO                               "Ex/O"
+IDSTRData                              "Adat "
+IDSTRRW                                "R/W"
+IDSTRRO                                "R-O"
+
+/* drwatson.c ModuleName (and several others) */
+
+IDSTRUnknown                           "Ismeretlen"
+
+/* drwatson.c FaultType */
+
+IDSTRDivideByZero                      "Nullával való osztás"
+IDSTRInvalidOpcode                     "Érvénytelen opkód"
+IDSTRGeneralProtection                 "Általános védelem"
+
+/* drwatson.c DecodeFault */
+
+IDSTRInvalidSelector                   "Érvénytelen választó"
+IDSTRNullSelector                      "Null kiválasztó"
+IDSTRSegmentNotPresent                 "A szegmens nem létezik"
+IDSTRExceedSegmentBounds               "Szegmenshatárok átlépése"
+IDSTRCodeSegment                       "Kódszegmens"
+IDSTRExecuteOnlySegment                "Csak a szegmens végrehajtása"
+IDSTRReadOnlySegment                   "Írásvédett szegmens"
+
+/* drwatson.c SafeDisAsm86 */
+
+IDSTRSegNotPresentOrPastEnd            "A szegmens nem létezik, vagy a végén túl van"
+
+/* drwatson.c FaultCause */
+
+IDSTRErrorLog                          "Hibafájl"
+IDSTRParameterErrorLog                 "Paraméterhiba-napló"
+
+/* drwatson.c FileInfo */
+
+IDSTRFileNotFound                      "A fájl nem található"
+
+/* drwatson.c DisAsmAround */
+
+IDSTRCodeSegmentNPOrInvalid            "Kódszegmens nem létezik vagy érvénytelen\n"
+IDSTRNoSymbolsFound                    "(nem található szimbólum)\n"
+
+/* drwatson.c DumpInfo */
+
+IDSTRSystemInfoInfo                    "Rendszerinformáció (infó)\n"
+IDSTRWindowsVersion                    "Windows verziószáma: %d.%02d\n"
+IDSTRDebugBuild                        "Hibakeresés felépítése\n"
+IDSTRRetailBuild                       "Kereskedelmi változat\n"
+IDSTRWindowsBuild                      "Windows változat: %s\n"
+IDSTRUsername                          "Felhasználói név %s\n"
+IDSTROrganization                      "%s szervezet\n"
+IDSTRSystemFreeSpace                   "Szabad rendszerterület: %ld\n"
+IDSTRStackBaseTopLowestSize            "Verem báziscím: %u, legfelsõ: %u, legalsó: %u, méret: %u\n"
+IDSTRSystemResourcesUserGDI            "Rendszererõforrások:  FELHASZNÁLÓI: %u%% szabad, seg %04x  GDI: %u%% szabad, seg %04x\n"
+IDSTRMemManInfo1                       "Legnagyobb szabad méret: %ld, használható lapok maximális száma: %ld, zárolható lapok maximális száma: %ld\n"
+IDSTRMemManInfo2                       "Lineáris elemek teljes száma: %ld, nem zárolt lapok teljes száma: %ld, szabad lapok száma: %ld\n"
+IDSTRMemManInfo3                       "Lapok teljes száma: %ld, szabad lineáris hely: %ld, lapozófájl lapjainak száma: %ld\n"
+IDSTRMemManInfo4                       "Oldalméret: %d\n"
+IDSTRTasksExecuting                    "%d feladat végrehajtása folyamatban.\n"
+IDSTRWinFlags                          "Windows jelzõk -\n"
+
+/* drwatson.c GetProcName */
+
+IDSTRUnknownAddress                    "Ismeretlen cím"
+
+/* drwatson.c DumpStack */
+
+IDSTRStackDumpStack                    "Veremlista (verem)\n"
+IDSTRStackFrameInfo                    "%d veremkeret: %-28s ss:bp %04x:%04x"
+
+/* drwatson.c BeginReport */
+
+IDSTRFailureReport                     "\n%s Hibajelentés - %s"
+
+/* drwatson.c ShowParamError */
+
+IDSTRLastParamErrorWas                 "Utolsó paraméterhiba:"
+
+/* drwatson.c Sherlock */
+
+IDSTRHadAFaultAt                       "%s - '%s' hiba történt a következõ helyen: %s.\n"
+IDSTRCPURegistersRegs                  "CPU regiszterek (reg)\n"
+IDSTRCPU32bitRegisters32bit            "32 bites CPU regiszterek (32 bit)\n"
+IDSTRInstructionDisasm                 "Disassembly utasítás (disasm)\n"
+IDSTRSystemTasksTasks                  "Rendszerfeladatok (feladatok)\n"
+IDSTRTaskHandleFlagsInfo               "Feladat: %8s, leíró: %04x, jelzõk: %04x, információ: %s\n"
+IDSTRFilename                          "  Fájlnév %s\n"
+IDSTRSystemModulesModules              "Rendszermodulok (modulok)\n"
+IDSTRModuleHandleFlagsInfo             "Modul: %8s, leíró: %04x, jelzõ: %04x, információ: %s\n"
+IDSTRFile                              "  Fájl %s\n"
+IDSTRContinuingExecution               "Végrehajtás folytatása a felhasználó kérésére (%s)"
+
+/* drwatson.c CallMeToo */
+
+IDSTRDebugString                       "Hibakeresési karakterlánc: %s"
+IDSTRApplicationError                  "Alkalmazáshiba"
+IDSTRInvalidParameter                  "Érvénytelen paraméter"
+IDSTRNA                                "---"
+IDSTRHadAFaultAt2                      "%s - '%s (%x)' hiba történt a következõ helyen: %s.\n"
+IDSTRParamIs                           "a paraméter %lx$%s\n"
+
+/* drwatson.c Moriarty */
+
+IDSTRStop                              "Leállítás"
+
+/* drwatson.c SherlockWndProc */
+
+IDSTRLogFileGettingLarge               "A ""Dr. Watson"" naplófájl (%s) kezd elég nagyra nõni."
+
+/* drwatson.c WinMain */
+
+IDSTRStart                             "\nKezdés"
+
+/* error.c LogErrorStr */
+
+IDSTRWarningError                      "\r\n\r\nFigyelmeztetés: #%04x"
+IDSTRFatalError                        "\r\n\r\nFatális hiba: #%04x"
+
+/* error.c LogParamErrorStr */
+
+IDSTRParamErrorParam                   "%s érvénytelen paramétert kapott: %ld"
+IDSTRParamErrorBadInt                  "%s érvénytelen paramétert kapott: %d"
+IDSTRParamErrorBadFlags                "%s érvénytelen jelzõbitet kapott: %#04x"
+IDSTRParamErrorBadDWord                "%s érvénytelen jelzõbitet kapott: %#08lx"
+IDSTRParamErrorBadHandle               "%s érvénytelen leírót kapott: %#04x"
+IDSTRParamErrorBadPtr                  "%s érvénytelen mutatót kapott: %#04x:%#04x"
+
+/* drwatson.c CurTime -- These strings must be short enough to not overflow
+                         the 48-byte buffer used by CurTime with a string of
+                         the form "Fri Sep  1 01:58:19 1995" (which is 24
+                         characters + 1 for the null terminator). */
+
+IDSTRJan                               "Jan."
+IDSTRFeb                               "Febr."
+IDSTRMar                               "Márc."
+IDSTRApr                               "Ápr."
+IDSTRMay                               "Máj."
+IDSTRJun                               "Jún."
+IDSTRJul                               "Júl."
+IDSTRAug                               "Aug."
+IDSTRSep                               "Szept."
+IDSTROct                               "Okt."
+IDSTRNov                               "Nov."
+IDSTRDec                               "Dec."
+
+IDSTRSun                               "V"
+IDSTRMon                               "H"
+IDSTRTue                               "K"
+IDSTRWed                               "Sze"
+IDSTRThu                               "Cs"
+IDSTRFri                               "P"
+IDSTRSat                               "Szo"
+
+END

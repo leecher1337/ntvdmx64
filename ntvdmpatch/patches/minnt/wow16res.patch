@@ -1,0 +1,157 @@
+--- NT4\private\mvdm\wow16\inc\common.ver
++++ nt\private\mvdm\wow16\inc\common.ver
+51a52,65
+> /* Language of this resource.  A localized .rcv overrides these; the	 */
+> /* defaults keep the US English layout byte for byte.			 */
+> #ifndef VER_LANGID
+> #define VER_LANGID 0x0409
+> #endif
+> 
+> #ifndef VER_CHARSETID
+> #define VER_CHARSETID 0x04E4
+> #endif
+> 
+> #ifndef VER_STRINGFILEINFO_BLOCK
+> #define VER_STRINGFILEINFO_BLOCK "040904E4"
+> #endif
+> 
+64a79
+> #ifdef INTL
+65a81,83
+> #else
+>         BLOCK VER_STRINGFILEINFO_BLOCK
+> #endif
+79c97
+<         BLOCK "040904E4"
+---
+>         BLOCK VER_STRINGFILEINFO_BLOCK
+97c115
+<         VALUE "Translation", 0x0409, 0x04E4
+---
+>         VALUE "Translation", VER_LANGID, VER_CHARSETID
+--- NT4\private\mvdm\wow16\ddeml\makefile
++++ nt\private\mvdm\wow16\ddeml\makefile
+103a104,106
+> #The international tree used to hold a precompiled ddeml.res; the recovered one
+> #holds the scripts instead, so compile those when there is no .res to copy.
+> !IF EXIST($(RES_DIR)\ddeml.res)
+105a109,116
+> !ELSE
+> ddeml.res: $(RES_DIR)\ddeml.rc $(RES_DIR)\ddeml.rcv $(RES_DIR)\ddeml.dlg \
+>            ddemlp.h ..\inc\common.ver ..\inc\version.h
+>     copy $(RES_DIR)\ddeml.rc
+>     copy $(RES_DIR)\ddeml.rcv
+>     copy $(RES_DIR)\ddeml.dlg
+>     $(RC) -r ddeml
+> !ENDIF
+--- NT4\private\mvdm\wow16\mmsystem\makefile
++++ nt\private\mvdm\wow16\mmsystem\makefile
+89a90
+> !IFNDEF LANG
+90a92,94
+> !ELSE
+> all:   $(NAME).$(LANG)
+> !ENDIF
+109a114,121
+> #international mods
+> #note INTL_SRC, INTL_EXE and LANG are external macros set by international.
+> #only mmsystem\mmtask was ever part of the international build, so the
+> #mmsystem\mmsystem sub-path is ours; the resources are recovered from the
+> #shipped localized mmsystem.dll by ntvdmpatch\src\wow16res.  mci.rc is the
+> #MCI command table and says DO NOT LOCALIZE, but it is copied from RES_DIR
+> #like the rest, so the recovered tree carries it unchanged.
+> !IFNDEF LANG
+110a123,126
+> !ELSE
+> RES_DIR =$(INTL_SRC)\$(LANG)\mmsystem\mmsystem
+> EXE_DIR =$(INTL_EXE)
+> !ENDIF
+123a140,145
+> 
+> !IFDEF LANG
+> $(NAME).$(LANG): $(NAME).res
+>         copy $(EXE_DIR)\$(NAME).$(EXT) $(NAME).$(LANG)
+>         $(RC) -t $(NAME).res $(NAME).$(LANG)
+> !ENDIF
+--- NT4\private\mvdm\wow16\ole\client\makefile
++++ nt\private\mvdm\wow16\ole\client\makefile
+71a72,74
+> #The international tree used to hold a precompiled ole.res; the recovered one
+> #holds the scripts instead, so compile those when there is no .res to copy.
+> !IF EXIST($(RES_DIR)\ole.res)
+73a77,82
+> !ELSE
+> ole.res: $(RES_DIR)\ole.rc $(RES_DIR)\olecli.rcv
+>     copy $(RES_DIR)\ole.rc
+>     copy $(RES_DIR)\olecli.rcv
+>     rc16 -r $(INCLUDE) ole.rc $@
+> !ENDIF
+167a177,178
+> #nmake runs every recipe line in its own process, so the cd the usa rule uses
+> #does not carry over to the next line; name the paths instead
+170,172c181
+<     -@ cd retail
+<     rc16 -t -30 ..\ole.res olecli.$(LANG)
+<     -@ cd..
+---
+>     rc16 -t -30 ole.res retail\olecli.$(LANG)
+--- NT4\private\mvdm\wow16\sherlock\makefile
++++ nt\private\mvdm\wow16\sherlock\makefile
+39a40,48
+> #international mods
+> #note INTL_SRC, INTL_EXE and LANG are external macros set by international.
+> #sherlock was never part of the international build, so the sdk\sherlock
+> #sub-path is ours; the resources are recovered from the shipped localized
+> #drwatson.exe by ntvdmpatch\src\wow16res.
+> !IFDEF LANG
+> RES_DIR=$(INTL_SRC)\$(LANG)\sdk\sherlock
+> EXE_DIR=$(INTL_EXE)
+> !ENDIF
+41a51
+> !IFNDEF LANG
+42a53,55
+> !ELSE
+> all:  drwatson.$(LANG)
+> !ENDIF
+59a73,86
+> 
+> !IFDEF LANG
+> #the usa rule compiles into RES_DIR, which for a localized build is the
+> #recovered international tree; copy the scripts in here and compile them here
+> #instead, so nothing is written back into INTL_SRC
+> drwatson.res: $(RES_DIR)\drwatson.rc $(RES_DIR)\drwatson.rcv ..\inc\common.ver str.h
+>         copy $(RES_DIR)\drwatson.rc
+>         copy $(RES_DIR)\drwatson.rcv
+>         rc16 -r $(INCS) drwatson.rc
+> 
+> drwatson.$(LANG): drwatson.res
+>         copy $(EXE_DIR)\drwatson.exe drwatson.$(LANG)
+>         rc16 -t -30 drwatson.res drwatson.$(LANG)
+> !ENDIF
+--- NT4\private\mvdm\wow16\timer\makefile
++++ nt\private\mvdm\wow16\timer\makefile
+84a85
+> !IFNDEF LANG
+85a87,89
+> !ELSE
+> all:   $(NAME).$(LANG)
+> !ENDIF
+99a104,109
+> #international mods
+> #note INTL_SRC, INTL_EXE and LANG are external macros set by international.
+> #timer was never part of the international build, so the sdk\timer sub-path is
+> #ours; the resources themselves are recovered from the shipped localized
+> #timer.drv by ntvdmpatch\src\wow16res.
+> !IFNDEF LANG
+100a111,114
+> !ELSE
+> RES_DIR =$(INTL_SRC)\$(LANG)\sdk\timer
+> EXE_DIR =$(INTL_EXE)
+> !ENDIF
+109a124,129
+> 
+> !IFDEF LANG
+> $(NAME).$(LANG): $(NAME).res
+>         copy $(EXE_DIR)\$(NAME).$(EXT) $(NAME).$(LANG)
+>         $(RC) -t $(NAME).res $(NAME).$(LANG)
+> !ENDIF

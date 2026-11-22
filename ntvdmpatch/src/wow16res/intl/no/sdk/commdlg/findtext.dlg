@@ -1,0 +1,89 @@
+//---------------------------------------------------------------------------
+// findtext.dlg : reconstructed no resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+
+FINDDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE
+30, 73, 236, 62
+CAPTION "Søk"
+STYLE WS_BORDER | WS_CAPTION | DS_MODALFRAME | WS_POPUP | WS_SYSMENU
+FONT 8, "Helv"
+BEGIN
+    CONTROL "&Søk etter:", -1, "static", SS_LEFT | WS_CHILD,
+        4, 8, 42, 8
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | WS_GROUP |
+            WS_TABSTOP | WS_CHILD | WS_BORDER,
+        47, 7, 119, 12
+
+    CONTROL "&Bare hele ord", chx1, "button", BS_AUTOCHECKBOX |
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        4, 30, 71, 12
+    CONTROL "Skill &mellom store og små bokstaver", chx2, "button", BS_AUTOCHECKBOX | 
+            WS_TABSTOP | WS_CHILD,
+        4, 48, 131, 10
+
+    CONTROL "Retning", grp1, "button", BS_GROUPBOX | WS_CHILD,
+        82, 23, 84, 24
+    CONTROL "&Opp", rad1, "button", BS_AUTORADIOBUTTON | 
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+         89, 34, 30, 8
+    CONTROL "&Ned", rad2, "button", BS_AUTORADIOBUTTON | WS_TABSTOP |
+            WS_CHILD,
+         130, 34, 31, 8
+
+    CONTROL "Søk &etter neste", IDOK, "button", BS_DEFPUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+       170, 5, 61, 14
+    CONTROL "Avbryt", IDCANCEL, "button", BS_PUSHBUTTON | WS_CHILD | 
+            WS_TABSTOP | WS_GROUP,
+       170, 23, 61, 14
+    CONTROL "&Hjelp", pshHelp, "button", BS_PUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+       170, 45, 61, 14
+END
+
+
+REPLACEDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE
+36, 44, 230, 94
+CAPTION "Erstatt"
+STYLE WS_BORDER | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | WS_POPUP
+FONT 8, "Helv"
+BEGIN
+    CONTROL "&Søk etter:", -1, "static", SS_LEFT | WS_CHILD,
+        4, 8, 35, 8
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | 
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        49, 5, 114, 12
+    CONTROL "E&rstatt med:", -1, "static", SS_LEFT | WS_CHILD,
+        4, 25, 42, 8
+    CONTROL "", edt2, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        49, 22, 114, 12
+
+    CONTROL "&Bare hele ord", chx1, "button", BS_AUTOCHECKBOX |
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        5, 46, 78, 12
+    CONTROL "Skill &mellom store og små bokstaver", chx2, "button", BS_AUTOCHECKBOX | WS_TABSTOP 
+            | WS_CHILD,
+        5, 62, 129, 12
+
+    CONTROL "Sø&k etter neste", IDOK, "button", BS_DEFPUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+        168, 5, 56, 14
+    CONTROL "&Erstatt", psh1, "button", BS_PUSHBUTTON | WS_CHILD | 
+            WS_TABSTOP | WS_GROUP,
+        168, 22, 56, 14
+    CONTROL "Erstatt &alle", psh2, "button", BS_PUSHBUTTON | WS_CHILD | 
+            WS_TABSTOP | WS_GROUP,
+        168, 39, 56, 14
+    CONTROL "Avbryt", IDCANCEL, "button", BS_PUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+        168, 56, 56, 14
+    CONTROL "&Hjelp", pshHelp, "button", BS_PUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+        168, 75, 56, 14
+
+END

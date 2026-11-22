@@ -1,0 +1,101 @@
+//---------------------------------------------------------------------------
+// fileopen.dlg : reconstructed el resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// FileOpen.dlg :  File Open and Save As dialog descriptions
+//
+// Copyright (c) Microsoft Corporation, 1990-
+//---------------------------------------------------------------------------
+
+FILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 
+36, 24,  324, 135
+CAPTION "’νοιγμα"
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME
+FONT 8, "Helv"
+BEGIN
+    LTEXT "Ό&νομα αρχείου:", stc3,   6,   6,  86,  9
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD | ES_OEMCONVERT,
+            6,    16,  90,  12
+    CONTROL "", lst1, "listbox",
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_OWNERDRAWFIXED,
+            6,    32,  90,  68
+
+    LTEXT "&Κατάλογοι:", -1, 110,   6,  120,   9
+    LTEXT "",            stc1, 110,  18,  120,   9, SS_NOPREFIX
+    CONTROL "", lst2, "listbox", 
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_OWNERDRAWFIXED,
+            110,  32,  120,  68
+
+    LTEXT "&Τύπος αρχείων στη λίστα:", stc2, 6,  104,  93,   9
+    CONTROL "", cmb1, "combobox", CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+            WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD,
+            6,  114,  90,  68
+
+    LTEXT "Μονάδες &δίσκων:", stc4,      110, 104,  120,  9
+    CONTROL "", cmb2, "combobox", 
+            CBS_SORT | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_DROPDOWNLIST 
+            | WS_CHILD | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL 
+            | WS_TABSTOP,
+            110, 114,  120, 68 
+
+    DEFPUSHBUTTON "ΟΚ", IDOK,       257,  6, 50, 14, WS_GROUP
+    PUSHBUTTON "’κυρο", IDCANCEL,  257, 24, 50, 14, WS_GROUP
+
+    PUSHBUTTON "&Βοήθεια", pshHelp,      257, 46, 50, 14, WS_GROUP
+    CHECKBOX "&Μόνο για ανάγνωση", chx1,    237, 68, 83, 10,
+                        BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+
+END
+
+MULTIFILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 
+36, 24,  324, 135
+CAPTION "’νοιγμα"
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME
+FONT 8, "Helv"
+BEGIN
+    LTEXT "Ό&νομα αρχείου:", stc3,   6,   6,  88,  10
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD | ES_OEMCONVERT,
+            6,    16,  90,  12
+    CONTROL "", lst1, "listbox", LBS_SORT | LBS_NOTIFY | LBS_DISABLENOSCROLL |
+             WS_VSCROLL | WS_BORDER | WS_TABSTOP | LBS_EXTENDEDSEL
+            | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED,
+            6,    32,  90,  68
+
+    LTEXT "&Κατάλογοι:", -1, 110,   6,  118,   9
+    LTEXT "",            stc1, 110,  16,  120,   9, SS_NOPREFIX
+    CONTROL "", lst2, "listbox", 
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_OWNERDRAWFIXED,
+            110,  32,  120,  68
+
+    LTEXT "&Τύπος αρχείων στη λίστα:", stc2, 6,  102,  94,   8
+    CONTROL "", cmb1, "combobox", CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+            WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD,
+            6,  112,  90,  68
+
+    LTEXT "Μονάδες &δίσκων:", stc4,      110, 102,  119,  9
+    CONTROL "", cmb2, "combobox", 
+            CBS_SORT | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_DROPDOWNLIST 
+            | WS_CHILD | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL 
+            | WS_TABSTOP,
+            110, 112,  120, 68 
+
+    DEFPUSHBUTTON "ΟΚ", IDOK,       258,  6, 50, 14, WS_GROUP
+    PUSHBUTTON "’κυρο", IDCANCEL,  258, 24, 50, 14, WS_GROUP
+
+    PUSHBUTTON "&Βοήθεια", pshHelp,      258, 46, 50, 14, WS_GROUP
+    CHECKBOX "&Μόνο για ανάγνωση", chx1,    237, 68, 83, 10,
+                        BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+
+END

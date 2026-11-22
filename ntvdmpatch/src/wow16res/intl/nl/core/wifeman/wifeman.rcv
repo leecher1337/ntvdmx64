@@ -1,0 +1,25 @@
+/********************************************************************/
+/*        WIFEMAN.RCV                                               */
+/********************************************************************/
+#include <version.h>
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT2_UNKNOWN
+#define VER_INTERNALNAME_STR		"WIFEMAN"
+#define VER_LEGALCOPYRIGHT_YEARS        "1991-1996"
+#define VER_ORIGINALFILENAME_STR        "WIFEMAN.DLL"
+
+/*-------------------------------------------------*/
+/* localized strings and language of this resource */
+/*-------------------------------------------------*/
+#undef VER_FILEDESCRIPTION_STR
+#define VER_FILEDESCRIPTION_STR     "Core-onderdeel Windows WIFE-interface"
+#undef VER_PRODUCTNAME_STR
+#define VER_PRODUCTNAME_STR         "Besturingssysteem Microsoft® Windows(TM)"
+#undef VER_LEGALCOPYRIGHT_STR
+#define VER_LEGALCOPYRIGHT_STR      "Copyright © Microsoft Corp. 1991-1996\0"
+#define VER_LANGID                  0x0413
+#define VER_CHARSETID               0x04E4
+#define VER_STRINGFILEINFO_BLOCK    "041304E4"
+
+#include <common.ver>

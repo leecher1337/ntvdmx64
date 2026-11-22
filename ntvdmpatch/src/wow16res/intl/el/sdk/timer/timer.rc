@@ -1,0 +1,15 @@
+//---------------------------------------------------------------------------
+// timer.rc : reconstructed el resources
+//
+// Recovered from the shipped localized timer.drv with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#include <windows.h>
+#include "timer.rcv"
+
+STRINGTABLE LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+	1,		"Πρόγραμμα οδήγησης χρονιστή"
+	2,		"Δεν είναι δυνατή η εύρεση του αρχείου VTDAPI.386. Οι χρονιστές πολυμέσων δεν είναι διαθέσιμοι.\nΒεβαιωθείτε ότι το VTDAPI.386 είναι στον κατάλογο SYSTEM των Windows και\nότι η γραμμή device=VTDAPI.386 περιλαμβάνεται στην ενότητα [386Enh] του  SYSTEM.INI."
+END

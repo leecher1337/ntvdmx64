@@ -1,0 +1,66 @@
+//---------------------------------------------------------------------------
+// user.rc : reconstructed br resources
+//
+// Recovered from the shipped localized user.exe with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+/****************************************************************************/
+/*                                                                          */
+/*  USER.RC -                                                               */
+/*                                                                          */
+/*  USER's Resource File                                                    */
+/*                                                                          */
+/****************************************************************************/
+
+#include "strtable.h"
+#include "netdlg.h"
+
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+
+    STR_NETDRIVER       "NETWORK.DRV"
+    STR_BOOT            "boot"
+    STR_LANGDRIVER      "LANGUAGE.DLL"
+    STR_SYSTEMINI       "SYSTEM.INI"
+    STR_TASKMAN         "TASKMAN.EXE"
+    STR_DRIVERS         "DRIVERS"
+
+/* Strings used for device driver initialization which we don't want hanging
+ * around our ds.
+ */
+    STR_COMMMODULENAME,     "COMM"
+    STR_COMMWRITESTRING,    "COMMWRITESTRING"
+    STR_COMMREADSTRING,     "READCOMMSTRING"
+    STR_COMMENABLENOTIFICATION "ENABLENOTIFICATION"
+
+/*---------------------------------------------------------------------------*/
+/* All strings above this line MUST NOT be localized.  All strings below
+ * this line should be localized.
+ */
+    STR_NETCONNTTL      "Erro na restauração das conexões da rede"
+    STR_NETCONNMSG      "Não é possível conectar-se a %s: %s"
+    STR_NETCRASHEDTITLE     "Erro na restauração das conexões da rede"
+    STR_NETCRASHEDMSG       "O Windows foi reiniciado durante a restauração das conexões da rede. Deseja restabelecer as conexões ou cancelar as conexões da rede para esta sessão?"
+
+    STR_NETERRORS       "Erro de rede inesperado: 0x%4.4X"
+    STR_NETERRORS+1     "Não há suporte para a função de rede"
+    STR_NETERRORS+2     "Erro de rede"
+    STR_NETERRORS+6     "Senha incorreta"
+    STR_NETERRORS+7     "Acesso negado"
+    STR_NETERRORS+11        "Memória insuficiente"
+    STR_NETERRORS+0x30      "Dispositivo não conectado"
+    STR_NETERRORS+0x31      "O dispositivo possui arquivos abertos"
+    STR_NETERRORS+0x32      "Nome de rede inválido"
+    STR_NETERRORS+0x33      "Dispositivo local inválido"
+    STR_NETERRORS+0x34      "Dispositivo já conectado"
+    STR_NETERRORS+0x35      "A conexão foi desfeita"
+    STR_NETERRORS+0x36      "A conexão permanente não está disponível"
+
+    STR_SYSERR,             "Erro de sistema"
+    STR_DIVBYZERO,          "Erro de divisão por zero ou estouro de capacidade"
+
+END
+
+#include "user.rcv"

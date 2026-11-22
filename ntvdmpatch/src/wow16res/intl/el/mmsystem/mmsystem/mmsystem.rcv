@@ -1,0 +1,24 @@
+/********************************************************************/
+/*     MMSYSTEM.RCV                                                 */
+/********************************************************************/
+#include <version.h>
+
+#define VER_FILETYPE                    VFT_DLL
+#define VER_FILESUBTYPE                 VFT2_UNKNOWN
+#define VER_INTERNALNAME_STR            "mmsystem.dll"
+#define VER_ORIGINALFILENAME_STR        "mmsystem.dll"
+
+/*-------------------------------------------------*/
+/* localized strings and language of this resource */
+/*-------------------------------------------------*/
+#undef VER_FILEDESCRIPTION_STR
+#define VER_FILEDESCRIPTION_STR     "APIs συστήματος για πολυμέσα\0\0"
+#undef VER_PRODUCTNAME_STR
+#define VER_PRODUCTNAME_STR         "Λειτουργικό σύστημα Microsoft® Windows(TM)\0"
+#undef VER_LEGALCOPYRIGHT_STR
+#define VER_LEGALCOPYRIGHT_STR      "Πνευματικά δικαιώματα © Microsoft Corporation 1981-1996"
+#define VER_LANGID                  0x0408
+#define VER_CHARSETID               0x04E5
+#define VER_STRINGFILEINFO_BLOCK    "040804E5"
+
+#include <common.ver>

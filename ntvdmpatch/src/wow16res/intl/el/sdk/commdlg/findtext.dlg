@@ -1,0 +1,89 @@
+//---------------------------------------------------------------------------
+// findtext.dlg : reconstructed el resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+
+FINDDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE
+30, 73, 277, 62
+CAPTION "Εύρεση"
+STYLE WS_BORDER | WS_CAPTION | DS_MODALFRAME | WS_POPUP | WS_SYSMENU
+FONT 8, "Helv"
+BEGIN
+    CONTROL "&Εύρεση του:", -1, "static", SS_LEFT | WS_CHILD,
+        4, 8, 50, 8
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | WS_GROUP |
+            WS_TABSTOP | WS_CHILD | WS_BORDER,
+        59, 7, 142, 12
+
+    CONTROL "&Μόνο ολόκληρες λέξεις", chx1, "button", BS_AUTOCHECKBOX |
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        4, 26, 107, 10
+    CONTROL "Ταίρια&σμα πεζών-κεφαλαίων", chx2, "button", BS_AUTOCHECKBOX | 
+            WS_TABSTOP | WS_CHILD,
+        4, 42, 112, 10
+
+    CONTROL "Κατεύθυνση", grp1, "button", BS_GROUPBOX | WS_CHILD,
+        116, 26, 85, 28
+    CONTROL "Επά&νω", rad1, "button", BS_AUTORADIOBUTTON | 
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+         120, 38, 38, 10
+    CONTROL "&Κάτω", rad2, "button", BS_AUTORADIOBUTTON | WS_TABSTOP |
+            WS_CHILD,
+         163, 38, 34, 10
+
+    CONTROL "Εύρεση ε&πόμενου", IDOK, "button", BS_DEFPUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+       205, 5, 65, 14
+    CONTROL "’κυρο", IDCANCEL, "button", BS_PUSHBUTTON | WS_CHILD | 
+            WS_TABSTOP | WS_GROUP,
+       205, 25, 65, 14
+    CONTROL "&Βοήθεια", pshHelp, "button", BS_PUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+       205, 45, 65, 14
+END
+
+
+REPLACEDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE
+36, 44, 281, 94
+CAPTION "Αντικατάσταση"
+STYLE WS_BORDER | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | WS_POPUP
+FONT 8, "Helv"
+BEGIN
+    CONTROL "&Εύρεση του:", -1, "static", SS_LEFT | WS_CHILD,
+        4, 9, 68, 8
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | 
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        77, 7, 114, 12
+    CONTROL "Αντι&κατάσταση με:", -1, "static", SS_LEFT | WS_CHILD,
+        4, 26, 71, 8
+    CONTROL "", edt2, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        77, 24, 114, 12
+
+    CONTROL "&Μόνο ολόκληρες λέξεις", chx1, "button", BS_AUTOCHECKBOX |
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        5, 46, 109, 10
+    CONTROL "Ταίρια&σμα πεζών-κεφαλαίων", chx2, "button", BS_AUTOCHECKBOX | WS_TABSTOP 
+            | WS_CHILD,
+        5, 62, 119, 10
+
+    CONTROL "Εύρεση ε&πόμενου", IDOK, "button", BS_DEFPUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+        197, 4, 78, 14
+    CONTROL "&Αντικατάσταση", psh1, "button", BS_PUSHBUTTON | WS_CHILD | 
+            WS_TABSTOP | WS_GROUP,
+        197, 21, 78, 14
+    CONTROL "Α&ντικατάσταση όλων", psh2, "button", BS_PUSHBUTTON | WS_CHILD | 
+            WS_TABSTOP | WS_GROUP,
+        197, 38, 78, 14
+    CONTROL "’κυρο", IDCANCEL, "button", BS_PUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+        197, 55, 78, 14
+    CONTROL "&Βοήθεια", pshHelp, "button", BS_PUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+        197, 75, 78, 14
+
+END

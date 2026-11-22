@@ -1,0 +1,89 @@
+//---------------------------------------------------------------------------
+// findtext.dlg : reconstructed ru resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+
+FINDDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE
+30, 73, 260, 63
+CAPTION "Поиск"
+STYLE WS_BORDER | WS_CAPTION | DS_MODALFRAME | WS_POPUP | WS_SYSMENU
+FONT 8, "Helv"
+BEGIN
+    CONTROL "Н&айти:", -1, "static", SS_LEFT | WS_CHILD,
+        4, 8, 37, 8
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | WS_GROUP |
+            WS_TABSTOP | WS_CHILD | WS_BORDER,
+        45, 7, 145, 12
+
+    CONTROL "&Только слово целиком", chx1, "button", BS_AUTOCHECKBOX |
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        4, 26, 100, 12
+    CONTROL "С у&четом регистра", chx2, "button", BS_AUTOCHECKBOX | 
+            WS_TABSTOP | WS_CHILD,
+        4, 42, 96, 12
+
+    CONTROL "Направление", grp1, "button", BS_GROUPBOX | WS_CHILD,
+        105, 26, 85, 28
+    CONTROL "В&верх", rad1, "button", BS_AUTORADIOBUTTON | 
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+         111, 38, 34, 12
+    CONTROL "Вн&из", rad2, "button", BS_AUTORADIOBUTTON | WS_TABSTOP |
+            WS_CHILD,
+         153, 38, 31, 12
+
+    CONTROL "&Найти далее", IDOK, "button", BS_DEFPUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+       200, 5, 55, 14
+    CONTROL "Отмена", IDCANCEL, "button", BS_PUSHBUTTON | WS_CHILD | 
+            WS_TABSTOP | WS_GROUP,
+       200, 23, 55, 14
+    CONTROL "&Справка", pshHelp, "button", BS_PUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+       200, 45, 55, 14
+END
+
+
+REPLACEDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE
+36, 44, 260, 95
+CAPTION "Замена"
+STYLE WS_BORDER | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | WS_POPUP
+FONT 8, "Helv"
+BEGIN
+    CONTROL "Найт&и:", -1, "static", SS_LEFT | WS_CHILD,
+        5, 9, 48, 8
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | 
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        54, 7, 125, 12
+    CONTROL "З&аменить на:", -1, "static", SS_LEFT | WS_CHILD,
+        5, 26, 48, 8
+    CONTROL "", edt2, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        54, 24, 125, 12
+
+    CONTROL "&Только слово целиком", chx1, "button", BS_AUTOCHECKBOX |
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        6, 46, 104, 12
+    CONTROL "С у&четом регистра", chx2, "button", BS_AUTOCHECKBOX | WS_TABSTOP 
+            | WS_CHILD,
+        6, 62, 91, 12
+
+    CONTROL "&Найти далее", IDOK, "button", BS_DEFPUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+        193, 4, 60, 14
+    CONTROL "&Заменить", psh1, "button", BS_PUSHBUTTON | WS_CHILD | 
+            WS_TABSTOP | WS_GROUP,
+        193, 21, 60, 14
+    CONTROL "Заменить &все", psh2, "button", BS_PUSHBUTTON | WS_CHILD | 
+            WS_TABSTOP | WS_GROUP,
+        193, 38, 60, 14
+    CONTROL "Отмена", IDCANCEL, "button", BS_PUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+        193, 55, 60, 14
+    CONTROL "&Справка", pshHelp, "button", BS_PUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+        193, 75, 60, 14
+
+END

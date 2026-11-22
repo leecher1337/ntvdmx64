@@ -11,6 +11,22 @@ if exist %BASEPATH%\..\..\Binaries\x86chk set SIZ_NTBLD=chk
 if exist %BASEPATH%\..\..\Binaries\x86fre set SIZ_NTBLD=fre
 )
 set BINDIR=%BASEPATH%\..\..\Binaries\x86%SIZ_NTBLD%
+rem
+rem The WOW16 modules hold no localized code, only localized resources, so the
+rem build links them once in usa and they are localized here instead, with the
+rem original international mechanism: nmake with LANG set copies the usa binary
+rem out of INTL_EXE and stamps the localized resources into it with rc16 -t.
+rem INTL_SRC is the international source tree, recovered from the shipped
+rem localized binaries by src\wow16res.  Stamping needs the 16-bit tools, so it
+rem is skipped when they are not on the PATH and the usa binaries are shipped.
+rem
+if "%INTL_SRC%"=="" set INTL_SRC=%PATCHROOT%src\wow16res\intl
+set INTL_EXE=%BINDIR%
+rem rc16 is either the plain 16-bit RC 3.11 or the rc16.bat wrapper that runs
+rem the MS-DOS Player build of it (see tools16\rc16.bat), so accept both.
+set WOW16STAMP=
+for %%I in (rc16.exe rc16.bat) do if not "%%~$PATH:I"=="" set WOW16STAMP=1
+if "%WOW16STAMP%"=="" echo rc16 is not on the PATH, shipping usa WOW16 resources
 set LANG=br CHS CHT cs el es fr GER hu it JPN KOR nl no pl pt ru sv tr usa
 if not "%1"=="" set LANG=%1
 md releases >nul
@@ -55,6 +71,19 @@ for %%L in (!LANG!) do (
   for %%I in (comm.drv commdlg.dll ctl3dv2.dll ddeml.dll drwatson.exe gdi.exe keyboard.drv krnl386.exe lanman.drv lzexpand.dll mciole16.dll mmsystem.dll mmtask.tsk mouse.drv netapi.dll olecli.dll olesvr.dll pmspl.dll rasapi16.dll regedt16.exe shell.dll sound.drv sysedit.exe system.drv timer.drv toolhelp.dll user.exe ver.dll wfwnet.drv vga.drv wifeman.dll win.com win87em.dll winhelp.exe winnls.dll winoldap.mod winsock.dll winspool.exe wow32.dll wowdeb.exe wowexec.exe wowfax.dll wowfaxui.dll) do if exist !BINDIR!\%%I xcopy /Y !BINDIR!\%%I releases\%%L\wow32\
 
   rem
+  rem Localized WOW16 resources.  Only the modules INTL_SRC actually has
+  rem resources for are stamped, so a language or a module that has not been
+  rem recovered simply keeps the usa binary copied in above.
+  rem
+  call :stampwow16 %%L commdlg  commdlg.dll  sdk\commdlg
+  call :stampwow16 %%L timer    timer.drv    sdk\timer
+  call :stampwow16 %%L ddeml    ddeml.dll    sdk\ddeml
+  call :stampwow16 %%L sherlock drwatson.exe sdk\sherlock
+  call :stampwow16 %%L mmsystem mmsystem.dll mmsystem\mmsystem
+  call :stampwow16 %%L ole\client olecli.dll sdk\ole\client retail
+  call :stampwow16 %%L wifeman  wifeman.dll  core\wifeman
+
+  rem
   rem Debug symbols and stuff
   rem
   xcopy /Y !BINDIR!\system32\*.sym releases\%%L\Symbols\
@@ -71,3 +100,62 @@ for %%L in (!LANG!) do (
   xcopy /Y %BASEPATH%\mvdm\softpc.new\debugger\obj%SIZ_NTBLD%\x86\vdmdebug.exe releases\%%L\Symbols\
 )
 :fini
+goto :eof
+
+rem
+rem Stamp one module's localized resources into its usa binary.
+rem   %1 language  %2 module directory  %3 binary  %4 sub-path under
+rem   INTL_SRC\<lang>  %5 where the makefile leaves the stamped file, when it
+rem   is not the module directory
+rem
+:stampwow16
+if "%WOW16STAMP%"=="" goto :eof
+if not exist "%INTL_SRC%\%1\%4\." goto :eof
+if not exist "%BASEPATH%\mvdm\wow16\%2\makefile" goto :eof
+if not exist "%INTL_EXE%\%3" goto :eof
+echo Stamping %1 resources into %3
+set WOW16DST=%CD%\releases\%1\wow32
+set WOW16SUB=%5
+if not "%WOW16SUB%"=="" set WOW16SUB=%WOW16SUB%\
+pushd %BASEPATH%\mvdm\wow16\%2
+call :iclean "%INTL_SRC%\%1\%4"
+nmake /nologo LANG=%1
+rem a half stamped file must not reach the release: without this the usa
+rem binary nmake copied in before rc16 failed would be shipped as localized
+if errorlevel 1 (
+  echo WARNING: nmake LANG=%1 failed in wow16\%2
+  if exist %WOW16SUB%%~n3.%1 del /F /Q %WOW16SUB%%~n3.%1
+)
+rem rc16 -t takes an empty .res without complaining and returns 0, stripping
+rem every resource from the image it stamps, so check the compile produced one
+for %%F in (*.res) do if %%~zF EQU 0 (
+  echo WARNING: %%F is empty, discarding the stamp of %3 for %1
+  if exist %WOW16SUB%%~n3.%1 del /F /Q %WOW16SUB%%~n3.%1
+)
+if exist %WOW16SUB%%~n3.%1 (
+  copy /Y %WOW16SUB%%~n3.%1 "%WOW16DST%\%3"
+  del %WOW16SUB%%~n3.%1
+) else (
+  echo WARNING: could not stamp %3 for %1, keeping the usa binary
+)
+rem leave no localized copies behind for the next usa build to pick up
+call :iclean "%INTL_SRC%\%1\%4"
+popd
+goto :eof
+
+rem
+rem Remove the localized scripts the makefile copied out of RES_DIR into the
+rem module directory, and the .res compiled from them, so a later usa build
+rem cannot pick them up.  That is what the original iclean targets are for,
+rem but only regedit, ole\client and kernel31 ever had one, so the list of
+rem names is taken from RES_DIR (%1) instead - which is exactly what was
+rem copied in.
+rem Doing it before nmake as well means a leftover .rc or .res from an
+rem interrupted run cannot make nmake believe the resources are up to date.
+rem   %1 the module's RES_DIR under INTL_SRC
+rem
+:iclean
+rem /F because a file checked out of the source tree can be read only
+for /f "delims=" %%F in ('dir /b /a-d "%~1" 2^>nul') do if exist "%%F" del /F /Q "%%F"
+if exist *.res del /F /Q *.res
+goto :eof

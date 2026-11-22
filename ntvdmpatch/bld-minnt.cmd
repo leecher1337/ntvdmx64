@@ -39,9 +39,12 @@ for %%I in (!LNGDIRS!) do (
 )
 cd..
 rem
-rem Currently, wow16 does'nt contain language dependent resources.
-rem Therefore we have to work around and null out LANG so that build script
-rem doesn't search for specific langauge yet.
+rem wow16 is the one component that keys off LANG, and for it LANG does not
+rem mean "compile this language" but "do not link, stamp the localized
+rem resources into a binary that INTL_EXE already holds".  The 16-bit modules
+rem carry no localized code, so they are built usa here and stamped per
+rem language later, by mkrelease, which is the pass that has the built
+rem binaries to stamp.  Null out LANG so wow16 builds usa.
 set LANGX=%LANG%
 set LANG=
 :nospeclang

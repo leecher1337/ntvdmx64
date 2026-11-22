@@ -1,0 +1,89 @@
+//---------------------------------------------------------------------------
+// findtext.dlg : reconstructed nl resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+
+FINDDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE
+30, 73, 293, 63
+CAPTION "Zoeken"
+STYLE WS_BORDER | WS_CAPTION | DS_MODALFRAME | WS_POPUP | WS_SYSMENU
+FONT 8, "Helv"
+BEGIN
+    CONTROL "&Zoeken naar:", -1, "static", SS_LEFT | WS_CHILD,
+        4, 8, 45, 8
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | WS_GROUP |
+            WS_TABSTOP | WS_CHILD | WS_BORDER,
+        53, 7, 158, 12
+
+    CONTROL "Heel &woord", chx1, "button", BS_AUTOCHECKBOX |
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        4, 30, 100, 12
+    CONTROL "&Identieke hoofdletters/kleine letters", chx2, "button", BS_AUTOCHECKBOX | 
+            WS_TABSTOP | WS_CHILD,
+        4, 43, 128, 12
+
+    CONTROL "Richting", grp1, "button", BS_GROUPBOX | WS_CHILD,
+        135, 20, 76, 38
+    CONTROL "&Omhoog", rad1, "button", BS_AUTORADIOBUTTON | 
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+         152, 30, 39, 12
+    CONTROL "Om&laag", rad2, "button", BS_AUTORADIOBUTTON | WS_TABSTOP |
+            WS_CHILD,
+         152, 43, 38, 12
+
+    CONTROL "&Volgende zoeken", IDOK, "button", BS_DEFPUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+       218, 7, 66, 14
+    CONTROL "Annuleren", IDCANCEL, "button", BS_PUSHBUTTON | WS_CHILD | 
+            WS_TABSTOP | WS_GROUP,
+       218, 25, 66, 14
+    CONTROL "&Help", pshHelp, "button", BS_PUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+       218, 45, 66, 14
+END
+
+
+REPLACEDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE
+36, 44, 253, 94
+CAPTION "Vervangen"
+STYLE WS_BORDER | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | WS_POPUP
+FONT 8, "Helv"
+BEGIN
+    CONTROL "&Zoeken naar:", -1, "static", SS_LEFT | WS_CHILD,
+        4, 9, 48, 8
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | 
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        59, 7, 114, 12
+    CONTROL "Vervangen &door:", -1, "static", SS_LEFT | WS_CHILD,
+        4, 26, 55, 8
+    CONTROL "", edt2, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        59, 24, 114, 12
+
+    CONTROL "Heel &woord", chx1, "button", BS_AUTOCHECKBOX |
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        5, 46, 104, 12
+    CONTROL "&Identieke hoofdletters/kleine letters", chx2, "button", BS_AUTOCHECKBOX | WS_TABSTOP 
+            | WS_CHILD,
+        5, 62, 130, 12
+
+    CONTROL "V&olgende zoeken", IDOK, "button", BS_DEFPUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+        181, 4, 66, 14
+    CONTROL "&Vervangen", psh1, "button", BS_PUSHBUTTON | WS_CHILD | 
+            WS_TABSTOP | WS_GROUP,
+        181, 21, 66, 14
+    CONTROL "A&lles vervangen", psh2, "button", BS_PUSHBUTTON | WS_CHILD | 
+            WS_TABSTOP | WS_GROUP,
+        181, 38, 66, 14
+    CONTROL "Annuleren", IDCANCEL, "button", BS_PUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+        181, 55, 66, 14
+    CONTROL "&Help", pshHelp, "button", BS_PUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+        181, 75, 66, 14
+
+END

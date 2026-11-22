@@ -1,0 +1,28 @@
+/********************************************************************/
+/*        DRWATSON.RCV                                              */
+/*        Version control data generated from layouts.dat           */
+/********************************************************************/
+#include <version.h>
+
+
+#define VER_FILETYPE                    VFT_APP
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_INTERNALNAME_STR            "DRWATSON"
+#define VER_ORIGINALFILENAME_STR        "DRWATSON.EXE"
+
+
+
+/*-------------------------------------------------*/
+/* localized strings and language of this resource */
+/*-------------------------------------------------*/
+#undef VER_FILEDESCRIPTION_STR
+#define VER_FILEDESCRIPTION_STR     "Utilitaire de détection de défaillances"
+#undef VER_PRODUCTNAME_STR
+#define VER_PRODUCTNAME_STR         "Système d'exploitation Microsoft® Windows(TM)\0\0"
+#undef VER_LEGALCOPYRIGHT_STR
+#define VER_LEGALCOPYRIGHT_STR      "Copyright © Microsoft Corp. 1981-1996\0"
+#define VER_LANGID                  0x040C
+#define VER_CHARSETID               0x04E4
+#define VER_STRINGFILEINFO_BLOCK    "040C04E4"
+
+#include <common.ver>

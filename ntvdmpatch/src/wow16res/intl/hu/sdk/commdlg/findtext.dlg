@@ -1,0 +1,89 @@
+//---------------------------------------------------------------------------
+// findtext.dlg : reconstructed hu resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+
+FINDDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE
+30, 73, 308, 63
+CAPTION "Keresés"
+STYLE WS_BORDER | WS_CAPTION | DS_MODALFRAME | WS_POPUP | WS_SYSMENU
+FONT 8, "Helv"
+BEGIN
+    CONTROL "Ke&resendõ:", -1, "static", SS_LEFT | WS_CHILD,
+        4, 8, 37, 8
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | WS_GROUP |
+            WS_TABSTOP | WS_CHILD | WS_BORDER,
+        47, 7, 171, 12
+
+    CONTROL "&Teljes szóval megegyezõ", chx1, "button", BS_AUTOCHECKBOX |
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        4, 26, 100, 12
+    CONTROL "Kis- és &nagybetûk megkülönböztetése", chx2, "button", BS_AUTOCHECKBOX | 
+            WS_TABSTOP | WS_CHILD,
+        4, 42, 135, 12
+
+    CONTROL "Irány", grp1, "button", BS_GROUPBOX | WS_CHILD,
+        142, 26, 76, 28
+    CONTROL "&Vissza", rad1, "button", BS_AUTORADIOBUTTON | 
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+         147, 38, 33, 12
+    CONTROL "&Elõre", rad2, "button", BS_AUTORADIOBUTTON | WS_TABSTOP |
+            WS_CHILD,
+         185, 38, 28, 12
+
+    CONTROL "&Következõ keresése", IDOK, "button", BS_DEFPUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+       225, 5, 78, 14
+    CONTROL "Mégse", IDCANCEL, "button", BS_PUSHBUTTON | WS_CHILD | 
+            WS_TABSTOP | WS_GROUP,
+       225, 23, 78, 14
+    CONTROL "&Súgó", pshHelp, "button", BS_PUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+       225, 45, 78, 14
+END
+
+
+REPLACEDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE
+36, 44, 256, 95
+CAPTION "Csere"
+STYLE WS_BORDER | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | WS_POPUP
+FONT 8, "Helv"
+BEGIN
+    CONTROL "K&eresendõ:", -1, "static", SS_LEFT | WS_CHILD,
+        4, 9, 48, 8
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | 
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        54, 7, 114, 12
+    CONTROL "Cse&re erre:", -1, "static", SS_LEFT | WS_CHILD,
+        4, 26, 48, 8
+    CONTROL "", edt2, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        54, 24, 114, 12
+
+    CONTROL "&Teljes szóval megegyezõ", chx1, "button", BS_AUTOCHECKBOX |
+            WS_TABSTOP | WS_CHILD | WS_GROUP,
+        5, 46, 135, 12
+    CONTROL "Kis- és &nagybetûk megkülönböztetése", chx2, "button", BS_AUTOCHECKBOX | WS_TABSTOP 
+            | WS_CHILD,
+        5, 62, 135, 12
+
+    CONTROL "&Következõ keresése", IDOK, "button", BS_DEFPUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+        174, 4, 78, 14
+    CONTROL "&Csere", psh1, "button", BS_PUSHBUTTON | WS_CHILD | 
+            WS_TABSTOP | WS_GROUP,
+        174, 21, 78, 14
+    CONTROL "A&z összes cseréje", psh2, "button", BS_PUSHBUTTON | WS_CHILD | 
+            WS_TABSTOP | WS_GROUP,
+        174, 38, 78, 14
+    CONTROL "Mégse", IDCANCEL, "button", BS_PUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+        174, 55, 78, 14
+    CONTROL "&Súgó", pshHelp, "button", BS_PUSHBUTTON | WS_CHILD |
+            WS_TABSTOP | WS_GROUP,
+        174, 75, 78, 14
+
+END

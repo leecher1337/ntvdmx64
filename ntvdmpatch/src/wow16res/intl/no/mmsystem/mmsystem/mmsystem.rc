@@ -1,0 +1,204 @@
+//---------------------------------------------------------------------------
+// mmsystem.rc : reconstructed no resources
+//
+// Recovered from the shipped localized mmsystem.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#include <windows.h>
+
+#define MMNOSOUND
+#define MMNOSEQ
+#define MMNOTIMER
+#define MMNOJOY
+#include "mmsystem.h"
+#include "mmsystem.rcv"
+
+#define NOTIMERDEV
+#define NOJOYDEV
+#define NOSEQDEV
+#define NOTASKDEV
+#include "mmddk.h"
+
+#include "mmsysi.h"
+
+STRINGTABLE
+begin
+   0,			        "Angitt kommando ble utført."
+
+   STR_MCIUNKNOWN,              "En ukjent feil ble returnert fra MCI-kommandoen."
+//   STR_WAVEINPUT,               "Wave Input: "
+//   STR_WAVEOUTPUT,              "Wave Output: "
+//   STR_MIDIINPUT,               "Midi Input: "
+//   STR_MIDIOUTPUT,              "Midi Output: "
+#ifdef DEBUG
+   STR_MCISSERRTXT,             "Error in mciSendString but could not get text"
+   STR_MCISCERRTXT,             "Error in mciSendCommand but could not get text"
+#endif
+   MMSYSERR_ERROR,	        "Udefinert ekstern feil."
+   MMSYSERR_BADDEVICEID,        "En enhets-ID som er utenfor systemområdet, er brukt."
+   MMSYSERR_NOTENABLED,         "Driveren ble ikke aktivert."
+   MMSYSERR_ALLOCATED,          "Den angitte enheten er allerede i bruk. Vent til den er ledig og prøv på nytt."
+   MMSYSERR_INVALHANDLE,        "Angitt enhetsreferanse er ugyldig."
+   MMSYSERR_NODRIVER,	        "Ingen drivere er installert i systemet."
+   MMSYSERR_NOMEM,	        "Det er ikke nok minne tilgjengelig for denne oppgaven. Avslutt ett eller flere programmer for å øke tilgjengelig minne, og prøv igjen."
+   MMSYSERR_NOTSUPPORTED,       "Denne funksjonen støttes ikke. Bruk funksjonen Muligheter for å finne ut hvilke funksjoner og meldinger driveren støtter."
+   MMSYSERR_BADERRNUM,          "Det ble oppgitt et feilnummer som ikke er definert i systemet."
+   MMSYSERR_INVALFLAG,          "Et ugyldig flagg ble sendt til en systemfunksjon."
+   MMSYSERR_INVALPARAM,         "Et ugyldig parameter ble sendt til en systemfunksjon."
+
+   WAVERR_BADFORMAT,            "Det angitte formatet støttes ikke, eller kan ikke oversettes. Bruk funksjonen Muligheter for å finne ut hvilke formater som støttes."
+   WAVERR_UNPREPARED,           "Digitallydfilhodet var ikke klargjort. Bruk funksjonen Klargjør til å klargjøre filhodet og prøv deretter på nytt."
+   WAVERR_STILLPLAYING,         "Kan ikke utføre denne operasjonen mens mediedata fremdeles spiller. Tilbakestill enheten, eller vent til dataene er ferdig avspilt."
+   WAVERR_SYNC,                 "Kan ikke åpne enheten uten å bruke flagget WAVE_ALLOWSYNC. Bruk flagget og prøv på nytt."
+
+   MIDIERR_UNPREPARED,          "MIDI-hodet var ikke klargjort. Bruk funksjonen Klargjør til å klargjøre hodet og prøv deretter på nytt."
+   MIDIERR_STILLPLAYING,        "Kan ikke utføre denne operasjonen mens mediedata fremdeles spiller. Tilbakestill enheten, eller vent til dataene er ferdig avspilt."
+   MIDIERR_NOMAP,               "Et MIDI-kart ble ikke funnet. Det kan hende det er et problem med driveren, eller at filen Midimap.cfg mangler eller er skadet."
+   MIDIERR_NOTREADY,            "Data overføres fra porten til enheten. Vent til dataene er overført og prøv deretter på nytt."
+   MIDIERR_NODEVICE,            "Gjeldende oppsett for MIDI-tilordner refererer til en MIDI-enhet som ikke er installert på systemet. Bruk MIDI-tilordner for å endre oppsettet."
+   MIDIERR_INVALIDSETUP,        "Gjeldende MIDI-oppsett er skadet. Kopier den originale filen Midimap.cfg til mappen System i Windows-mappen og prøv igjen."
+
+   MCIERR_INVALID_DEVICE_ID,        "Ugyldig MCI-enhets-ID. Bruk den returnerte IDen ved åpning av MCI-enheten."
+   MCIERR_UNRECOGNIZED_KEYWORD,     "Driveren gjenkjenner ikke angitt kommandoparameter."
+   MCIERR_UNRECOGNIZED_COMMAND,     "Driveren gjenkjenner ikke angitt kommando."
+   MCIERR_HARDWARE,                 "Det er et problem med medieenheten. Kontroller at den virker skikkelig, eller ta kontakt med produsenten av enheten."
+   MCIERR_INVALID_DEVICE_NAME,      "Angitt enhet er ikke åpen, eller gjenkjennes ikke av MCI."
+   MCIERR_OUT_OF_MEMORY,            "Ikke nok minne til denne oppgaven.\n\nAvslutt en eller flere programmer for å øke mengden av tilgjengelig minne og prøv igjen"
+   MCIERR_DEVICE_OPEN,              "Enhetsnavnet er allerede brukt som alias i programmet. Bruk et unikt alias."
+   MCIERR_CANNOT_LOAD_DRIVER,       "Det er problemer med å laste inn angitt enhetsdriver."
+   MCIERR_MISSING_COMMAND_STRING,   "Ingen kommando ble angitt."
+   MCIERR_PARAM_OVERFLOW,           "Utdatastrengen får ikke plass i returbufferen. Utvid størrelsen på bufferen."
+   MCIERR_MISSING_STRING_ARGUMENT,  "Kommandoen krever en tekststrengparameter. Skriv inn parameteren."
+   MCIERR_BAD_INTEGER,              "Ugyldig heltall for denne kommandoen."
+   MCIERR_PARSER_INTERNAL,          "Enheten returnerte en ugyldig returtype. Kontroller med produsenten av enheten hvordan du skaffer er ny driver."
+   MCIERR_DRIVER_INTERNAL,          "Det er problemer med enhetsdriveren. Kontakt produsenten av enheten for å få tak i en ny driver."
+   MCIERR_MISSING_PARAMETER,        "Kommandoen krever en parameter. Oppgi en parameter."
+   MCIERR_UNSUPPORTED_FUNCTION,     "MCI-enheten du bruker støtter ikke angitt kommando."
+   MCIERR_NONAPPLICABLE_FUNCTION,   "Kan ikke utføre kommandoene i den angitte rekkefølgen. Rett kommandorekkefølgen og prøv på nytt."
+   MCIERR_FILE_NOT_FOUND,           "Finner ikke filen. Kontroller at banen og filnavnet er riktig."
+   MCIERR_DEVICE_NOT_READY,         "Enhetsdriveren er ikke klar."
+   MCIERR_INTERNAL,                 "Det oppstod et problem ved initialisering av MCI. Prøv å starte Windows på nytt."
+   MCIERR_DRIVER,                   "Feil på enhetsdriveren. Driveren er stengt. Får ikke tilgang til feilen."
+   MCIERR_CANNOT_USE_ALL,           "Kan ikke bruke ""alt"" som enhetsnavn sammen med angitt kommando."
+   MCIERR_MULTIPLE,                 "Det oppstod feil på flere enn en enhet. Angi kommandoene og enhetene hver for seg for å finne ut hvilke enheter som forårsaket feilene."
+   MCIERR_EXTENSION_NOT_FOUND,      "Kan ikke bestemme enhetstypen ut fra oppgitt filtype."
+   MCIERR_OUTOFRANGE,	            "Angitt parameter kan ikke brukes med denne kommandoen."
+   MCIERR_FLAGS_NOT_COMPATIBLE,     "Angitte parametere kan ikke brukes sammen."
+   MCIERR_FILE_NOT_SAVED,           "Kan ikke lagre den angitte filen. Pass på at du har nok diskplass eller fremdeles er tilkoblet nettverket."
+   MCIERR_FILE_READ,                "Kan ikke lese angitt fil. Kontroller at filen fremdeles er til stede eller kontroller stasjonen eller nettverkstilkoblingen."
+   MCIERR_FILE_WRITE,               "Kan ikke skrive til den angitte filen. Kontroller at maskinen har nok diskplass og at den fremdeles er tilkoblet nettverket."
+   MCIERR_DEVICE_LOCKED,            "Den angitte enheten lukkes. Vent noen sekunder og prøv på nytt."
+   MCIERR_DUPLICATE_ALIAS,          "Det angitte aliaset brukes allerede av et annet program. Bruk et unikt alias."
+   MCIERR_BAD_CONSTANT,             "Angitt parameter kan ikke brukes sammen med denne kommandoen."
+   MCIERR_MUST_USE_SHAREABLE,       "Enhetsdriveren er allerede i bruk. Bruk den delbare parameteren med hver åpne-kommando for å dele den."
+   MCIERR_MISSING_DEVICE_NAME,      "Den angitte kommandoen krever et alias, en fil, en driver eller et enhetsnavn. Skriv dette inn."
+   MCIERR_BAD_TIME_FORMAT,          "Den angitte verdien for tidsformat er ugyldig. Se MCI-dokumentasjonen for gyldige formater."
+   MCIERR_NO_CLOSING_QUOTE,         "Parameterverdien mangler et avsluttende anførselstegn. Skriv det inn."
+   MCIERR_DUPLICATE_FLAGS,          "En parameter eller verdi ble angitt to ganger. Angi den bare en gang."
+   MCIERR_INVALID_FILE,		    "Den angitte filen kan ikke spilles av på den angitte MCI-enheten. Filen kan være korrupt eller av feil format.."
+   MCIERR_NULL_PARAMETER_BLOCK,     "En tom parameterblokk ble sendt til MCI."
+   MCIERR_UNNAMED_RESOURCE,	    "Kan ikke lagre filen uten navn. Skriv inn et filnavn."
+   MCIERR_NEW_REQUIRES_ALIAS,       "Du må angi et alias når du bruker parameteren ""new""."
+   MCIERR_NOTIFY_ON_AUTO_OPEN,      "Kan ikke bruke ""notify""-flagget med enheter som åpnes automatisk."
+   MCIERR_NO_ELEMENT_ALLOWED,       "Kan ikke bruke filnavnet sammen med angitt enhet."
+   MCIERR_ILLEGAL_FOR_AUTO_OPEN,    "Kan ikke utføre den angitte kommandoen på en enhet som er åpnet automatisk. Vent til enheten er lukket, og prøv igjen."
+   MCIERR_FILENAME_REQUIRED,        "Filnavnet er ugyldig. Kontroller at filnavnet ikke er lenger enn 8 tegn, og at det etterfølges av et punktum og et filetternavn."
+   MCIERR_EXTRA_CHARACTERS,         "En streng som står i anførselstegn, kan ikke etterfølges av flere tegn."
+   MCIERR_DEVICE_NOT_INSTALLED,     "Den angitte enheten er ikke installert på systemet. Bruk alternativet Drivere i Kontrollpanel for å installere enheten."
+   MCIERR_GET_CD,                   "Ingen tilgang til den angitte filen eller MCI-enheten. Prøv å bytte mappe eller start maskinen på nytt."
+   MCIERR_SET_CD,                   "Får ikke tilgang til filen eller MCI-enheten fordi programmet ikke kan bytte mappe."
+   MCIERR_SET_DRIVE,                "Får ikke tilgang til filen eller MCI-enheten fordi programmet ikke kan bytte stasjon."
+   MCIERR_DEVICE_LENGTH,            "Angi et enhets- eller drivernavn som inneholder mindre enn 79 tegn."
+   MCIERR_DEVICE_ORD_LENGTH,        "Angi et enhets- eller drivernavn som inneholder mindre enn 69 tegn."
+   MCIERR_NO_INTEGER,               "Angitt kommando krever et heltall som parameter."
+
+   MCIERR_WAVE_OUTPUTSINUSE,        "Alle digitallydenheter som kan spille av filer i gjeldende format er opptatt. Vent til en digitallydenhet er ledig, og prøv igjen."
+   MCIERR_WAVE_SETOUTPUTINUSE,      "Kan ikke stille gjeldende digitallydenhet til avspilling fordi den er i bruk. Vent til enheten er ledig, og prøv igjen."
+   MCIERR_WAVE_INPUTSINUSE,         "Alle digitallydenheter som kan spille inn filer i gjeldende format er i bruk. Vent til en digitallydenhet er ledig, og prøv igjen."
+   MCIERR_WAVE_SETINPUTINUSE,       "Kan ikke stille gjeldende digitallydenhet til innspilling fordi den er i bruk. Vent til enheten er ledig, og prøv igjen."
+   MCIERR_WAVE_OUTPUTUNSPECIFIED,   "Du kan bruke en hvilken som helst kompatibel avspillingsenhet."
+   MCIERR_WAVE_INPUTUNSPECIFIED,    "Du kan bruke en hvilken som helst kompatibel innspillingsenhet."
+   MCIERR_WAVE_OUTPUTSUNSUITABLE,   "Det er ikke installert noen digitallydenheter som kan spille av filer i gjeldende format. Bruk alternativet Drivere i Kontrollpanel for å installere digitallydenheten."
+   MCIERR_WAVE_SETOUTPUTUNSUITABLE, "Enheten du prøver å spille til, gjenkjenner ikke gjeldende filformat."
+   MCIERR_WAVE_INPUTSUNSUITABLE,    "Det er ikke installert noen digitallydenheter som kan spille inn filer i gjeldende format. Bruk alternativet Drivere i Kontrollpanel for å installere digitallydenheten."
+   MCIERR_WAVE_SETINPUTUNSUITABLE,  "Enheten du prøver å spille inn fra , gjenkjenner ikke gjeldende filformat."
+
+   MCIERR_SEQ_DIV_INCOMPATIBLE,     "Kan ikke bruke tidsformatet til sangpekeren og SMPTE samtidig."
+   MCIERR_SEQ_PORT_INUSE,	    "Den angitte MIDI-enheten er allerede i bruk. Vent til den er ledig og prøv på nytt."
+   MCIERR_SEQ_PORT_NONEXISTENT,	    "Den angitte MIDI-enheten er ikke installert på systemet. Bruk alternativet Drivere i Kontrollpanel for å installere driveren."
+   MCIERR_SEQ_PORT_MAPNODEVICE,	    "Gjeldende oppsett for MIDI-tilordner refererer til en MIDI-enhet som ikke er installert på systemet. Bruk MIDI-tilordner for å endre oppsettet."
+   MCIERR_SEQ_PORT_MISCERROR,	    "Det oppstod en feil da angitt port ble brukt."
+   MCIERR_SEQ_TIMER,		    "Alle multimedietidtakere brukes av andre programmer. Avslutt en av disse programmene og prøv igjen."
+   MCIERR_SEQ_PORTUNSPECIFIED,      "Det finnes ingen gjeldende MIDI-port."
+   MCIERR_SEQ_NOMIDIPRESENT,        "Ingen MIDI-enheter er installert på systemet. Bruk alternativet Drivere i Kontrollpanel for å installere driveren."
+
+   MCIERR_NO_WINDOW,                "Det finnes ingen visningsvinduer."
+   MCIERR_CREATEWINDOW,             "Kan ikke opprette eller bruke vindu."
+
+   MCIERR_DEVICE_TYPE_REQUIRED,     "Finner ikke den angitte enheten. Kontroller at den er installert og at enhetsnavnet er riktig stavet."
+
+   MCI_FALSE,  	                    "usann"
+   MCI_TRUE,                        "sann"
+
+   MCI_DEVTYPE_ANIMATION,           "animation"
+   MCI_DEVTYPE_CD_AUDIO,            "cdaudio"
+   MCI_DEVTYPE_DAT,                 "dat"
+   MCI_DEVTYPE_DIGITAL_VIDEO,       "digitalvideo"        
+   MCI_DEVTYPE_OTHER,               "other"
+   MCI_DEVTYPE_OVERLAY,             "overlay"
+   MCI_DEVTYPE_SCANNER,             "scanner"
+   MCI_DEVTYPE_SEQUENCER,           "sequencer"
+   MCI_DEVTYPE_VCR,                 "vcr"
+   MCI_DEVTYPE_VIDEODISC,           "videodisc"
+   MCI_DEVTYPE_WAVEFORM_AUDIO,      "waveaudio"
+   
+   MCI_MODE_NOT_READY,              "ikke klar"
+   MCI_MODE_STOP,                   "stoppet"
+   MCI_MODE_PLAY,                   "spiller av"
+   MCI_MODE_RECORD,                 "spiller inn"
+   MCI_MODE_SEEK,                   "søker"
+   MCI_MODE_PAUSE,                  "midlertidig stanset"
+   MCI_MODE_OPEN,                   "åpne"
+
+   MCI_FORMAT_MILLISECONDS_S,       "millisekunder"
+   MCI_FORMAT_HMS_S,                "hms"
+   MCI_FORMAT_MSF_S,                "msf"
+   MCI_FORMAT_FRAMES_S,             "frames"
+   MCI_FORMAT_SMPTE_24_S,           "smpte 24"
+   MCI_FORMAT_SMPTE_25_S,           "smpte 25"    
+   MCI_FORMAT_SMPTE_30_S,           "smpte 30"
+   MCI_FORMAT_SMPTE_30DROP_S,       "smpte 30 drop"
+   MCI_FORMAT_BYTES_S,              "bytes"
+   MCI_FORMAT_SAMPLES_S,            "samples"
+   MCI_FORMAT_TMSF_S,               "tmsf"
+
+   MCI_VD_MODE_PARK,                "parked"
+   MCI_VD_MEDIA_CAV,                "CAV"
+   MCI_VD_MEDIA_CLV,                "CLV"
+   MCI_VD_MEDIA_OTHER,		    "other"
+   MCI_VD_FORMAT_TRACK_S,           "track"
+
+   MCI_SEQ_DIV_PPQN,		    "PPQN"
+   MCI_SEQ_DIV_SMPTE_24, 	    "SMPTE 24 Frame"
+   MCI_SEQ_DIV_SMPTE_25, 	    "SMPTE 25 Frame"
+   MCI_SEQ_DIV_SMPTE_30DROP,	    "SMPTE 30 Drop Frame"
+   MCI_SEQ_DIV_SMPTE_30, 	    "SMPTE 30 Frame"
+   MIDIMAPPER_S,                    "mapper"
+   MCI_SEQ_FILE_S,                  "fil"
+   MCI_SEQ_MIDI_S,                  "midi"
+   MCI_SEQ_SMPTE_S,                 "smpte"
+   MCI_SEQ_FORMAT_SONGPTR_S,        "song pointer"
+   MCI_SEQ_NONE_S,                  "ingen"
+
+   WAVE_FORMAT_PCM_S,		    "pcm"
+   WAVE_MAPPER_S,   		    "mapper"
+
+   IDS_TASKSTUB,                    "mmtask.tsk"
+end
+
+#include "mci.rc"
+
+#ifdef DEBUG
+#include "mmsex.dlg"
+#endif

@@ -1,0 +1,36 @@
+/********************************************************************/
+/*                                                                  */
+/*  COMMDLG.RCV                                                     */
+/*                                                                  */
+/*  This RC fragment shows how to define version information in an  */
+/*  internal RC file                                                */
+/*                                                                  */
+/*  It relies upon both the public VER.H and private VERSION.H      */
+/*                                                                  */
+/********************************************************************/
+
+#include <version.h>
+
+/*-----------------------------------------------*/
+/* the following lines are specific to this file */
+/*-----------------------------------------------*/
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_INTERNALNAME_STR        "COMMDLG"
+#define VER_ORIGINALFILENAME_STR    "COMMDLG.DLL"
+
+/*-------------------------------------------------*/
+/* localized strings and language of this resource */
+/*-------------------------------------------------*/
+#undef VER_FILEDESCRIPTION_STR
+#define VER_FILEDESCRIPTION_STR     "Biblioteki wspólnych okien dialogowych\0"
+#undef VER_PRODUCTNAME_STR
+#define VER_PRODUCTNAME_STR         "System operacyjny Microsoft® Windows(TM)"
+#undef VER_LEGALCOPYRIGHT_STR
+#define VER_LEGALCOPYRIGHT_STR      "Copyright © Microsoft Corp. 1981-1996\0"
+#define VER_LANGID                  0x0415
+#define VER_CHARSETID               0x04E2
+#define VER_STRINGFILEINFO_BLOCK    "041504E2"
+
+#include <common.ver>

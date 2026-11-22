@@ -1,0 +1,242 @@
+//---------------------------------------------------------------------------
+// drwatson.rc : reconstructed tr resources
+//
+// Recovered from the shipped localized drwatson.exe with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#define NOGDICAPMASKS
+#define NOWINMESSAGES
+#define NOSYSMETRICS
+#define NOICON
+#define NOKEYSTATE
+#define NOSYSCOMMANDS
+#define NOSHOWWINDOW
+#define NOATOM
+#define NOGDI
+#define NOFONT
+#define NOBRUSH
+#define NOCLIPBOARD
+#define NOCOLOR
+#define NOCREATESTRUCT
+#define NODRAWTEXT
+#define NOMB
+#define NOMEMMGR
+#define NOMETAFILE
+#define NOMINMAX
+#define NOOPENFILE
+#define NOPEN
+#define NOREGION
+#define NOSCROLL
+#define NOSOUND
+#define NOTEXTMETRIC
+#define NOWH
+#define NOWINOFFSETS
+#define NOWNDCLASS
+#define NOCOMM
+#include <windows.h>
+
+#include "drwatson.rcv"
+
+#include "str.h"
+
+drwatsonIcon ICON doctor.ico
+
+#define DS_3DLOOK           0x0004
+
+SHERDIAG DIALOG DISCARDABLE LOADONCALL PURE MOVEABLE 59, 42, 179, 124
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_3DLOOK
+CAPTION "Dr. Watson'ýn Ýpuçlarý"
+BEGIN
+  CONTROL "Karþýlaþmýþ olduðunuz sorunun çözümünde yardýmcý olmak için, hata oluþtuðunda yaptýðýnýz iþlemi tanýmlayýn." 101, "STATIC", WS_CHILD | WS_VISIBLE | 0x1L, 26, 5, 128, 26
+  CONTROL "" 102, "EDIT", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | 0x44L, 13, 33, 151, 62
+  CONTROL "Tamam" 1, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 32, 101, 32, 14
+  CONTROL "Ýptal" 2, "BUTTON", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 110, 101, 36, 14
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+
+/* Note all strings below must be <= CCH_MAX_STRING_RESOURCE chars! */
+
+/* drwatson.c */
+
+IDSTRNoFault                           "Hiçbir Hata Algýlanmadý\n\nTelif Hakký 1991-1995, Microsoft Corp."
+IDSTRFaulty                            "%d yeni 'Dr. Watson' Hata Raporlarý, '%s' dosyasýnda bulunabilir\n\nTelif Hakký 1991-1995, Microsoft Corp."
+IDSTRGPText                            "Uygulamanýzda bir hata oluþtu.\nYoksay'ý seçerseniz, çalýþmanýzý yeni bir dosyada kaydetmeniz gerekir.\nKapat'ý seçerseniz, uygulamanýz kapatýlýr."
+IDSTRErrMsg                            "Bir 'Dr. Watson' kopyasý halen sistemde çalýþýyor."
+IDSTRVers                              "'Dr. Watson' yüklenemedi, TOOLHELP.DLL yanlýþ sürümü olabilir"
+IDSTRClassMsg                          "'Dr. Watson' yüklenemedi, windows sýnýfý kadedilemiyor."
+IDSTRCoprocessor                       "Matematik iþlemcisi"
+IDSTR8086                              "8086"
+IDSTR80186                             "80186 or 80188"
+IDSTR80286                             "80286"
+IDSTR80386                             "80386 or 80386 SX"
+IDSTR80486                             "80486"
+IDSTREnhancedMode                      "Geliþmiþ Mod"
+IDSTRProtectMode                       "Koruma modu"
+IDSTRStandardMode                      "Standart mod"
+IDSTRWindowsNT                         "Windows NT"
+
+/* drwatson.c SegFlags */
+
+IDSTRNullPtr                           "Null Ptr"
+IDSTRInvalid                           "Geçersiz"
+IDSTRNotPresent                        "!Present"
+IDSTRCode                              "Kod "
+IDSTRExR                               "Ex/R"
+IDSTRExO                               "Ex/O"
+IDSTRData                              "Veri "
+IDSTRRW                                "O/Y"
+IDSTRRO                                "R-O"
+
+/* drwatson.c ModuleName (and several others) */
+
+IDSTRUnknown                           "Bilinmiyor"
+
+/* drwatson.c FaultType */
+
+IDSTRDivideByZero                      "0 ile böl"
+IDSTRInvalidOpcode                     "Geçersiz opcode"
+IDSTRGeneralProtection                 "Genel Koruma"
+
+/* drwatson.c DecodeFault */
+
+IDSTRInvalidSelector                   "Geçersiz seçici"
+IDSTRNullSelector                      "Boþ Seçici"
+IDSTRSegmentNotPresent                 "Bölüt mevcut deðil"
+IDSTRExceedSegmentBounds               "Bölük Sýnýrlarýný Geçiyor"
+IDSTRCodeSegment                       "Kod Bölütü"
+IDSTRExecuteOnlySegment                "Yalnýzca Yürütme Bölütü"
+IDSTRReadOnlySegment                   "Salt Okunur Bölüt"
+
+/* drwatson.c SafeDisAsm86 */
+
+IDSTRSegNotPresentOrPastEnd            "Bölüt yok ya da sonu geçti"
+
+/* drwatson.c FaultCause */
+
+IDSTRErrorLog                          "Hata Günlüðü"
+IDSTRParameterErrorLog                 "Parametre Hata Günlüðü"
+
+/* drwatson.c FileInfo */
+
+IDSTRFileNotFound                      "Dosya bulunamadý"
+
+/* drwatson.c DisAsmAround */
+
+IDSTRCodeSegmentNPOrInvalid            "Kod bölütü yok ya da geçersiz\n"
+IDSTRNoSymbolsFound                    "(hiç simge yok)\n"
+
+/* drwatson.c DumpInfo */
+
+IDSTRSystemInfoInfo                    "System Info (info)\n"
+IDSTRWindowsVersion                    "Windows sürümü %d.%02d\n"
+IDSTRDebugBuild                        "Debug build\n"
+IDSTRRetailBuild                       "Retail build\n"
+IDSTRWindowsBuild                      "Windows Yapýmý %s\n"
+IDSTRUsername                          "Kullanýcý Adý %s\n"
+IDSTROrganization                      "Kuruluþ %s\n"
+IDSTRSystemFreeSpace                   "Sistem Boþ Alaný %ld\n"
+IDSTRStackBaseTopLowestSize            "Stack base %u, top %u, lowest %u, size %u\n"
+IDSTRSystemResourcesUserGDI            "Sistem kaynaðý:  USER: %u%% boþ, seg %04x  GDI: %u%% boþ, seg %04x\n"
+IDSTRMemManInfo1                       "EnBykBoþ %ld, KullnblrEnÇokSyf %ld, KltlnblrEnÇokSyf %ld\n"
+IDSTRMemManInfo2                       "TplmDðrsl %ld, TplmKldAçlmþSyf %ld, BoþSayfa %ld\n"
+IDSTRMemManInfo3                       "TplmSayfa %ld, BoþDðrslAlan %ld, TakasDsysSyf %ld\n"
+IDSTRMemManInfo4                       "Sayfa Boyutu %d\n"
+IDSTRTasksExecuting                    "%d görevleri uygulanýyor.\n"
+IDSTRWinFlags                          "WinFlags -\n"
+
+/* drwatson.c GetProcName */
+
+IDSTRUnknownAddress                    "Bilinmeyen adres"
+
+/* drwatson.c DumpStack */
+
+IDSTRStackDumpStack                    "Stack Dump (stack)\n"
+IDSTRStackFrameInfo                    "Yýðýn Çerçevesi %d is %-28s ss:bp %04x:%04x"
+
+/* drwatson.c BeginReport */
+
+IDSTRFailureReport                     "\n%s Hata Raporu - %s"
+
+/* drwatson.c ShowParamError */
+
+IDSTRLastParamErrorWas                 "Son param hatasý þuydu:"
+
+/* drwatson.c Sherlock */
+
+IDSTRHadAFaultAt                       "%s, %s üzerinde '%s' hatasý yaþýyor\n"
+IDSTRCPURegistersRegs                  "CPU Registers (regs)\n"
+IDSTRCPU32bitRegisters32bit            "CPU 32 bit Registers (32bit)\n"
+IDSTRInstructionDisasm                 "Instruction Disassembly (disasm)\n"
+IDSTRSystemTasksTasks                  "System Tasks (tasks)\n"
+IDSTRTaskHandleFlagsInfo               "Görev %8s, Ýþleyici %04x, Flags %04x, Info %s\n"
+IDSTRFilename                          "  Dosya adý %s\n"
+IDSTRSystemModulesModules              "Sistem Modülü (modules)\n"
+IDSTRModuleHandleFlagsInfo             "Module %8s, Handle %04x, Flags %04x, Info %s\n"
+IDSTRFile                              "  Dosya: %s\n"
+IDSTRContinuingExecution               "Kullanýcý isteðine göre yürütme devamý deneniyor, %s"
+
+/* drwatson.c CallMeToo */
+
+IDSTRDebugString                       "DebugString: %s"
+IDSTRApplicationError                  "Uygulama Hatasý"
+IDSTRInvalidParameter                  "Geçersiz parametre"
+IDSTRNA                                "yok"
+IDSTRHadAFaultAt2                      "%s, %s üzerinde '%s (%x)' hatasý gördü\n"
+IDSTRParamIs                           "param is %lx$%s\n"
+
+/* drwatson.c Moriarty */
+
+IDSTRStop                              "Dur"
+
+/* drwatson.c SherlockWndProc */
+
+IDSTRLogFileGettingLarge               "'Dr. Watson' günlük dosyanýz '%s' çok büyüyor."
+
+/* drwatson.c WinMain */
+
+IDSTRStart                             "\nBaþlat"
+
+/* error.c LogErrorStr */
+
+IDSTRWarningError                      "\r\n\r\nUyarý hatasý #%04x"
+IDSTRFatalError                        "\r\n\r\nÖnemli hata #%04x"
+
+/* error.c LogParamErrorStr */
+
+IDSTRParamErrorParam                   "Geçersiz parametre gönderildi: %s: %ld"
+IDSTRParamErrorBadInt                  "Geçersiz parametre gönderildi: %s: %d"
+IDSTRParamErrorBadFlags                "Geçersiz iþaret gönderildi: %s: %#04x"
+IDSTRParamErrorBadDWord                "Geçersiz iþaret gönderildi: %s: %#08lx"
+IDSTRParamErrorBadHandle               "Geçersiz iþleyici gönderildi: %s: %#04x"
+IDSTRParamErrorBadPtr                  "%s öðesine geçersiz iþleyici gönderildi: %#04x:%#04x"
+
+/* drwatson.c CurTime -- These strings must be short enough to not overflow
+                         the 48-byte buffer used by CurTime with a string of
+                         the form "Fri Sep  1 01:58:19 1995" (which is 24
+                         characters + 1 for the null terminator). */
+
+IDSTRJan                               "Oca"
+IDSTRFeb                               "Þub"
+IDSTRMar                               "Mar"
+IDSTRApr                               "Nis"
+IDSTRMay                               "Mayýs"
+IDSTRJun                               "Haz"
+IDSTRJul                               "Tem"
+IDSTRAug                               "Aðu"
+IDSTRSep                               "Eyl"
+IDSTROct                               "Eki"
+IDSTRNov                               "Kas"
+IDSTRDec                               "Ara"
+
+IDSTRSun                               "Paz"
+IDSTRMon                               "Pts"
+IDSTRTue                               "Sal"
+IDSTRWed                               "Çar"
+IDSTRThu                               "Per"
+IDSTRFri                               "Cum"
+IDSTRSat                               "Doy"
+
+END

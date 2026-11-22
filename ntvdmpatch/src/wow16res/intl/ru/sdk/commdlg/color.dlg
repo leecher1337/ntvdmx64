@@ -1,0 +1,68 @@
+//---------------------------------------------------------------------------
+// color.dlg : reconstructed ru resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#include "colordlg.h"
+
+ChooseColor DIALOG LOADONCALL MOVEABLE DISCARDABLE 2, 0, 315, 183
+CAPTION "Цвет"
+STYLE WS_BORDER | DS_MODALFRAME | WS_CAPTION | WS_POPUP | WS_SYSMENU
+FONT 8 "Helv"
+BEGIN
+  LTEXT "&Основные цвета:", -1, 4, 4, 140, 9
+
+  CONTROL "", COLOR_BOX1, "static", SS_SIMPLE | WS_CHILD | WS_TABSTOP | WS_GROUP, 4, 14, 140, 86
+
+  LTEXT "Осо&бые цвета:", -1, 4, 106, 140, 9
+
+  CONTROL "",  COLOR_CUSTOM1, "static", SS_SIMPLE | WS_CHILD | WS_TABSTOP | WS_GROUP, 4, 116, 140, 28
+
+  PUSHBUTTON "О&пределить цвет..." COLOR_MIX, 4, 150, 140, 14, WS_TABSTOP | WS_GROUP
+
+  DEFPUSHBUTTON "ОК",      IDOK,  4, 166, 44, 14, WS_GROUP | WS_TABSTOP
+  PUSHBUTTON "Отмена", IDCANCEL, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
+  PUSHBUTTON "&Справка",  pshHelp, 100, 166, 44, 14, WS_GROUP | WS_TABSTOP
+
+  CONTROL "",  COLOR_RAINBOW, "static", SS_BLACKFRAME | WS_CHILD, 152, 4, 135, 116
+
+  CONTROL "",  COLOR_LUMSCROLL, "static", SS_SIMPLE | WS_CHILD, 297, 4, 8, 116
+
+  CONTROL "", COLOR_CURRENT, "static", SS_BLACKFRAME | WS_CHILD, 152, 124, 44, 26
+
+  PUSHBUTTON "&л", COLOR_SOLID, 300, 200, 4, 14, WS_GROUP
+
+  RTEXT "Цвет|", -1, 148, 151, 20, 9
+
+  LTEXT "Зали&вка", -1, 168, 151, 30, 9
+
+
+  RTEXT "О&ттенок:", COLOR_HUEACCEL, 200, 126, 34, 9
+
+  EDITTEXT, COLOR_HUE, 235, 124, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "&Контраст:", COLOR_SATACCEL, 200, 140, 34, 9
+
+  EDITTEXT, COLOR_SAT, 235, 138, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "&Яркость:", COLOR_LUMACCEL, 200, 154, 34, 9
+
+  EDITTEXT, COLOR_LUM, 235, 152, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "Крас&ный:", COLOR_REDACCEL, 255, 126, 32, 9
+
+  EDITTEXT, COLOR_RED, 289, 124, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "&Зеленый:", COLOR_GREENACCEL, 255, 140, 32, 9
+
+  EDITTEXT, COLOR_GREEN, 289, 138, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "С&иний:", COLOR_BLUEACCEL, 255, 154, 32, 9
+
+  EDITTEXT, COLOR_BLUE, 289, 152, 18, 12, WS_GROUP | WS_TABSTOP
+
+  PUSHBUTTON "&Добавить в набор", COLOR_ADD, 152, 166, 155, 14, WS_GROUP | WS_TABSTOP
+
+END

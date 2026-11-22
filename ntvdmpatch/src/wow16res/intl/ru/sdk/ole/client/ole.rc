@@ -1,0 +1,31 @@
+//---------------------------------------------------------------------------
+// ole.rc : reconstructed ru resources
+//
+// Recovered from the shipped localized olecli.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#include <windows.h>
+
+//----Version Stamping-------------------------------------------------------
+#include "olecli.rcv"
+
+CONNECTDLG DIALOG FIXED IMPURE  76, 55, 161, 76
+STYLE DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
+CAPTION "Подключение сетевого диска"
+BEGIN
+	CONTROL "&Диск:",        -1, "STATIC", SS_RIGHT | WS_CHILD | WS_VISIBLE | WS_GROUP, 3, 5, 52, 9
+	CONTROL "",               500, "COMBOBOX", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP, 58, 3, 20, 40
+	CONTROL "С&етевой путь:", -1, "STATIC", SS_RIGHT | WS_CHILD | WS_VISIBLE | WS_GROUP, 3, 22, 52, 8
+	CONTROL "",               502, "EDIT", ES_LEFT | ES_AUTOHSCROLL | ES_OEMCONVERT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP, 58, 20, 96, 12
+	CONTROL "&Пароль:",     -1, "STATIC", SS_RIGHT | WS_CHILD | WS_VISIBLE | WS_GROUP, 3, 37, 52, 10
+	CONTROL "",               501, "EDIT", ES_LEFT | ES_PASSWORD | ES_AUTOHSCROLL | ES_OEMCONVERT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP, 58, 35, 60, 12
+	CONTROL "Подклю&чить",       IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 25, 54, 50, 14
+	CONTROL "&Отмена",        IDCANCEL, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 85, 55, 50, 14
+END
+
+STRINGTABLE
+BEGIN
+    600, "Сетевая ошибка"
+    601, "Не удается подключиться к сетевому диску."
+END

@@ -1,0 +1,66 @@
+//---------------------------------------------------------------------------
+// user.rc : reconstructed tr resources
+//
+// Recovered from the shipped localized user.exe with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+/****************************************************************************/
+/*                                                                          */
+/*  USER.RC -                                                               */
+/*                                                                          */
+/*  USER's Resource File                                                    */
+/*                                                                          */
+/****************************************************************************/
+
+#include "strtable.h"
+#include "netdlg.h"
+
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+
+    STR_NETDRIVER       "NETWORK.DRV"
+    STR_BOOT            "boot"
+    STR_LANGDRIVER      "LANGUAGE.DLL"
+    STR_SYSTEMINI       "SYSTEM.INI"
+    STR_TASKMAN         "TASKMAN.EXE"
+    STR_DRIVERS         "DRIVERS"
+
+/* Strings used for device driver initialization which we don't want hanging
+ * around our ds.
+ */
+    STR_COMMMODULENAME,     "COMM"
+    STR_COMMWRITESTRING,    "COMMWRITESTRING"
+    STR_COMMREADSTRING,     "READCOMMSTRING"
+    STR_COMMENABLENOTIFICATION "ENABLENOTIFICATION"
+
+/*---------------------------------------------------------------------------*/
+/* All strings above this line MUST NOT be localized.  All strings below
+ * this line should be localized.
+ */
+    STR_NETCONNTTL      "Að Baðlantýlarýný Eski Haline Getirme Hatasý"
+    STR_NETCONNMSG      "%s baðlanýlamýyor: %s"
+    STR_NETCRASHEDTITLE     "Að Baðlantýlarýný Eski Haline Getirme Hatasý"
+    STR_NETCRASHEDMSG       "Að baðlantýlarý eski haline getirilirken Windows yeniden baþlatýldý. Baðlantýlar yeniden kurulmaya çalýþýlsýn mý yoksa bu oturum için að baðlantýlarý iptal edilsin mi?"
+
+    STR_NETERRORS       "Beklenilmeyen að hatasý: 0x%4.4X"
+    STR_NETERRORS+1     "Að iþlevi desteklenmiyor"
+    STR_NETERRORS+2     "Að hatasý"
+    STR_NETERRORS+6     "Geçersiz parola"
+    STR_NETERRORS+7     "Eriþim engellendi"
+    STR_NETERRORS+11        "Bellek yetersiz"
+    STR_NETERRORS+0x30      "Aygýt baðlý deðil"
+    STR_NETERRORS+0x31      "Aygýtta açýk dosyalar var"
+    STR_NETERRORS+0x32      "Geçersiz að adý"
+    STR_NETERRORS+0x33      "Geçersiz yerel aygýt"
+    STR_NETERRORS+0x34      "Aygýt zaten baðlý"
+    STR_NETERRORS+0x35      "Baðlantý koptu"
+    STR_NETERRORS+0x36      "Kalýcý baðlantý kullanýlamýyor"
+
+    STR_SYSERR,             "Sistem Hatasý"
+    STR_DIVBYZERO,          "Sýfýra Bölme veya Taþma Hatasý"
+
+END
+
+#include "user.rcv"

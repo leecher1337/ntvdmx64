@@ -1,0 +1,15 @@
+//---------------------------------------------------------------------------
+// timer.rc : reconstructed fr resources
+//
+// Recovered from the shipped localized timer.drv with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#include <windows.h>
+#include "timer.rcv"
+
+STRINGTABLE LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+	1,		"Pilote de minuteur"
+	2,		"Impossible de trouver le fichier VTDAPI.386. Les minuteurs multimédias ne sont pas disponibles.\nVérifiez que VTDAPI.386 est dans le répertoire Windows SYSTEM et que\nla ligne device=VTDAPI.386 est incluse dans la section [386Enh] du fichier SYSTEM.INI."
+END

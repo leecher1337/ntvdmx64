@@ -1,0 +1,73 @@
+//---------------------------------------------------------------------------
+// prnsetup.dlg : reconstructed tr resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+
+PRINTDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 
+36, 52,  225, 130
+CAPTION "Yazdýr"
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME
+FONT 8, "Helv"
+BEGIN
+  LTEXT "Yazýcý:"  stc6, 4,    4,  40,   8
+  LTEXT "Sistem Varsayýlaný"  stc1, 44,   4, 120,  18
+  GROUPBOX "Yazdýrma Aralýðý", grp1, 4,   27,  132,  67
+  RADIOBUTTON "&Tümü" rad1, 10,  39,  76,  12,  WS_TABSTOP | WS_GROUP
+  RADIOBUTTON "S&eçim" rad2, 10,  52,  76,  12
+  RADIOBUTTON "&Sayfa" rad3, 10,  65,  76,  12
+  RTEXT "Ý&lk:"  stc2, 24,  80,  24,   9,  WS_GROUP
+  EDITTEXT edt1, 52,  78,  26,  12,  WS_TABSTOP | ES_RIGHT
+  RTEXT "S&on:"  stc3, 82,  80,  16,   9
+  EDITTEXT edt2, 102,  78,  26,  12,  WS_TABSTOP | ES_RIGHT
+
+  LTEXT "&Baský Kalitesi:"  stc4, 4,  100,  50,   9
+  COMBOBOX      cmb1, 55,  98,  81,  36,
+              WS_TABSTOP | CBS_DROPDOWNLIST | WS_GROUP | WS_BORDER | WS_VSCROLL
+
+  LTEXT "&Kopya Sayýsý:", stc5, 147, 95,  33,   17
+  EDITTEXT, edt3, 184,  98,  26,  12,  WS_TABSTOP | ES_RIGHT
+
+  CHECKBOX "&Dosyaya Yazdýr"   chx1,
+          4,  113, 120,  12,  BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+  CHECKBOX "Kopyalarý &Harmanla"  chx2,
+         147, 113,  76,  12,  BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+
+  DEFPUSHBUTTON  "Tamam"  IDOK,     170,   4,  50,  14,  WS_GROUP
+  PUSHBUTTON "Ýptal"  IDCANCEL, 170,  21,  50,  14,  WS_GROUP
+
+  PUSHBUTTON "&Ayarlar..."  psh1,  170,  41,  50,  14,  WS_GROUP
+  PUSHBUTTON "&Yardým"   pshHelp,  170,  75,  50,  14,  WS_GROUP
+END
+
+
+PRNSETUPDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 30, 23, 287, 122
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Yazýcý Ayarlarý"
+FONT 8, "Helv"
+BEGIN
+  GROUPBOX      "Yazýcý", grp3, 4, 6, 224, 66
+  LTEXT         "(Varsayýlan Yazýcý Yok)", stc1, 18, 30, 208, 9
+  RADIOBUTTON   "Varsayýlan Ya&zýcý", rad3, 8, 16, 218, 12, WS_GROUP | WS_TABSTOP
+  RADIOBUTTON   "&Belirli Yazýcý:", rad4, 8, 42, 218, 12
+  COMBOBOX      cmb1, 18, 56, 208, 80, CBS_DROPDOWNLIST | WS_GROUP |
+                WS_BORDER | WS_VSCROLL
+  GROUPBOX      "Yön", grp1, 4, 74, 91, 46
+  ICON          "", ico1, 12, 92, 24, 16
+  RADIOBUTTON   "&Dikey", rad1, 40, 86, 53, 12, WS_GROUP | WS_TABSTOP
+  RADIOBUTTON   "Ya&tay", rad2, 40, 102, 53, 12
+  GROUPBOX      "Kaðýt", grp2, 100, 74, 128, 46, WS_GROUP
+  LTEXT         "B&oyutu:", stc2, 104, 88, 26, 9
+  COMBOBOX      cmb2, 134, 86, 92, 80, CBS_DROPDOWNLIST | WS_BORDER | 
+                WS_VSCROLL | WS_TABSTOP
+  LTEXT         "Kay&naðý:", stc3, 104, 104, 28, 9
+  COMBOBOX      cmb3, 134, 102, 92, 80, CBS_DROPDOWNLIST | WS_BORDER | 
+                WS_VSCROLL | WS_TABSTOP
+  DEFPUSHBUTTON "Tamam", IDOK, 232, 4, 50, 14, WS_GROUP
+  PUSHBUTTON    "Ýptal", IDCANCEL, 232, 20, 50, 14, WS_GROUP
+  PUSHBUTTON    "&Seçenekler...", psh1, 232, 40, 50, 14, WS_GROUP
+  PUSHBUTTON    "&Yardým", pshHelp, 232, 56, 50, 14, WS_GROUP
+END
+

@@ -1,0 +1,73 @@
+//---------------------------------------------------------------------------
+// prnsetup.dlg : reconstructed el resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+
+PRINTDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 
+36, 52,  225, 130
+CAPTION "Εκτύπωση"
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME
+FONT 8, "Helv"
+BEGIN
+  LTEXT "Εκτυπωτής:"  stc6, 4,    4,  43,   8
+  LTEXT "Προεπιλογή συστήματος"  stc1, 50,   4, 109,  18
+  GROUPBOX "Περιοχή εκτύπωσης", grp1, 4,   27,  132,  67
+  RADIOBUTTON "Ό&λες" rad1, 10,  39,  117,  10,  WS_TABSTOP | WS_GROUP
+  RADIOBUTTON "Επιλε&γμένη περιοχή" rad2, 10,  52,  115,  10
+  RADIOBUTTON "Σελί&δες" rad3, 10,  65,  118,  10
+  RTEXT "&Από:"  stc2, 19,  80,  24,   9,  WS_GROUP
+  EDITTEXT edt1, 47,  78,  26,  12,  WS_TABSTOP | ES_RIGHT
+  RTEXT "έ&ως:"  stc3, 79,  80,  20,   8
+  EDITTEXT edt2, 102,  78,  26,  12,  WS_TABSTOP | ES_RIGHT
+
+  LTEXT "Π&οιότητα εκτύπωσης:"  stc4, 4,  96,  46,   16
+  COMBOBOX      cmb1, 52,  98,  91,  36,
+              WS_TABSTOP | CBS_DROPDOWNLIST | WS_GROUP | WS_BORDER | WS_VSCROLL
+
+  LTEXT "Α&ντίτυπα:", stc5, 154, 100,  34,   8
+  EDITTEXT, edt3, 194,  98,  26,  12,  WS_TABSTOP | ES_RIGHT
+
+  CHECKBOX "Εκτύπωση σε αρ&χείο"   chx1,
+          4,  115, 104,  10,  BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+  CHECKBOX "&Κατάταξη αντιτύπων"  chx2,
+         138, 115,  87,  10,  BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+
+  DEFPUSHBUTTON  "ΟΚ"  IDOK,     164,   4,  57,  14,  WS_GROUP
+  PUSHBUTTON "’κυρο"  IDCANCEL, 164,  21,  57,  14,  WS_GROUP
+
+  PUSHBUTTON "&Παράμετροι..."  psh1,  164,  41,  57,  14,  WS_GROUP
+  PUSHBUTTON "&Βοήθεια"   pshHelp,  164,  75,  57,  14,  WS_GROUP
+END
+
+
+PRNSETUPDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 30, 23, 287, 122
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Παράμετροι εκτύπωσης"
+FONT 8, "Helv"
+BEGIN
+  GROUPBOX      "Εκτυπωτής", grp3, 4, 6, 224, 66
+  LTEXT         "(Χωρίς προεπιλεγμένο εκτυπωτή)", stc1, 18, 30, 208, 9
+  RADIOBUTTON   "Προεπι&λεγμένος εκτυπωτής", rad3, 8, 16, 218, 12, WS_GROUP | WS_TABSTOP
+  RADIOBUTTON   "&Συγκεκριμένος εκτυπωτής:", rad4, 8, 42, 218, 12
+  COMBOBOX      cmb1, 18, 55, 205, 80, CBS_DROPDOWNLIST | WS_GROUP |
+                WS_BORDER | WS_VSCROLL
+  GROUPBOX      "Προσανατολισμός", grp1, 4, 74, 103, 46
+  ICON          "", ico1, 12, 92, 24, 16
+  RADIOBUTTON   "&Κατακόρυφος", rad1, 40, 86, 61, 10, WS_GROUP | WS_TABSTOP
+  RADIOBUTTON   "&Οριζόντιος", rad2, 40, 102, 62, 10
+  GROUPBOX      "Χαρτί", grp2, 110, 74, 172, 46, WS_GROUP
+  LTEXT         "&Μέγεθος:", stc2, 118, 88, 46, 8
+  COMBOBOX      cmb2, 169, 86, 105, 80, CBS_DROPDOWNLIST | WS_BORDER | 
+                WS_VSCROLL | WS_TABSTOP
+  LTEXT         "&Προέλευση:", stc3, 118, 104, 48, 8
+  COMBOBOX      cmb3, 169, 102, 105, 80, CBS_DROPDOWNLIST | WS_BORDER | 
+                WS_VSCROLL | WS_TABSTOP
+  DEFPUSHBUTTON "ΟΚ", IDOK, 232, 4, 50, 14, WS_GROUP
+  PUSHBUTTON    "’κυρο", IDCANCEL, 232, 20, 50, 14, WS_GROUP
+  PUSHBUTTON    "&Επιλογές...", psh1, 232, 40, 50, 14, WS_GROUP
+  PUSHBUTTON    "&Βοήθεια", pshHelp, 232, 56, 50, 14, WS_GROUP
+END
+

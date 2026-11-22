@@ -1,0 +1,73 @@
+//---------------------------------------------------------------------------
+// prnsetup.dlg : reconstructed es resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+
+PRINTDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 
+36, 52,  245, 130
+CAPTION "Imprimir"
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME
+FONT 8, "Helv"
+BEGIN
+  LTEXT "Impresora:"  stc6, 4,    4,  40,   8
+  LTEXT "predeterminada del sistema"  stc1, 50,   4, 130,  18
+  GROUPBOX "Intervalo de impresión", grp1, 4,   27,  150,  67
+  RADIOBUTTON "&Todo" rad1, 10,  39,  138,  12,  WS_TABSTOP | WS_GROUP
+  RADIOBUTTON "S&elección" rad2, 10,  52,  136,  12
+  RADIOBUTTON "&Páginas" rad3, 10,  65,  136,  12
+  RTEXT "&De la:"  stc2, 18,  80,  30,   9,  WS_GROUP
+  EDITTEXT edt1, 52,  78,  26,  12,  WS_TABSTOP | ES_RIGHT
+  RTEXT "&a la:"  stc3, 82,  80,  24,   9
+  EDITTEXT edt2, 108,  78,  26,  12,  WS_TABSTOP | ES_RIGHT
+
+  LTEXT "Calidad de i&mpresión:"  stc4, 4,  100,  68,   9
+  COMBOBOX      cmb1, 73,  98,  81,  36,
+              WS_TABSTOP | CBS_DROPDOWNLIST | WS_GROUP | WS_BORDER | WS_VSCROLL
+
+  LTEXT "Copia&s:", stc5, 171, 100,  29,   9
+  EDITTEXT, edt3, 202,  98,  26,  12,  WS_TABSTOP | ES_RIGHT
+
+  CHECKBOX "Imprimir a u&n archivo"   chx1,
+          4,  113, 156,  12,  BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+  CHECKBOX "&Intercalar copias"  chx2,
+         171, 113,  74,  12,  BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+
+  DEFPUSHBUTTON  "Aceptar"  IDOK,     188,   4,  52,  14,  WS_GROUP
+  PUSHBUTTON "Cancelar"  IDCANCEL, 188,  21,  52,  14,  WS_GROUP
+
+  PUSHBUTTON "&Configurar..."  psh1,  188,  41,  52,  14,  WS_GROUP
+  PUSHBUTTON "Ay&uda"   pshHelp,  188,  75,  52,  14,  WS_GROUP
+END
+
+
+PRNSETUPDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 30, 23, 288, 122
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Configurar impresión"
+FONT 8, "Helv"
+BEGIN
+  GROUPBOX      "Impresora", grp3, 4, 6, 225, 66
+  LTEXT         "(No hay impresora predeterminada)", stc1, 18, 30, 205, 9
+  RADIOBUTTON   "Impresor&a predeterminada", rad3, 8, 16, 214, 12, WS_GROUP | WS_TABSTOP
+  RADIOBUTTON   "&Impresora específica:", rad4, 8, 42, 213, 12
+  COMBOBOX      cmb1, 18, 56, 209, 80, CBS_DROPDOWNLIST | WS_GROUP |
+                WS_BORDER | WS_VSCROLL
+  GROUPBOX      "Orientación", grp1, 4, 74, 91, 46
+  ICON          "", ico1, 12, 92, 24, 16
+  RADIOBUTTON   "&Vertical", rad1, 40, 86, 50, 12, WS_GROUP | WS_TABSTOP
+  RADIOBUTTON   "&Horizontal", rad2, 40, 102, 48, 12
+  GROUPBOX      "Papel", grp2, 100, 74, 129, 46, WS_GROUP
+  LTEXT         "Ta&maño:", stc2, 104, 88, 29, 9
+  COMBOBOX      cmb2, 135, 86, 92, 80, CBS_DROPDOWNLIST | WS_BORDER | 
+                WS_VSCROLL | WS_TABSTOP
+  LTEXT         "Orige&n:", stc3, 104, 104, 28, 9
+  COMBOBOX      cmb3, 135, 102, 92, 80, CBS_DROPDOWNLIST | WS_BORDER | 
+                WS_VSCROLL | WS_TABSTOP
+  DEFPUSHBUTTON "Aceptar", IDOK, 233, 4, 50, 14, WS_GROUP
+  PUSHBUTTON    "Cancelar", IDCANCEL, 233, 20, 50, 14, WS_GROUP
+  PUSHBUTTON    "&Opciones...", psh1, 233, 40, 50, 14, WS_GROUP
+  PUSHBUTTON    "Ay&uda", pshHelp, 233, 56, 50, 14, WS_GROUP
+END
+

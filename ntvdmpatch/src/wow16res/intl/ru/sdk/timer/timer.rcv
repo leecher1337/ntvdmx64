@@ -1,0 +1,24 @@
+/********************************************************************/
+/*        TIMER.RCV                                                 */
+/********************************************************************/
+#include <version.h>
+
+#define VER_FILETYPE                    VFT_DRV
+#define VER_FILESUBTYPE                 VFT2_DRV_INSTALLABLE
+#define VER_INTERNALNAME_STR            "timer.drv"
+#define VER_ORIGINALFILENAME_STR        "timer.drv"
+
+/*-------------------------------------------------*/
+/* localized strings and language of this resource */
+/*-------------------------------------------------*/
+#undef VER_FILEDESCRIPTION_STR
+#define VER_FILEDESCRIPTION_STR     "Драйвер таймера для PC-совместимых компьютеров\0"
+#undef VER_PRODUCTNAME_STR
+#define VER_PRODUCTNAME_STR         "Операционная система Microsoft® Windows(TM)"
+#undef VER_LEGALCOPYRIGHT_STR
+#define VER_LEGALCOPYRIGHT_STR      "© Корпорация Майкрософт, 1981-1996"
+#define VER_LANGID                  0x0419
+#define VER_CHARSETID               0x04E3
+#define VER_STRINGFILEINFO_BLOCK    "041904E3"
+
+#include <common.ver>

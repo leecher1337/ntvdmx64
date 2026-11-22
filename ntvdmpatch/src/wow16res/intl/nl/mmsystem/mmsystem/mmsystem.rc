@@ -1,0 +1,204 @@
+//---------------------------------------------------------------------------
+// mmsystem.rc : reconstructed nl resources
+//
+// Recovered from the shipped localized mmsystem.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#include <windows.h>
+
+#define MMNOSOUND
+#define MMNOSEQ
+#define MMNOTIMER
+#define MMNOJOY
+#include "mmsystem.h"
+#include "mmsystem.rcv"
+
+#define NOTIMERDEV
+#define NOJOYDEV
+#define NOSEQDEV
+#define NOTASKDEV
+#include "mmddk.h"
+
+#include "mmsysi.h"
+
+STRINGTABLE
+begin
+   0,			        "De opgegeven opdracht is uitgevoerd."
+
+   STR_MCIUNKNOWN,              "Er is een onbekende fout opgetreden na een MCI-opdracht."
+//   STR_WAVEINPUT,               "Wave Input: "
+//   STR_WAVEOUTPUT,              "Wave Output: "
+//   STR_MIDIINPUT,               "Midi Input: "
+//   STR_MIDIOUTPUT,              "Midi Output: "
+#ifdef DEBUG
+   STR_MCISSERRTXT,             "Error in mciSendString but could not get text"
+   STR_MCISCERRTXT,             "Error in mciSendCommand but could not get text"
+#endif
+   MMSYSERR_ERROR,	        "Er is een niet-gedefinieerde externe fout opgetreden."
+   MMSYSERR_BADDEVICEID,        "Er is een apparaat-ID gebruikt die buiten het bereik van uw systeem valt."
+   MMSYSERR_NOTENABLED,         "Het stuurprogramma is niet ingeschakeld."
+   MMSYSERR_ALLOCATED,          "Het opgegeven apparaat wordt al gebruikt. Wacht tot het beschikbaar is en probeer het opnieuw."
+   MMSYSERR_INVALHANDLE,        "De opgegeven apparaatingang is ongeldig."
+   MMSYSERR_NODRIVER,	        "Er is geen stuurprogramma op het systeem geïnstalleerd."
+   MMSYSERR_NOMEM,	        "Er is onvoldoende geheugen voor deze taak. Sluit één of meer toepassingen af en probeer het opnieuw."
+   MMSYSERR_NOTSUPPORTED,       "Deze functie wordt niet ondersteund. Gebruik de functie Capaciteit om te bepalen welke functies en berichten het stuurprogramma ondersteunt."
+   MMSYSERR_BADERRNUM,          "Er is een foutnummer opgegeven dat niet is gedefinieerd in het systeem."
+   MMSYSERR_INVALFLAG,          "Er is een ongeldige vlag doorgegeven aan een systeemfunctie."
+   MMSYSERR_INVALPARAM,         "Er is een ongeldige parameter doorgegeven aan een systeemfunctie."
+
+   WAVERR_BADFORMAT,            "De opgegeven opmaak wordt niet ondersteund of kan niet worden omgezet. Gebruik de functie Capaciteit om de ondersteunde opmaken te bepalen."
+   WAVERR_UNPREPARED,           "De waveheader is niet voorbereid. Gebruik de functie Voorbereiden om de header voor te bereiden en probeer het opnieuw."
+   WAVERR_STILLPLAYING,         "Kan deze bewerking niet uitvoeren terwijl er nog mediagegevens worden afgespeeld. Stel het apparaat opnieuw in of wacht totdat de gegevens niet meer worden afgespeeld."
+   WAVERR_SYNC,                 "Kan het apparaat niet openen zonder de WAVE_ALLOWSYNC-vlag te gebruiken. Gebruik de vlag en probeer het opnieuw."
+
+   MIDIERR_UNPREPARED,          "De MIDI-header is niet voorbereid. Gebruik de functie Voorbereiden om de header voor te bereiden en probeer het opnieuw."
+   MIDIERR_STILLPLAYING,        "Kan deze bewerking niet uitvoeren terwijl er nog mediagegevens worden afgespeeld. Stel het apparaat opnieuw in of wacht totdat de gegevens niet meer worden afgespeeld."
+   MIDIERR_NOMAP,               "Er is geen MIDI-lijst gevonden. Er is wellicht een probleem met het stuurprogramma of MIDIMAP.CFG is beschadigd of niet aanwezig."
+   MIDIERR_NOTREADY,            "De poort is bezig met het versturen van gegevens naar het apparaat. Wacht tot de gegevens zijn verstuurd en probeer het opnieuw."
+   MIDIERR_NODEVICE,            "De actieve MIDI Mapper-instelling verwijst naar een MIDI-apparaat dat niet is geïnstalleerd op het systeem. Gebruik MIDI Mapper voor het bewerken van de instelling."
+   MIDIERR_INVALIDSETUP,        "De actieve MIDI-instellingen zijn beschadigd. Kopieer het originele MIDIMAP.CFG-bestand naar de Windows-map SYSTEM en probeer het opnieuw."
+
+   MCIERR_INVALID_DEVICE_ID,        "Ongeldige MCI-apparaat-id. Gebruik de id die wordt opgegeven bij het openen van het MCI-apparaat."
+   MCIERR_UNRECOGNIZED_KEYWORD,     "Het stuurprogramma herkent de opgegeven opdrachtparameter niet."
+   MCIERR_UNRECOGNIZED_COMMAND,     "Het stuurprogramma herkent de opgegeven opdracht niet."
+   MCIERR_HARDWARE,                 "Er is een probleem met het media-apparaat. Controleer of het juist functioneert of neem contact op met de apparaatleverancier."
+   MCIERR_INVALID_DEVICE_NAME,      "Het opgegeven apparaat is niet geopend of wordt niet herkend door MCI."
+   MCIERR_OUT_OF_MEMORY,            "Er is onvoldoende geheugen voor deze taak.\n\nSluit één of meer toepassingen af en probeer het opnieuw."
+   MCIERR_DEVICE_OPEN,              "De apparaatnaam wordt al als alias door deze toepassing gebruikt. Gebruik een unieke alias."
+   MCIERR_CANNOT_LOAD_DRIVER,       "Er is een niet-herkenbaar probleem opgetreden tijdens het laden van het opgegeven apparaatstuurprogramma."
+   MCIERR_MISSING_COMMAND_STRING,   "Geen opdracht opgegeven."
+   MCIERR_PARAM_OVERFLOW,           "De uitvoertekenreeks is te groot voor de retourbuffer. Vergroot de grootte van de buffer."
+   MCIERR_MISSING_STRING_ARGUMENT,  "Voor de opgegeven opdracht moet een parameter worden ingevoerd die uit een tekenreeks bestaat. Voer een tekenreeks in."
+   MCIERR_BAD_INTEGER,              "De opgegeven integer is niet geldig voor deze opdracht."
+   MCIERR_PARSER_INTERNAL,          "Het apparaatstuurprogramma heeft een ongeldig returntype geretourneerd. Neem contact op met de leverancier en vraag naar een nieuw stuurprogramma."
+   MCIERR_DRIVER_INTERNAL,          "Er is een probleem met het stuurprogramma. Neem contact op met de fabrikant voor een nieuw stuurprogramma."
+   MCIERR_MISSING_PARAMETER,        "De opgegeven opdracht vereist een parameter. Voer er één in."
+   MCIERR_UNSUPPORTED_FUNCTION,     "Het gebruikte MCI-apparaat ondersteunt de opgegeven opdracht niet."
+   MCIERR_NONAPPLICABLE_FUNCTION,   "Kan de opdrachten niet in de opgegeven volgorde uitvoeren. Corrigeer de opdrachtvolgorde en probeer het opnieuw."
+   MCIERR_FILE_NOT_FOUND,           "Kan het opgegeven bestand niet vinden. Controleer of het juiste pad en de juiste bestandsnaam zijn ingevoerd."
+   MCIERR_DEVICE_NOT_READY,         "Het stuurprogramma is niet gereed."
+   MCIERR_INTERNAL,                 "Er doet zich een probleem voor bij het initialiseren van MCI. Start Windows opnieuw."
+   MCIERR_DRIVER,                   "Er is een probleem met het stuurprogramma. Het stuurprogramma is afgesloten. Kan geen toegang krijgen tot de fout."
+   MCIERR_CANNOT_USE_ALL,           "Kan 'all' als apparaatnaam niet gebruiken in de opgegeven opdracht."
+   MCIERR_MULTIPLE,                 "Er zijn fouten opgetreden in meerdere apparaten. Geef elke opdracht en elk apparaat apart op om vast te kunnen stellen door welke apparaten de fouten zijn veroorzaakt."
+   MCIERR_EXTENSION_NOT_FOUND,      "Kan geen apparaattype bepalen met de opgegeven bestandsnaamextensie."
+   MCIERR_OUTOFRANGE,	            "De opgegeven parameter valt buiten het bereik van de opgegeven opdracht."
+   MCIERR_FLAGS_NOT_COMPATIBLE,     "De opgegeven parameters kunnen niet tegelijk worden gebruikt."
+   MCIERR_FILE_NOT_SAVED,           "Kan het opgegeven bestand niet opslaan. Controleer of er voldoende schijfruimte is en of u nog verbinding met het netwerk hebt."
+   MCIERR_FILE_READ,                "Kan het opgegeven bestand niet lezen. Controleer of het bestand nog aanwezig is of controleer de schijf of de netwerkverbinding."
+   MCIERR_FILE_WRITE,               "Kan niet naar het opgegeven bestand schrijven. Controleer of er voldoende schijfruimte is en of u nog een verbinding met het netwerk hebt."
+   MCIERR_DEVICE_LOCKED,            "Het opgegeven apparaat wordt gesloten. Wacht een aantal seconden en probeer het opnieuw."
+   MCIERR_DUPLICATE_ALIAS,          "De opgegeven alias wordt al gebruikt in deze toepassing. Gebruik een unieke alias."
+   MCIERR_BAD_CONSTANT,             "De opgegeven parameter is ongeldig voor deze opdracht."
+   MCIERR_MUST_USE_SHAREABLE,       "Het stuurprogramma is al in gebruik. Om het te delen, moet u de parameter 'shareable' bij elke opdracht 'openen' gebruiken."
+   MCIERR_MISSING_DEVICE_NAME,      "Voor de opgegeven opdracht is een alias, bestand, stuurprogramma of apparaatnaam vereist. Voer dit in."
+   MCIERR_BAD_TIME_FORMAT,          "De opgegeven waarde voor de tijdnotatie is ongeldig. Raadpleeg de MCI-documentatie voor geldige notaties."
+   MCIERR_NO_CLOSING_QUOTE,         "Er ontbreekt een aanhalingsteken sluiten in de parameterwaarde. Voer dit aanhalingsteken in."
+   MCIERR_DUPLICATE_FLAGS,          "Een parameter of waarde is twee keer opgegeven. Geef deze slechts één keer op."
+   MCIERR_INVALID_FILE,		    "Het opgegeven bestand kan niet op het opgegeven MCI-apparaat worden afgespeeld. Het bestand is mogelijk beschadigd of heeft een onjuiste indeling."
+   MCIERR_NULL_PARAMETER_BLOCK,     "Een lege parameterblok is doorgegeven aan MCI."
+   MCIERR_UNNAMED_RESOURCE,	    "Kan geen naamloos bestand opslaan. Voer een bestandsnaam in."
+   MCIERR_NEW_REQUIRES_ALIAS,       "U moet een alias opgeven als u de parameter 'new' gebruikt."
+   MCIERR_NOTIFY_ON_AUTO_OPEN,      "Kan de vlag 'notify' niet gebruiken met automatisch gestarte apparaten."
+   MCIERR_NO_ELEMENT_ALLOWED,       "Kan geen bestandsnaam gebruiken met het opgegeven apparaat."
+   MCIERR_ILLEGAL_FOR_AUTO_OPEN,    "Kan de opgegeven opdracht niet uitvoeren op een automatisch gestart apparaat. Wacht totdat het apparaat is gesloten en probeer het opnieuw."
+   MCIERR_FILENAME_REQUIRED,        "De bestandsnaam is ongeldig. Zorg ervoor dat de bestandsnaam niet langer dan 8 tekens is en gevolgd wordt door een punt en een extensie."
+   MCIERR_EXTRA_CHARACTERS,         "Kan geen extra tekens opgeven na een reeks tussen aanhalingstekens."
+   MCIERR_DEVICE_NOT_INSTALLED,     "Dit apparaat is niet geïnstalleerd op het systeem. Ga naar het onderdeel Hardware van het Configuratiescherm om het apparaat te installeren."
+   MCIERR_GET_CD,                   "Kan geen toegang tot het opgegeven bestand of MCI-apparaat krijgen. Probeer een andere map of start de computer opnieuw op."
+   MCIERR_SET_CD,                   "Kan geen toegang tot het opgegeven bestand of MCI-apparaat krijgen omdat de toepassing geen andere map kan kiezen."
+   MCIERR_SET_DRIVE,                "Kan geen toegang tot het opgegeven bestand of MCI-apparaat krijgen omdat de toepassing geen ander station kan kiezen."
+   MCIERR_DEVICE_LENGTH,            "Geef een apparaat- of stuurprogrammanaam op die minder dan 79 tekens bevat."
+   MCIERR_DEVICE_ORD_LENGTH,        "Geef een apparaat- of stuurprogrammanaam op die minder dan 69 tekens bevat."
+   MCIERR_NO_INTEGER,               "De opgegeven opdracht vereist een geheel getal als parameter. Voer er één in."
+
+   MCIERR_WAVE_OUTPUTSINUSE,        "Alle waveapparaten die bestanden in de huidige indeling kunnen afspelen zijn in gebruik. Wacht totdat er een apparaat vrij komt en probeer het opnieuw."
+   MCIERR_WAVE_SETOUTPUTINUSE,      "Kan het huidige waveapparaat niet instellen op afspelen omdat het in gebruik is. Wacht totdat het apparaat vrij komt en probeer het opnieuw."
+   MCIERR_WAVE_INPUTSINUSE,         "Alle waveapparaten die bestanden in de huidige indeling kunnen opnemen, zijn in gebruik. Wacht totdat er een apparaat vrij komt en probeer het opnieuw."
+   MCIERR_WAVE_SETINPUTINUSE,       "Kan het huidige waveapparaat niet instellen op opnemen omdat het in gebruik is. Wacht totdat het apparaat vrij komt en probeer het opnieuw."
+   MCIERR_WAVE_OUTPUTUNSPECIFIED,   "U kunt elk compatibel wavevorm-afspeelapparaat gebruiken."
+   MCIERR_WAVE_INPUTUNSPECIFIED,    "U kunt elk compatibel wavevorm-opnameapparaat gebruiken."
+   MCIERR_WAVE_OUTPUTSUNSUITABLE,   "Er is geen waveapparaat geïnstalleerd dat bestanden in de huidige indeling kan afspelen. Gebruik de optie Stuurprogramma's om het waveapparaat te installeren."
+   MCIERR_WAVE_SETOUTPUTUNSUITABLE, "Het apparaat waarmee u probeert af te spelen herkent de huidige bestandsindeling niet."
+   MCIERR_WAVE_INPUTSUNSUITABLE,    "Er is geen waveapparaat geïnstalleerd dat bestanden in de huidige indeling kan opnemen. Gebruik de optie Stuurprogramma's om het waveapparaat te installeren."
+   MCIERR_WAVE_SETINPUTUNSUITABLE,  "Het apparaat waarvan u probeert op te nemen herkent de huidige bestandsindeling niet."
+
+   MCIERR_SEQ_DIV_INCOMPATIBLE,     "Kan de tijdnotatie voor nummeraanwijzer en de tijdnotatie voor SMPTE niet tegelijk gebruiken."
+   MCIERR_SEQ_PORT_INUSE,	    "Het opgegeven MIDI-apparaat is al in gebruik. Wacht totdat het vrij is en probeer het opnieuw."
+   MCIERR_SEQ_PORT_NONEXISTENT,	    "Het opgegeven MIDI-apparaat is niet geïnstalleerd op het systeem. Ga naar het onderdeel Hardware van het Configuratiescherm om het stuurprogramma te installeren."
+   MCIERR_SEQ_PORT_MAPNODEVICE,	    "De actieve MIDI Mapper-instelling verwijst naar een MIDI-apparaat dat niet is geïnstalleerd op het systeem. Gebruik MIDI Mapper voor het bewerken van de instelling."
+   MCIERR_SEQ_PORT_MISCERROR,	    "Fout bij het gebruiken van opgegeven poort."
+   MCIERR_SEQ_TIMER,		    "Alle multimediatimers worden door andere toepassingen gebruikt. Sluit één van deze toepassingen af en probeer het opnieuw."
+   MCIERR_SEQ_PORTUNSPECIFIED,      "Er is geen actieve MIDI-poort."
+   MCIERR_SEQ_NOMIDIPRESENT,        "Er zijn geen MIDI-apparaten geïnstalleerd op het systeem. Ga naar het onderdeel Hardware van het Configuratiescherm om het stuurprogramma te installeren."
+
+   MCIERR_NO_WINDOW,                "Er is geen weergavevenster."
+   MCIERR_CREATEWINDOW,             "Kan het venster niet maken of gebruiken."
+
+   MCIERR_DEVICE_TYPE_REQUIRED,     "Kan het opgegeven apparaat niet vinden. Controleer of het is geïnstalleerd en of de apparaatnaam juist is gespeld."
+
+   MCI_FALSE,  	                    "onwaar"
+   MCI_TRUE,                        "waar"
+
+   MCI_DEVTYPE_ANIMATION,           "animation"
+   MCI_DEVTYPE_CD_AUDIO,            "cdaudio"
+   MCI_DEVTYPE_DAT,                 "dat"
+   MCI_DEVTYPE_DIGITAL_VIDEO,       "digitalvideo"        
+   MCI_DEVTYPE_OTHER,               "other"
+   MCI_DEVTYPE_OVERLAY,             "overlay"
+   MCI_DEVTYPE_SCANNER,             "scanner"
+   MCI_DEVTYPE_SEQUENCER,           "sequencer"
+   MCI_DEVTYPE_VCR,                 "vcr"
+   MCI_DEVTYPE_VIDEODISC,           "videodisc"
+   MCI_DEVTYPE_WAVEFORM_AUDIO,      "waveaudio"
+   
+   MCI_MODE_NOT_READY,              "niet gereed"
+   MCI_MODE_STOP,                   "beëindigd"
+   MCI_MODE_PLAY,                   "bezig met afspelen"
+   MCI_MODE_RECORD,                 "bezig met opnemen"
+   MCI_MODE_SEEK,                   "bezig met zoeken"
+   MCI_MODE_PAUSE,                  "onderbroken"
+   MCI_MODE_OPEN,                   "openen"
+
+   MCI_FORMAT_MILLISECONDS_S,       "msec."
+   MCI_FORMAT_HMS_S,                "hms"
+   MCI_FORMAT_MSF_S,                "msf"
+   MCI_FORMAT_FRAMES_S,             "frames"
+   MCI_FORMAT_SMPTE_24_S,           "smpte 24"
+   MCI_FORMAT_SMPTE_25_S,           "smpte 25"    
+   MCI_FORMAT_SMPTE_30_S,           "smpte 30"
+   MCI_FORMAT_SMPTE_30DROP_S,       "smpte 30 drop"
+   MCI_FORMAT_BYTES_S,              "bytes"
+   MCI_FORMAT_SAMPLES_S,            "samples"
+   MCI_FORMAT_TMSF_S,               "tmsf"
+
+   MCI_VD_MODE_PARK,                "parked"
+   MCI_VD_MEDIA_CAV,                "CAV"
+   MCI_VD_MEDIA_CLV,                "CLV"
+   MCI_VD_MEDIA_OTHER,		    "other"
+   MCI_VD_FORMAT_TRACK_S,           "track"
+
+   MCI_SEQ_DIV_PPQN,		    "PPQN"
+   MCI_SEQ_DIV_SMPTE_24, 	    "SMPTE 24-frame"
+   MCI_SEQ_DIV_SMPTE_25, 	    "SMPTE 25-frame"
+   MCI_SEQ_DIV_SMPTE_30DROP,	    "SMPTE 30-dropframe"
+   MCI_SEQ_DIV_SMPTE_30, 	    "SMPTE 30-frame"
+   MIDIMAPPER_S,                    "mapper"
+   MCI_SEQ_FILE_S,                  "bestand"
+   MCI_SEQ_MIDI_S,                  "midi"
+   MCI_SEQ_SMPTE_S,                 "smpte"
+   MCI_SEQ_FORMAT_SONGPTR_S,        "nummeraanwijzer"
+   MCI_SEQ_NONE_S,                  "geen"
+
+   WAVE_FORMAT_PCM_S,		    "pcm"
+   WAVE_MAPPER_S,   		    "mapper"
+
+   IDS_TASKSTUB,                    "mmtask.tsk"
+end
+
+#include "mci.rc"
+
+#ifdef DEBUG
+#include "mmsex.dlg"
+#endif

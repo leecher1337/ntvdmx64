@@ -1,0 +1,15 @@
+//---------------------------------------------------------------------------
+// timer.rc : reconstructed pl resources
+//
+// Recovered from the shipped localized timer.drv with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#include <windows.h>
+#include "timer.rcv"
+
+STRINGTABLE LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+	1,		"Sterownik czasomierza"
+	2,		"Nie mo¿na znaleŸæ pliku VTDAPI.386. Czasomierze multimediów s¹ niedostêpne.\nUpewnij siê, ¿e plik VTDAPI.386 znajduje siê w katalogu SYSTEM Windows i ¿e\nwiersz device=VTDAPI.386 znajduje siê w sekcji [386Enh] pliku SYSTEM.INI."
+END

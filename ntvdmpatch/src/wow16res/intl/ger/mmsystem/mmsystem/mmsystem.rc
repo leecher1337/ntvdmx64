@@ -1,0 +1,204 @@
+//---------------------------------------------------------------------------
+// mmsystem.rc : reconstructed ger resources
+//
+// Recovered from the shipped localized mmsystem.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#include <windows.h>
+
+#define MMNOSOUND
+#define MMNOSEQ
+#define MMNOTIMER
+#define MMNOJOY
+#include "mmsystem.h"
+#include "mmsystem.rcv"
+
+#define NOTIMERDEV
+#define NOJOYDEV
+#define NOSEQDEV
+#define NOTASKDEV
+#include "mmddk.h"
+
+#include "mmsysi.h"
+
+STRINGTABLE
+begin
+   0,			        "Der angeforderte Befehl wurde ausgeführt."
+
+   STR_MCIUNKNOWN,              "Unbekannter Fehler vom MCI-Befehl"
+//   STR_WAVEINPUT,               "Wave Input: "
+//   STR_WAVEOUTPUT,              "Wave Output: "
+//   STR_MIDIINPUT,               "Midi Input: "
+//   STR_MIDIOUTPUT,              "Midi Output: "
+#ifdef DEBUG
+   STR_MCISSERRTXT,             "Error in mciSendString but could not get text"
+   STR_MCISCERRTXT,             "Error in mciSendCommand but could not get text"
+#endif
+   MMSYSERR_ERROR,	        "Unbekannter externer Fehler."
+   MMSYSERR_BADDEVICEID,        "Die benutzte Gerätekennung ist außerhalb des zulässigen Bereichs für diesen Computer."
+   MMSYSERR_NOTENABLED,         "Der Treiber konnte nicht gestartet werden."
+   MMSYSERR_ALLOCATED,          "Das Gerät wird bereits benutzt. Warten Sie, bis es freigegeben ist, und versuchen Sie es erneut."
+   MMSYSERR_INVALHANDLE,        "Die angegebene Gerätehandle ist ungültig."
+   MMSYSERR_NODRIVER,	        "Es ist kein Treiber auf diesem Computer installiert."
+   MMSYSERR_NOMEM,	        "Nicht genügend Arbeitsspeicher für diesen Befehl. Beenden Sie eine oder mehrere Anwendungen, und versuchen Sie es erneut."
+   MMSYSERR_NOTSUPPORTED,       "Diese Funktion wird nicht unterstützt. Benutzen Sie die Funktion ""Capabilities"", um zu ermitteln, welche Funktionen dieser Treiber unterstützt."
+   MMSYSERR_BADERRNUM,          "Die angegebene Fehlernummer ist für dieses System nicht definiert."
+   MMSYSERR_INVALFLAG,          "Ungültige Flag wurde an eine Systemfunktion übergeben."
+   MMSYSERR_INVALPARAM,         "Ungültiger Parameter wurde an eine Systemfunktion übergeben."
+
+   WAVERR_BADFORMAT,            "Dieses Format wird nicht unterstützt oder kann nicht übersetzt werden. Benutzen Sie die Funktion ""Capabilities"", um die unterstützten Formate zu ermitteln."
+   WAVERR_UNPREPARED,           "Der WAVE-Header wurde vor dem Schreiben nicht vorbereitet. Benutzen Sie die Funktion ""Prepare"" zum Vorbereiten des Headers."
+   WAVERR_STILLPLAYING,         "Die Funktion kann nicht durchgeführt werden, während Mediendaten wiedergegeben werden. Starten Sie das Gerät neu, oder warten Sie, bis keine Daten mehr wiedergegeben werden."
+   WAVERR_SYNC,                 "Gerät kann nicht ohne das WAVE_ALLOWSYNC-Flag geöffnet werden. Benutzen Sie dieses Flag."
+
+   MIDIERR_UNPREPARED,          "Der MIDI-Header wurde nicht vorbereitet. Benutzen Sie die Funktion ""Prepare""."
+   MIDIERR_STILLPLAYING,        "Die Funktion kann nicht durchgeführt werden, während Mediendaten wiedergegeben werden. Starten Sie das Gerät neu, oder warten Sie, bis keine Daten mehr wiedergegeben werden."
+   MIDIERR_NOMAP,               "Es wurde keine MIDI-Map gefunden. Es könnte der Treiber fehlerhaft sein, oder die Datei MIDIMAP.CFG fehlt oder ist beschädigt."
+   MIDIERR_NOTREADY,            "Der Anschluss ist mit der Datenausgabe belegt. Warten Sie, bis die Daten übertragen wurden."
+   MIDIERR_NODEVICE,            "Das gegenwärtige MIDI-Mapper-Setup benutzt ein MIDI-Gerät, das nicht installiert ist. Benutzen Sie den MIDI-Mapper in der Systemsteuerung, um das Setup zu ändern."
+   MIDIERR_INVALIDSETUP,        "Das aktuelle MIDI-Setup ist beschädigt. Kopieren Sie die ursprüngliche Datei MIDIMAP.CFG in das Windows-Systemverzeichnis, und versuchen Sie es erneut."
+
+   MCIERR_INVALID_DEVICE_ID,        "Ungültige MCI-Gerätekennung. Benutzen Sie die zurückgegebene Kennung, wenn Sie das MCI-Gerät öffnen."
+   MCIERR_UNRECOGNIZED_KEYWORD,     "Unbekannter Befehlsparameter."
+   MCIERR_UNRECOGNIZED_COMMAND,     "Unbekannter Befehl."
+   MCIERR_HARDWARE,                 "Hardwarefehler beim Media-Gerät. Stellen Sie sicher, dass es korrekt arbeitet, oder fragen Sie den Gerätehersteller."
+   MCIERR_INVALID_DEVICE_NAME,      "Gerät ist nicht geöffnet oder wird vom MCI nicht erkannt."
+   MCIERR_OUT_OF_MEMORY,            "Nicht genügend Arbeitsspeicher für angeforderten Vorgang.\n\nBeenden Sie eine oder mehrere Anwendungen, und versuchen Sie es erneut."
+   MCIERR_DEVICE_OPEN,              "Der Gerätename wird von dieser Anwendung bereits als Alias benutzt. Benutzen Sie einen eindeutigen Alias."
+   MCIERR_CANNOT_LOAD_DRIVER,       "Unbekanntes Problem beim Laden des angegebenen Gerätetreibers."
+   MCIERR_MISSING_COMMAND_STRING,   "Kein Befehl angegeben."
+   MCIERR_PARAM_OVERFLOW,           "Die Ausgabezeichenkette war zu lang für den Rückgabepuffer. Erhöhen Sie die Puffergröße."
+   MCIERR_MISSING_STRING_ARGUMENT,  "Der Befehl erfordert einen Zeichenkettenparameter."
+   MCIERR_BAD_INTEGER,              "Die Angabe einer ganzen Zahl ist ungültig für diesen Befehl."
+   MCIERR_PARSER_INTERNAL,          "Der Gerätetreiber hat einen ungültigen Rückgabewert geliefert. Fragen Sie den Gerätehersteller nach einem neuen Treiber."
+   MCIERR_DRIVER_INTERNAL,          "Ein Treiberfehler ist aufgetreten. Fragen Sie den Gerätehersteller nach einem neuen Treiber."
+   MCIERR_MISSING_PARAMETER,        "Der angegebene Befehl erfordert einen Parameter. Geben Sie einen Parameter ein."
+   MCIERR_UNSUPPORTED_FUNCTION,     "Das verwendete MCI-Gerät unterstützt diesen Befehl nicht."
+   MCIERR_NONAPPLICABLE_FUNCTION,   "Die Befehle sind in der angegebenen Reihenfolge nicht ausführbar. Ändern Sie die Reihenfolge."
+   MCIERR_FILE_NOT_FOUND,           "Die angeforderte Datei wurde nicht gefunden. Stellen Sie sicher, dass Pfad- und Dateiname korrekt sind."
+   MCIERR_DEVICE_NOT_READY,         "Der Gerätetreiber ist nicht bereit."
+   MCIERR_INTERNAL,                 "Fehler beim Starten des MCI."
+   MCIERR_DRIVER,                   "Fehler im Gerätetreiber. Der Treiber wurde geschlossen. Ein Fehler kann nicht gemeldet werden."
+   MCIERR_CANNOT_USE_ALL,           "Der Gerätename ""all"" ist in diesem Befehl nicht erlaubt."
+   MCIERR_MULTIPLE,                 "Fehler traten in mehr als einem Gerät auf. Geben Sie jeden Befehl für jedes Gerät einzeln an, um zu bestimmen, welches Gerät die Fehler verursachte."
+   MCIERR_EXTENSION_NOT_FOUND,      "Es kann kein Gerätetyp aus der angegebenen Dateinamenerweiterung ermitteln werden."
+   MCIERR_OUTOFRANGE,	            "Parameterwert liegt außerhalb des zulässigen Bereichs für diesen Befehl."
+   MCIERR_FLAGS_NOT_COMPATIBLE,     "Die angegebenen Parameter können nicht zusammen benutzt werden."
+   MCIERR_FILE_NOT_SAVED,           "Die Datei kann nicht gespeichert werden. Stellen Sie sicher, dass genügend Platz auf dem Datenträger verfügbar ist, oder Ihre Netzwerkverbindung noch besteht."
+   MCIERR_FILE_READ,                "Die Datei konnte nicht gelesen werden. Stellen Sie sicher, dass die Datei existiert bzw. dass die Netzwerkverbindung noch besteht."
+   MCIERR_FILE_WRITE,               "Die Datei konnte nicht geschrieben werden. Stellen Sie sicher, dass genügend Platz auf dem Datenträger verfügbar ist bzw. dass die Netzwerkverbindung noch besteht."
+   MCIERR_DEVICE_LOCKED,            "Gerät wird geschlossen. Warten Sie einige Sekunden, und versuchen Sie es erneut."
+   MCIERR_DUPLICATE_ALIAS,          "Angegebener Alias wird von dieser Anwendung bereits genutzt. Wählen Sie einen eindeutigen Alias."
+   MCIERR_BAD_CONSTANT,             "Unbekannter Parameterwert für diesen Befehl."
+   MCIERR_MUST_USE_SHAREABLE,       "Gerät ist bereits geöffnet. Benutzen Sie den ""shareable""-Parameter bei jedem ""open""-Befehl."
+   MCIERR_MISSING_DEVICE_NAME,      "Der Befehl erfordert einen Alias-, Datei-, Treiber- oder Gerätenamen."
+   MCIERR_BAD_TIME_FORMAT,          "Unzulässiger Wert für Zeitformat. Lesen Sie bitte in der MCI-Dokumentation nach."
+   MCIERR_NO_CLOSING_QUOTE,         "Ein abschließendes Anführungszeichen fehlt im Parameter."
+   MCIERR_DUPLICATE_FLAGS,          "Ein Parameter oder Wert wurde zweimal angegeben."
+   MCIERR_INVALID_FILE,		    "Die angegebene Datei kann auf dem MCI-Gerät nicht wiedergegeben werden. Die Datei ist wahrscheinlich beschädigt oder in einem ungültigen Format."
+   MCIERR_NULL_PARAMETER_BLOCK,     "Parameterblock war NULL."
+   MCIERR_UNNAMED_RESOURCE,	    "Es kann keine unbenannte Datei gespeichert werden. Geben Sie einen Dateinamen an."
+   MCIERR_NEW_REQUIRES_ALIAS,       "Sie müssen einen Alias mit dem ""new""-Parameter angeben."
+   MCIERR_NOTIFY_ON_AUTO_OPEN,      "Das Flag ""notify"" ist unzulässig für selbstöffnende Geräte."
+   MCIERR_NO_ELEMENT_ALLOWED,       "Ein Dateiname kann mit diesem Gerät nicht benutzt werden."
+   MCIERR_ILLEGAL_FOR_AUTO_OPEN,    "Der Befehl kann nicht auf ein selbstöffnendes Gerät angewandt werden. Warten Sie, bis das Gerät geschlossen wurde."
+   MCIERR_FILENAME_REQUIRED,        "Der Dateiname ist ungültig. Der Dateiname muss aus maximal 8 Zeichen, gefolgt von einem Punkt und einer Dateinamenerweiterung, bestehen."
+   MCIERR_EXTRA_CHARACTERS,         "Zusätzliche Zeichen nach einer Zeichenkette mit Anführungszeichen sind nicht erlaubt."
+   MCIERR_DEVICE_NOT_INSTALLED,     "Das angegebene Gerät ist nicht installiert. Benutzen Sie ""Treiber"" in der Systemsteuerung, um einen Treiber zu installieren."
+   MCIERR_GET_CD,                   "Auf das angegebene MCI-Gerät oder auf die Datei kann nicht zugegriffen werden. Versuchen Sie, das Verzeichnis zu wechseln oder das System neu zu starten."
+   MCIERR_SET_CD,                   "Auf das angegebene MCI-Gerät oder auf die Datei kann nicht zugegriffen werden, weil die Anwendung nicht das Verzeichnis wechseln kann."
+   MCIERR_SET_DRIVE,                "Auf das angegebene MCI-Gerät oder auf die Datei kann nicht zugegriffen werden, weil die Anwendung nicht das Laufwerk wechseln kann."
+   MCIERR_DEVICE_LENGTH,            "Geben Sie einen Geräte- oder Treibernamen mit weniger als 79 Zeichen an."
+   MCIERR_DEVICE_ORD_LENGTH,        "Geben Sie einen Geräte- oder Treibernamen mit weniger als 69 Zeichen an."
+   MCIERR_NO_INTEGER,               "Der Befehl erfordert einen ganzzahligen Parameter."
+
+   MCIERR_WAVE_OUTPUTSINUSE,        "Es ist kein Waveform-Wiedergabegerät frei, das das gegenwärtige Format wiedergeben könnte. Warten Sie, bis ein Waveform-Wiedergabegerät frei ist."
+   MCIERR_WAVE_SETOUTPUTINUSE,      "Das gegenwärtige Waveform-Gerät kann nicht aufzeichnen, weil es gerade benutzt wird. Warten Sie, bis das Gerät frei wird."
+   MCIERR_WAVE_INPUTSINUSE,         "Es ist kein Waveform-Gerät frei, das das gegenwärtige Format aufzeichnen könnte. Warten Sie, bis ein Waveform-Gerät frei ist."
+   MCIERR_WAVE_SETINPUTINUSE,       "Das gegenwärtige Waveform-Gerät kann nicht aufzeichnen, weil es gerade benutzt wird. Warten Sie, bis das Gerät frei wird."
+   MCIERR_WAVE_OUTPUTUNSPECIFIED,   "Jedes kompatible Waveform-Wiedergabegerät kann benutzt werden."
+   MCIERR_WAVE_INPUTUNSPECIFIED,    "Jedes kompatible Waveform-Aufzeichnungsgerät kann benutzt werden."
+   MCIERR_WAVE_OUTPUTSUNSUITABLE,   "Es ist kein Waveform-Gerät installiert, das Dateien im gegenwärtigen Format wiedergeben könnte. Installieren Sie das Waveform-Gerät mit der Option ""Treiber"" in der Systemsteuerung."
+   MCIERR_WAVE_SETOUTPUTUNSUITABLE, "Das Gerät, auf dem Sie wiedergeben möchten, erkennt das gegenwärtige Dateiformat nicht."
+   MCIERR_WAVE_INPUTSUNSUITABLE,    "Es ist kein Waveform-Gerät installiert, das Dateien im gegenwärtigen Format wiedergeben kann. Installieren Sie einen Treiber mit der Option ""Treiber"" in der Systemsteuerung."
+   MCIERR_WAVE_SETINPUTUNSUITABLE,  "Das Gerät, mit dem Sie aufzeichnen möchten, erkennt das gegenwärtige Dateiformat nicht."
+
+   MCIERR_SEQ_DIV_INCOMPATIBLE,     "Set-Song-Zeiger kann nicht mit SMPTE Dateien verwendet werden."
+   MCIERR_SEQ_PORT_INUSE,	    "Das angegebene MIDI-Gerät wird benutzt. Warten Sie, bis es freigegeben wurde."
+   MCIERR_SEQ_PORT_NONEXISTENT,	    "Das angegebene MIDI-Gerät ist nicht installiert. Benutzen Sie ""Treiber"" in der Systemsteuerung, um einen Treiber zu installieren."
+   MCIERR_SEQ_PORT_MAPNODEVICE,	    "Das gegenwärtige MIDI-Mapper-Setup benutzt ein MIDI-Gerät, das nicht installiert ist. Benutzen Sie den MIDI-Mapper in der Systemsteuerung, um das Setup zu ändern."
+   MCIERR_SEQ_PORT_MISCERROR,	    "Beim Benutzen des angegebenen Anschlusses trat ein Fehler auf."
+   MCIERR_SEQ_TIMER,		    "Alle Multimediatimer werden von anderen Anwendungen benutzt. Beenden Sie eine dieser Anwendungen, und versuchen Sie es erneut."
+   MCIERR_SEQ_PORTUNSPECIFIED,      "Es gibt keinen aktuellen MIDI-Anschluss."
+   MCIERR_SEQ_NOMIDIPRESENT,        "Es sind keine MIDI-Geräte installiert. Benutzen Sie ""Treiber"" in der Systemsteuerung, um einen Treiber zu installieren."
+
+   MCIERR_NO_WINDOW,                "Es gibt kein Anzeigefenster."
+   MCIERR_CREATEWINDOW,             "Fenster konnte nicht erzeugt bzw. verwendet werden."
+
+   MCIERR_DEVICE_TYPE_REQUIRED,     "Das angegebene Gerät wurde nicht gefunden. Stellen Sie sicher, dass es installiert ist, und dass der Gerätename richtig geschrieben ist."
+
+   MCI_FALSE,  	                    "false"
+   MCI_TRUE,                        "true"
+
+   MCI_DEVTYPE_ANIMATION,           "animation"
+   MCI_DEVTYPE_CD_AUDIO,            "cdaudio"
+   MCI_DEVTYPE_DAT,                 "dat"
+   MCI_DEVTYPE_DIGITAL_VIDEO,       "digitalvideo"        
+   MCI_DEVTYPE_OTHER,               "other"
+   MCI_DEVTYPE_OVERLAY,             "overlay"
+   MCI_DEVTYPE_SCANNER,             "scanner"
+   MCI_DEVTYPE_SEQUENCER,           "sequencer"
+   MCI_DEVTYPE_VCR,                 "vcr"
+   MCI_DEVTYPE_VIDEODISC,           "videodisc"
+   MCI_DEVTYPE_WAVEFORM_AUDIO,      "waveaudio"
+   
+   MCI_MODE_NOT_READY,              "not ready"
+   MCI_MODE_STOP,                   "stopped"
+   MCI_MODE_PLAY,                   "playing"
+   MCI_MODE_RECORD,                 "recording"
+   MCI_MODE_SEEK,                   "seeking"
+   MCI_MODE_PAUSE,                  "paused"
+   MCI_MODE_OPEN,                   "open"
+
+   MCI_FORMAT_MILLISECONDS_S,       "milliseconds"
+   MCI_FORMAT_HMS_S,                "hms"
+   MCI_FORMAT_MSF_S,                "msf"
+   MCI_FORMAT_FRAMES_S,             "frames"
+   MCI_FORMAT_SMPTE_24_S,           "smpte 24"
+   MCI_FORMAT_SMPTE_25_S,           "smpte 25"    
+   MCI_FORMAT_SMPTE_30_S,           "smpte 30"
+   MCI_FORMAT_SMPTE_30DROP_S,       "smpte 30 drop"
+   MCI_FORMAT_BYTES_S,              "bytes"
+   MCI_FORMAT_SAMPLES_S,            "samples"
+   MCI_FORMAT_TMSF_S,               "tmsf"
+
+   MCI_VD_MODE_PARK,                "parked"
+   MCI_VD_MEDIA_CAV,                "CAV"
+   MCI_VD_MEDIA_CLV,                "CLV"
+   MCI_VD_MEDIA_OTHER,		    "other"
+   MCI_VD_FORMAT_TRACK_S,           "track"
+
+   MCI_SEQ_DIV_PPQN,		    "PPQN"
+   MCI_SEQ_DIV_SMPTE_24, 	    "SMPTE 24 Frame"
+   MCI_SEQ_DIV_SMPTE_25, 	    "SMPTE 25 Frame"
+   MCI_SEQ_DIV_SMPTE_30DROP,	    "SMPTE 30 Drop Frame"
+   MCI_SEQ_DIV_SMPTE_30, 	    "SMPTE 30 Frame"
+   MIDIMAPPER_S,                    "mapper"
+   MCI_SEQ_FILE_S,                  "file"
+   MCI_SEQ_MIDI_S,                  "midi"
+   MCI_SEQ_SMPTE_S,                 "smpte"
+   MCI_SEQ_FORMAT_SONGPTR_S,        "song pointer"
+   MCI_SEQ_NONE_S,                  "none"
+
+   WAVE_FORMAT_PCM_S,		    "pcm"
+   WAVE_MAPPER_S,   		    "mapper"
+
+   IDS_TASKSTUB,                    "mmtask.tsk"
+end
+
+#include "mci.rc"
+
+#ifdef DEBUG
+#include "mmsex.dlg"
+#endif

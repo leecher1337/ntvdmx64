@@ -1,0 +1,66 @@
+//---------------------------------------------------------------------------
+// user.rc : reconstructed cs resources
+//
+// Recovered from the shipped localized user.exe with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+/****************************************************************************/
+/*                                                                          */
+/*  USER.RC -                                                               */
+/*                                                                          */
+/*  USER's Resource File                                                    */
+/*                                                                          */
+/****************************************************************************/
+
+#include "strtable.h"
+#include "netdlg.h"
+
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+
+    STR_NETDRIVER       "NETWORK.DRV"
+    STR_BOOT            "boot"
+    STR_LANGDRIVER      "LANGUAGE.DLL"
+    STR_SYSTEMINI       "SYSTEM.INI"
+    STR_TASKMAN         "TASKMAN.EXE"
+    STR_DRIVERS         "DRIVERS"
+
+/* Strings used for device driver initialization which we don't want hanging
+ * around our ds.
+ */
+    STR_COMMMODULENAME,     "COMM"
+    STR_COMMWRITESTRING,    "COMMWRITESTRING"
+    STR_COMMREADSTRING,     "READCOMMSTRING"
+    STR_COMMENABLENOTIFICATION "ENABLENOTIFICATION"
+
+/*---------------------------------------------------------------------------*/
+/* All strings above this line MUST NOT be localized.  All strings below
+ * this line should be localized.
+ */
+    STR_NETCONNTTL      "Došlo k chybì pøi obnovování síovıch pøipojení"
+    STR_NETCONNMSG      "Nelze se pøipojit k %s: %s"
+    STR_NETCRASHEDTITLE     "Došlo k chybì pøi obnovování síovıch pøipojení"
+    STR_NETCRASHEDMSG       "Systém Windows byl restartován bìhem obnovování síovıch pøipojení. Mají se pro tuto relaci daná pøipojení obnovit nebo zrušit?"
+
+    STR_NETERRORS       "Došlo k neoèekávané chybì sítì: 0x%4.4X"
+    STR_NETERRORS+1     "Síová funkce není podporována"
+    STR_NETERRORS+2     "Chyba sítì"
+    STR_NETERRORS+6     "Nesprávné heslo"
+    STR_NETERRORS+7     "Pøístup byl odepøen"
+    STR_NETERRORS+11        "Nedostatek pamìti"
+    STR_NETERRORS+0x30      "Zaøízení není pøipojeno"
+    STR_NETERRORS+0x31      "Zaøízení má otevøené soubory"
+    STR_NETERRORS+0x32      "Neplatnı síovı název"
+    STR_NETERRORS+0x33      "Neplatné místní zaøízení"
+    STR_NETERRORS+0x34      "Zaøízení je ji pøipojeno"
+    STR_NETERRORS+0x35      "Pøipojení pøestalo fungovat"
+    STR_NETERRORS+0x36      "Stálé pøipojení není k dispozici"
+
+    STR_SYSERR,             "Systémová chyba"
+    STR_DIVBYZERO,          "Došlo k chybì dìlení nulou èi pøeteèení"
+
+END
+
+#include "user.rcv"

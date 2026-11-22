@@ -1,0 +1,242 @@
+//---------------------------------------------------------------------------
+// drwatson.rc : reconstructed no resources
+//
+// Recovered from the shipped localized drwatson.exe with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#define NOGDICAPMASKS
+#define NOWINMESSAGES
+#define NOSYSMETRICS
+#define NOICON
+#define NOKEYSTATE
+#define NOSYSCOMMANDS
+#define NOSHOWWINDOW
+#define NOATOM
+#define NOGDI
+#define NOFONT
+#define NOBRUSH
+#define NOCLIPBOARD
+#define NOCOLOR
+#define NOCREATESTRUCT
+#define NODRAWTEXT
+#define NOMB
+#define NOMEMMGR
+#define NOMETAFILE
+#define NOMINMAX
+#define NOOPENFILE
+#define NOPEN
+#define NOREGION
+#define NOSCROLL
+#define NOSOUND
+#define NOTEXTMETRIC
+#define NOWH
+#define NOWINOFFSETS
+#define NOWNDCLASS
+#define NOCOMM
+#include <windows.h>
+
+#include "drwatson.rcv"
+
+#include "str.h"
+
+drwatsonIcon ICON doctor.ico
+
+#define DS_3DLOOK           0x0004
+
+SHERDIAG DIALOG DISCARDABLE LOADONCALL PURE MOVEABLE 59, 42, 179, 124
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_3DLOOK
+CAPTION "Dr. Watsons tips"
+BEGIN
+  CONTROL "Beskriv hva du gjorde før feilen oppstod for å lette løsingen av problemet du nettopp møtte." 101, "STATIC", WS_CHILD | WS_VISIBLE | 0x1L, 26, 5, 128, 26
+  CONTROL "" 102, "EDIT", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | 0x44L, 13, 33, 151, 62
+  CONTROL "OK" 1, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 32, 101, 32, 14
+  CONTROL "Avbryt" 2, "BUTTON", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 110, 101, 36, 14
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+
+/* Note all strings below must be <= CCH_MAX_STRING_RESOURCE chars! */
+
+/* drwatson.c */
+
+IDSTRNoFault                           "Ingen feil oppdaget\n\nCopyright 1991-1995, Microsoft Corp."
+IDSTRFaulty                            "%d nye 'Dr. Watson' feilrapporter kan finnes i filen '%s'\n\nCopyright 1991-1995, Microsoft Corp."
+IDSTRGPText                            "Det har oppstått en feil i programmet.\nHvis du velger Ignorer, bør du lagre arbeidet i en ny fil.\nVelger du Lukk, avsluttes programmet"
+IDSTRErrMsg                            "En kopi av 'Dr. Watson' kjører allerede på systemet."
+IDSTRVers                              "Kan ikke installere 'Dr. Watson'. Har muligens feil versjon av TOOLHELP.DLL"
+IDSTRClassMsg                          "Kan ikke installere 'Dr. Watson'. Kan ikke registrere vindusklasse."
+IDSTRCoprocessor                       "Matematikkprosessor"
+IDSTR8086                              "8086"
+IDSTR80186                             "80186 eller 80188"
+IDSTR80286                             "80286"
+IDSTR80386                             "80386 eller 80386 SX"
+IDSTR80486                             "80486"
+IDSTREnhancedMode                      "Utvidet modus"
+IDSTRProtectMode                       "Beskyttet modus"
+IDSTRStandardMode                      "Standardmodus"
+IDSTRWindowsNT                         "Windows NT"
+
+/* drwatson.c SegFlags */
+
+IDSTRNullPtr                           "Null Ptr"
+IDSTRInvalid                           "Ugyldig"
+IDSTRNotPresent                        "!Present"
+IDSTRCode                              "Kode "
+IDSTRExR                               "Ex/R"
+IDSTRExO                               "Ex/O"
+IDSTRData                              "Data "
+IDSTRRW                                "L/S"
+IDSTRRO                                "R-O"
+
+/* drwatson.c ModuleName (and several others) */
+
+IDSTRUnknown                           "Ukjent"
+
+/* drwatson.c FaultType */
+
+IDSTRDivideByZero                      "Divisjon med 0"
+IDSTRInvalidOpcode                     "Ugyldig opkode"
+IDSTRGeneralProtection                 "Generell beskyttelse"
+
+/* drwatson.c DecodeFault */
+
+IDSTRInvalidSelector                   "Ugyldig selektor"
+IDSTRNullSelector                      "Null-selektor"
+IDSTRSegmentNotPresent                 "Segmentet finnes ikke"
+IDSTRExceedSegmentBounds               "Overskride segmentgrenser"
+IDSTRCodeSegment                       "Kodesegment"
+IDSTRExecuteOnlySegment                "Segment som bare kan kjøres"
+IDSTRReadOnlySegment                   "Segment som bare kan leses"
+
+/* drwatson.c SafeDisAsm86 */
+
+IDSTRSegNotPresentOrPastEnd            "Segmentet finnes ikke, eller slutten er passert"
+
+/* drwatson.c FaultCause */
+
+IDSTRErrorLog                          "Feillogg"
+IDSTRParameterErrorLog                 "Logg for parameterfeil"
+
+/* drwatson.c FileInfo */
+
+IDSTRFileNotFound                      "Finner ikke filen"
+
+/* drwatson.c DisAsmAround */
+
+IDSTRCodeSegmentNPOrInvalid            "Kodesegmentet finnes ikke eller er ugyldig\n"
+IDSTRNoSymbolsFound                    "(finner ingen symboler)\n"
+
+/* drwatson.c DumpInfo */
+
+IDSTRSystemInfoInfo                    "Systeminformasjon (info)\n"
+IDSTRWindowsVersion                    "Windows versjon %d.%02d\n"
+IDSTRDebugBuild                        "Feilsøkingsbuild\n"
+IDSTRRetailBuild                       "Detaljsalgsbuild\n"
+IDSTRWindowsBuild                      "Windows Build %s\n"
+IDSTRUsername                          "Brukernavn %s\n"
+IDSTROrganization                      "Organisasjon %s\n"
+IDSTRSystemFreeSpace                   "Ledig systemplass %ld\n"
+IDSTRStackBaseTopLowestSize            "Stakk base %u, topp %u, laveste %u, størrelse %u\n"
+IDSTRSystemResourcesUserGDI            "System ressurser:  USER: %u%% ledig, seg %04x  GDI: %u%% ledig, seg %04x\n"
+IDSTRMemManInfo1                       "StørsteFrie %ld, MaksSiderTilgj %ld, MaksLåsbareSider %ld\n"
+IDSTRMemManInfo2                       "TotaltLineær %ld, TotaltUlåsteSider %ld, FrieSider %ld\n"
+IDSTRMemManInfo3                       "TotaltSider %ld, FrittLineærtOmråde %ld, BytteFilsider %ld\n"
+IDSTRMemManInfo4                       "Sidestørrelse %d\n"
+IDSTRTasksExecuting                    "%d oppgaver kjører.\n"
+IDSTRWinFlags                          "WinFlagg -\n"
+
+/* drwatson.c GetProcName */
+
+IDSTRUnknownAddress                    "Ukjent adresse"
+
+/* drwatson.c DumpStack */
+
+IDSTRStackDumpStack                    "Stakkdump (stakk)\n"
+IDSTRStackFrameInfo                    "Stakkramme %d er %-28s ss:bp %04x:%04x"
+
+/* drwatson.c BeginReport */
+
+IDSTRFailureReport                     "\n%s Feilrapport - %s"
+
+/* drwatson.c ShowParamError */
+
+IDSTRLastParamErrorWas                 "Forrige param-feil var:"
+
+/* drwatson.c Sherlock */
+
+IDSTRHadAFaultAt                       "%s hadde en '%s' feil i %s\n"
+IDSTRCPURegistersRegs                  "CPU registre (reg)\n"
+IDSTRCPU32bitRegisters32bit            "CPU 32 biters registre (32bit)\n"
+IDSTRInstructionDisasm                 "Instruksjon Disassembly (disasm)\n"
+IDSTRSystemTasksTasks                  "Systemoppgaver (oppgaver)\n"
+IDSTRTaskHandleFlagsInfo               "Oppgave %8s, Referanse %04x, Flagg %04x, Info %s\n"
+IDSTRFilename                          "  Filnavn %s\n"
+IDSTRSystemModulesModules              "Systemmoduler (moduler)\n"
+IDSTRModuleHandleFlagsInfo             "Modul %8s, Referanse %04x, Flagg %04x, Info %s\n"
+IDSTRFile                              "  Fil %s\n"
+IDSTRContinuingExecution               "Forsøker å fortsette kjøring på brukers anmodning, %s"
+
+/* drwatson.c CallMeToo */
+
+IDSTRDebugString                       "Feilsøkingsstreng: %s"
+IDSTRApplicationError                  "Programfeil"
+IDSTRInvalidParameter                  "Ugyldig parameter"
+IDSTRNA                                "i/t"
+IDSTRHadAFaultAt2                      "%s hadde en '%s (%x)' feil i %s\n"
+IDSTRParamIs                           "param er %lx$%s\n"
+
+/* drwatson.c Moriarty */
+
+IDSTRStop                              "Stopp"
+
+/* drwatson.c SherlockWndProc */
+
+IDSTRLogFileGettingLarge               "Loggfilen '%s'  for 'Dr. Watson' begynner å bli rimelig stor."
+
+/* drwatson.c WinMain */
+
+IDSTRStart                             "\nStart"
+
+/* error.c LogErrorStr */
+
+IDSTRWarningError                      "\r\n\r\nAdvarsel feil #%04x"
+IDSTRFatalError                        "\r\n\r\nAlvorlig feil #%04x"
+
+/* error.c LogParamErrorStr */
+
+IDSTRParamErrorParam                   "Ugyldig parameter sendt til %s: %ld"
+IDSTRParamErrorBadInt                  "Ugyldig parameter sendt til %s: %d"
+IDSTRParamErrorBadFlags                "Ugyldige flagg sendt til %s: %#04x"
+IDSTRParamErrorBadDWord                "Ugyldige flagg sendt til %s: %#08lx"
+IDSTRParamErrorBadHandle               "Ugyldig referanse sendt til %s: %#04x"
+IDSTRParamErrorBadPtr                  "Ugyldig peker sendt til %s: %#04x:%#04x"
+
+/* drwatson.c CurTime -- These strings must be short enough to not overflow
+                         the 48-byte buffer used by CurTime with a string of
+                         the form "Fri Sep  1 01:58:19 1995" (which is 24
+                         characters + 1 for the null terminator). */
+
+IDSTRJan                               "Jan"
+IDSTRFeb                               "Feb"
+IDSTRMar                               "Mar"
+IDSTRApr                               "Apr"
+IDSTRMay                               "Mai"
+IDSTRJun                               "Jun"
+IDSTRJul                               "Jul"
+IDSTRAug                               "Aug"
+IDSTRSep                               "Sep"
+IDSTROct                               "Okt"
+IDSTRNov                               "Nov"
+IDSTRDec                               "Des"
+
+IDSTRSun                               "Sø"
+IDSTRMon                               "Ma"
+IDSTRTue                               "Ti"
+IDSTRWed                               "On"
+IDSTRThu                               "To"
+IDSTRFri                               "Fr"
+IDSTRSat                               "Lø"
+
+END

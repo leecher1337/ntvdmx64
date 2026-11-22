@@ -1,0 +1,242 @@
+//---------------------------------------------------------------------------
+// drwatson.rc : reconstructed fr resources
+//
+// Recovered from the shipped localized drwatson.exe with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#define NOGDICAPMASKS
+#define NOWINMESSAGES
+#define NOSYSMETRICS
+#define NOICON
+#define NOKEYSTATE
+#define NOSYSCOMMANDS
+#define NOSHOWWINDOW
+#define NOATOM
+#define NOGDI
+#define NOFONT
+#define NOBRUSH
+#define NOCLIPBOARD
+#define NOCOLOR
+#define NOCREATESTRUCT
+#define NODRAWTEXT
+#define NOMB
+#define NOMEMMGR
+#define NOMETAFILE
+#define NOMINMAX
+#define NOOPENFILE
+#define NOPEN
+#define NOREGION
+#define NOSCROLL
+#define NOSOUND
+#define NOTEXTMETRIC
+#define NOWH
+#define NOWINOFFSETS
+#define NOWNDCLASS
+#define NOCOMM
+#include <windows.h>
+
+#include "drwatson.rcv"
+
+#include "str.h"
+
+drwatsonIcon ICON doctor.ico
+
+#define DS_3DLOOK           0x0004
+
+SHERDIAG DIALOG DISCARDABLE LOADONCALL PURE MOVEABLE 59, 42, 179, 139
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_3DLOOK
+CAPTION "Les indications du Dr Watson"
+BEGIN
+  CONTROL "Pour vous aider à résoudre le problème que vous venez de rencontrer, veuillez décrire ce que vous étiez en train de faire avant que l'erreur ne se produise." 101, "STATIC", WS_CHILD | WS_VISIBLE | 0x1L, 26, 5, 128, 42
+  CONTROL "" 102, "EDIT", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | 0x44L, 14, 50, 151, 62
+  CONTROL "OK" 1, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 45, 119, 36, 14
+  CONTROL "Annuler" 2, "BUTTON", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 119, 36, 14
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+
+/* Note all strings below must be <= CCH_MAX_STRING_RESOURCE chars! */
+
+/* drwatson.c */
+
+IDSTRNoFault                           "Aucune erreur détectée\n\nCopyright 1991-1995, Microsoft Corp."
+IDSTRFaulty                            "%d Vous trouverez de nouveaux rapports d'échec Dr Watson dans le fichier %s\n\nCopyright 1991-1995, Microsoft Corp."
+IDSTRGPText                            "Une erreur s'est produite dans votre application.\nSi vous choisissez Ignorer, vous devriez enregistrer votre travail dans un nouveau fichier.\nSi vous choisissez Fermer, votre application s'arrêtera."
+IDSTRErrMsg                            "Un exemplaire de Dr Watson est déjà en cours d'exécution sur votre ordinateur."
+IDSTRVers                              "Impossible d'installer Dr Watson, la version de TOOLHELP.DLL n'est peut-être pas correcte"
+IDSTRClassMsg                          "Impossible d'installer Dr Watson, la classe de la fenêtre ne peut pas être déterminée."
+IDSTRCoprocessor                       "Coprocesseur mathématique"
+IDSTR8086                              "8086"
+IDSTR80186                             "80186 ou 80188"
+IDSTR80286                             "80286"
+IDSTR80386                             "80386 ou 80386 SX"
+IDSTR80486                             "80486"
+IDSTREnhancedMode                      "Mode étendu"
+IDSTRProtectMode                       "Mode protégé"
+IDSTRStandardMode                      "Mode standard"
+IDSTRWindowsNT                         "Windows NT"
+
+/* drwatson.c SegFlags */
+
+IDSTRNullPtr                           "Null Ptr"
+IDSTRInvalid                           "Non valide"
+IDSTRNotPresent                        "!Present"
+IDSTRCode                              "Code "
+IDSTRExR                               "Ex/R"
+IDSTRExO                               "Ex/O"
+IDSTRData                              "Données "
+IDSTRRW                                "R/W"
+IDSTRRO                                "R-O"
+
+/* drwatson.c ModuleName (and several others) */
+
+IDSTRUnknown                           "Inconnu"
+
+/* drwatson.c FaultType */
+
+IDSTRDivideByZero                      "Division par 0"
+IDSTRInvalidOpcode                     "Opcode non valide"
+IDSTRGeneralProtection                 "Protection générale"
+
+/* drwatson.c DecodeFault */
+
+IDSTRInvalidSelector                   "Sélecteur non valide"
+IDSTRNullSelector                      "Sélecteur nul"
+IDSTRSegmentNotPresent                 "Segment absent"
+IDSTRExceedSegmentBounds               "Dépasse les limites du segment"
+IDSTRCodeSegment                       "Segment de code"
+IDSTRExecuteOnlySegment                "Segment réservé à l'exécution"
+IDSTRReadOnlySegment                   "Segment réservé à la lecture"
+
+/* drwatson.c SafeDisAsm86 */
+
+IDSTRSegNotPresentOrPastEnd            "Segment absent, ou dépassé"
+
+/* drwatson.c FaultCause */
+
+IDSTRErrorLog                          "Journal des erreurs"
+IDSTRParameterErrorLog                 "Journal des erreurs de paramètre"
+
+/* drwatson.c FileInfo */
+
+IDSTRFileNotFound                      "Fichier introuvable"
+
+/* drwatson.c DisAsmAround */
+
+IDSTRCodeSegmentNPOrInvalid            "Segment de code absent ou non valide\n"
+IDSTRNoSymbolsFound                    "(aucun symbole trouvé)\n"
+
+/* drwatson.c DumpInfo */
+
+IDSTRSystemInfoInfo                    "Info système (info)\n"
+IDSTRWindowsVersion                    "Windows version %d.%02d\n"
+IDSTRDebugBuild                        "Version de débogage\n"
+IDSTRRetailBuild                       "Version commerciale\n"
+IDSTRWindowsBuild                      "Version de Windows numéro %s\n"
+IDSTRUsername                          "Nom d'utilisateur %s\n"
+IDSTROrganization                      "Organisation %s\n"
+IDSTRSystemFreeSpace                   "Espace système libre %ld\n"
+IDSTRStackBaseTopLowestSize            "Base de la pile %u, haute %u, basse %u, taille %u\n"
+IDSTRSystemResourcesUserGDI            "Ressources système : Utilisateur : %u%% libres, seg %04x GDI: %u%% libres, seg %04x\n"
+IDSTRMemManInfo1                       "LargestFree %ld, MaxPagesAvail %ld, MaxPagesLockable %ld\n"
+IDSTRMemManInfo2                       "TotalLinear %ld, TotalUnlockedPages %ld, FreePages %ld\n"
+IDSTRMemManInfo3                       "TotalPages %ld, FreeLinearSpace %ld, SwapFilePages %ld\n"
+IDSTRMemManInfo4                       "Taille de page %d\n"
+IDSTRTasksExecuting                    "%d tâches en cours d'exécution.\n"
+IDSTRWinFlags                          "WinFlags -\n"
+
+/* drwatson.c GetProcName */
+
+IDSTRUnknownAddress                    "Adresse inconnue"
+
+/* drwatson.c DumpStack */
+
+IDSTRStackDumpStack                    "Vidage de pile (pile)\n"
+IDSTRStackFrameInfo                    "La trame de pile %d est %-28s ss:bp %04x:%04x"
+
+/* drwatson.c BeginReport */
+
+IDSTRFailureReport                     "\n%s Rapport d'échec - %s"
+
+/* drwatson.c ShowParamError */
+
+IDSTRLastParamErrorWas                 "La dernière erreur de paramétrage était :"
+
+/* drwatson.c Sherlock */
+
+IDSTRHadAFaultAt                       "%s avait une erreur '%s' à %s\n"
+IDSTRCPURegistersRegs                  "Registres UC (regs)\n"
+IDSTRCPU32bitRegisters32bit            "Registres 32 bits UC (32 bits)\n"
+IDSTRInstructionDisasm                 "Désassemblage d'instructions (disasm)\n"
+IDSTRSystemTasksTasks                  "Tâches système (tâches)\n"
+IDSTRTaskHandleFlagsInfo               "Tâche %8s, Handle %04x, Indicateurs %04x, Info %s\n"
+IDSTRFilename                          "  Nom de fichier %s\n"
+IDSTRSystemModulesModules              "Modules Systèmes (modules)\n"
+IDSTRModuleHandleFlagsInfo             "Module %8s, Handle %04x, Indicateurs %04x, Info %s\n"
+IDSTRFile                              "  Fichier %s\n"
+IDSTRContinuingExecution               "Tentative de poursuite de l'exécution à la demande de l'utilisateur, %s"
+
+/* drwatson.c CallMeToo */
+
+IDSTRDebugString                       "DebugString: %s"
+IDSTRApplicationError                  "Erreur d'application"
+IDSTRInvalidParameter                  "Paramètre non valide"
+IDSTRNA                                "n.a."
+IDSTRHadAFaultAt2                      "%s a eu une erreur %s (%x) à %s\n"
+IDSTRParamIs                           "Le paramètre est %lx$%s\n"
+
+/* drwatson.c Moriarty */
+
+IDSTRStop                              "Arrêter"
+
+/* drwatson.c SherlockWndProc */
+
+IDSTRLogFileGettingLarge               "La taille du fichier journal %s de Dr Watson commence à être importante."
+
+/* drwatson.c WinMain */
+
+IDSTRStart                             "\nDémarrer"
+
+/* error.c LogErrorStr */
+
+IDSTRWarningError                      "\r\n\r\nErreur d'avertissement #%04x"
+IDSTRFatalError                        "\r\n\r\nErreur irrécupérable #%04x"
+
+/* error.c LogParamErrorStr */
+
+IDSTRParamErrorParam                   "Paramètre non valide passé à %s : %ld"
+IDSTRParamErrorBadInt                  "Paramètre non valide passé à %s : %d"
+IDSTRParamErrorBadFlags                "Indicateurs non valides passés à %s : %#04x"
+IDSTRParamErrorBadDWord                "Indicateurs non valides passés à %s : %#08lx"
+IDSTRParamErrorBadHandle               "Handle non valide passé à %s : %#04x"
+IDSTRParamErrorBadPtr                  "Pointeur non valide passé à %s : %#04x:%#04x"
+
+/* drwatson.c CurTime -- These strings must be short enough to not overflow
+                         the 48-byte buffer used by CurTime with a string of
+                         the form "Fri Sep  1 01:58:19 1995" (which is 24
+                         characters + 1 for the null terminator). */
+
+IDSTRJan                               "Jan"
+IDSTRFeb                               "Fév"
+IDSTRMar                               "Mar"
+IDSTRApr                               "Avr"
+IDSTRMay                               "Mai"
+IDSTRJun                               "Jui"
+IDSTRJul                               "Jul"
+IDSTRAug                               "Aoû"
+IDSTRSep                               "Sep"
+IDSTROct                               "Oct"
+IDSTRNov                               "Nov"
+IDSTRDec                               "Déc"
+
+IDSTRSun                               "Dim"
+IDSTRMon                               "Lun"
+IDSTRTue                               "Mar"
+IDSTRWed                               "Mer"
+IDSTRThu                               "Jeu"
+IDSTRFri                               "Ven"
+IDSTRSat                               "Sam"
+
+END

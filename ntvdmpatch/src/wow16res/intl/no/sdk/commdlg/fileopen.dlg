@@ -1,0 +1,101 @@
+//---------------------------------------------------------------------------
+// fileopen.dlg : reconstructed no resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// FileOpen.dlg :  File Open and Save As dialog descriptions
+//
+// Copyright (c) Microsoft Corporation, 1990-
+//---------------------------------------------------------------------------
+
+FILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 
+36, 24,  274, 135
+CAPTION "Åpne"
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME
+FONT 8, "Helv"
+BEGIN
+    LTEXT "&Filnavn:", stc3,   6,   6,  76,  9
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD | ES_OEMCONVERT,
+            6,    16,  90,  12
+    CONTROL "", lst1, "listbox",
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_OWNERDRAWFIXED,
+            6,    32,  90,  68
+
+    LTEXT "&Mapper:", -1, 105,   6,  76,   9
+    LTEXT "",            stc1, 105,  18,  92,   9, SS_NOPREFIX
+    CONTROL "", lst2, "listbox", 
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_OWNERDRAWFIXED,
+            105,  32,  92,  68
+
+    LTEXT "Fil&type:", stc2, 6,  104,  90,   9
+    CONTROL "", cmb1, "combobox", CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+            WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD,
+            6,  114,  90,  68
+
+    LTEXT "&Stasjoner:", stc4,      105, 104,  92,  9
+    CONTROL "", cmb2, "combobox", 
+            CBS_SORT | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_DROPDOWNLIST 
+            | WS_CHILD | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL 
+            | WS_TABSTOP,
+            105, 114,  92, 68 
+
+    DEFPUSHBUTTON "OK", IDOK,       218,  6, 50, 14, WS_GROUP
+    PUSHBUTTON "Avbryt", IDCANCEL,  218, 24, 50, 14, WS_GROUP
+
+    PUSHBUTTON "&Hjelp", pshHelp,      218, 46, 50, 14, WS_GROUP
+    CHECKBOX "Skrive&beskyttet", chx1,    208, 68, 63, 12,
+                        BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+
+END
+
+MULTIFILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 
+36, 24,  267, 135
+CAPTION "Åpne"
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME
+FONT 8, "Helv"
+BEGIN
+    LTEXT "&Filnavn:", stc3,   4,   6,  76,  10
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD | ES_OEMCONVERT,
+            4,    16,  90,  12
+    CONTROL "", lst1, "listbox", LBS_SORT | LBS_NOTIFY | LBS_DISABLENOSCROLL |
+             WS_VSCROLL | WS_BORDER | WS_TABSTOP | LBS_EXTENDEDSEL
+            | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED,
+            4,    32,  90,  68
+
+    LTEXT "&Mapper:", -1, 105,   6,  83,   9
+    LTEXT "",            stc1, 105,  16,  92,   9, SS_NOPREFIX
+    CONTROL "", lst2, "listbox", 
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_OWNERDRAWFIXED,
+            105,  32,  92,  68
+
+    LTEXT "Fil&type:", stc2, 4,  102,  90,   9
+    CONTROL "", cmb1, "combobox", CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+            WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD,
+            4,  112,  90,  68
+
+    LTEXT "&Stasjoner:", stc4,      105, 102,  92,  9
+    CONTROL "", cmb2, "combobox", 
+            CBS_SORT | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_DROPDOWNLIST 
+            | WS_CHILD | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL 
+            | WS_TABSTOP,
+            105, 112,  92, 68 
+
+    DEFPUSHBUTTON "OK", IDOK,       210,  7, 50, 14, WS_GROUP
+    PUSHBUTTON "Avbryt", IDCANCEL,  210, 25, 50, 14, WS_GROUP
+
+    PUSHBUTTON "&Hjelp", pshHelp,      210, 48, 50, 14, WS_GROUP
+    CHECKBOX "Skrive&beskyttet", chx1,    202, 70, 63, 10,
+                        BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+
+END

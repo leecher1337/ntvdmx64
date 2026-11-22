@@ -1,0 +1,66 @@
+//---------------------------------------------------------------------------
+// user.rc : reconstructed no resources
+//
+// Recovered from the shipped localized user.exe with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+/****************************************************************************/
+/*                                                                          */
+/*  USER.RC -                                                               */
+/*                                                                          */
+/*  USER's Resource File                                                    */
+/*                                                                          */
+/****************************************************************************/
+
+#include "strtable.h"
+#include "netdlg.h"
+
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+
+    STR_NETDRIVER       "NETWORK.DRV"
+    STR_BOOT            "boot"
+    STR_LANGDRIVER      "LANGUAGE.DLL"
+    STR_SYSTEMINI       "SYSTEM.INI"
+    STR_TASKMAN         "TASKMAN.EXE"
+    STR_DRIVERS         "DRIVERS"
+
+/* Strings used for device driver initialization which we don't want hanging
+ * around our ds.
+ */
+    STR_COMMMODULENAME,     "COMM"
+    STR_COMMWRITESTRING,    "COMMWRITESTRING"
+    STR_COMMREADSTRING,     "READCOMMSTRING"
+    STR_COMMENABLENOTIFICATION "ENABLENOTIFICATION"
+
+/*---------------------------------------------------------------------------*/
+/* All strings above this line MUST NOT be localized.  All strings below
+ * this line should be localized.
+ */
+    STR_NETCONNTTL      "Feil ved gjenoppretting av nettverkstilkoblinger"
+    STR_NETCONNMSG      "Kan ikke koble til %s: %s"
+    STR_NETCRASHEDTITLE     "Feil ved gjenoppretting av nettverkstilkoblinger"
+    STR_NETCRASHEDMSG       "Windows ble startet på nytt mens nettverkstilkoblingene ble gjenopprettet. Vil du prøve å opprette koblingene, eller avbryte nettverkstilkoblingene for denne økten?"
+
+    STR_NETERRORS       "Uventet nettverksfeil: 0x%4.4X"
+    STR_NETERRORS+1     "Nettverksfunksjonen støttes ikke"
+    STR_NETERRORS+2     "Nettverksfeil"
+    STR_NETERRORS+6     "Feil passord"
+    STR_NETERRORS+7     "Ingen tilgang"
+    STR_NETERRORS+11        "Ikke nok minne"
+    STR_NETERRORS+0x30      "Enheten er ikke tilkoblet"
+    STR_NETERRORS+0x31      "Det er åpne filer på enheten"
+    STR_NETERRORS+0x32      "Ugyldig nettverksnavn"
+    STR_NETERRORS+0x33      "Ugyldig lokal enhet"
+    STR_NETERRORS+0x34      "Enheten er allerede tilkoblet"
+    STR_NETERRORS+0x35      "Koblingen er brutt"
+    STR_NETERRORS+0x36      "Permanent tilkobling er ikke tilgjengelig"
+
+    STR_SYSERR,             "Systemfeil"
+    STR_DIVBYZERO,          "Divisjon med null eller overflytsfeil"
+
+END
+
+#include "user.rcv"

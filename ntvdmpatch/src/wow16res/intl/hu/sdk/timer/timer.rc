@@ -1,0 +1,15 @@
+//---------------------------------------------------------------------------
+// timer.rc : reconstructed hu resources
+//
+// Recovered from the shipped localized timer.drv with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#include <windows.h>
+#include "timer.rcv"
+
+STRINGTABLE LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+	1,		"Idõmérõ illesztõprogram"
+	2,		"A VTDAPI.386 fájl nem található. A multimédia idõmérõk nem használhatóak.\nEllenõrizze, hogy a VTDAPI.386 fájl létezik-e a Windows SYSTEM könyvtárában,\nés hogy a ""device=VTDAPI.386"" sor szerepel-e a SYSTEM.INI fájl [386Enh] szakaszában."
+END

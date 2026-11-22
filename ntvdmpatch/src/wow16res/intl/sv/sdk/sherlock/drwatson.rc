@@ -1,0 +1,242 @@
+//---------------------------------------------------------------------------
+// drwatson.rc : reconstructed sv resources
+//
+// Recovered from the shipped localized drwatson.exe with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#define NOGDICAPMASKS
+#define NOWINMESSAGES
+#define NOSYSMETRICS
+#define NOICON
+#define NOKEYSTATE
+#define NOSYSCOMMANDS
+#define NOSHOWWINDOW
+#define NOATOM
+#define NOGDI
+#define NOFONT
+#define NOBRUSH
+#define NOCLIPBOARD
+#define NOCOLOR
+#define NOCREATESTRUCT
+#define NODRAWTEXT
+#define NOMB
+#define NOMEMMGR
+#define NOMETAFILE
+#define NOMINMAX
+#define NOOPENFILE
+#define NOPEN
+#define NOREGION
+#define NOSCROLL
+#define NOSOUND
+#define NOTEXTMETRIC
+#define NOWH
+#define NOWINOFFSETS
+#define NOWNDCLASS
+#define NOCOMM
+#include <windows.h>
+
+#include "drwatson.rcv"
+
+#include "str.h"
+
+drwatsonIcon ICON doctor.ico
+
+#define DS_3DLOOK           0x0004
+
+SHERDIAG DIALOG DISCARDABLE LOADONCALL PURE MOVEABLE 59, 42, 179, 134
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_3DLOOK
+CAPTION "Dr. Watsons ledtrådar"
+BEGIN
+  CONTROL "Beskriv exakt vad du gjorde innan felet uppstod. Din beskrivning kommer att användas för att söka reda på och åtgärda felet." 101, "STATIC", WS_CHILD | WS_VISIBLE | 0x1L, 26, 5, 128, 33
+  CONTROL "" 102, "EDIT", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | 0x44L, 13, 43, 151, 62
+  CONTROL "OK" 1, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 32, 111, 32, 14
+  CONTROL "Avbryt" 2, "BUTTON", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 110, 111, 36, 14
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+
+/* Note all strings below must be <= CCH_MAX_STRING_RESOURCE chars! */
+
+/* drwatson.c */
+
+IDSTRNoFault                           "Inga fel har hittats.\n\nCopyright 1991-1995, Microsoft Corp."
+IDSTRFaulty                            "%d nytt Dr. Watson-fel. Rapporter finns i filen ""%s""\n\nCopyright 1991-1995, Microsoft Corp."
+IDSTRGPText                            "Ett fel har inträffat i programmet.\nOm du väljer Ignorera ska du spara arbetet i en ny fil.\nOm du väljer Stäng kommer programmet att avslutas."
+IDSTRErrMsg                            "Ett exemplar av Dr. Watson körs redan."
+IDSTRVers                              "Det gick inte att installera Dr. Watson. TOOLHELP.DLL kan vara av fel version."
+IDSTRClassMsg                          "Det gick inte at installera Dr. Watson. Det gick inte att registrera fönsterklassen."
+IDSTRCoprocessor                       "Flyttalsprocessor"
+IDSTR8086                              "8086"
+IDSTR80186                             "80186 eller 80188"
+IDSTR80286                             "80286"
+IDSTR80386                             "80386 eller 80386 SX"
+IDSTR80486                             "80486"
+IDSTREnhancedMode                      "Enhanced-läge"
+IDSTRProtectMode                       "Protected-läge"
+IDSTRStandardMode                      "Standardläge"
+IDSTRWindowsNT                         "Windows NT"
+
+/* drwatson.c SegFlags */
+
+IDSTRNullPtr                           "Null-pekare"
+IDSTRInvalid                           "Felaktig"
+IDSTRNotPresent                        "!Present"
+IDSTRCode                              "Kod "
+IDSTRExR                               "Körning/Läsning"
+IDSTRExO                               "Körning"
+IDSTRData                              "Data "
+IDSTRRW                                "Läsning/skrivning"
+IDSTRRO                                "Läsning"
+
+/* drwatson.c ModuleName (and several others) */
+
+IDSTRUnknown                           "Okänt"
+
+/* drwatson.c FaultType */
+
+IDSTRDivideByZero                      "Division med noll"
+IDSTRInvalidOpcode                     "Ogiltig opkod"
+IDSTRGeneralProtection                 "Allmänt skyddsfel"
+
+/* drwatson.c DecodeFault */
+
+IDSTRInvalidSelector                   "Ogiltig väljare"
+IDSTRNullSelector                      "Null-selector"
+IDSTRSegmentNotPresent                 "Segmentet saknas"
+IDSTRExceedSegmentBounds               "Segmentgränserna har överskridits"
+IDSTRCodeSegment                       "Kodsegment"
+IDSTRExecuteOnlySegment                """Endast körning""-segment"
+IDSTRReadOnlySegment                   "Skrivskyddat segment"
+
+/* drwatson.c SafeDisAsm86 */
+
+IDSTRSegNotPresentOrPastEnd            "Segmentet saknas eller har gåtts förbi"
+
+/* drwatson.c FaultCause */
+
+IDSTRErrorLog                          "Fellogg"
+IDSTRParameterErrorLog                 "Parameterfellogg"
+
+/* drwatson.c FileInfo */
+
+IDSTRFileNotFound                      "Det gick inte att hitta filen"
+
+/* drwatson.c DisAsmAround */
+
+IDSTRCodeSegmentNPOrInvalid            "Kodsegmentet saknas eller är ogiltigt\n"
+IDSTRNoSymbolsFound                    "(inga symboler hittades)\n"
+
+/* drwatson.c DumpInfo */
+
+IDSTRSystemInfoInfo                    "Systeminformation (info)\n"
+IDSTRWindowsVersion                    "Windows-version %d.%02d\n"
+IDSTRDebugBuild                        "Felsöknings-build\n"
+IDSTRRetailBuild                       "Återförsäljnings-build\n"
+IDSTRWindowsBuild                      "Windows-build %s\n"
+IDSTRUsername                          "Användarnamn %s\n"
+IDSTROrganization                      "Organisation %s\n"
+IDSTRSystemFreeSpace                   "Ledigt systemutrymme %ld\n"
+IDSTRStackBaseTopLowestSize            "Stackbas %u, topp %u, lägsta %u, storlek %u\n"
+IDSTRSystemResourcesUserGDI            "Systemresurser:  USER: %u %% ledigt, seg %04x  GDI: %u %% ledigt, seg %04x\n"
+IDSTRMemManInfo1                       "LargestFree %ld, MaxPagesAvail %ld, MaxPagesLockable %ld\n"
+IDSTRMemManInfo2                       "TotalLinear %ld, TotalUnlockedPages %ld, FreePages %ld\n"
+IDSTRMemManInfo3                       "TotalPages %ld, FreeLinearSpace %ld, SwapFilePages %ld\n"
+IDSTRMemManInfo4                       "Sidstorlek %d\n"
+IDSTRTasksExecuting                    "%d processer kör.\n"
+IDSTRWinFlags                          "WinFlags -\n"
+
+/* drwatson.c GetProcName */
+
+IDSTRUnknownAddress                    "Okänd adress"
+
+/* drwatson.c DumpStack */
+
+IDSTRStackDumpStack                    "Stackdump (stack)\n"
+IDSTRStackFrameInfo                    "Stackramen %d är %-28s ss:bp %04x:%04x"
+
+/* drwatson.c BeginReport */
+
+IDSTRFailureReport                     "\n%s Felrapport - %s"
+
+/* drwatson.c ShowParamError */
+
+IDSTRLastParamErrorWas                 "Sista parameterfel var:"
+
+/* drwatson.c Sherlock */
+
+IDSTRHadAFaultAt                       "%s gjorde ett ""%s""-fel vid %s\n"
+IDSTRCPURegistersRegs                  "CPU-register (regs)\n"
+IDSTRCPU32bitRegisters32bit            "32-bitars-CPU-register (32bit)\n"
+IDSTRInstructionDisasm                 "Instruktionsdisassemblering (disasm)\n"
+IDSTRSystemTasksTasks                  "Systemprocesser (tasks)\n"
+IDSTRTaskHandleFlagsInfo               "Aktivitet %8s, Referens %04x, Flaggor %04x, Info %s\n"
+IDSTRFilename                          "  Filnamn %s\n"
+IDSTRSystemModulesModules              "Systemmoduler (modules)\n"
+IDSTRModuleHandleFlagsInfo             "Modul %8s, Referens %04x, Flaggor %04x, Info %s\n"
+IDSTRFile                              "  Fil %s\n"
+IDSTRContinuingExecution               "Det gick inte att fortsätta körningen vid användarbegäran, %s"
+
+/* drwatson.c CallMeToo */
+
+IDSTRDebugString                       "DebugString: %s"
+IDSTRApplicationError                  "Programfel"
+IDSTRInvalidParameter                  "Ogiltig parameter"
+IDSTRNA                                "ej tillg"
+IDSTRHadAFaultAt2                      "%s gjorde ett ""%s (%x)""-fel vid %s\n"
+IDSTRParamIs                           "parametern är %lx$%s\n"
+
+/* drwatson.c Moriarty */
+
+IDSTRStop                              "Stoppa"
+
+/* drwatson.c SherlockWndProc */
+
+IDSTRLogFileGettingLarge               "Dr. Watson-loggfilen ""%s"" börjar bli stor."
+
+/* drwatson.c WinMain */
+
+IDSTRStart                             "\nStarta"
+
+/* error.c LogErrorStr */
+
+IDSTRWarningError                      "\r\n\r\nVarningsfel nr %04x"
+IDSTRFatalError                        "\r\n\r\nOåterkalleligt fel nr %04x"
+
+/* error.c LogParamErrorStr */
+
+IDSTRParamErrorParam                   "Ogiltig parameter överförd till %s: %ld"
+IDSTRParamErrorBadInt                  "Ogiltig parameter överförd till %s: %d"
+IDSTRParamErrorBadFlags                "Ogiltiga flaggor överförda till %s: %#04x"
+IDSTRParamErrorBadDWord                "Ogiltiga flaggor överförda till %s: %#08lx"
+IDSTRParamErrorBadHandle               "Ogiltigt referens överförd till %s: %#04x"
+IDSTRParamErrorBadPtr                  "Ogiltig pekare överförd till %s: %#04x:%#04x"
+
+/* drwatson.c CurTime -- These strings must be short enough to not overflow
+                         the 48-byte buffer used by CurTime with a string of
+                         the form "Fri Sep  1 01:58:19 1995" (which is 24
+                         characters + 1 for the null terminator). */
+
+IDSTRJan                               "jan"
+IDSTRFeb                               "feb"
+IDSTRMar                               "mar"
+IDSTRApr                               "apr"
+IDSTRMay                               "maj"
+IDSTRJun                               "jun"
+IDSTRJul                               "jul"
+IDSTRAug                               "aug"
+IDSTRSep                               "sep"
+IDSTROct                               "okt"
+IDSTRNov                               "nov"
+IDSTRDec                               "dec"
+
+IDSTRSun                               "Sön"
+IDSTRMon                               "mån"
+IDSTRTue                               "Tis"
+IDSTRWed                               "Ons"
+IDSTRThu                               "Tor"
+IDSTRFri                               "Fre"
+IDSTRSat                               "Lör"
+
+END

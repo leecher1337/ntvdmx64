@@ -1,0 +1,15 @@
+//---------------------------------------------------------------------------
+// timer.rc : reconstructed nl resources
+//
+// Recovered from the shipped localized timer.drv with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#include <windows.h>
+#include "timer.rcv"
+
+STRINGTABLE LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+	1,		"Timerstuurprogramma"
+	2,		"Kan het bestand VTDAPI.386 niet vinden. De multimediatimers zijn niet\nbeschikbaar. Controleer of VTDAPI.386 zich in uw Windows-map System bevindt \nen of de regel device=VTDAPI.386 is opgenomen in de sectie [386Enh] van het\nbestand System.ini."
+END

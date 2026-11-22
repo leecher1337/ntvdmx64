@@ -1,0 +1,68 @@
+//---------------------------------------------------------------------------
+// color.dlg : reconstructed sv resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#include "colordlg.h"
+
+ChooseColor DIALOG LOADONCALL MOVEABLE DISCARDABLE 2, 0, 339, 190
+CAPTION "Färg"
+STYLE WS_BORDER | DS_MODALFRAME | WS_CAPTION | WS_POPUP | WS_SYSMENU
+FONT 8 "Helv"
+BEGIN
+  LTEXT "&Grundfärger:", -1, 4, 4, 140, 9
+
+  CONTROL "", COLOR_BOX1, "static", SS_SIMPLE | WS_CHILD | WS_TABSTOP | WS_GROUP, 4, 14, 140, 86
+
+  LTEXT "Anpassade f&ärger:", -1, 4, 106, 140, 9
+
+  CONTROL "",  COLOR_CUSTOM1, "static", SS_SIMPLE | WS_CHILD | WS_TABSTOP | WS_GROUP, 4, 116, 140, 28
+
+  PUSHBUTTON "&Definiera anpassade färger..." COLOR_MIX, 4, 153, 140, 14, WS_TABSTOP | WS_GROUP
+
+  DEFPUSHBUTTON "OK",      IDOK,  4, 169, 44, 14, WS_GROUP | WS_TABSTOP
+  PUSHBUTTON "Avbryt", IDCANCEL, 52, 169, 44, 14, WS_GROUP | WS_TABSTOP
+  PUSHBUTTON "&Hjälp",  pshHelp, 100, 169, 44, 14, WS_GROUP | WS_TABSTOP
+
+  CONTROL "",  COLOR_RAINBOW, "static", SS_BLACKFRAME | WS_CHILD, 153, 4, 119, 116
+
+  CONTROL "",  COLOR_LUMSCROLL, "static", SS_SIMPLE | WS_CHILD, 280, 4, 8, 116
+
+  CONTROL "", COLOR_CURRENT, "static", SS_BLACKFRAME | WS_CHILD, 153, 124, 40, 26
+
+  PUSHBUTTON "&e", COLOR_SOLID, 300, 200, 6, 14, WS_GROUP
+
+  RTEXT "Färg|", -1, 152, 151, 20, 9
+
+  LTEXT "Ren &färg", -1, 172, 151, 31, 9
+
+
+  RTEXT "&Nyans:", COLOR_HUEACCEL, 209, 126, 22, 9
+
+  EDITTEXT, COLOR_HUE, 247, 124, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "&Mättnad:", COLOR_SATACCEL, 206, 140, 31, 10
+
+  EDITTEXT, COLOR_SAT, 247, 138, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "&Ljusstyrka:", COLOR_LUMACCEL, 201, 154, 40, 9
+
+  EDITTEXT, COLOR_LUM, 247, 152, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "&Röd:", COLOR_REDACCEL, 264, 126, 24, 9
+
+  EDITTEXT, COLOR_RED, 292, 124, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "Gr&ön:", COLOR_GREENACCEL, 266, 140, 24, 9
+
+  EDITTEXT, COLOR_GREEN, 292, 138, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "&Blå:", COLOR_BLUEACCEL, 261, 154, 24, 9
+
+  EDITTEXT, COLOR_BLUE, 292, 152, 18, 12, WS_GROUP | WS_TABSTOP
+
+  PUSHBUTTON "Lägg &till anpassade färger", COLOR_ADD, 172, 169, 142, 14, WS_GROUP | WS_TABSTOP
+
+END

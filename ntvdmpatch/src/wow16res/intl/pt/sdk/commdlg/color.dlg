@@ -1,0 +1,68 @@
+//---------------------------------------------------------------------------
+// color.dlg : reconstructed pt resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#include "colordlg.h"
+
+ChooseColor DIALOG LOADONCALL MOVEABLE DISCARDABLE 2, 0, 300, 185
+CAPTION "Cor"
+STYLE WS_BORDER | DS_MODALFRAME | WS_CAPTION | WS_POPUP | WS_SYSMENU
+FONT 8 "Helv"
+BEGIN
+  LTEXT "Cores &base:", -1, 4, 4, 140, 9
+
+  CONTROL "", COLOR_BOX1, "static", SS_SIMPLE | WS_CHILD | WS_TABSTOP | WS_GROUP, 4, 15, 140, 86
+
+  LTEXT "&Cores personalizadas:", -1, 4, 106, 140, 9
+
+  CONTROL "",  COLOR_CUSTOM1, "static", SS_SIMPLE | WS_CHILD | WS_TABSTOP | WS_GROUP, 4, 117, 140, 28
+
+  PUSHBUTTON "De&finir cores personalizadas..." COLOR_MIX, 4, 150, 140, 14, WS_TABSTOP | WS_GROUP
+
+  DEFPUSHBUTTON "OK",      IDOK,  4, 168, 44, 14, WS_GROUP | WS_TABSTOP
+  PUSHBUTTON "Cancelar", IDCANCEL, 52, 168, 44, 14, WS_GROUP | WS_TABSTOP
+  PUSHBUTTON "&Ajuda",  pshHelp, 100, 168, 44, 14, WS_GROUP | WS_TABSTOP
+
+  CONTROL "",  COLOR_RAINBOW, "static", SS_BLACKFRAME | WS_CHILD, 152, 4, 118, 116
+
+  CONTROL "",  COLOR_LUMSCROLL, "static", SS_SIMPLE | WS_CHILD, 280, 4, 8, 116
+
+  CONTROL "", COLOR_CURRENT, "static", SS_BLACKFRAME | WS_CHILD, 152, 124, 40, 26
+
+  PUSHBUTTON "&d", COLOR_SOLID, 300, 200, 4, 14, WS_GROUP
+
+  RTEXT "Cor|", -1, 151, 151, 20, 9
+
+  LTEXT "Sól&ida", -1, 171, 151, 22, 9
+
+
+  RTEXT "&Ton.:", COLOR_HUEACCEL, 203, 126, 23, 9
+
+  EDITTEXT, COLOR_HUE, 229, 124, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "&Sat.:", COLOR_SATACCEL, 203, 140, 23, 9
+
+  EDITTEXT, COLOR_SAT, 229, 138, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "&Lum.:", COLOR_LUMACCEL, 203, 154, 23, 9
+
+  EDITTEXT, COLOR_LUM, 229, 152, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "&Verm.:", COLOR_REDACCEL, 249, 126, 25, 9
+
+  EDITTEXT, COLOR_RED, 276, 124, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "V&erde:", COLOR_GREENACCEL, 249, 140, 25, 9
+
+  EDITTEXT, COLOR_GREEN, 276, 138, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "A&zul:", COLOR_BLUEACCEL, 249, 154, 25, 9
+
+  EDITTEXT, COLOR_BLUE, 276, 152, 18, 12, WS_GROUP | WS_TABSTOP
+
+  PUSHBUTTON "Adicio&nar às cores personalizadas", COLOR_ADD, 152, 168, 142, 14, WS_GROUP | WS_TABSTOP
+
+END

@@ -1,0 +1,66 @@
+//---------------------------------------------------------------------------
+// user.rc : reconstructed nl resources
+//
+// Recovered from the shipped localized user.exe with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+/****************************************************************************/
+/*                                                                          */
+/*  USER.RC -                                                               */
+/*                                                                          */
+/*  USER's Resource File                                                    */
+/*                                                                          */
+/****************************************************************************/
+
+#include "strtable.h"
+#include "netdlg.h"
+
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+
+    STR_NETDRIVER       "NETWORK.DRV"
+    STR_BOOT            "boot"
+    STR_LANGDRIVER      "LANGUAGE.DLL"
+    STR_SYSTEMINI       "SYSTEM.INI"
+    STR_TASKMAN         "TASKMAN.EXE"
+    STR_DRIVERS         "DRIVERS"
+
+/* Strings used for device driver initialization which we don't want hanging
+ * around our ds.
+ */
+    STR_COMMMODULENAME,     "COMM"
+    STR_COMMWRITESTRING,    "COMMWRITESTRING"
+    STR_COMMREADSTRING,     "READCOMMSTRING"
+    STR_COMMENABLENOTIFICATION "ENABLENOTIFICATION"
+
+/*---------------------------------------------------------------------------*/
+/* All strings above this line MUST NOT be localized.  All strings below
+ * this line should be localized.
+ */
+    STR_NETCONNTTL      "Fout bij het herstellen van de netwerkverbindingen"
+    STR_NETCONNMSG      "Kan geen verbinding maken met %s: %s"
+    STR_NETCRASHEDTITLE     "Fout bij het herstellen van de netwerkverbindingen"
+    STR_NETCRASHEDMSG       "Windows is opnieuw gestart bij het herstellen van de netwerkverbinding. Wilt u de verbindingen opnieuw proberen te herstellen of wilt u netwerkverbindingen voor deze sessie annuleren?"
+
+    STR_NETERRORS       "Onbekende netwerkfout: 0x%4.4X"
+    STR_NETERRORS+1     "De netwerkfunctie wordt niet ondersteund."
+    STR_NETERRORS+2     "Netwerkfout"
+    STR_NETERRORS+6     "Ongeldig wachtwoord"
+    STR_NETERRORS+7     "Toegang geweigerd"
+    STR_NETERRORS+11        "Er is onvoldoende geheugen beschikbaar"
+    STR_NETERRORS+0x30      "Het apparaat is niet aangesloten"
+    STR_NETERRORS+0x31      "Op het apparaat zijn bestanden geopend"
+    STR_NETERRORS+0x32      "Ongeldige netwerknaam"
+    STR_NETERRORS+0x33      "Ongeldig lokaal apparaat"
+    STR_NETERRORS+0x34      "Het apparaat is al verbonden"
+    STR_NETERRORS+0x35      "De verbinding is niet meer beschikbaar"
+    STR_NETERRORS+0x36      "Een permanente verbinding is niet beschikbaar"
+
+    STR_SYSERR,             "Systeemfout"
+    STR_DIVBYZERO,          "Fout bij delen door nul of overloop"
+
+END
+
+#include "user.rcv"

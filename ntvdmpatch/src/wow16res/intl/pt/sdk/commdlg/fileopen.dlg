@@ -1,0 +1,101 @@
+//---------------------------------------------------------------------------
+// fileopen.dlg : reconstructed pt resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// FileOpen.dlg :  File Open and Save As dialog descriptions
+//
+// Copyright (c) Microsoft Corporation, 1990-
+//---------------------------------------------------------------------------
+
+FILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 
+36, 24,  263, 134
+CAPTION "Abrir"
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME
+FONT 8, "Helv"
+BEGIN
+    LTEXT "&Nome do ficheiro:", stc3,   6,   5,  76,  8
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD | ES_OEMCONVERT,
+            6,    16,  90,  12
+    CONTROL "", lst1, "listbox",
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_OWNERDRAWFIXED,
+            6,    32,  90,  68
+
+    LTEXT "&Directórios:", -1, 103,   5,  92,   9
+    LTEXT "",            stc1, 103,  16,  92,   9, SS_NOPREFIX
+    CONTROL "", lst2, "listbox", 
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_OWNERDRAWFIXED,
+            103,  32,  92,  68
+
+    LTEXT "&Listar ficheiros do tipo:", stc2, 6,  103,  85,   8
+    CONTROL "", cmb1, "combobox", CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+            WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD,
+            6,  114,  90,  68
+
+    LTEXT "&Unidades:", stc4,      103, 103,  85,  8
+    CONTROL "", cmb2, "combobox", 
+            CBS_SORT | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_DROPDOWNLIST 
+            | WS_CHILD | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL 
+            | WS_TABSTOP,
+            103, 114,  92, 68 
+
+    DEFPUSHBUTTON "OK", IDOK,       203,  7, 50, 14, WS_GROUP
+    PUSHBUTTON "Cancelar", IDCANCEL,  203, 25, 50, 14, WS_GROUP
+
+    PUSHBUTTON "&Ajuda", pshHelp,      203, 47, 50, 14, WS_GROUP
+    CHECKBOX "&Só de leitura", chx1,    200, 68, 61, 12,
+                        BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+
+END
+
+MULTIFILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 
+36, 24,  263, 134
+CAPTION "Abrir"
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME
+FONT 8, "Helv"
+BEGIN
+    LTEXT "&Nome do ficheiro:", stc3,   6,   4,  76,  9
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD | ES_OEMCONVERT,
+            6,    16,  90,  12
+    CONTROL "", lst1, "listbox", LBS_SORT | LBS_NOTIFY | LBS_DISABLENOSCROLL |
+             WS_VSCROLL | WS_BORDER | WS_TABSTOP | LBS_EXTENDEDSEL
+            | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED,
+            6,    32,  90,  68
+
+    LTEXT "&Directórios:", -1, 103,   4,  89,   8
+    LTEXT "",            stc1, 103,  16,  92,   9, SS_NOPREFIX
+    CONTROL "", lst2, "listbox", 
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_OWNERDRAWFIXED,
+            103,  32,  92,  68
+
+    LTEXT "&Listar ficheiros do tipo:", stc2, 6,  103,  86,   8
+    CONTROL "", cmb1, "combobox", CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+            WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD,
+            6,  114,  90,  68
+
+    LTEXT "&Unidades:", stc4,      103, 103,  86,  8
+    CONTROL "", cmb2, "combobox", 
+            CBS_SORT | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_DROPDOWNLIST 
+            | WS_CHILD | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL 
+            | WS_TABSTOP,
+            103, 114,  92, 68 
+
+    DEFPUSHBUTTON "OK", IDOK,       204,  6, 50, 14, WS_GROUP
+    PUSHBUTTON "Cancelar", IDCANCEL,  204, 24, 50, 14, WS_GROUP
+
+    PUSHBUTTON "&Ajuda", pshHelp,      204, 46, 50, 14, WS_GROUP
+    CHECKBOX "&Só de leitura", chx1,    201, 68, 59, 12,
+                        BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+
+END

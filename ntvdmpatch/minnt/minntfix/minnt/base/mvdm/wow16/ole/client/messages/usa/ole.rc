@@ -1,5 +1,8 @@
 #include <windows.h>
 
+//----Version Stamping-------------------------------------------------------
+#include "olecli.rcv"
+
 CONNECTDLG DIALOG FIXED IMPURE  76, 55, 155, 76
 STYLE DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "Connect Network Drive"

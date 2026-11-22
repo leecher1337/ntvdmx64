@@ -1,0 +1,68 @@
+//---------------------------------------------------------------------------
+// color.dlg : reconstructed el resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#include "colordlg.h"
+
+ChooseColor DIALOG LOADONCALL MOVEABLE DISCARDABLE 2, 0, 324, 186
+CAPTION "Χρώμα"
+STYLE WS_BORDER | DS_MODALFRAME | WS_CAPTION | WS_POPUP | WS_SYSMENU
+FONT 8 "Helv"
+BEGIN
+  LTEXT "&Βασικά χρώματα:", -1, 4, 4, 140, 9
+
+  CONTROL "", COLOR_BOX1, "static", SS_SIMPLE | WS_CHILD | WS_TABSTOP | WS_GROUP, 4, 14, 140, 86
+
+  LTEXT "Προσαρμoσμένα χρώμα&τα:", -1, 4, 106, 140, 9
+
+  CONTROL "",  COLOR_CUSTOM1, "static", SS_SIMPLE | WS_CHILD | WS_TABSTOP | WS_GROUP, 4, 116, 140, 28
+
+  PUSHBUTTON "Ορισμός προ&σαρμοσμένων χρωμάτων..." COLOR_MIX, 4, 153, 140, 14, WS_TABSTOP | WS_GROUP
+
+  DEFPUSHBUTTON "ΟΚ",      IDOK,  4, 169, 44, 14, WS_GROUP | WS_TABSTOP
+  PUSHBUTTON "’κυρο", IDCANCEL, 52, 169, 44, 14, WS_GROUP | WS_TABSTOP
+  PUSHBUTTON "Βοήθ&εια",  pshHelp, 100, 169, 44, 14, WS_GROUP | WS_TABSTOP
+
+  CONTROL "",  COLOR_RAINBOW, "static", SS_BLACKFRAME | WS_CHILD, 152, 4, 118, 116
+
+  CONTROL "",  COLOR_LUMSCROLL, "static", SS_SIMPLE | WS_CHILD, 280, 4, 8, 116
+
+  CONTROL "", COLOR_CURRENT, "static", SS_BLACKFRAME | WS_CHILD, 152, 124, 40, 26
+
+  PUSHBUTTON "&ο", COLOR_SOLID, 300, 200, 4, 14, WS_GROUP
+
+  RTEXT "Χρώμα|", -1, 146, 153, 26, 8
+
+  LTEXT "&Αμιγές", -1, 173, 153, 25, 8
+
+
+  RTEXT "Από&χρωση:", COLOR_HUEACCEL, 194, 126, 38, 8
+
+  EDITTEXT, COLOR_HUE, 241, 124, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "&Κορ.:", COLOR_SATACCEL, 208, 140, 24, 8
+
+  EDITTEXT, COLOR_SAT, 241, 138, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "&Φωτ.:", COLOR_LUMACCEL, 208, 154, 24, 8
+
+  EDITTEXT, COLOR_LUM, 241, 152, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "Κόκκι&νο:", COLOR_REDACCEL, 261, 126, 32, 8
+
+  EDITTEXT, COLOR_RED, 295, 124, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "&Πράσινο:", COLOR_GREENACCEL, 261, 140, 32, 8
+
+  EDITTEXT, COLOR_GREEN, 295, 138, 18, 12, WS_GROUP | WS_TABSTOP
+
+  RTEXT "&Μπλε:", COLOR_BLUEACCEL, 261, 154, 32, 8
+
+  EDITTEXT, COLOR_BLUE, 295, 152, 18, 12, WS_GROUP | WS_TABSTOP
+
+  PUSHBUTTON "Προσ&θήκη στα προσαρμοσμένα χρώματα", COLOR_ADD, 152, 169, 164, 14, WS_GROUP | WS_TABSTOP
+
+END

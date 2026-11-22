@@ -1,0 +1,204 @@
+//---------------------------------------------------------------------------
+// mmsystem.rc : reconstructed it resources
+//
+// Recovered from the shipped localized mmsystem.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+#include <windows.h>
+
+#define MMNOSOUND
+#define MMNOSEQ
+#define MMNOTIMER
+#define MMNOJOY
+#include "mmsystem.h"
+#include "mmsystem.rcv"
+
+#define NOTIMERDEV
+#define NOJOYDEV
+#define NOSEQDEV
+#define NOTASKDEV
+#include "mmddk.h"
+
+#include "mmsysi.h"
+
+STRINGTABLE
+begin
+   0,			        "Comando specificato correttamente eseguito."
+
+   STR_MCIUNKNOWN,              "Errore non determinato restituito dal comando MCI"
+//   STR_WAVEINPUT,               "Wave Input: "
+//   STR_WAVEOUTPUT,              "Wave Output: "
+//   STR_MIDIINPUT,               "Midi Input: "
+//   STR_MIDIOUTPUT,              "Midi Output: "
+#ifdef DEBUG
+   STR_MCISSERRTXT,             "Error in mciSendString but could not get text"
+   STR_MCISCERRTXT,             "Error in mciSendCommand but could not get text"
+#endif
+   MMSYSERR_ERROR,	        "Errore esterno non determinato."
+   MMSYSERR_BADDEVICEID,        "È stato utilizzato un ID di periferica non compreso nell'intervallo consentito dal sistema."
+   MMSYSERR_NOTENABLED,         "Il driver non era attivato."
+   MMSYSERR_ALLOCATED,          "La periferica specificata è già in uso. Attendere che si liberi, quindi riprovare."
+   MMSYSERR_INVALHANDLE,        "Handle di periferica specificato non valido."
+   MMSYSERR_NODRIVER,	        "Nessun driver installato nel sistema."
+   MMSYSERR_NOMEM,	        "Memoria insufficiente per l'operazione. Chiudere una o più applicazioni per aumentare la memoria disponibile, quindi riprovare."
+   MMSYSERR_NOTSUPPORTED,       "Funzione non supportata. Usare la funzione Capacità per determinare quali funzioni e messaggi sono supportati dal driver."
+   MMSYSERR_BADERRNUM,          "Numero di errore specificato non definito nel sistema."
+   MMSYSERR_INVALFLAG,          "Opzione non valida inoltrata ad una funzione di sistema."
+   MMSYSERR_INVALPARAM,         "Parametro non valido inoltrato ad una funzione di sistema."
+
+   WAVERR_BADFORMAT,            "Il formato specificato non è supportato o traducibile. Usare la funzione Capacità per determinare i formati supportati."
+   WAVERR_UNPREPARED,           "Intestazione della forma d'onda non preparata. Usare la funzione Prepara, quindi riprovare."
+   WAVERR_STILLPLAYING,         "Impossibile eseguire l'operazione con dati in fase di riproduzione. Reimpostare la periferica o attendere la fine della riproduzione"
+   WAVERR_SYNC,                 "Impossibile aprire la periferica senza usare l'opzione WAVE_ALLOWSYNC. Usare l'opzione, quindi riprovare."
+
+   MIDIERR_UNPREPARED,          "Intestazione MIDI non preparata. Usare la funzione Prepara, quindi riprovare."
+   MIDIERR_STILLPLAYING,        "Impossibile eseguire l'operazione con dati in fase di riproduzione. Reimpostare la periferica o attendere la fine della riproduzione"
+   MIDIERR_NOMAP,               "Nessuna mappa MIDI trovata. Ci potrebbe essere un problema di driver, o il file MIDIMAP.CGF potrebbe essere danneggiato o mancante."
+   MIDIERR_NOTREADY,            "La porta sta trasmettendo dati alla periferica. Attendere la fine della trasmissione dei dati, quindi riprovare."
+   MIDIERR_NODEVICE,            "L'impostazione corrente di MIDI Mapper fa riferimento a una periferica MIDI non installata nel sistema. Usare MIDI Mapper per modificare l'impostazione."
+   MIDIERR_INVALIDSETUP,        "L'impostazione corrente di MIDI Mapper è danneggiata. Copiare il file MIDIMAP.CFG originale nella directory SYSTEM di Windows, quindi riprovare."
+
+   MCIERR_INVALID_DEVICE_ID,        "ID non valido della periferica MIDI. Usare l'ID restituito all'apertura della periferica MCI."
+   MCIERR_UNRECOGNIZED_KEYWORD,     "Il driver non può riconoscere il parametro del comando specificato."
+   MCIERR_UNRECOGNIZED_COMMAND,     "Il driver non può riconoscere il comando specificato."
+   MCIERR_HARDWARE,                 "È stato rilevato un problema con la periferica multimediale. Assicurarsi che funzioni correttamente o contattare il costruttore della periferica."
+   MCIERR_INVALID_DEVICE_NAME,      "La periferica specificata non è aperta o riconosciuta da MCI."
+   MCIERR_OUT_OF_MEMORY,            "Memoria insufficiente per l'operazione.\n\nChiudere una o più applicazioni per aumentare la memoria disponibile, quindi riprovare."
+   MCIERR_DEVICE_OPEN,              "Il nome della periferica è già usato dall'applicazione come alias. Usare un alias univoco."
+   MCIERR_CANNOT_LOAD_DRIVER,       "Problema non rilevabile nel caricamento del driver di periferica specificato."
+   MCIERR_MISSING_COMMAND_STRING,   "Nessun comando specificato."
+   MCIERR_PARAM_OVERFLOW,           "Stringa di output troppo lunga per il buffer di restituzione. Aumentare la dimensione del buffer."
+   MCIERR_MISSING_STRING_ARGUMENT,  "Il comando specificato richiede una stringa di caratteri come parametro."
+   MCIERR_BAD_INTEGER,              "Il numero intero specificato non è valido per il comando."
+   MCIERR_PARSER_INTERNAL,          "Il driver della periferica ha restituito un tipo non valido. Richiedere un nuovo driver al costruttore della periferica."
+   MCIERR_DRIVER_INTERNAL,          "È stato rilevato un problema con il driver della periferica. Richiedere un nuovo driver al costruttore della periferica."
+   MCIERR_MISSING_PARAMETER,        "Il comando specificato richiede un parametro."
+   MCIERR_UNSUPPORTED_FUNCTION,     "La periferica MCI in uso non supporta il comando specificato."
+   MCIERR_NONAPPLICABLE_FUNCTION,   "Impossibile eseguire i comandi nell'ordine specificato. Correggere la sequenza dei comandi, quindi riprovare."
+   MCIERR_FILE_NOT_FOUND,           "Impossibile trovare il file specificato. Assicurarsi che il percorso e il nome file siano corretti."
+   MCIERR_DEVICE_NOT_READY,         "Il driver della periferica non è pronto."
+   MCIERR_INTERNAL,                 "Problema di inizializzazione di MCI. Provare a riavviare Windows."
+   MCIERR_DRIVER,                   "È stato rilevato un problema con il driver della periferica. Il driver è stato chiuso. Impossibile specificare l'errore."
+   MCIERR_CANNOT_USE_ALL,           "Impossibile usare 'all' come nome di periferica con il comando specificato."
+   MCIERR_MULTIPLE,                 "Si sono verificati errori in più periferiche. Specificare ogni comando e periferica separatamente per determinare quale periferica ha causato l'errore."
+   MCIERR_EXTENSION_NOT_FOUND,      "Impossibile determinare il tipo di periferica dall'estensione del file."
+   MCIERR_OUTOFRANGE,	            "Il parametro specificato è fuori dall'intervallo consentito del comando specificato."
+   MCIERR_FLAGS_NOT_COMPATIBLE,     "I parametri specificati non possono essere usati assieme."
+   MCIERR_FILE_NOT_SAVED,           "Impossibile salvare il file specificato. Assicurarsi di avere sufficiente spazio su disco e di essere ancora connessi alla rete."
+   MCIERR_FILE_READ,                "Impossibile leggere il file specificato. Assicurarsi che il file sia ancora presente, oppure controllare il disco o la connessione di rete."
+   MCIERR_FILE_WRITE,               "Impossibile scrivere sul file specificato. Assicurarsi di avere sufficiente spazio su disco o di essere ancora connessi alla rete."
+   MCIERR_DEVICE_LOCKED,            "La periferica specificata è in fase di chiusura. Attendere alcuni secondi, quindi riprovare."
+   MCIERR_DUPLICATE_ALIAS,          "L'alias specificato è già in uso in questa applicazione. Usare un alias univoco."
+   MCIERR_BAD_CONSTANT,             "Il parametro specificato non è valido per il comando."
+   MCIERR_MUST_USE_SHAREABLE,       "Il driver della periferica è già in uso. Per condividerlo, usare il parametro 'shareable' con ogni comando 'open'."
+   MCIERR_MISSING_DEVICE_NAME,      "Il comando specificato richiede un nome di alias, file, driver o periferica."
+   MCIERR_BAD_TIME_FORMAT,          "Il valore specificato per il formato dell'ora non è corretto. Fare riferimento alla documentazione MCI per esempi di formati corretti."
+   MCIERR_NO_CLOSING_QUOTE,         "Il valore del parametro manca della doppia virgoletta di chiusura."
+   MCIERR_DUPLICATE_FLAGS,          "Un parametro o valore è stato specificato due volte. Specificarlo una volta sola."
+   MCIERR_INVALID_FILE,		    "Il file specificato non può essere riprodotto sulla periferica MCI specificata. Il file può essere danneggiato, o nel formato errato."
+   MCIERR_NULL_PARAMETER_BLOCK,     "È stato inoltrato a MCI un blocco di parametri nulli."
+   MCIERR_UNNAMED_RESOURCE,	    "Impossibile salvare un file senza titolo. Specificare un nome di file."
+   MCIERR_NEW_REQUIRES_ALIAS,       "Bisogna specificare un alias se si usa il parametro 'nuovo'."
+   MCIERR_NOTIFY_ON_AUTO_OPEN,      "Impossibile usare l'opzione di notifica con periferiche ad apertura automatica."
+   MCIERR_NO_ELEMENT_ALLOWED,       "Impossibile usare un nome di file con la periferica specificata."
+   MCIERR_ILLEGAL_FOR_AUTO_OPEN,    "Impossibile eseguire il comando specificato su una periferica ad apertura automatica. Attendere la chiusura della periferica, quindi riprovare."
+   MCIERR_FILENAME_REQUIRED,        "Il nome file non è valido. Assicurarsi che il nome non sia più lungo di 8 caratteri, seguiti da un punto e da un'estensione."
+   MCIERR_EXTRA_CHARACTERS,         "Impossibile specificare caratteri addizionali dopo una stringa racchiusa tra virgolette."
+   MCIERR_DEVICE_NOT_INSTALLED,     "La periferica specificata non è installata nel sistema. Usare Driver nel Pannello di Controllo per installare il driver."
+   MCIERR_GET_CD,                   "Impossibile accedere al file o periferica MCI specificati. Tentare di cambiare directory o riavviare il computer."
+   MCIERR_SET_CD,                   "Impossibile accedere al file o periferica MCI specificati dato che l'applicazione non può cambiare directory."
+   MCIERR_SET_DRIVE,                "Impossibile accedere al file o periferica MCI specificati dato che l'applicazione non può cambiare unità."
+   MCIERR_DEVICE_LENGTH,            "Specificare una nome di periferica o driver che sia non più lungo di 79 caratteri."
+   MCIERR_DEVICE_ORD_LENGTH,        "Specificare una nome di periferica o driver che sia non più lungo di 69 caratteri."
+   MCIERR_NO_INTEGER,               "Il comando specificato richiede un parametro intero. Specificarne uno."
+
+   MCIERR_WAVE_OUTPUTSINUSE,        "Tutte le periferiche WAVE che possono eseguire file nel formato corrente sono in uso. Attendere che una periferica si liberi, quindi riprovare."
+   MCIERR_WAVE_SETOUTPUTINUSE,      "Impossibile impostare la periferica WAVE corrente per la riproduzione. La periferica è in uso. Attendere che si liberi, quindi riprovare."
+   MCIERR_WAVE_INPUTSINUSE,         "Tutte le periferiche WAVE in grado di registrare file nel formato corrente sono in uso. Attendere che una periferica si liberi, quindi riprovare."
+   MCIERR_WAVE_SETINPUTINUSE,       "Impossibile impostare la periferica WAVE corrente per la registrazione. La periferica è in uso. Attendere che si liberi, quindi riprovare."
+   MCIERR_WAVE_OUTPUTUNSPECIFIED,   "È possibile utilizzare qualunque periferica di riproduzione WAVE compatibile."
+   MCIERR_WAVE_INPUTUNSPECIFIED,    "È possibile utilizzare qualunque periferica di registrazione WAVE compatibile."
+   MCIERR_WAVE_OUTPUTSUNSUITABLE,   "Nessuna periferica WAVE in grado di eseguire file nel formato corrente è installata. Usare l'opzione Driver per installare la periferica."
+   MCIERR_WAVE_SETOUTPUTUNSUITABLE, "La periferica su cui si sta cercando di eseguire non riconosce il formato file corrente."
+   MCIERR_WAVE_INPUTSUNSUITABLE,    "Nessuna periferica WAVE in grado di eseguire file nel formato corrente è installata. Usare l'opzione Driver per installare la periferica."
+   MCIERR_WAVE_SETINPUTUNSUITABLE,  "La periferica da cui si sta cercando di registrare non riconosce il formato di file corrente."
+
+   MCIERR_SEQ_DIV_INCOMPATIBLE,     "Impossibile usare il formato tempo song-pointer assieme al formato SMPTE."
+   MCIERR_SEQ_PORT_INUSE,	    "La periferica MIDI specificata è già in uso. Attendere che si liberi, quindi riprovare."
+   MCIERR_SEQ_PORT_NONEXISTENT,	    "La periferica MIDI specificata non è installata sul sistema. Usare Driver nel Pannello di Controllo per installare il driver."
+   MCIERR_SEQ_PORT_MAPNODEVICE,	    "L'impostazione corrente di MIDI Mapper fa riferimento a una periferica MIDI non installata nel sistema. Usare MIDI Mapper per modificare l'impostazione."
+   MCIERR_SEQ_PORT_MISCERROR,	    "Si è verificato un errore durante l'utilizzo della porta specificata."
+   MCIERR_SEQ_TIMER,		    "Tutti i timer multimediali sono in uso da altre applicazioni. Chiudere una o più applicazioni, quindi riprovare."
+   MCIERR_SEQ_PORTUNSPECIFIED,      "Nessuna porta MIDI corrente."
+   MCIERR_SEQ_NOMIDIPRESENT,        "Nessuna periferica MCI è installata sul sistema. Usare Driver nel Pannello di Controllo per installare il driver."
+
+   MCIERR_NO_WINDOW,                "Nessuna finestra di visualizzazione."
+   MCIERR_CREATEWINDOW,             "Impossibile creare o usare la finestra."
+
+   MCIERR_DEVICE_TYPE_REQUIRED,     "Impossibile trovare la periferica specificata. Assicurarsi che sia installata e che il suo nome sia specificato correttamente."
+
+   MCI_FALSE,  	                    "false"
+   MCI_TRUE,                        "true"
+
+   MCI_DEVTYPE_ANIMATION,           "animation"
+   MCI_DEVTYPE_CD_AUDIO,            "cdaudio"
+   MCI_DEVTYPE_DAT,                 "dat"
+   MCI_DEVTYPE_DIGITAL_VIDEO,       "digitalvideo"        
+   MCI_DEVTYPE_OTHER,               "other"
+   MCI_DEVTYPE_OVERLAY,             "overlay"
+   MCI_DEVTYPE_SCANNER,             "scanner"
+   MCI_DEVTYPE_SEQUENCER,           "sequencer"
+   MCI_DEVTYPE_VCR,                 "vcr"
+   MCI_DEVTYPE_VIDEODISC,           "videodisc"
+   MCI_DEVTYPE_WAVEFORM_AUDIO,      "waveaudio"
+   
+   MCI_MODE_NOT_READY,              "not ready"
+   MCI_MODE_STOP,                   "arrestato"
+   MCI_MODE_PLAY,                   "in esecuzione"
+   MCI_MODE_RECORD,                 "registrazione"
+   MCI_MODE_SEEK,                   "ricerca"
+   MCI_MODE_PAUSE,                  "pausa"
+   MCI_MODE_OPEN,                   "apri"
+
+   MCI_FORMAT_MILLISECONDS_S,       "millisecondi"
+   MCI_FORMAT_HMS_S,                "hms"
+   MCI_FORMAT_MSF_S,                "msf"
+   MCI_FORMAT_FRAMES_S,             "frames"
+   MCI_FORMAT_SMPTE_24_S,           "smpte 24"
+   MCI_FORMAT_SMPTE_25_S,           "smpte 25"    
+   MCI_FORMAT_SMPTE_30_S,           "smpte 30"
+   MCI_FORMAT_SMPTE_30DROP_S,       "smpte 30 drop"
+   MCI_FORMAT_BYTES_S,              "bytes"
+   MCI_FORMAT_SAMPLES_S,            "samples"
+   MCI_FORMAT_TMSF_S,               "tmsf"
+
+   MCI_VD_MODE_PARK,                "parked"
+   MCI_VD_MEDIA_CAV,                "CAV"
+   MCI_VD_MEDIA_CLV,                "CLV"
+   MCI_VD_MEDIA_OTHER,		    "other"
+   MCI_VD_FORMAT_TRACK_S,           "track"
+
+   MCI_SEQ_DIV_PPQN,		    "PPQN"
+   MCI_SEQ_DIV_SMPTE_24, 	    "Frame SMPTE 24"
+   MCI_SEQ_DIV_SMPTE_25, 	    "Frame SMPTE 25"
+   MCI_SEQ_DIV_SMPTE_30DROP,	    "Frame scartato SMPTE 30"
+   MCI_SEQ_DIV_SMPTE_30, 	    "Frame SMPTE 30"
+   MIDIMAPPER_S,                    "mapper"
+   MCI_SEQ_FILE_S,                  "file"
+   MCI_SEQ_MIDI_S,                  "midi"
+   MCI_SEQ_SMPTE_S,                 "smpte"
+   MCI_SEQ_FORMAT_SONGPTR_S,        "song pointer"
+   MCI_SEQ_NONE_S,                  "Nessuno"
+
+   WAVE_FORMAT_PCM_S,		    "pcm"
+   WAVE_MAPPER_S,   		    "mapper"
+
+   IDS_TASKSTUB,                    "mmtask.tsk"
+end
+
+#include "mci.rc"
+
+#ifdef DEBUG
+#include "mmsex.dlg"
+#endif

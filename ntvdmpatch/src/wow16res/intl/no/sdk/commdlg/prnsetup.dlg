@@ -1,0 +1,73 @@
+//---------------------------------------------------------------------------
+// prnsetup.dlg : reconstructed no resources
+//
+// Recovered from the shipped localized commdlg.dll with ntvdmpatch\src\wow16res,
+// using messages\usa as the template.  Strings, captions and control
+// geometry come from the binary; symbol names and layout from usa.
+//---------------------------------------------------------------------------
+
+PRINTDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 
+36, 52,  225, 130
+CAPTION "Skriv ut"
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME
+FONT 8, "Helv"
+BEGIN
+  LTEXT "Skriver:"  stc6, 4,    4,  33,   8
+  LTEXT "Systemstandard"  stc1, 44,   4, 120,  18
+  GROUPBOX "Utskriftsområde", grp1, 4,   27,  132,  67
+  RADIOBUTTON "&Alt" rad1, 10,  39,  76,  12,  WS_TABSTOP | WS_GROUP
+  RADIOBUTTON "&Utvalg" rad2, 10,  52,  76,  12
+  RADIOBUTTON "&Sider" rad3, 10,  65,  76,  12
+  RTEXT "F&ra:"  stc2, 34,  80,  14,   9,  WS_GROUP
+  EDITTEXT edt1, 52,  78,  26,  12,  WS_TABSTOP | ES_RIGHT
+  RTEXT "&Til:"  stc3, 83,  80,  16,   9
+  EDITTEXT edt2, 102,  78,  26,  12,  WS_TABSTOP | ES_RIGHT
+
+  LTEXT "Utskri&ftskvalitet:"  stc4, 4,  100,  54,   9
+  COMBOBOX      cmb1, 59,  98,  76,  36,
+              WS_TABSTOP | CBS_DROPDOWNLIST | WS_GROUP | WS_BORDER | WS_VSCROLL
+
+  LTEXT "&Eksemplarer:", stc5, 148, 100,  41,   9
+  EDITTEXT, edt3, 193,  98,  26,  12,  WS_TABSTOP | ES_RIGHT
+
+  CHECKBOX "Skri&v til fil"   chx1,
+          4,  113, 120,  12,  BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+  CHECKBOX "&Kollater kopier"  chx2,
+         148, 113,  67,  12,  BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP
+
+  DEFPUSHBUTTON  "OK"  IDOK,     170,   4,  50,  14,  WS_GROUP
+  PUSHBUTTON "Avbryt"  IDCANCEL, 170,  21,  50,  14,  WS_GROUP
+
+  PUSHBUTTON "&Innstillinger..."  psh1,  170,  41,  50,  14,  WS_GROUP
+  PUSHBUTTON "&Hjelp"   pshHelp,  170,  75,  50,  14,  WS_GROUP
+END
+
+
+PRNSETUPDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 30, 23, 287, 126
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Skriveroppsett"
+FONT 8, "Helv"
+BEGIN
+  GROUPBOX      "Skriver", grp3, 4, 6, 224, 66
+  LTEXT         "(Ingen standardskriver)", stc1, 18, 30, 208, 9
+  RADIOBUTTON   "&Standardskriver", rad3, 8, 16, 218, 12, WS_GROUP | WS_TABSTOP
+  RADIOBUTTON   "A&ngitt skriver:", rad4, 8, 42, 218, 12
+  COMBOBOX      cmb1, 18, 56, 208, 80, CBS_DROPDOWNLIST | WS_GROUP |
+                WS_BORDER | WS_VSCROLL
+  GROUPBOX      "Papirretning", grp1, 4, 75, 91, 46
+  ICON          "", ico1, 12, 93, 24, 16
+  RADIOBUTTON   "S&tående", rad1, 40, 87, 49, 12, WS_GROUP | WS_TABSTOP
+  RADIOBUTTON   "&Liggende", rad2, 40, 103, 49, 12
+  GROUPBOX      "Papir", grp2, 100, 75, 128, 46, WS_GROUP
+  LTEXT         "Stø&rrelse:", stc2, 104, 89, 36, 9
+  COMBOBOX      cmb2, 141, 87, 85, 80, CBS_DROPDOWNLIST | WS_BORDER | 
+                WS_VSCROLL | WS_TABSTOP
+  LTEXT         "&Kilde:", stc3, 104, 105, 36, 9
+  COMBOBOX      cmb3, 141, 103, 85, 80, CBS_DROPDOWNLIST | WS_BORDER | 
+                WS_VSCROLL | WS_TABSTOP
+  DEFPUSHBUTTON "OK", IDOK, 232, 4, 50, 14, WS_GROUP
+  PUSHBUTTON    "Avbryt", IDCANCEL, 232, 20, 50, 14, WS_GROUP
+  PUSHBUTTON    "&Alternativer...", psh1, 232, 40, 50, 14, WS_GROUP
+  PUSHBUTTON    "&Hjelp", pshHelp, 232, 56, 50, 14, WS_GROUP
+END
+
