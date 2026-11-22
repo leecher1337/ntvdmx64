@@ -11,7 +11,7 @@ if exist %BASEPATH%\..\..\Binaries\x86chk set SIZ_NTBLD=chk
 if exist %BASEPATH%\..\..\Binaries\x86fre set SIZ_NTBLD=fre
 )
 set BINDIR=%BASEPATH%\..\..\Binaries\x86%SIZ_NTBLD%
-set LANG=br CHS CHT cs es fr GER hu it JPN KOR nl pl pt ru sv usa
+set LANG=br CHS CHT cs el es fr GER hu it JPN KOR nl no pl pt ru sv tr usa
 if not "%1"=="" set LANG=%1
 md releases >nul
 echo Copying DOS files

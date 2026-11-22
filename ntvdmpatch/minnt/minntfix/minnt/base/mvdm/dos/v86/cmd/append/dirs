@@ -5,13 +5,16 @@ DIRS= USA \
       KOR \
       BR \
       CS \
+      EL \
       ES \
       FR \
       GER \
       HU \
       IT \
       NL \
+      NO \
       PL \
       PT \
       RU \
-      SV
+      SV \
+	  TR
